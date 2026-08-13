@@ -1,13 +1,8 @@
 import Link from 'next/link'
-import { MapPin, HandHeart, Stethoscope, ListChecks } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
-
-const ENLACES = [
-  { href: '/', etiqueta: 'Solicitudes', Icono: HandHeart },
-  { href: '/servidores', etiqueta: 'Profesionales', Icono: Stethoscope },
-  { href: '/mis-solicitudes', etiqueta: 'Mis solicitudes', Icono: ListChecks },
-]
+import { Navegacion } from '@/components/navegacion'
 
 export async function Encabezado() {
   const supabase = await createClient()
@@ -35,23 +30,7 @@ export async function Encabezado() {
         </Button>
       </div>
 
-      {/* Navegación con scroll horizontal: en pantallas de 320px no caben
-          tres pestañas sin encogerlas por debajo del mínimo táctil. */}
-      <nav aria-label="Secciones" className="mx-auto max-w-3xl overflow-x-auto px-4">
-        <ul className="flex gap-1 pb-1">
-          {ENLACES.map(({ href, etiqueta, Icono }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                className="flex min-h-12 shrink-0 items-center gap-1.5 rounded-lg px-3 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-              >
-                <Icono className="size-4" aria-hidden="true" />
-                {etiqueta}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <Navegacion />
     </header>
   )
 }

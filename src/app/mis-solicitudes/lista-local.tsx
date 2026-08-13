@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { FileQuestion } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -18,7 +18,11 @@ const CLAVE = 'mis_solicitudes'
 // (null) y en cliente, sin desajuste de hidratación.
 function suscribir(alCambiar: () => void) {
   window.addEventListener('storage', alCambiar)
-  return () => window.removeEventListener('storage', alCambiar)
+  window.addEventListener('mis-solicitudes', alCambiar)
+  return () => {
+    window.removeEventListener('storage', alCambiar)
+    window.removeEventListener('mis-solicitudes', alCambiar)
+  }
 }
 
 // El '[]' importa: sin él, "no hay nada guardado" y "todavía no leemos"
@@ -28,6 +32,7 @@ const leerServidor = () => null
 
 export function ListaLocal() {
   const crudo = useSyncExternalStore(suscribir, leerCliente, leerServidor)
+  const [depurado, setDepurado] = useState(false)
 
   const solicitudes = useMemo<Guardada[] | null>(() => {
     if (crudo === null) return null
@@ -37,6 +42,41 @@ export function ListaLocal() {
       return []
     }
   }, [crudo])
+
+  // El teléfono no se entera de que una solicitud venció o se cerró: el
+  // token solo vive aquí. Se le pregunta al servidor una vez y se quitan
+  // las que ya no existen, para no dejar tarjetas que llevan a la nada.
+  useEffect(() => {
+    if (depurado || !solicitudes || solicitudes.length === 0) return
+    let cancelado = false
+
+    async function depurar(lista: Guardada[]) {
+      try {
+        const res = await fetch('/api/solicitudes/vigentes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tokens: lista.map((s) => s.token) }),
+        })
+        if (!res.ok || cancelado) return
+        const { vigentes } = (await res.json()) as { vigentes: string[] }
+        const vivas = lista.filter((s) => vigentes.includes(s.token))
+        if (vivas.length !== lista.length) {
+          localStorage.setItem(CLAVE, JSON.stringify(vivas))
+          window.dispatchEvent(new Event('mis-solicitudes'))
+        }
+      } catch {
+        // Sin conexión se deja la lista como está: es preferible una
+        // tarjeta vencida a borrar un enlace que no se puede recuperar.
+      } finally {
+        if (!cancelado) setDepurado(true)
+      }
+    }
+
+    depurar(solicitudes)
+    return () => {
+      cancelado = true
+    }
+  }, [solicitudes, depurado])
 
   if (solicitudes === null) {
     return <p className="mt-6 text-base text-muted-foreground">Buscando…</p>

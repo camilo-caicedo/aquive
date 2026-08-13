@@ -100,6 +100,14 @@ $$;
 
 revoke execute on function public.es_admin(uuid) from public, anon, authenticated;
 
+-- OJO: por ese revoke, `es_admin()` NO se puede usar dentro de una política
+-- RLS. La expresión de la política corre con los permisos de quien consulta,
+-- así que cualquier lectura fallaba con "permission denied for function
+-- es_admin" — para todo el mundo, no solo para administradores. Las
+-- políticas de más abajo hacen el EXISTS contra `administradores` a mano.
+-- Dentro de una RPC `security definer` sí es válido llamarla: ahí corre
+-- como dueña de la función.
+
 -- ---------------------------------------------------------------------
 -- 3. Solicitudes — CERO datos personales
 -- ---------------------------------------------------------------------
@@ -330,9 +338,9 @@ create policy "respuestas delete propia" on public.respuestas
 create policy "reportar es publico" on public.reportes
   for insert to public with check (true);
 create policy "admin lee reportes" on public.reportes
-  for select to authenticated using (public.es_admin((select auth.uid())));
+  for select to authenticated using (exists (select 1 from public.administradores a where a.user_id = (select auth.uid())));
 create policy "admin actualiza reportes" on public.reportes
-  for update to authenticated using (public.es_admin((select auth.uid())));
+  for update to authenticated using (exists (select 1 from public.administradores a where a.user_id = (select auth.uid())));
 
 -- Métricas: lectura pública, escritura solo por el job
 create policy "metricas lectura publica" on public.metricas
@@ -777,9 +785,9 @@ grant  execute on function public.resolver_reporte(uuid,boolean) to authenticate
 
 -- El administrador necesita leer la ficha completa para poder verificarla.
 create policy "admin lee perfiles" on public.perfiles
-  for select to authenticated using (public.es_admin((select auth.uid())));
+  for select to authenticated using (exists (select 1 from public.administradores a where a.user_id = (select auth.uid())));
 create policy "admin lee servidores" on public.servidores
-  for select to authenticated using (public.es_admin((select auth.uid())));
+  for select to authenticated using (exists (select 1 from public.administradores a where a.user_id = (select auth.uid())));
 
 -- ---------------------------------------------------------------------
 -- 10. Expiración — borrado duro cada hora
