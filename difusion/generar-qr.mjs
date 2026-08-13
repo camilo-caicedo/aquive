@@ -5,7 +5,7 @@ import { createRequire } from 'node:module'
 const require = createRequire(import.meta.url)
 const qrcode = require('qrcode-generator')
 
-const URL_APP = 'https://aquive.vercel.app'
+const URL_APP = 'https://aquive.co'
 const SALIDA = process.argv[2]
 const LADO = Number(process.argv[3] ?? 1080)
 
