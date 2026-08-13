@@ -1,0 +1,32 @@
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+
+// Único punto donde entra la sesión de Google.
+// Del objeto de sesión se usa EXCLUSIVAMENTE `user.id`. El correo que
+// Google devuelve se ignora a propósito: no se lee, no se guarda, no se
+// loggea (CLAUDE.md — autenticación).
+export async function GET(request: Request) {
+  const { searchParams, origin } = new URL(request.url)
+  const code = searchParams.get('code')
+
+  if (!code) {
+    return NextResponse.redirect(`${origin}/login?error=1`)
+  }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+
+  if (error || !data.user) {
+    return NextResponse.redirect(`${origin}/login?error=1`)
+  }
+
+  // El perfil no puede crearse aquí: nombre visible, municipios y contacto
+  // los escribe la persona en /registro. Aquí solo se decide a dónde va.
+  const { data: perfil } = await supabase
+    .from('perfiles')
+    .select('id')
+    .eq('id', data.user.id)
+    .maybeSingle()
+
+  return NextResponse.redirect(perfil ? `${origin}/` : `${origin}/registro`)
+}

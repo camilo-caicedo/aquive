@@ -1,17 +1,10 @@
 # AquíVe · Ayuda directa en Colombia
 
-Punto de partida para construir con Claude Code. No es código todavía:
-son las especificaciones, el esquema de base de datos y los legales.
+Plataforma web temporal para conectar a quien necesita insumos tras el
+sismo del 10 de agosto de 2026 con quien puede darlos, y con
+profesionales con matrícula que ofrecen sus servicios.
 
-## Qué hay aquí
-
-| Archivo | Para qué |
-|---|---|
-| `CLAUDE.md` | Contexto y **reglas duras**. Claude Code lo lee en cada sesión. Es el archivo más importante. |
-| `PLAN.md` | Setup inicial y seis fases con prompts listos para pegar. Empieza aquí. |
-| `docs/ESPECIFICACION.md` | Roles, flujos, modelo de datos, catálogo de ítems. |
-| `supabase/schema.sql` | Esquema completo con RLS, RPC y expiración. Ejecutar antes de la fase 1. |
-| `docs/legal/PLANTILLAS.md` | Aviso de privacidad, términos, autorización y avisos in-app. Rellenar los `[CORCHETES]`. |
+**En vivo:** https://aquive.vercel.app
 
 ## La idea en tres líneas
 
@@ -21,25 +14,102 @@ El contacto ocurre por fuera de la plataforma, y todo se borra a las 72 horas.
 
 No es una app de mapas. Ya existen varias y funcionan.
 
-## Por dónde empezar
-
-1. Lee `CLAUDE.md` completo.
-2. Sigue el setup de `PLAN.md`.
-3. Ejecuta `supabase/schema.sql` en el SQL Editor de Supabase.
-4. Pega el prompt de la Fase 1 en Claude Code.
-
 ## Lo que no es negociable
 
 - Las solicitudes describen **cosas, no personas**
 - Borrado real a las 72 horas, sin Point-in-Time Recovery
 - Sin dinero, sin alojamiento de personas, sin menores, sin transporte
+- Sin rescate ni atención de urgencias: eso es del 123
 - El contacto nunca pasa por la plataforma
 
 Estas reglas son la protección jurídica del proyecto, no preferencias de
-diseño. Ver `CLAUDE.md`.
+diseño. Ver `CLAUDE.md` antes de tocar nada.
+
+## Estado
+
+Las seis fases están implementadas y desplegadas. Lo que falta para
+lanzar de verdad está en `PLAN.md`, sección "Pendientes que NO son
+código".
+
+| Flujo | Estado |
+|---|---|
+| Publicar solicitud sin cuenta (token portador) | Probado en producción |
+| Tablero público con filtros, sin JavaScript | Probado |
+| Login con Google, perfiles de ofertador y servidor | Probado en producción |
+| Responder una solicitud | Probado |
+| Directorio de profesionales con matrícula | Probado |
+| Notificaciones push (Web Push + VAPID) | Probado en producción |
+| Renovar, cerrar y borrado duro a 72 h | Probado, incluido el job de `pg_cron` |
+| Panel de moderación y verificación de matrículas | Probado |
+| Borrado permanente de cuenta | Implementado |
+
+Bug abierto: en `/mis-solicitudes` la lista guardada en `localStorage` no
+siempre aparece. El enlace directo y el QR sí funcionan.
+
+## Stack
+
+Next.js 16 (App Router, Server Components), TypeScript, Tailwind v4,
+shadcn/ui sobre **Base UI**, Supabase (Postgres + Auth + pg_cron),
+`web-push` con VAPID, Cloudflare Turnstile, desplegado en Vercel.
+
+Sin librería de mapas, sin geocoding, sin analítica.
+
+## Cómo levantarlo
+
+```bash
+npm install
+cp .env.local.example .env.local   # y llena los valores
+npm run dev
+```
+
+En Supabase, en este orden:
+
+1. `supabase/schema.sql` — tablas, RLS, RPC, vistas y el job de expiración
+2. `supabase/seed-municipios.sql` — los 1.122 municipios con código DANE
+3. `supabase/seed-catalogo.sql` — 117 insumos y los servicios pedibles
+
+Después: activa Google como proveedor de Auth, pon el dominio en
+**Authentication → URL Configuration**, y **confirma que Point-in-Time
+Recovery está desactivado** (si está activo, el aviso de privacidad
+miente).
+
+Para que `/admin` sea accesible hay que insertar a mano la primera fila
+en `administradores` con el id del usuario que va a moderar.
+
+## Mapa del repositorio
+
+| Ruta | Para qué |
+|---|---|
+| `CLAUDE.md` | Contexto y **reglas duras**. El archivo más importante. |
+| `PLAN.md` | Las seis fases y los pendientes que no son código. |
+| `docs/ESPECIFICACION.md` | Roles, flujos y modelo de datos. |
+| `docs/legal/PLANTILLAS.md` | Aviso de privacidad, términos y autorización. |
+| `supabase/schema.sql` | Esquema completo. Fuente de verdad de la base. |
+| `supabase/seed-*.sql` | Municipios, insumos y servicios. Re-ejecutables. |
+| `src/lib/config.ts` | Responsable, correo y fecha de los legales. Tiene efecto legal. |
+| `src/lib/types.ts` | Tipos de la base, escritos a mano. Actualizar junto al esquema. |
+| `src/proxy.ts` | Refresca la sesión de Supabase (en Next 16 ya no se llama `middleware`). |
+
+## Decisiones que parecen raras y no lo son
+
+- **Las vistas públicas son `SECURITY DEFINER` a propósito.** El cliente
+  tiene revocado el acceso a `solicitudes`; la vista *es* la frontera de
+  seguridad y por eso excluye `token_hash`.
+- **`es_admin()` no se puede usar dentro de una política RLS.** Tiene
+  `EXECUTE` revocado, y la expresión de una política corre con los
+  permisos de quien consulta: cualquier lectura fallaría. Las políticas
+  hacen el `EXISTS` contra `administradores` a mano.
+- **Los filtros de municipio solo listan los que tienen contenido.**
+  Mandar los 1.122 en cada carga pesaba más que el resto de la página.
+- **Un solo tema claro, sin modo oscuro.** El modo oscuro automático
+  rompía el contraste de los controles nativos en gama baja.
+- **El desplegable de municipio es `<select>` nativo hasta que hidrata.**
+  Es lo único que funciona en un formulario GET sin JavaScript, que es
+  requisito del tablero.
+- **Las animaciones son solo CSS.** Presupuesto de JS agresivo: el
+  público entra desde Android de gama baja con mala señal.
 
 ## Lo que decide si esto sirve
 
-Conseguir que coordinadores de albergues en Cali y Pereira lo usen. Eso
-importa más que cualquier línea de código de este repositorio, y hay que
-empezarlo antes de terminar de programar.
+Conseguir que coordinadores de albergues lo usen. Eso importa más que
+cualquier línea de código de este repositorio.

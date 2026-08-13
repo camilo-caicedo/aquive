@@ -3,6 +3,12 @@
 Seis fases. Cada una termina en algo que funciona. Los prompts están
 listos para pegar en Claude Code, uno por uno, sin saltarse ninguno.
 
+> **Estado: las seis fases están implementadas.** Lo que queda antes de
+> lanzar no es código: llenar los `[CORCHETES]` (nombre completo y correo
+> del proyecto en `src/lib/config.ts`, `.env.local` y las páginas legales),
+> restaurar las llaves reales de Turnstile, agendar la revisión jurídica y
+> hablar con coordinadores de albergues. Ver la lista al final.
+
 ## Antes de empezar
 
 ```bash
@@ -31,6 +37,46 @@ NEXT_PUBLIC_TURNSTILE_SITE_KEY=
 En el dashboard de Supabase: ejecuta `supabase/schema.sql`, activa Google
 como proveedor de Auth, y **confirma que Point-in-Time Recovery está
 desactivado**.
+
+### Skills de usuario disponibles — cuáles usar aquí
+
+Regla general: son auditoría/apoyo, no autoridad. CLAUDE.md manda sobre su
+criterio por defecto siempre. Úsalas después de construir cada pantalla,
+no antes. Si una sugiere algo vistoso que cueste JS, contraste o peso de
+imagen, no lo tomes.
+
+**Buenas, usar sin reparo:**
+- `/accesslint` — auditoría WCAG real, encaja con el AA obligatorio
+- `/web-design-guidelines` — checklist accesibilidad/UX, no impone estética
+- `/minimalist-ui` — plano, monocromo, sin sombras/gradiente pesado; la
+  única skill de "taste" cuyo default ya se parece al tono del proyecto
+- `/vercel-optimize` — Core Web Vitals, Function Invocations; directo al
+  plan Hobby + Android gama baja
+- `/vercel-react-best-practices`, `/vercel-composition-patterns` — patrones
+  Next.js/React, sin relación con estética
+- `/deploy-to-vercel`, `/vercel-cli-with-tokens` — para cuando deployes
+- `/full-output-enforcement` — evita código a medias
+- `/security-review` — correr antes de lanzar, dado el alcance legal-sensible
+
+**Dudosas, usar solo como auditoría puntual, recortar contra CLAUDE.md:**
+- `/impeccable`, `/ui-ux-pro-max` — ver notas por fase abajo
+- `design-taste-frontend` — "anti-slop" genérico pero asertivo, revisar
+  cada sugerencia
+- `redesign-existing-projects` — solo para pulido post-MVP, no antes
+- `writing-guidelines`, `typography`, `design-audit`,
+  `adaptive-communication`, `relationship-design`, `bencium-*-ux-designer`
+  — sin descripción completa revisada; mirar antes de invocar a ciegas
+- `dataviz` — solo cuando publiques `metricas` como dato abierto
+
+**Evitar, chocan con reglas del proyecto:**
+`apple-design`, `gpt-taste`, `industrial-brutalist-ui`,
+`high-end-visual-design`, `stitch-design-taste` (motion pesado o estética
+"premium", contra "sin animaciones pesadas" y presupuesto de JS agresivo);
+`find-animation-opportunities`, `improve-animations`, `review-animations`
+(no hay animación que agregar); `image-to-code`,
+`imagegen-frontend-mobile`, `imagegen-frontend-web` (imágenes pesadas,
+malo para red lenta); `vercel-react-view-transitions` (transición
+innecesaria); `vercel-react-native-skills` (app nativa fuera de alcance).
 
 ---
 
@@ -67,6 +113,9 @@ desactivado**.
 >
 > Guarda el enlace en localStorage bajo la clave `mis_solicitudes`.
 
+> Después: `/impeccable` y `/accesslint scan` sobre el formulario de 3
+> pasos (es el flujo más usado, por gente en crisis con celulares viejos).
+
 ## Fase 3 — Tablero público
 
 > Implementa F2. `app/page.tsx` como Server Component que lee la vista
@@ -81,6 +130,10 @@ desactivado**.
 >
 > Verifica que en el HTML servido no aparezca ningún token ni nada
 > identificable.
+
+> Después: `/ui-ux-pro-max ui-styling` para el sistema de tarjetas y
+> badges de frescura — debe seguir siendo legible sin color (daltonismo)
+> y sin JS.
 
 ## Fase 4 — Cuentas, ofertadores y servidores
 
@@ -97,6 +150,9 @@ desactivado**.
 >   caracteres.
 > - `app/servidores/page.tsx`: directorio leyendo `servidores_publicos`,
 >   verificados primero, no verificados con la advertencia del documento.
+
+> Después: `/impeccable` sobre registro y directorio — checkbox de
+> autorización y sello de verificado son los puntos críticos de claridad.
 
 ## Fase 5 — Notificaciones push
 
@@ -143,6 +199,23 @@ desactivado**.
 6. Abrir el tablero sin sesión y revisar el HTML crudo buscando tokens
 7. Probar completo en un Android de gama baja con red lenta
 8. Probar push en Android y el fallback en iOS
+9. Correr `/accesslint scan` y `/security-review` sobre el sitio completo
+
+## Pendientes que NO son código (bloquean el lanzamiento)
+
+1. `src/lib/config.ts` → `RESPONSABLE`: poner el nombre completo real.
+   Aparece en el texto de autorización que firma cada ofertador, así que
+   tiene efecto legal.
+2. `src/app/privacidad/page.tsx` y `src/app/terminos/page.tsx`: reemplazar
+   `[CORREO]` y `[FECHA]`.
+3. `.env.local`: `VAPID_SUBJECT` con el correo real del proyecto, y
+   restaurar las llaves reales de Turnstile (están comentadas arriba de
+   las de prueba). Las de prueba dejan pasar a cualquiera.
+4. En Cloudflare Turnstile, agregar el dominio de producción a los
+   hostnames del widget.
+5. Supabase → confirmar Point-in-Time Recovery desactivado.
+6. Insertar la primera fila en `administradores` a mano, con el id del
+   usuario que va a moderar. Sin eso, `/admin` no es accesible para nadie.
 
 ## Después de lanzar
 
