@@ -8,6 +8,7 @@ import {
   MessageSquare,
   PhoneCall,
   Stethoscope,
+  Info,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import type { Categoria } from '@/lib/types'
@@ -89,6 +90,7 @@ export default async function InicioPage({
   const hayMas = (solicitudes?.length ?? 0) === POR_PAGINA
   const cursorSiguiente = hayMas ? solicitudes![solicitudes!.length - 1].creada_at : null
   const hayFiltro = !!(params.municipio || params.categoria || params.urgentes)
+  const mostrarFiltros = (municipios?.length ?? 0) > 0 || hayFiltro
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
@@ -172,6 +174,10 @@ export default async function InicioPage({
       <section className="mt-8">
         <h2 className="text-xl font-bold">Solicitudes abiertas</h2>
 
+        {/* Con el tablero vacío y sin filtros, mostrar filtros sería pedirle
+            a la gente que filtre la nada: tres avisos diciendo lo mismo. */}
+        {mostrarFiltros && (
+        <>
         <div className="mt-3 flex flex-wrap gap-2">
           <Link
             href={construirHref(params, {
@@ -226,15 +232,30 @@ export default async function InicioPage({
           </Button>
         </form>
 
+        {/* Sin esto, quien no encuentra su municipio en la lista concluye
+            que la plataforma no lo cubre. La lista está recortada a los
+            que tienen algo publicado, y eso hay que decirlo. */}
+        <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
+          <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
+          <span>
+            La lista solo muestra los {municipios?.length ?? 0}{' '}
+            {municipios?.length === 1 ? 'municipio que tiene' : 'municipios que tienen'}{' '}
+            solicitudes abiertas ahora. Puedes publicar desde cualquier
+            municipio del país.
+          </span>
+        </p>
+        </>
+        )}
+
         {!solicitudes || solicitudes.length === 0 ? (
           <div className="mt-6 rounded-xl border border-dashed border-border p-8 text-center">
             <SearchX className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
             <p className="mt-2 text-base text-muted-foreground">
               {hayFiltro
                 ? 'No hay solicitudes abiertas con estos filtros.'
-                : 'Todavía no hay solicitudes abiertas.'}
+                : 'Todavía no hay solicitudes abiertas en ningún municipio del país.'}
             </p>
-            {hayFiltro && (
+            {hayFiltro ? (
               <Button
                 variant="outline"
                 className="mt-4"
@@ -242,6 +263,11 @@ export default async function InicioPage({
                 render={<Link href="/" />}
               >
                 Ver todas
+              </Button>
+            ) : (
+              <Button className="mt-4" nativeButton={false} render={<Link href="/publicar" />}>
+                <PlusCircle className="size-5" aria-hidden="true" />
+                Publicar la primera
               </Button>
             )}
           </div>

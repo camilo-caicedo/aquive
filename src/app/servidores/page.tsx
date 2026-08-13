@@ -1,3 +1,5 @@
+import Link from 'next/link'
+import { Info, Inbox } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { ENTIDADES_MATRICULA } from '@/lib/config'
 import type { EntidadMatricula, AreaServicio } from '@/lib/types'
@@ -43,6 +45,8 @@ export default async function ServidoresPage({
   if (params.servicio) query = query.contains('servicios', [params.servicio])
 
   const { data: servidores } = await query
+  const hayFiltro = !!(params.municipio || params.servicio)
+  const mostrarFiltros = (municipios?.length ?? 0) > 0 || hayFiltro
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
@@ -51,6 +55,10 @@ export default async function ServidoresPage({
         Escríbeles directamente. La plataforma no participa en el contacto.
       </p>
 
+      {/* Mismo criterio que el tablero: sin nadie registrado y sin filtros,
+          los desplegables solo estorban. */}
+      {mostrarFiltros && (
+      <>
       <form
         method="get"
         className="mt-4 flex flex-col gap-2 rounded-lg border border-border bg-muted/40 p-3 sm:flex-row"
@@ -84,10 +92,42 @@ export default async function ServidoresPage({
         </Button>
       </form>
 
+      {/* La lista de municipios está recortada a los que tienen a alguien
+          registrado; si no se dice, parece que faltan municipios. */}
+      <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
+        <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
+        <span>
+          La lista de municipios solo muestra los {municipios?.length ?? 0} donde
+          ya hay profesionales registrados. La de servicios los muestra todos,
+          aunque nadie los ofrezca todavía.
+        </span>
+      </p>
+      </>
+      )}
+
       {!servidores || servidores.length === 0 ? (
-        <p className="mt-6 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
-          Todavía no hay profesionales registrados con estos filtros.
-        </p>
+        <div className="mt-6 rounded-lg border border-dashed border-border p-8 text-center">
+          <Inbox className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
+          <p className="mt-2 text-base text-muted-foreground">
+            {hayFiltro
+              ? 'No hay profesionales registrados con estos filtros.'
+              : 'Todavía no hay profesionales registrados. Si tienes matrícula, puedes ser el primero.'}
+          </p>
+          {hayFiltro ? (
+            <Button
+              variant="outline"
+              className="mt-4"
+              nativeButton={false}
+              render={<Link href="/servidores" />}
+            >
+              Ver todos
+            </Button>
+          ) : (
+            <Button className="mt-4" nativeButton={false} render={<Link href="/registro" />}>
+              Ofrecer mis servicios
+            </Button>
+          )}
+        </div>
       ) : (
         <ul className="mt-6 space-y-3">
           {servidores.map((s) => (
