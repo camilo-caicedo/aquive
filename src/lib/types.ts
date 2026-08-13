@@ -11,6 +11,7 @@ export type Categoria =
   | 'cocina'
   | 'otros'
   | 'servicios'
+  | 'mascotas'
 export type TipoPerfil = 'ofertador' | 'servidor'
 export type ContactoTipo = 'whatsapp' | 'telefono'
 export type EntidadMatricula = 'COPNIA' | 'CPNAA' | 'COLPSIC' | 'ReTHUS' | 'SIRNA' | 'OTRA'

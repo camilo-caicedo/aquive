@@ -40,8 +40,8 @@ insert into public.catalogo_items (id, categoria, nombre, unidad, orden) values
   ('platano','alimentacion','Plátano','unidad',25),
   ('yuca','alimentacion','Yuca','libra',26),
   ('huevos','alimentacion','Huevos','panal',27),
-  ('comida_perro','alimentacion','Alimento para perro','libra',28),
-  ('comida_gato','alimentacion','Alimento para gato','libra',29),
+  ('comida_perro','mascotas','Alimento para perro','libra',300),
+  ('comida_gato','mascotas','Alimento para gato','libra',301),
 
   -- Aseo ---------------------------------------------------------------
   ('panales_rn','aseo','Pañales recién nacido','paquete',40),
@@ -139,13 +139,50 @@ insert into public.catalogo_items (id, categoria, nombre, unidad, orden) values
   ('silla_ruedas','otros','Silla de ruedas','unidad',175),
   ('muletas','otros','Muletas','par',176),
   ('caminador','otros','Caminador','unidad',177),
-  ('panal_mascota','otros','Elementos para mascota (correa, guacal)','unidad',178)
+
+  -- Mascotas ------------------------------------------------------------
+  -- Son enseres, y por eso están dentro del alcance. Lo que CLAUDE.md
+  -- excluye es la CUSTODIA de mascotas en casa ajena, no sus insumos.
+  -- Solo antiparasitarios de venta libre: nada que exija fórmula.
+  ('masc_perro_cachorro','mascotas','Alimento para cachorro','libra',302),
+  ('masc_gato_gatito','mascotas','Alimento para gatito','libra',303),
+  ('masc_humedo','mascotas','Alimento húmedo en lata','lata',304),
+  ('masc_leche','mascotas','Leche de reemplazo para cachorros','tarro',305),
+  ('masc_aves','mascotas','Alimento para aves','libra',306),
+  ('masc_roedores','mascotas','Alimento para conejos o roedores','libra',307),
+  ('masc_arena','mascotas','Arena para gato','bolsa',320),
+  ('masc_arenera','mascotas','Arenera (caja de arena)','unidad',321),
+  ('masc_tapetes','mascotas','Tapetes entrenadores','paquete',322),
+  ('masc_bolsas_heces','mascotas','Bolsas para recoger heces','paquete',323),
+  ('masc_shampoo','mascotas','Shampoo para mascota','unidad',324),
+  ('masc_toallitas','mascotas','Pañitos húmedos para mascota','paquete',325),
+  ('masc_cama','mascotas','Cama para mascota','unidad',340),
+  ('masc_cobija','mascotas','Cobija para mascota','unidad',341),
+  ('masc_ropa','mascotas','Ropa o abrigo para mascota','unidad',342),
+  ('masc_guacal','mascotas','Guacal o transportadora','unidad',343),
+  ('masc_corral','mascotas','Corral o jaula','unidad',344),
+  ('masc_comedero','mascotas','Comedero','unidad',360),
+  ('masc_bebedero','mascotas','Bebedero','unidad',361),
+  ('masc_correa','mascotas','Correa','unidad',362),
+  ('masc_collar','mascotas','Collar','unidad',363),
+  ('masc_arnes','mascotas','Arnés','unidad',364),
+  ('masc_placa','mascotas','Placa de identificación','unidad',365),
+  ('masc_bozal','mascotas','Bozal','unidad',366),
+  ('masc_juguete','mascotas','Juguete para mascota','unidad',367),
+  ('masc_rascador','mascotas','Rascador para gato','unidad',368),
+  ('masc_antipulgas','mascotas','Antipulgas','unidad',380),
+  ('masc_desparasitante','mascotas','Desparasitante','caja',381),
+  ('masc_botiquin','mascotas','Botiquín para mascota','unidad',382)
 on conflict (id) do update set
   categoria = excluded.categoria,
   nombre    = excluded.nombre,
   unidad    = excluded.unidad,
   orden     = excluded.orden,
   activo    = true;
+
+-- Reemplazado por ítems concretos (correa, guacal, comedero...). No se
+-- borra para no romper una referencia histórica desde solicitud_items.
+update public.catalogo_items set activo = false where id = 'panal_mascota';
 
 -- Los servicios también se pueden PEDIR, no solo ofrecer. Se derivan de
 -- catalogo_servicios en vez de escribirse dos veces: re-ejecutar esto los

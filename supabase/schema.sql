@@ -16,7 +16,7 @@ create extension if not exists pg_cron;
 create table if not exists public.catalogo_items (
   id            text primary key,
   categoria     text not null check (categoria in
-                  ('alimentacion','aseo','salud','abrigo','cocina','otros','servicios')),
+                  ('alimentacion','aseo','salud','abrigo','cocina','otros','servicios','mascotas')),
   nombre        text not null,
   unidad        text not null default 'unidad',
   activo        boolean not null default true,
@@ -119,7 +119,7 @@ create table if not exists public.solicitudes (
   municipio       text not null references public.municipios(codigo_dane),
   barrio          text not null check (char_length(barrio) between 2 and 60),
   categoria       text not null check (categoria in
-                    ('alimentacion','aseo','salud','abrigo','cocina','otros','servicios')),
+                    ('alimentacion','aseo','salud','abrigo','cocina','otros','servicios','mascotas')),
   nota            text check (char_length(nota) <= 140),
   estado          text not null default 'abierta'
                     check (estado in ('abierta','cumplida')),

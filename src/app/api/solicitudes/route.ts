@@ -13,6 +13,7 @@ const CATEGORIAS: readonly Categoria[] = [
   'cocina',
   'otros',
   'servicios',
+  'mascotas',
 ]
 
 interface ItemBody {
