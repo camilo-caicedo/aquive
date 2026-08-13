@@ -10,6 +10,19 @@ export async function Encabezado() {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Solo se consulta si hay sesión: para un visitante anónimo no tiene
+  // sentido pagar la consulta en cada carga. La RLS de `administradores`
+  // solo deja ver la propia fila, así que esto no revela quién más lo es.
+  const esAdmin = user
+    ? !!(
+        await supabase
+          .from('administradores')
+          .select('user_id')
+          .eq('user_id', user.id)
+          .maybeSingle()
+      ).data
+    : false
+
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2">
@@ -30,7 +43,7 @@ export async function Encabezado() {
         </Button>
       </div>
 
-      <Navegacion />
+      <Navegacion esAdmin={esAdmin} />
     </header>
   )
 }

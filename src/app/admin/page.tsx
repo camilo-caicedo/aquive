@@ -68,10 +68,10 @@ export default async function AdminPage() {
         .eq('atendido', false)
         .order('creado_at', { ascending: false }),
       supabase.from('servidores').select('*').eq('verificado', false),
-      supabase
-        .from('perfiles')
-        .select('id, nombre_visible, municipios, suspendido')
-        .eq('tipo', 'servidor'),
+      // Sin filtrar por tipo: el vínculo real es servidores.perfil_id, y si
+      // el tipo del perfil no coincidiera, la cola mostraría "Perfil sin
+      // nombre" y el administrador no sabría a quién está verificando.
+      supabase.from('perfiles').select('id, nombre_visible, municipios, suspendido'),
     ])
 
   const porPerfil = new Map((perfiles ?? []).map((p) => [p.id, p]))

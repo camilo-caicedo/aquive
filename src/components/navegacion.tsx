@@ -2,13 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { HandHeart, Stethoscope, ListChecks } from 'lucide-react'
+import { HandHeart, Stethoscope, ListChecks, ShieldCheck } from 'lucide-react'
 
 const ENLACES = [
   { href: '/', etiqueta: 'Solicitudes', Icono: HandHeart },
   { href: '/servidores', etiqueta: 'Profesionales', Icono: Stethoscope },
   { href: '/mis-solicitudes', etiqueta: 'Mis solicitudes', Icono: ListChecks },
 ]
+
+const ENLACE_ADMIN = { href: '/admin', etiqueta: 'Moderación', Icono: ShieldCheck }
 
 // Coincidencia exacta para la portada; por prefijo para el resto, para que
 // /responder/ABCD siga marcando "Solicitudes".
@@ -25,15 +27,16 @@ function estaActiva(ruta: string, href: string) {
  * JavaScript los enlaces siguen funcionando; lo único que se pierde es el
  * resaltado, que es decorativo.
  */
-export function Navegacion() {
+export function Navegacion({ esAdmin }: { esAdmin: boolean }) {
   const ruta = usePathname()
+  const enlaces = esAdmin ? [...ENLACES, ENLACE_ADMIN] : ENLACES
 
   return (
     // Scroll horizontal: en pantallas de 320px no caben tres pestañas sin
     // encogerlas por debajo del mínimo táctil.
     <nav aria-label="Secciones" className="mx-auto max-w-3xl overflow-x-auto px-4">
       <ul className="flex gap-1">
-        {ENLACES.map(({ href, etiqueta, Icono }) => {
+        {enlaces.map(({ href, etiqueta, Icono }) => {
           const activa = estaActiva(ruta, href)
           return (
             <li key={href}>
