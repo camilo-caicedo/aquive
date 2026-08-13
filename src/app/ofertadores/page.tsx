@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Info, Inbox, MapPin, PlusCircle, PackageOpen } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { listarMunicipios } from '@/lib/municipios'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { SelectFiltro } from '@/components/select-filtro'
@@ -15,9 +16,9 @@ export default async function OfertadoresPage({
   const params = await searchParams
   const supabase = await createClient()
 
-  const [{ data: municipios }, { data: todosMunicipios }] = await Promise.all([
+  const [{ data: municipios }, todosMunicipios] = await Promise.all([
     supabase.from('municipios_con_ofertadores').select('*').order('nombre'),
-    supabase.from('municipios').select('codigo_dane, nombre'),
+    listarMunicipios(supabase),
   ])
 
   let query = supabase

@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { listarMunicipios } from '@/lib/municipios'
 import { FormularioRegistro } from './formulario-registro'
 import { AvisosOfertador } from './avisos-ofertador'
 import { CerrarSesion } from './cerrar-sesion'
@@ -13,9 +14,9 @@ export default async function RegistroPage() {
 
   if (!user) redirect('/login')
 
-  const [{ data: municipios }, { data: perfil }, { data: servidor }, { data: servicios }] =
+  const [municipios, { data: perfil }, { data: servidor }, { data: servicios }] =
     await Promise.all([
-      supabase.from('municipios').select('*').order('nombre'),
+      listarMunicipios(supabase),
       supabase.from('perfiles').select('*').eq('id', user.id).maybeSingle(),
       supabase.from('servidores').select('*').eq('perfil_id', user.id).maybeSingle(),
       supabase.from('catalogo_servicios').select('*').eq('activo', true).order('orden'),

@@ -493,6 +493,12 @@ export interface Database {
         Args: { p_reporte_id: string; p_borrar: boolean }
         Returns: undefined
       }
+      // Devuelve un único jsonb con TODOS los municipios. Una consulta
+      // normal se cortaría en 1000 filas y perderíamos 122.
+      listar_municipios: {
+        Args: Record<string, never>
+        Returns: Json
+      }
       generar_codigo: {
         Args: Record<string, never>
         Returns: string

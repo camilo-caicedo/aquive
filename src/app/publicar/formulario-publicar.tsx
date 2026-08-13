@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Database, Categoria } from '@/lib/types'
+import type { MunicipioBasico as Municipio } from '@/lib/municipios'
 import { CATEGORIAS } from '@/lib/catalogo'
 import { validarBarrio, validarNota } from '@/lib/validacion'
 import { TurnstileWidget } from '@/components/turnstile-widget'
@@ -22,7 +23,6 @@ import {
   ComboboxValue,
 } from '@/components/ui/combobox'
 
-type Municipio = Database['public']['Tables']['municipios']['Row']
 type ItemCatalogo = Database['public']['Tables']['catalogo_items']['Row']
 
 interface ItemSeleccionado {

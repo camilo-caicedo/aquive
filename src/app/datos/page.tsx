@@ -1,5 +1,6 @@
 import { BarChart3 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { listarMunicipios } from '@/lib/municipios'
 import { CATEGORIAS } from '@/lib/catalogo'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
@@ -14,7 +15,7 @@ export default async function DatosPage() {
     .from('metricas')
     .select('municipio, categoria, cumplida, horas_hasta_respuesta')
 
-  const { data: municipios } = await supabase.from('municipios').select('codigo_dane, nombre')
+  const municipios = await listarMunicipios(supabase)
   const nombrePorCodigo = new Map((municipios ?? []).map((m) => [m.codigo_dane, m.nombre]))
 
   const total = metricas?.length ?? 0

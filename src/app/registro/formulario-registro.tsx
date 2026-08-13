@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { RESPONSABLE, ENTIDADES_MATRICULA } from '@/lib/config'
 import type { Database, TipoPerfil, ContactoTipo, EntidadMatricula } from '@/lib/types'
+import type { MunicipioBasico as Municipio } from '@/lib/municipios'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -28,7 +29,6 @@ import {
   ComboboxList,
 } from '@/components/ui/combobox'
 
-type Municipio = Database['public']['Tables']['municipios']['Row']
 type Perfil = Database['public']['Tables']['perfiles']['Row']
 type Servidor = Database['public']['Tables']['servidores']['Row']
 type Servicio = Database['public']['Tables']['catalogo_servicios']['Row']

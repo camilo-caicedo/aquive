@@ -307,6 +307,35 @@ where p.tipo = 'servidor'
 grant select on public.municipios_con_solicitudes to anon, authenticated;
 grant select on public.municipios_con_servidores  to anon, authenticated;
 
+-- Los 1.122 municipios del país en una sola fila jsonb.
+--
+-- PostgREST corta cualquier respuesta en 1000 filas y Supabase impone ese
+-- tope del lado del servidor: ni `limit` ni la cabecera `Range` lo suben.
+-- Con un `select` normal desaparecían los 122 del final del alfabeto
+-- —Yumbo, Zarzal, Zona Bananera— y quien vive ahí no podía ni publicar una
+-- solicitud ni registrarse. Una fila nunca se corta.
+create or replace function public.listar_municipios()
+returns jsonb
+language sql
+security definer
+set search_path = ''
+stable
+as $$
+  select coalesce(
+    jsonb_agg(
+      jsonb_build_object(
+        'codigo_dane',  m.codigo_dane,
+        'nombre',       m.nombre,
+        'departamento', m.departamento
+      ) order by m.nombre
+    ),
+    '[]'::jsonb
+  )
+  from public.municipios m;
+$$;
+
+grant execute on function public.listar_municipios() to anon, authenticated;
+
 -- ---------------------------------------------------------------------
 -- 8. RLS
 -- ---------------------------------------------------------------------

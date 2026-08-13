@@ -1,12 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
+import { listarMunicipios } from '@/lib/municipios'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { FormularioPublicar } from './formulario-publicar'
 
 export default async function PublicarPage() {
   const supabase = await createClient()
 
-  const [{ data: municipios }, { data: items }] = await Promise.all([
-    supabase.from('municipios').select('*').eq('afectado', true).order('nombre'),
+  const [municipios, { data: items }] = await Promise.all([
+    listarMunicipios(supabase),
     supabase.from('catalogo_items').select('*').eq('activo', true).order('orden'),
   ])
 

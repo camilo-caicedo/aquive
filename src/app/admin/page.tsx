@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { listarMunicipios } from '@/lib/municipios'
 import { ENTIDADES_MATRICULA } from '@/lib/config'
 import type { EntidadMatricula, MotivoReporte, TipoObjetoReporte } from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -77,9 +78,7 @@ export default async function AdminPage() {
   const porPerfil = new Map((perfiles ?? []).map((p) => [p.id, p]))
 
   // El código DANE no le dice nada a quien está verificando una matrícula.
-  const { data: municipios } = await supabase
-    .from('municipios')
-    .select('codigo_dane, nombre')
+  const municipios = await listarMunicipios(supabase)
   const nombreMunicipio = new Map(
     (municipios ?? []).map((m) => [m.codigo_dane, m.nombre])
   )
