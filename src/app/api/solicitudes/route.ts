@@ -5,7 +5,15 @@ import { validarBarrio, validarNota } from '@/lib/validacion'
 import { verificarTurnstile } from '@/lib/turnstile'
 import type { Categoria, Json } from '@/lib/types'
 
-const CATEGORIAS: readonly Categoria[] = ['alimentacion', 'aseo', 'salud', 'abrigo', 'cocina', 'otros']
+const CATEGORIAS: readonly Categoria[] = [
+  'alimentacion',
+  'aseo',
+  'salud',
+  'abrigo',
+  'cocina',
+  'otros',
+  'servicios',
+]
 
 interface ItemBody {
   item_id: string

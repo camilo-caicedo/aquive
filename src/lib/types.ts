@@ -3,7 +3,14 @@
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
-export type Categoria = 'alimentacion' | 'aseo' | 'salud' | 'abrigo' | 'cocina' | 'otros'
+export type Categoria =
+  | 'alimentacion'
+  | 'aseo'
+  | 'salud'
+  | 'abrigo'
+  | 'cocina'
+  | 'otros'
+  | 'servicios'
 export type TipoPerfil = 'ofertador' | 'servidor'
 export type ContactoTipo = 'whatsapp' | 'telefono'
 export type EntidadMatricula = 'COPNIA' | 'CPNAA' | 'COLPSIC' | 'ReTHUS' | 'SIRNA' | 'OTRA'

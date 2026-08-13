@@ -234,9 +234,24 @@ export function FormularioPublicar({
             </div>
           </div>
 
+          {/* Pedir un servicio de salud ya insinúa una necesidad de salud.
+              La solicitud es anónima, pero el aviso evita que la persona
+              agregue por su cuenta el detalle que sí la identificaría. */}
+          {categoria === 'servicios' && (
+            <Alert variant="warning">
+              <AlertDescription className="text-amber-900">
+                Elige el servicio de la lista y nada más. No escribas tu
+                diagnóstico, tu enfermedad ni lo que te pasó: quien responda
+                no necesita saberlo para ayudarte.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {categoria && (
             <div>
-              <Label className="mb-1">Ítems que necesitas</Label>
+              <Label className="mb-1">
+                {categoria === 'servicios' ? 'Servicios que necesitas' : 'Ítems que necesitas'}
+              </Label>
               <ul className="space-y-2">
                 {itemsDeCategoria.map((item) => {
                   const sel = seleccionados.find((s) => s.item_id === item.id)
@@ -258,7 +273,8 @@ export function FormularioPublicar({
                         {sel ? '✓ ' : ''}
                         {item.nombre}
                       </button>
-                      {sel && (
+                      {/* Un servicio no se pide por cantidad: se pide o no. */}
+                      {sel && item.unidad !== 'servicio' && (
                         <Input
                           type="number"
                           inputMode="numeric"
@@ -270,7 +286,9 @@ export function FormularioPublicar({
                           aria-label={`Cantidad de ${item.nombre}`}
                         />
                       )}
-                      <span className="w-16 text-sm text-muted-foreground">{item.unidad}</span>
+                      {item.unidad !== 'servicio' && (
+                        <span className="w-16 text-sm text-muted-foreground">{item.unidad}</span>
+                      )}
                     </li>
                   )
                 })}

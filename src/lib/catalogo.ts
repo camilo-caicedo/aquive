@@ -1,4 +1,12 @@
-import { Utensils, Droplets, HeartPulse, Shirt, CookingPot, Package } from 'lucide-react'
+import {
+  Utensils,
+  Droplets,
+  HeartPulse,
+  Shirt,
+  CookingPot,
+  Package,
+  Stethoscope,
+} from 'lucide-react'
 import type { Categoria } from '@/lib/types'
 
 export const CATEGORIAS: {
@@ -11,11 +19,19 @@ export const CATEGORIAS: {
   { valor: 'salud', etiqueta: 'Salud', Icono: HeartPulse },
   { valor: 'abrigo', etiqueta: 'Abrigo', Icono: Shirt },
   { valor: 'cocina', etiqueta: 'Cocina', Icono: CookingPot },
+  { valor: 'servicios', etiqueta: 'Servicios profesionales', Icono: Stethoscope },
   { valor: 'otros', etiqueta: 'Otros', Icono: Package },
 ]
 
 export function categoria(valor: Categoria) {
-  return CATEGORIAS.find((c) => c.valor === valor) ?? CATEGORIAS[5]
+  return CATEGORIAS.find((c) => c.valor === valor) ?? CATEGORIAS[CATEGORIAS.length - 1]
+}
+
+// Un servicio no se cuenta por unidades: "1 servicio de Fisioterapia" se
+// lee mal. En esos ítems se muestra solo el nombre.
+export function describirItem(it: { nombre: string; cantidad: number; unidad: string }) {
+  if (it.unidad === 'servicio') return it.nombre
+  return `${it.cantidad} ${it.unidad} de ${it.nombre}`
 }
 
 // Una solicitud "por vencer" es la que se borra sola en menos de 12 horas.

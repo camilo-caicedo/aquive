@@ -2,7 +2,7 @@ import { headers } from 'next/headers'
 import Link from 'next/link'
 import { MessageSquare, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { horasParaVencer } from '@/lib/catalogo'
+import { horasParaVencer, describirItem, categoria } from '@/lib/catalogo'
 import type { SolicitudConRespuestas } from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -53,12 +53,12 @@ export default async function SolicitudPage({
         <h2 className="text-xl font-bold">Lo que pediste</h2>
         <div className="mt-2 rounded-lg border border-border p-4">
           <p className="text-base">
-            {solicitud.barrio} · {solicitud.categoria}
+            {solicitud.barrio} · {categoria(solicitud.categoria).etiqueta}
           </p>
           <ul className="mt-2 space-y-1 text-base">
             {solicitud.items.map((it, i) => (
               <li key={i}>
-                {it.cantidad} {it.unidad} de {it.nombre}
+                {describirItem(it)}
               </li>
             ))}
           </ul>

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { formatearHoras } from '@/lib/tiempo'
+import { describirItem } from '@/lib/catalogo'
 import { BadgeFrescura } from '@/components/badge-frescura'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -70,7 +71,7 @@ export default async function ResponderPage({
           <ul className="mt-3 space-y-1 text-base">
             {solicitud.items.map((it, i) => (
               <li key={i}>
-                {it.cantidad} {it.unidad} de {it.nombre}
+                {describirItem(it)}
               </li>
             ))}
           </ul>

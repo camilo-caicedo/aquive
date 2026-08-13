@@ -43,11 +43,11 @@ ese en todos los documentos.
 
 **Cómo tratamos la información en AquíVe**
 
-Última actualización: [FECHA]
+Última actualización: 13/08/2026
 
 **Quién es responsable**
-[TU NOMBRE COMPLETO], persona natural, Cali, Colombia.
-Correo de contacto: [CORREO DEDICADO AL PROYECTO].
+Juan Camilo Caicedo Sepulveda, persona natural, Cali, Colombia.
+Correo de contacto: aquive@coffeaorigen.co.
 
 Este es un proyecto personal y sin ánimo de lucro, hecho por una sola
 persona para apoyar a los afectados por el sismo del 10 de agosto de
@@ -97,7 +97,7 @@ plataforma y nosotros no vemos nada de eso.
 
 **Tus derechos**
 Conforme a la Ley 1581 de 2012 puedes conocer, actualizar, rectificar y
-suprimir tus datos, y revocar la autorización. Escríbenos a [CORREO] y
+suprimir tus datos, y revocar la autorización. Escríbenos a aquive@coffeaorigen.co y
 respondemos en los términos de ley.
 
 **Esta plataforma es temporal.** Fue creada para la emergencia del sismo
@@ -110,12 +110,12 @@ Cuando eso ocurra, eliminaremos todas las bases de datos.
 
 **Términos de uso de AquíVe**
 
-Última actualización: [FECHA]
+Última actualización: 13/08/2026
 
 **1. Qué es esto.** Un tablón de anuncios gratuito que permite a personas
 afectadas por el sismo publicar qué artículos necesitan, y a otras
 personas ofrecer ayuda. Es un proyecto personal, gratuito y sin ánimo de
-lucro, operado por [TU NOMBRE COMPLETO] a título individual. No hay
+lucro, operado por Juan Camilo Caicedo Sepulveda a título individual. No hay
 empresa ni organización detrás.
 
 **2. Qué NO es.** No somos una entidad de socorro, ni una ONG, ni una
@@ -157,19 +157,18 @@ explicación previa, especialmente si hay riesgo para alguien.
 
 **10. Ley aplicable.** Leyes de la República de Colombia.
 
-**11. Contacto.** [CORREO]
-
+**11. Contacto.** aquive@coffeaorigen.co
 ---
 
 ## 3. Texto de autorización (checkbox al registrarse)
 
-> Autorizo a [TU NOMBRE COMPLETO], responsable de esta plataforma, a
+> Autorizo a Juan Camilo Caicedo Sepulveda, responsable de esta plataforma, a
 > tratar los datos que estoy entregando —nombre visible, municipios, forma de contacto, descripción
 > y, si aplica, profesión y matrícula— con la finalidad de publicarlos de
 > forma **pública** en esta plataforma para que personas afectadas puedan
 > contactarme. Entiendo que esta información será visible para cualquiera
 > en internet, que puedo borrarla en cualquier momento, y he leído el
-> [aviso de privacidad].
+> aviso de privacidad.
 
 Guarda `acepto_publicacion = true` y `acepto_politica_at = now()`. Esa
 marca de tiempo es la prueba de la autorización.
@@ -198,11 +197,11 @@ marca de tiempo es la prueba de la autorización.
 
 ## 5. Lista de verificación antes de publicar
 
-- [ ] Aviso de privacidad y términos publicados y enlazados en el pie
-- [ ] Correo de contacto real y monitoreado
-- [ ] Tu nombre completo correcto en ambos documentos
-- [ ] Correo dedicado al proyecto creado y monitoreado (no tu correo personal)
-- [ ] Checkbox de autorización con marca de tiempo funcionando
+- [x] Aviso de privacidad y términos publicados y enlazados en el pie
+- [x] Correo de contacto real y monitoreado
+- [x] Tu nombre completo correcto en ambos documentos
+- [x] Correo dedicado al proyecto creado y monitoreado (no tu correo personal)
+- [x] Checkbox de autorización con marca de tiempo funcionando
 - [ ] Botón de reportar visible en cada contenido
 - [ ] Detección de teléfonos y correos activa en la nota
 - [ ] Verificado que el borrado a 72 h realmente elimina filas

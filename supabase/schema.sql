@@ -16,7 +16,7 @@ create extension if not exists pg_cron;
 create table if not exists public.catalogo_items (
   id            text primary key,
   categoria     text not null check (categoria in
-                  ('alimentacion','aseo','salud','abrigo','cocina','otros')),
+                  ('alimentacion','aseo','salud','abrigo','cocina','otros','servicios')),
   nombre        text not null,
   unidad        text not null default 'unidad',
   activo        boolean not null default true,
@@ -74,7 +74,10 @@ create table if not exists public.servidores (
   numero_matricula    text not null,
   verificado          boolean not null default false,
   verificado_at       timestamptz,
-  verificado_por      uuid references auth.users(id),
+  -- SET NULL y no la cascada por defecto: si el administrador borra su
+  -- propia cuenta, un NO ACTION aquí haría fallar el borrado y le negaría
+  -- su derecho de supresión. La verificación sobrevive sin su autor.
+  verificado_por      uuid references auth.users(id) on delete set null,
   -- ids de catalogo_servicios; la RPC crear_perfil valida que existan
   servicios           text[] not null default '{}',
   unique (entidad_matricula, numero_matricula)
@@ -108,7 +111,7 @@ create table if not exists public.solicitudes (
   municipio       text not null references public.municipios(codigo_dane),
   barrio          text not null check (char_length(barrio) between 2 and 60),
   categoria       text not null check (categoria in
-                    ('alimentacion','aseo','salud','abrigo','cocina','otros')),
+                    ('alimentacion','aseo','salud','abrigo','cocina','otros','servicios')),
   nota            text check (char_length(nota) <= 140),
   estado          text not null default 'abierta'
                     check (estado in ('abierta','cumplida')),

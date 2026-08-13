@@ -146,3 +146,17 @@ on conflict (id) do update set
   unidad    = excluded.unidad,
   orden     = excluded.orden,
   activo    = true;
+
+-- Los servicios también se pueden PEDIR, no solo ofrecer. Se derivan de
+-- catalogo_servicios en vez de escribirse dos veces: re-ejecutar esto los
+-- deja sincronizados. La unidad 'servicio' es la que hace que la interfaz
+-- oculte la cantidad y muestre solo el nombre.
+insert into public.catalogo_items (id, categoria, nombre, unidad, orden)
+select 'serv_' || s.id, 'servicios', s.nombre, 'servicio', 200 + s.orden
+from public.catalogo_servicios s
+where s.activo
+on conflict (id) do update set
+  nombre = excluded.nombre,
+  unidad = excluded.unidad,
+  orden  = excluded.orden,
+  activo = true;

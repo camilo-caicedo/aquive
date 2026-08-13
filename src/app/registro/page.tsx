@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { FormularioRegistro } from './formulario-registro'
+import { BorrarPerfil } from './borrar-perfil'
 
 export default async function RegistroPage() {
   const supabase = await createClient()
@@ -33,6 +34,7 @@ export default async function RegistroPage() {
         servidor={servidor ?? null}
         servicios={servicios ?? []}
       />
+      <BorrarPerfil tienePerfil={!!perfil} />
     </main>
   )
 }

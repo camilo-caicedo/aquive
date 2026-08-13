@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { MapPin, MessageSquare, TimerOff } from 'lucide-react'
 import type { Database } from '@/lib/types'
-import { categoria, horasParaVencer, HORAS_POR_VENCER } from '@/lib/catalogo'
+import { categoria, describirItem, horasParaVencer, HORAS_POR_VENCER } from '@/lib/catalogo'
 import { formatearHoras } from '@/lib/tiempo'
 import { BadgeFrescura } from '@/components/badge-frescura'
 import { Button } from '@/components/ui/button'
@@ -40,7 +40,7 @@ export function TarjetaSolicitud({ solicitud }: { solicitud: Solicitud }) {
               key={i}
               className="rounded-md bg-muted px-2 py-1 text-sm text-foreground"
             >
-              {it.cantidad} {it.unidad} de {it.nombre}
+              {describirItem(it)}
             </li>
           ))}
         </ul>
