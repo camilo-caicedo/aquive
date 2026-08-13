@@ -205,7 +205,7 @@ marca de tiempo es la prueba de la autorización.
 - [ ] Botón de reportar visible en cada contenido
 - [ ] Detección de teléfonos y correos activa en la nota
 - [ ] Verificado que el borrado a 72 h realmente elimina filas
-- [ ] Point-in-Time Recovery **desactivado**
+- [x] Point-in-Time Recovery **desactivado**
 - [ ] Sin analytics que capturen URLs completas (el token va en la URL)
 - [ ] Confirmado que como persona natural no debes inscribir en el RNBD
 - [ ] Cita agendada en un consultorio jurídico para revisión

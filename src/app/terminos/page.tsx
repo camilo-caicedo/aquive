@@ -1,10 +1,10 @@
-import { RESPONSABLE } from '@/lib/config'
+import { RESPONSABLE, CORREO_CONTACTO, FECHA_LEGALES } from '@/lib/config'
 
 export default function TerminosPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       <h1 className="text-2xl font-bold">Términos de uso de AquíVe</h1>
-      <p className="mt-3 text-base">Última actualización: [FECHA]</p>
+      <p className="mt-3 text-base">Última actualización: {FECHA_LEGALES}</p>
 
       <h2 className="mt-6 text-xl font-bold">1. Qué es esto.</h2>
       <p className="mt-3 text-base">
@@ -72,7 +72,7 @@ export default function TerminosPage() {
 
       <h2 className="mt-6 text-xl font-bold">11. Contacto.</h2>
       <p className="mt-3 text-base">
-        [CORREO]
+        {CORREO_CONTACTO}
       </p>
     </main>
   )

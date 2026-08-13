@@ -1,17 +1,17 @@
-import { RESPONSABLE } from '@/lib/config'
+import { RESPONSABLE, CORREO_CONTACTO, FECHA_LEGALES } from '@/lib/config'
 
 export default function PrivacidadPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       <h1 className="text-2xl font-bold">Cómo tratamos la información en AquíVe</h1>
-      <p className="mt-3 text-base">Última actualización: [FECHA]</p>
+      <p className="mt-3 text-base">Última actualización: {FECHA_LEGALES}</p>
 
       <h2 className="mt-6 text-xl font-bold">Quién es responsable</h2>
       <p className="mt-3 text-base">
         {RESPONSABLE}, persona natural, Cali, Colombia.
       </p>
       <p className="mt-3 text-base">
-        Correo de contacto: [CORREO DEDICADO AL PROYECTO].
+        Correo de contacto: {CORREO_CONTACTO}.
       </p>
       <p className="mt-3 text-base">
         Este es un proyecto personal y sin ánimo de lucro, hecho por una sola persona para apoyar
@@ -69,7 +69,7 @@ export default function PrivacidadPage() {
       <h2 className="mt-6 text-xl font-bold">Tus derechos</h2>
       <p className="mt-3 text-base">
         Conforme a la Ley 1581 de 2012 puedes conocer, actualizar, rectificar y suprimir tus datos, y revocar la
-        autorización. Escríbenos a [CORREO] y respondemos en los términos de ley.
+        autorización. Escríbenos a {CORREO_CONTACTO} y respondemos en los términos de ley.
       </p>
 
       <h2 className="mt-6 text-xl font-bold">Esta plataforma es temporal.</h2>
