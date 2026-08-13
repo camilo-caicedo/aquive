@@ -191,8 +191,10 @@ export function FormularioRegistro({
             <ComboboxList>
               {(m: Municipio) => (
                 <ComboboxItem key={m.codigo_dane} value={m}>
-                  <span>{m.nombre}</span>
-                  <span className="text-sm text-muted-foreground">{m.departamento}</span>
+                  <span className="flex min-w-0 flex-col">
+                    <span>{m.nombre}</span>
+                    <span className="text-sm text-muted-foreground">{m.departamento}</span>
+                  </span>
                 </ComboboxItem>
               )}
             </ComboboxList>
@@ -320,9 +322,9 @@ export function FormularioRegistro({
                 <ComboboxList>
                   {(s: Servicio) => (
                     <ComboboxItem key={s.id} value={s}>
-                      <span>{s.nombre}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {AREAS[s.area]}
+                      <span className="flex min-w-0 flex-col">
+                        <span>{s.nombre}</span>
+                        <span className="text-sm text-muted-foreground">{AREAS[s.area]}</span>
                       </span>
                     </ComboboxItem>
                   )}

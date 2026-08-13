@@ -76,6 +76,14 @@ export default async function AdminPage() {
 
   const porPerfil = new Map((perfiles ?? []).map((p) => [p.id, p]))
 
+  // El código DANE no le dice nada a quien está verificando una matrícula.
+  const { data: municipios } = await supabase
+    .from('municipios')
+    .select('codigo_dane, nombre')
+  const nombreMunicipio = new Map(
+    (municipios ?? []).map((m) => [m.codigo_dane, m.nombre])
+  )
+
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       <h1 className="text-2xl font-bold">Administración</h1>
@@ -142,7 +150,10 @@ export default async function AdminPage() {
                   </p>
                   {perfil && perfil.municipios.length > 0 && (
                     <p className="mt-1 text-base text-muted-foreground">
-                      Municipios: {perfil.municipios.join(', ')}
+                      Municipios:{' '}
+                      {perfil.municipios
+                        .map((c) => nombreMunicipio.get(c) ?? c)
+                        .join(', ')}
                     </p>
                   )}
                   <AccionesServidor perfilId={s.perfil_id} />

@@ -115,10 +115,14 @@ export function SelectFiltro({
             <ComboboxList>
               {(item: OpcionFiltro) => (
                 <ComboboxItem key={item.valor || '__todos'} value={item}>
-                  <span>{item.etiqueta}</span>
-                  {item.detalle && (
-                    <span className="text-sm text-muted-foreground">{item.detalle}</span>
-                  )}
+                  {/* Apilado, no en fila: con el detalle al lado, un nombre
+                      largo se parte en tres líneas y no se puede leer. */}
+                  <span className="flex min-w-0 flex-col">
+                    <span>{item.etiqueta}</span>
+                    {item.detalle && (
+                      <span className="text-sm text-muted-foreground">{item.detalle}</span>
+                    )}
+                  </span>
                 </ComboboxItem>
               )}
             </ComboboxList>

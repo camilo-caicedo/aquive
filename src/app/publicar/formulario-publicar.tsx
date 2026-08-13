@@ -185,8 +185,10 @@ export function FormularioPublicar({
                 <ComboboxList>
                   {(m: Municipio) => (
                     <ComboboxItem key={m.codigo_dane} value={m}>
-                      <span>{m.nombre}</span>
-                      <span className="text-sm text-muted-foreground">{m.departamento}</span>
+                      <span className="flex min-w-0 flex-col">
+                        <span>{m.nombre}</span>
+                        <span className="text-sm text-muted-foreground">{m.departamento}</span>
+                      </span>
                     </ComboboxItem>
                   )}
                 </ComboboxList>
