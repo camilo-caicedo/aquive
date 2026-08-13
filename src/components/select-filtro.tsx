@@ -95,17 +95,20 @@ export function SelectFiltro({
           itemToStringLabel={(o: OpcionFiltro) => o.etiqueta}
           isItemEqualToValue={(a: OpcionFiltro, b: OpcionFiltro) => a.valor === b.valor}
         >
+          {/* ComboboxValue va como hijo del Trigger, no dentro de `render`:
+              si se anida en el Button, Base UI descarta ese contenido y el
+              botón queda sin valor visible ni chevron. */}
           <ComboboxTrigger
             aria-label={label}
             render={
               <Button
                 variant="outline"
-                className={`justify-between bg-background font-normal ${envoltura}`}
-              >
-                <ComboboxValue />
-              </Button>
+                className={`justify-between bg-background px-3 font-normal ${envoltura}`}
+              />
             }
-          />
+          >
+            <ComboboxValue />
+          </ComboboxTrigger>
           <ComboboxContent>
             <ComboboxInput showTrigger={false} placeholder="Escribe para buscar" />
             <ComboboxEmpty>No encontramos ese lugar.</ComboboxEmpty>

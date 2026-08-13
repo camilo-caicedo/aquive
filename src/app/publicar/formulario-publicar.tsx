@@ -171,11 +171,14 @@ export function FormularioPublicar({
               <ComboboxTrigger
                 id="municipio"
                 render={
-                  <Button variant="outline" className="w-full justify-between font-normal">
-                    <ComboboxValue placeholder="Busca tu municipio" />
-                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between px-3 font-normal"
+                  />
                 }
-              />
+              >
+                <ComboboxValue placeholder="Busca tu municipio" />
+              </ComboboxTrigger>
               <ComboboxContent>
                 <ComboboxInput showTrigger={false} placeholder="Escribe el nombre" />
                 <ComboboxEmpty>No encontramos ese municipio.</ComboboxEmpty>

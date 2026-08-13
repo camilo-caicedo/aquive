@@ -7,6 +7,7 @@ import {
   ShieldCheck,
   MessageSquare,
   PhoneCall,
+  Stethoscope,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import type { Categoria } from '@/lib/types'
@@ -120,6 +121,32 @@ export default async function InicioPage({
           El contacto ocurre por fuera de la plataforma. Nunca vemos tu
           teléfono ni tus conversaciones.
         </p>
+      </section>
+
+      {/* Los servicios profesionales no se piden por solicitud: viven en un
+          directorio aparte. Sin esta tarjeta no había forma de llegar desde
+          la portada, y nadie iba a adivinar que "Profesionales" era eso. */}
+      <section className="mt-8">
+        <div className="animar-entrada flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:p-5">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+            <Stethoscope className="size-6" aria-hidden="true" />
+          </span>
+          <div className="flex-1">
+            <h2 className="text-xl font-bold">¿Necesitas un profesional?</h2>
+            <p className="mt-1 text-base text-muted-foreground">
+              Psicología, revisión de tu casa, atención médica, asesoría
+              jurídica. Todos con matrícula, y los verificados van de primeros.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto"
+            nativeButton={false}
+            render={<Link href="/servidores" />}
+          >
+            Ver profesionales
+          </Button>
+        </div>
       </section>
 
       <section className="mt-8">
