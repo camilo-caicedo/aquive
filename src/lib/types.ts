@@ -287,6 +287,26 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['push_suscripciones']['Insert']>
         Relationships: []
       }
+      push_ofertadores: {
+        Row: {
+          id: string
+          perfil_id: string
+          endpoint: string
+          p256dh: string
+          auth_key: string
+          creada_at: string
+        }
+        Insert: {
+          id?: string
+          perfil_id: string
+          endpoint: string
+          p256dh: string
+          auth_key: string
+          creada_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['push_ofertadores']['Insert']>
+        Relationships: []
+      }
       reportes: {
         Row: {
           id: string
@@ -364,6 +384,22 @@ export interface Database {
         Row: { codigo_dane: string; nombre: string; departamento: string }
         Relationships: []
       }
+      municipios_con_ofertadores: {
+        Row: { codigo_dane: string; nombre: string; departamento: string }
+        Relationships: []
+      }
+      // Sin `contacto_publico` a propósito: el contacto ocurre cuando el
+      // ofertador responde una solicitud, no al revés.
+      ofertadores_publicos: {
+        Row: {
+          id: string
+          nombre_visible: string
+          municipios: string[]
+          descripcion: string | null
+          creado_at: string
+        }
+        Relationships: []
+      }
       servidores_publicos: {
         Row: {
           id: string
@@ -407,6 +443,14 @@ export interface Database {
       }
       guardar_push: {
         Args: { p_token: string; p_endpoint: string; p_p256dh: string; p_auth: string }
+        Returns: undefined
+      }
+      guardar_push_ofertador: {
+        Args: { p_endpoint: string; p_p256dh: string; p_auth: string }
+        Returns: undefined
+      }
+      quitar_push_ofertador: {
+        Args: Record<string, never>
         Returns: undefined
       }
       crear_perfil: {

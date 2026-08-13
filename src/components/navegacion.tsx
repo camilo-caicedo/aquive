@@ -2,10 +2,17 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { HandHeart, Stethoscope, ListChecks, ShieldCheck } from 'lucide-react'
+import {
+  HandHeart,
+  Stethoscope,
+  ListChecks,
+  ShieldCheck,
+  PackageOpen,
+} from 'lucide-react'
 
 const ENLACES = [
   { href: '/', etiqueta: 'Solicitudes', Icono: HandHeart },
+  { href: '/ofertadores', etiqueta: 'Quién ofrece', Icono: PackageOpen },
   { href: '/servidores', etiqueta: 'Profesionales', Icono: Stethoscope },
   { href: '/mis-solicitudes', etiqueta: 'Mis solicitudes', Icono: ListChecks },
 ]

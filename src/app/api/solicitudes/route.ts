@@ -3,18 +3,15 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { generarToken } from '@/lib/tokens'
 import { validarBarrio, validarNota } from '@/lib/validacion'
 import { verificarTurnstile } from '@/lib/turnstile'
+import { notificarOfertadores } from '@/lib/push-ofertadores'
+import { CATEGORIAS } from '@/lib/catalogo'
 import type { Categoria, Json } from '@/lib/types'
 
-const CATEGORIAS: readonly Categoria[] = [
-  'alimentacion',
-  'aseo',
-  'salud',
-  'abrigo',
-  'cocina',
-  'otros',
-  'servicios',
-  'mascotas',
-]
+// Ambas se derivan de CATEGORIAS: antes la lista de categorías válidas
+// estaba escrita otra vez aquí, y agregar una nueva obligaba a acordarse
+// de tocar los dos sitios.
+const VALIDAS: readonly Categoria[] = CATEGORIAS.map((c) => c.valor)
+const ETIQUETA = new Map(CATEGORIAS.map((c) => [c.valor, c.etiqueta]))
 
 interface ItemBody {
   item_id: string
@@ -62,7 +59,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: errorBarrio }, { status: 400 })
   }
 
-  if (!CATEGORIAS.includes(body.categoria)) {
+  if (!VALIDAS.includes(body.categoria)) {
     return NextResponse.json({ error: 'Categoría inválida' }, { status: 400 })
   }
 
@@ -95,6 +92,24 @@ export async function POST(request: Request) {
 
   if (error || !data || data.length === 0) {
     return NextResponse.json({ error: 'No se pudo crear la solicitud' }, { status: 500 })
+  }
+
+  // Avisar a quienes ofrecen en ese municipio. Best-effort: si falla, la
+  // solicitud ya quedó publicada y se ve en el tablero igual.
+  try {
+    const servicio = createServiceClient()
+    const { data: municipio } = await servicio
+      .from('municipios')
+      .select('nombre')
+      .eq('codigo_dane', body.municipio)
+      .maybeSingle()
+
+    if (municipio) {
+      const etiqueta = ETIQUETA.get(body.categoria) ?? 'insumos'
+      await notificarOfertadores(body.municipio, municipio.nombre, etiqueta)
+    }
+  } catch {
+    // Silencioso: no se loggea nada del cuerpo (CLAUDE.md regla 6).
   }
 
   return NextResponse.json({ codigo: data[0].codigo, token })

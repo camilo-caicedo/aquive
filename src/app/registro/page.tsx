@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { FormularioRegistro } from './formulario-registro'
+import { AvisosOfertador } from './avisos-ofertador'
 import { CerrarSesion } from './cerrar-sesion'
 import { BorrarPerfil } from './borrar-perfil'
 
@@ -35,6 +36,9 @@ export default async function RegistroPage() {
         servidor={servidor ?? null}
         servicios={servicios ?? []}
       />
+      {/* Solo si ya hay perfil: sin municipios guardados no sabríamos de
+          qué avisarle. */}
+      {perfil && <AvisosOfertador municipios={perfil.municipios.length} />}
       <CerrarSesion />
       <BorrarPerfil tienePerfil={!!perfil} />
     </main>

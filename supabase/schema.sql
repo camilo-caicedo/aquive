@@ -163,6 +163,19 @@ create table if not exists public.respuestas (
 -- 5. Suscripciones push — mueren con la solicitud
 -- ---------------------------------------------------------------------
 
+-- Avisos para quien OFRECE: la suscripción cuelga del perfil, no de una
+-- solicitud, y muere con el perfil. Se le avisa solo de solicitudes en
+-- sus propios municipios.
+create table if not exists public.push_ofertadores (
+  id         uuid primary key default gen_random_uuid(),
+  perfil_id  uuid not null references public.perfiles(id) on delete cascade,
+  endpoint   text not null,
+  p256dh     text not null,
+  auth_key   text not null,
+  creada_at  timestamptz not null default now(),
+  unique (perfil_id, endpoint)
+);
+
 create table if not exists public.push_suscripciones (
   id              uuid primary key default gen_random_uuid(),
   solicitud_id    uuid not null references public.solicitudes(id) on delete cascade,
@@ -261,6 +274,28 @@ from public.municipios m
 join public.solicitudes s on s.municipio = m.codigo_dane
 where s.estado = 'abierta' and s.expira_at > now();
 
+-- Directorio de quienes ofrecen insumos. A diferencia de
+-- `servidores_publicos`, NO expone `contacto_publico`: el contacto ocurre
+-- cuando el ofertador responde una solicitud, no al revés. Así se expone
+-- menos dato y nadie queda sujeto a que lo llamen 200 personas a la vez.
+create or replace view public.ofertadores_publicos as
+select p.id, p.nombre_visible, p.municipios, p.descripcion, p.creado_at
+from public.perfiles p
+where p.tipo = 'ofertador'
+  and p.suspendido = false
+  and p.acepto_publicacion = true;
+
+create or replace view public.municipios_con_ofertadores as
+select distinct m.codigo_dane, m.nombre, m.departamento
+from public.municipios m
+join public.perfiles p on m.codigo_dane = any(p.municipios)
+where p.tipo = 'ofertador'
+  and p.suspendido = false
+  and p.acepto_publicacion = true;
+
+grant select on public.ofertadores_publicos       to anon, authenticated;
+grant select on public.municipios_con_ofertadores to anon, authenticated;
+
 create or replace view public.municipios_con_servidores as
 select distinct m.codigo_dane, m.nombre, m.departamento
 from public.municipios m
@@ -282,6 +317,7 @@ alter table public.respuestas         enable row level security;
 alter table public.perfiles           enable row level security;
 alter table public.servidores         enable row level security;
 alter table public.push_suscripciones enable row level security;
+alter table public.push_ofertadores    enable row level security;
 alter table public.reportes           enable row level security;
 alter table public.metricas           enable row level security;
 alter table public.administradores    enable row level security;
@@ -289,6 +325,7 @@ alter table public.administradores    enable row level security;
 -- Nadie lee `solicitudes` directamente. Solo la vista y las RPC.
 revoke all on public.solicitudes        from anon, authenticated;
 revoke all on public.push_suscripciones from anon, authenticated;
+revoke all on public.push_ofertadores    from anon, authenticated;
 grant select on public.solicitudes_publicas to anon, authenticated;
 grant select on public.servidores_publicos  to anon, authenticated;
 
@@ -546,6 +583,46 @@ end;
 $$;
 
 grant execute on function public.guardar_push(text,text,text,text) to anon, authenticated;
+
+-- Avisos del lado de quien ofrece. Aquí no hay token: la persona tiene
+-- cuenta, así que se identifica con auth.uid().
+create or replace function public.guardar_push_ofertador(
+  p_endpoint text, p_p256dh text, p_auth text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare v_uid uuid := auth.uid();
+begin
+  if v_uid is null then raise exception 'Debes iniciar sesión'; end if;
+  if not exists (select 1 from public.perfiles p where p.id = v_uid) then
+    raise exception 'Necesitas completar tu perfil';
+  end if;
+
+  insert into public.push_ofertadores (perfil_id, endpoint, p256dh, auth_key)
+  values (v_uid, p_endpoint, p_p256dh, p_auth)
+  on conflict (perfil_id, endpoint) do nothing;
+end;
+$$;
+
+revoke execute on function public.guardar_push_ofertador(text,text,text) from public, anon;
+grant  execute on function public.guardar_push_ofertador(text,text,text) to authenticated;
+
+create or replace function public.quitar_push_ofertador()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is null then raise exception 'Debes iniciar sesión'; end if;
+  delete from public.push_ofertadores where perfil_id = auth.uid();
+end;
+$$;
+
+revoke execute on function public.quitar_push_ofertador() from public, anon;
+grant  execute on function public.quitar_push_ofertador() to authenticated;
 
 -- Crea o actualiza el perfil de quien ofrece (ofertador o servidor).
 -- El id sale de auth.uid(): el cliente nunca lo elige, y el correo de
