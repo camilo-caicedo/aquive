@@ -5,6 +5,11 @@ import type { Database } from '@/lib/types'
 // En Next 16 este archivo se llama `proxy.ts` (antes `middleware.ts`).
 // Su única función es refrescar el token de Supabase: sin esto la sesión
 // muere a la hora, porque un Server Component no puede escribir cookies.
+//
+// La redirección de aquive.vercel.app y www.aquive.co hacia aquive.co NO
+// se hace aquí: está configurada en el propio Vercel, que responde el 308
+// antes de ejecutar nada. Es más rápido, no gasta invocaciones y sigue
+// funcionando aunque la aplicación falle.
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request })
 
