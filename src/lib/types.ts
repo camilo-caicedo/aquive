@@ -450,7 +450,7 @@ export interface Database {
         Returns: undefined
       }
       quitar_push_ofertador: {
-        Args: Record<string, never>
+        Args: { p_endpoint?: string | null }
         Returns: undefined
       }
       crear_perfil: {

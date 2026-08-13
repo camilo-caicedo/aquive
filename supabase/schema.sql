@@ -609,20 +609,30 @@ $$;
 revoke execute on function public.guardar_push_ofertador(text,text,text) from public, anon;
 grant  execute on function public.guardar_push_ofertador(text,text,text) to authenticated;
 
-create or replace function public.quitar_push_ofertador()
+-- Con endpoint borra solo ESTE dispositivo: apagar los avisos en el
+-- celular no debe apagarlos también en el computador. Sin endpoint,
+-- borra todos (se usa al cerrar la cuenta).
+create or replace function public.quitar_push_ofertador(p_endpoint text default null)
 returns void
 language plpgsql
 security definer
 set search_path = ''
-as $$
+as $
+declare v_uid uuid := auth.uid();
 begin
-  if auth.uid() is null then raise exception 'Debes iniciar sesión'; end if;
-  delete from public.push_ofertadores where perfil_id = auth.uid();
-end;
-$$;
+  if v_uid is null then raise exception 'Debes iniciar sesión'; end if;
 
-revoke execute on function public.quitar_push_ofertador() from public, anon;
-grant  execute on function public.quitar_push_ofertador() to authenticated;
+  if p_endpoint is null then
+    delete from public.push_ofertadores where perfil_id = v_uid;
+  else
+    delete from public.push_ofertadores
+     where perfil_id = v_uid and endpoint = p_endpoint;
+  end if;
+end;
+$;
+
+revoke execute on function public.quitar_push_ofertador(text) from public, anon;
+grant  execute on function public.quitar_push_ofertador(text) to authenticated;
 
 -- Crea o actualiza el perfil de quien ofrece (ofertador o servidor).
 -- El id sale de auth.uid(): el cliente nunca lo elige, y el correo de

@@ -3,6 +3,7 @@ import { MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Navegacion } from '@/components/navegacion'
+import { BotonAvisos } from '@/components/boton-avisos'
 
 export async function Encabezado() {
   const supabase = await createClient()
@@ -11,17 +12,19 @@ export async function Encabezado() {
   } = await supabase.auth.getUser()
 
   // Solo se consulta si hay sesión: para un visitante anónimo no tiene
-  // sentido pagar la consulta en cada carga. La RLS de `administradores`
+  // sentido pagar las consultas en cada carga. La RLS de `administradores`
   // solo deja ver la propia fila, así que esto no revela quién más lo es.
-  const esAdmin = user
-    ? !!(
-        await supabase
-          .from('administradores')
-          .select('user_id')
-          .eq('user_id', user.id)
-          .maybeSingle()
-      ).data
-    : false
+  const [admin, perfil] = user
+    ? await Promise.all([
+        supabase.from('administradores').select('user_id').eq('user_id', user.id).maybeSingle(),
+        supabase.from('perfiles').select('id').eq('id', user.id).maybeSingle(),
+      ])
+    : [null, null]
+
+  const esAdmin = !!admin?.data
+  // El interruptor de avisos solo tiene sentido con perfil: los avisos
+  // son de solicitudes en TUS municipios, y sin perfil no hay municipios.
+  const tienePerfil = !!perfil?.data
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
@@ -33,14 +36,17 @@ export async function Encabezado() {
           <span className="text-lg font-bold tracking-tight">AquíVe</span>
         </Link>
 
-        <Button
-          size="sm"
-          className="h-11 px-3"
-          nativeButton={false}
-          render={<Link href={user ? '/registro' : '/login'} />}
-        >
-          {user ? 'Mi perfil' : 'Quiero ayudar'}
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          {tienePerfil && <BotonAvisos />}
+          <Button
+            size="sm"
+            className="h-11 px-3"
+            nativeButton={false}
+            render={<Link href={user ? '/registro' : '/login'} />}
+          >
+            {user ? 'Mi perfil' : 'Quiero ayudar'}
+          </Button>
+        </div>
       </div>
 
       <Navegacion esAdmin={esAdmin} />
