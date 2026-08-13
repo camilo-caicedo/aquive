@@ -819,6 +819,12 @@ begin
 end;
 $$;
 
+-- Postgres concede EXECUTE a PUBLIC por defecto, así que estas dos quedaban
+-- expuestas en la API REST sin que nadie las concediera: cualquiera podía
+-- disparar el borrado masivo desde internet. Son internas.
+revoke execute on function public.expirar_solicitudes() from public, anon, authenticated;
+revoke execute on function public.generar_codigo() from public, anon, authenticated;
+
 select cron.schedule(
   'expirar-solicitudes',
   '0 * * * *',
