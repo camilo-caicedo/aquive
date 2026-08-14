@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Info, Inbox } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { ENTIDADES_MATRICULA } from '@/lib/config'
+import { enlaceWhatsapp } from '@/lib/contacto'
 import type { EntidadMatricula, AreaServicio } from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -178,7 +179,7 @@ export default async function ServidoresPage({
                   <a
                     href={
                       s.contacto_tipo === 'whatsapp'
-                        ? `https://wa.me/57${s.contacto_publico.replace(/\D/g, '')}`
+                        ? enlaceWhatsapp(s.contacto_publico)
                         : `tel:${s.contacto_publico}`
                     }
                     target={s.contacto_tipo === 'whatsapp' ? '_blank' : undefined}

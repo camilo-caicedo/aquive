@@ -235,6 +235,15 @@ export function FormularioRegistro({
           placeholder="Ej: 3001234567"
           className="mt-2"
         />
+        <p className="mt-1 text-base text-muted-foreground">
+          Si estás en Colombia, escribe tu celular de diez dígitos.{' '}
+          <strong className="font-semibold text-foreground">
+            Si estás en otro país, empieza con el signo más y el código de tu
+            país
+          </strong>{' '}
+          —por ejemplo +34 600 123 456 para España—, si no, el mensaje no te
+          llega.
+        </p>
         <p className="mt-1 text-sm text-muted-foreground">
           Este número será visible para cualquiera en internet.
         </p>
