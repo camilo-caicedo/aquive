@@ -1,14 +1,19 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
-import { COLUMNAS_ITEM_PUBLICO, type OfrecimientoResumen } from '@/lib/types'
+import {
+  COLUMNAS_ITEM_PUBLICO,
+  type MiRespuesta,
+  type OfrecimientoResumen,
+} from '@/lib/types'
 import { Pestanas } from '@/components/pestanas'
 import { FormularioRegistro } from './formulario-registro'
 import { AvisosOfertador } from './avisos-ofertador'
 import { CerrarSesion } from './cerrar-sesion'
 import { BorrarPerfil } from './borrar-perfil'
+import { MisRespuestas } from './mis-respuestas'
 
-type Vista = 'perfil' | 'ajustes'
+type Vista = 'perfil' | 'respuestas' | 'ajustes'
 
 export default async function RegistroPage({
   searchParams,
@@ -16,7 +21,7 @@ export default async function RegistroPage({
   searchParams: Promise<{ ver?: string }>
 }) {
   const { ver } = await searchParams
-  const vista: Vista = ver === 'ajustes' ? 'ajustes' : 'perfil'
+  const vista: Vista = ver === 'ajustes' || ver === 'respuestas' ? ver : 'perfil'
 
   const supabase = await createClient()
   const {
@@ -31,8 +36,15 @@ export default async function RegistroPage({
     .eq('id', user.id)
     .maybeSingle()
 
+  // Se pide siempre porque el número va en la barra, y son pocas filas:
+  // una persona responde un puñado de solicitudes, no cientos.
+  const { data: respuestasData } = perfil
+    ? await supabase.rpc('mis_respuestas')
+    : { data: null }
+  const respuestas = (respuestasData as unknown as MiRespuesta[]) ?? []
+
   // El catálogo, los servicios y el inventario solo hacen falta para
-  // dibujar el formulario. La pestaña de ajustes no los toca.
+  // dibujar el formulario. Las otras dos pestañas no los tocan.
   const [municipios, { data: servidor }, { data: servicios }, { data: itemsCatalogo }, { data: ofrecimientos }] =
     vista === 'perfil'
       ? await Promise.all([
@@ -59,15 +71,21 @@ export default async function RegistroPage({
         {perfil ? 'Mi perfil' : 'Crear mi perfil'}
       </h1>
 
-      {/* Solo hay dos pestañas cuando ya hay perfil: mientras se está
-          creando no hay nada que ajustar, y una barra con una opción
-          muerta es peor que ninguna barra. */}
+      {/* La barra solo aparece con perfil ya creado: mientras se está
+          creando no hay respuestas ni nada que ajustar, y una barra con
+          opciones muertas es peor que ninguna barra. */}
       {perfil && (
         <div className="mt-4">
           <Pestanas
             etiqueta="Secciones de tu perfil"
             pestanas={[
               { href: '/registro', etiqueta: 'Mi perfil', activa: vista === 'perfil' },
+              {
+                href: '/registro?ver=respuestas',
+                etiqueta: 'Mis respuestas',
+                activa: vista === 'respuestas',
+                cuenta: respuestas.length,
+              },
               {
                 href: '/registro?ver=ajustes',
                 etiqueta: 'Ajustes',
@@ -78,7 +96,16 @@ export default async function RegistroPage({
         </div>
       )}
 
-      {vista === 'perfil' ? (
+      {vista === 'respuestas' ? (
+        <section className="mt-4">
+          <p className="text-base text-muted-foreground">
+            Las solicitudes a las que respondiste, mientras sigan abiertas.
+            Cuando una se cierra o vence, se borra entera y tu respuesta se
+            va con ella.
+          </p>
+          <MisRespuestas respuestas={respuestas} />
+        </section>
+      ) : vista === 'perfil' ? (
         <>
           <p className="mt-4 text-base text-muted-foreground">
             Estos datos se muestran públicamente para que quien necesita ayuda

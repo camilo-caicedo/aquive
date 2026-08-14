@@ -373,6 +373,22 @@ export interface PanelFlujo2 {
   hilos_abiertos: number
 }
 
+// Una respuesta propia, tal como la ve quien ofreció ayuda. Solo salen las
+// de solicitudes que siguen vivas: `respuestas` cuelga de `solicitudes` por
+// CASCADE, así que a las 72 horas se va con ella.
+export interface MiRespuesta {
+  id: string
+  mensaje: string
+  creada_at: string
+  codigo: string
+  municipio: string
+  barrio: string
+  categoria: Categoria
+  flujo: FlujoSolicitud
+  expira_at: string
+  num_respuestas: number
+}
+
 // Lo que devuelve `unirse_a_organizacion`.
 export interface ResultadoUnirse {
   organizacion: string
@@ -1261,6 +1277,13 @@ export interface Database {
       // Solo para decidir si el encabezado muestra la pestaña «Mi
       // organización». NO autoriza nada: quien decide qué puede hacer un
       // miembro es es_miembro_activo(), y cada RPC lo vuelve a comprobar.
+      // Devuelve MiRespuesta[]. Va por RPC y no por un `select` sobre
+      // `respuestas` —que sí tiene política de fila propia— porque hace
+      // falta el código y el municipio, y `solicitudes` está revocada.
+      mis_respuestas: {
+        Args: Record<string, never>
+        Returns: Json
+      }
       soy_aliado: {
         Args: Record<string, never>
         Returns: boolean
