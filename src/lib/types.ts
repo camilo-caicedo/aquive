@@ -456,7 +456,11 @@ export interface SolicitudConRespuestas {
     mensaje: string
     creada_at: string
     nombre: string
-    contacto: string
+    // NULL cuando quien respondió no tiene contacto público: desde la
+    // Fase D un perfil de aliado no lo tiene.  ya no
+    // deja responder así, pero las respuestas viejas siguen existiendo y
+    // esta pantalla tiene que poder mostrarlas.
+    contacto: string | null
     contacto_tipo: ContactoTipo
     tipo: TipoPerfil
     profesion: string | null

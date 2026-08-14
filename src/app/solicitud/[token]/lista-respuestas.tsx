@@ -44,35 +44,51 @@ export function ListaRespuestas({ respuestas }: { respuestas: Respuesta[] }) {
 
           <p className="mt-2 text-base">{r.mensaje}</p>
 
-          {/* El tercero de los cuatro puntos, y el que más pesa: es el paso
-              donde de verdad se decide. Va pegado al botón, no arriba de la
-              lista, porque cada persona es una decisión distinta. */}
-          <p className="mt-3 text-sm text-muted-foreground">
-            {r.tipo === 'servidor' && r.verificado
-              ? AVISO_CONTACTO_VERIFICADO
-              : AVISO_CONTACTO}{' '}
-            <Link href="/seguridad" className="underline">
-              Cómo cuidarte
-            </Link>
-          </p>
+          {/* Una respuesta sin contacto no debería existir: desde agosto de
+              2026 `responder_solicitud` lo exige. Pero las que se
+              escribieron antes de ese arreglo siguen ahí, y esta pantalla
+              tiene que poder mostrarlas — antes reventaba entera y quien
+              pidió ayuda no veía NINGUNA de sus respuestas. */}
+          {r.contacto === null ? (
+            <p className="mt-3 text-sm text-muted-foreground">
+              Esta persona no dejó una forma de contacto pública, así que no
+              hay a dónde escribirle. Si vuelve a responder con su contacto,
+              aparecerá aquí.
+            </p>
+          ) : (
+            <>
+              {/* El tercero de los cuatro puntos, y el que más pesa: es el
+                  paso donde de verdad se decide. Va pegado al botón, no
+                  arriba de la lista, porque cada persona es una decisión
+                  distinta. */}
+              <p className="mt-3 text-sm text-muted-foreground">
+                {r.tipo === 'servidor' && r.verificado
+                  ? AVISO_CONTACTO_VERIFICADO
+                  : AVISO_CONTACTO}{' '}
+                <Link href="/seguridad" className="underline">
+                  Cómo cuidarte
+                </Link>
+              </p>
 
-          <Button
-            className="mt-3 w-full"
-            nativeButton={false}
-            render={
-              <a
-                href={
-                  r.contacto_tipo === 'whatsapp'
-                    ? enlaceWhatsapp(r.contacto)
-                    : `tel:${r.contacto}`
+              <Button
+                className="mt-3 w-full"
+                nativeButton={false}
+                render={
+                  <a
+                    href={
+                      r.contacto_tipo === 'whatsapp'
+                        ? enlaceWhatsapp(r.contacto)
+                        : `tel:${r.contacto}`
+                    }
+                    target={r.contacto_tipo === 'whatsapp' ? '_blank' : undefined}
+                    rel={r.contacto_tipo === 'whatsapp' ? 'noopener noreferrer' : undefined}
+                  />
                 }
-                target={r.contacto_tipo === 'whatsapp' ? '_blank' : undefined}
-                rel={r.contacto_tipo === 'whatsapp' ? 'noopener noreferrer' : undefined}
-              />
-            }
-          >
-            {r.contacto_tipo === 'whatsapp' ? 'Escribir por WhatsApp' : 'Llamar'}
-          </Button>
+              >
+                {r.contacto_tipo === 'whatsapp' ? 'Escribir por WhatsApp' : 'Llamar'}
+              </Button>
+            </>
+          )}
 
           <div className="mt-2">
             <BotonReportar tipoObjeto="respuesta" objetoId={r.id} />

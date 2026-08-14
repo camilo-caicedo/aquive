@@ -2205,6 +2205,15 @@ begin
     raise exception 'Necesitas completar tu perfil antes de responder';
   end if;
 
+  -- Sin contacto publico no hay respuesta posible: el flujo directo se
+  -- sostiene sobre que quien pidio pueda escribirle a quien ofrecio. Un
+  -- perfil de aliado no tiene contacto, y por eso no responde por aqui —
+  -- para el flujo acompanado existe iniciar_conversacion.
+  if not exists (select 1 from public.perfiles p
+                  where p.id = v_uid and p.contacto_publico is not null) then
+    raise exception 'Para responder necesitas una forma de contacto en tu perfil: si no, quien pidio ayuda no tiene a donde escribirte';
+  end if;
+
   select s.id into v_solicitud_id
     from public.solicitudes s
    where s.codigo = upper(trim(p_codigo))
