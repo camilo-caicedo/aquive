@@ -20,6 +20,7 @@ export type EstadoSolicitud = 'abierta' | 'cumplida'
 export type OrigenItem = 'semilla' | 'admin' | 'aliado' | 'sugerencia'
 export type OrigenSugerencia = 'solicitante' | 'ofertador' | 'aliado'
 export type EstadoSugerencia = 'pendiente' | 'aprobada' | 'rechazada' | 'fusionada'
+export type AccionSugerencia = 'aprobar' | 'rechazar' | 'fusionar'
 export type TipoObjetoReporte = 'solicitud' | 'respuesta' | 'perfil'
 export type MotivoReporte =
   | 'datos_personales'
@@ -71,6 +72,19 @@ export type OfrecimientoInput = { cantidad?: number | null; disponible?: boolean
   | { sugerencia_id: string }
   | { sugerencia: string }
 )
+
+// Una fila del jsonb que devuelve `sugerencias_pendientes`. `parecidos`
+// son los ítems del catálogo que comparten alguna palabra con el nombre
+// propuesto: están ahí para que fusionar cueste lo mismo que aprobar.
+export interface SugerenciaPendiente {
+  id: string
+  nombre_propuesto: string
+  categoria_sugerida: Categoria | null
+  origen: OrigenSugerencia
+  creada_at: string
+  usos: number
+  parecidos: Array<{ id: string; nombre: string; categoria: Categoria }>
+}
 
 // Forma del jsonb que devuelve leer_solicitud
 export interface SolicitudConRespuestas {
@@ -557,6 +571,25 @@ export interface Database {
       guardar_ofrecimientos: {
         Args: { p_items: Json }
         Returns: undefined
+      }
+      // Devuelve cada sugerencia pendiente con los ítems parecidos del
+      // catálogo, para que fusionar cueste lo mismo que aprobar.
+      sugerencias_pendientes: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      resolver_sugerencia: {
+        Args: {
+          p_sugerencia_id: string
+          p_accion: AccionSugerencia
+          p_item_destino?: string | null
+          p_nota?: string | null
+        }
+        Returns: string | null
+      }
+      crear_item_catalogo: {
+        Args: { p_nombre: string; p_categoria: Categoria; p_unidad?: string }
+        Returns: string
       }
       mis_ofrecimientos: {
         Args: Record<string, never>

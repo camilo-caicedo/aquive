@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Database, Categoria } from '@/lib/types'
+import type { Database, Categoria, ItemSolicitudInput } from '@/lib/types'
 import type { MunicipioBasico as Municipio } from '@/lib/municipios'
 import { CATEGORIAS } from '@/lib/catalogo'
-import { validarBarrio, validarNota } from '@/lib/validacion'
+import { validarBarrio, validarNota, contienePII } from '@/lib/validacion'
 import { TurnstileWidget } from '@/components/turnstile-widget'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,10 +25,7 @@ import {
 
 type ItemCatalogo = Database['public']['Tables']['catalogo_items']['Row']
 
-interface ItemSeleccionado {
-  item_id: string
-  cantidad: number
-}
+const MAX_SUGERENCIAS = 3
 
 interface RespuestaExito {
   codigo: string
@@ -70,7 +67,9 @@ export function FormularioPublicar({
   const [municipio, setMunicipio] = useState('')
   const [barrio, setBarrio] = useState('')
   const [categoria, setCategoria] = useState<Categoria | ''>('')
-  const [seleccionados, setSeleccionados] = useState<ItemSeleccionado[]>([])
+  const [seleccionados, setSeleccionados] = useState<ItemSolicitudInput[]>([])
+  const [mostrarSugerencia, setMostrarSugerencia] = useState(false)
+  const [textoSugerencia, setTextoSugerencia] = useState('')
   const [nota, setNota] = useState('')
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
@@ -84,10 +83,12 @@ export function FormularioPublicar({
     [items, categoria]
   )
 
+  const numSugerencias = seleccionados.filter((s) => 'sugerencia' in s).length
+
   function alternarItem(itemId: string) {
     setSeleccionados((prev) =>
-      prev.some((s) => s.item_id === itemId)
-        ? prev.filter((s) => s.item_id !== itemId)
+      prev.some((s) => 'item_id' in s && s.item_id === itemId)
+        ? prev.filter((s) => !('item_id' in s && s.item_id === itemId))
         : [...prev, { item_id: itemId, cantidad: 1 }]
     )
   }
@@ -95,9 +96,40 @@ export function FormularioPublicar({
   function cambiarCantidad(itemId: string, cantidad: number) {
     setSeleccionados((prev) =>
       prev.map((s) =>
-        s.item_id === itemId ? { ...s, cantidad: Math.min(9999, Math.max(1, cantidad)) } : s
+        'item_id' in s && s.item_id === itemId
+          ? { ...s, cantidad: Math.min(9999, Math.max(1, cantidad)) }
+          : s
       )
     )
+  }
+
+  // Las sugerencias no tienen un id de catálogo para identificarlas: se
+  // ubican por su posición en `seleccionados`, que no cambia de orden.
+  function cambiarCantidadSugerencia(indice: number, cantidad: number) {
+    setSeleccionados((prev) =>
+      prev.map((s, i) => (i === indice ? { ...s, cantidad: Math.min(9999, Math.max(1, cantidad)) } : s))
+    )
+  }
+
+  function quitarSugerencia(indice: number) {
+    setSeleccionados((prev) => prev.filter((_, i) => i !== indice))
+  }
+
+  const errorSugerencia =
+    textoSugerencia.trim() && contienePII(textoSugerencia)
+      ? 'No incluyas teléfonos, correos ni números de identificación'
+      : null
+  const puedeAgregarSugerencia =
+    textoSugerencia.trim().length >= 2 &&
+    !errorSugerencia &&
+    numSugerencias < MAX_SUGERENCIAS &&
+    seleccionados.length < 12
+
+  function agregarSugerencia() {
+    if (!puedeAgregarSugerencia) return
+    setSeleccionados((prev) => [...prev, { sugerencia: textoSugerencia.trim(), cantidad: 1 }])
+    setTextoSugerencia('')
+    setMostrarSugerencia(false)
   }
 
   const puedeAvanzarPaso1 = municipio !== '' && barrio.trim().length >= 2 && !errorBarrio
@@ -256,7 +288,7 @@ export function FormularioPublicar({
               </Label>
               <ul className="space-y-2">
                 {itemsDeCategoria.map((item) => {
-                  const sel = seleccionados.find((s) => s.item_id === item.id)
+                  const sel = seleccionados.find((s) => 'item_id' in s && s.item_id === item.id)
                   return (
                     <li
                       key={item.id}
@@ -294,7 +326,95 @@ export function FormularioPublicar({
                     </li>
                   )
                 })}
+                {seleccionados.map((s, indice) =>
+                  'sugerencia' in s ? (
+                    <li
+                      key={`sugerencia-${indice}`}
+                      className="flex items-center gap-2 rounded-lg border border-primary bg-accent p-2"
+                    >
+                      <span className="min-h-12 flex-1 px-2 py-2 text-base font-semibold text-accent-foreground">
+                        {s.sugerencia}{' '}
+                        <span className="font-normal text-muted-foreground">(por confirmar)</span>
+                      </span>
+                      <Input
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        max={9999}
+                        value={s.cantidad}
+                        onChange={(e) => cambiarCantidadSugerencia(indice, Number(e.target.value))}
+                        className="w-20"
+                        aria-label={`Cantidad de ${s.sugerencia}`}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => quitarSugerencia(indice)}
+                        aria-label={`Quitar ${s.sugerencia}`}
+                      >
+                        Quitar
+                      </Button>
+                    </li>
+                  ) : null
+                )}
               </ul>
+
+              {mostrarSugerencia ? (
+                <div className="mt-2 space-y-2 rounded-lg border border-border p-3">
+                  <Label htmlFor="sugerencia" className="mb-1">
+                    Escribe el nombre de lo que necesitas
+                  </Label>
+                  <Input
+                    id="sugerencia"
+                    type="text"
+                    value={textoSugerencia}
+                    onChange={(e) => setTextoSugerencia(e.target.value)}
+                    maxLength={60}
+                    placeholder="Ej: Crema dental"
+                  />
+                  {errorSugerencia && <p className="text-sm text-destructive">{errorSugerencia}</p>}
+                  <p className="text-sm text-muted-foreground">
+                    Escribe solo el nombre de la cosa, nada más. Una persona lo
+                    va a revisar; mientras tanto tu solicitud se publica igual.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        setMostrarSugerencia(false)
+                        setTextoSugerencia('')
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="button"
+                      className="flex-1"
+                      disabled={!puedeAgregarSugerencia}
+                      onClick={agregarSugerencia}
+                    >
+                      Agregar
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="mt-2 w-full"
+                  disabled={numSugerencias >= MAX_SUGERENCIAS || seleccionados.length >= 12}
+                  onClick={() => setMostrarSugerencia(true)}
+                >
+                  No encuentro lo que necesito
+                </Button>
+              )}
+              {numSugerencias >= MAX_SUGERENCIAS && (
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Ya agregaste el máximo de 3 ítems por confirmar.
+                </p>
+              )}
             </div>
           )}
 
