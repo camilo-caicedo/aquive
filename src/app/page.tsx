@@ -64,11 +64,10 @@ export default async function InicioPage({
     antes?: string
     urgentes?: string
     modo?: string
-    // Repetido en la URL: `?tengo=agua&tengo=arroz`. Un formulario GET con
-    // casillas del mismo nombre produce exactamente esto, que es lo que
-    // hace que el segundo modo funcione sin JavaScript.
+    // Repetido en la URL: `?tengo=agua&tengo=arroz`. Vive ahí y no solo en
+    // el estado del selector para que el enlace se pueda compartir y para
+    // que los resultados los arme el servidor.
     tengo?: string | string[]
-    cat?: string
     desde?: string
   }>
 }) {
@@ -78,6 +77,14 @@ export default async function InicioPage({
   const modoTengo = params.modo === 'tengo'
   const seleccionCruda =
     params.tengo === undefined ? [] : Array.isArray(params.tengo) ? params.tengo : [params.tengo]
+
+  // Acotado aquí y no solo en la base: `?desde=1e10` pasa el `> 0`, el cast
+  // a integer de Postgres revienta, y la pantalla acaba diciendo "nadie está
+  // pidiendo eso" cuando en realidad la consulta falló. Un error no puede
+  // disfrazarse de respuesta legítima.
+  const desdeCrudo = Number.parseInt(params.desde ?? '', 10)
+  const desdeSeguro =
+    Number.isFinite(desdeCrudo) && desdeCrudo > 0 ? Math.min(desdeCrudo, 10000) : 0
 
   // Solo municipios con solicitudes abiertas: filtrar por uno vacío no
   // sirve de nada, y mandar los 1.122 del país en cada carga pesaba más
@@ -218,9 +225,8 @@ export default async function InicioPage({
           <div className="mt-4">
             <CruceInverso
               seleccionCruda={seleccionCruda}
-              categoriaCruda={params.cat}
               municipio={params.municipio ?? null}
-              desde={Number(params.desde) > 0 ? Number(params.desde) : 0}
+              desde={desdeSeguro}
             />
           </div>
         ) : (

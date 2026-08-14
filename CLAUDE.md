@@ -163,8 +163,9 @@ muestra con advertencia visible.
 - Server Components por defecto; `'use client'` solo donde haga falta
 - Toda escritura pasa por funciones RPC `security definer` en Postgres,
   nunca por `insert` directo del cliente
-- Mobile first, real: la mayoría entra desde un Android de gama baja con
-  mala señal. Presupuesto de JS agresivo, sin animaciones pesadas.
+- Mobile first, real: se usa desde el celular, casi siempre de pie y con
+  prisa. Sin animaciones pesadas y sin traer librerías nuevas por comodidad
+  — pero la interfaz puede ser interactiva donde eso ayude a coordinar.
 
 ## Accesibilidad
 
@@ -174,8 +175,17 @@ con teléfonos viejos. Diseña para eso.
 - Texto base mínimo 16px, contraste AA
 - Áreas táctiles de 48px
 - Flujo de publicar solicitud en máximo 3 pantallas
-- Funciona sin JS para lectura de solicitudes
 - Sin jerga técnica en ningún texto visible
+
+**Ya no se exige que funcione sin JavaScript.** Era requisito para la
+lectura de solicitudes, y se quitó el 14 de agosto de 2026 por decisión del
+responsable: la fase de "gama baja y sin señal" pasó, y ahora lo que hace
+falta es coordinar entregas, que pide más interfaz de la que cabe en
+enlaces y formularios GET.
+
+Lo que **no** cambió: sigue siendo mobile first de verdad, con las áreas
+táctiles, el tamaño de texto y el contraste de arriba. Que se pueda usar
+JavaScript no es permiso para una página de tres megas.
 
 ## Qué hacer si algo no está claro
 

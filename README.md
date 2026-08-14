@@ -34,7 +34,8 @@ código".
 | Flujo | Estado |
 |---|---|
 | Publicar solicitud sin cuenta (token portador) | Probado en producción |
-| Tablero público con filtros, sin JavaScript | Probado |
+| Tablero público con filtros | Probado |
+| Cruce inverso: "¿quién necesita lo que tengo?" | Probado en el proyecto de pruebas |
 | Login con Google, perfiles de ofertador y servidor | Probado en producción |
 | Responder una solicitud | Probado |
 | Directorio de profesionales con matrícula | Probado |
@@ -118,10 +119,10 @@ en `administradores` con el id del usuario que va a moderar.
 - **Un solo tema claro, sin modo oscuro.** El modo oscuro automático
   rompía el contraste de los controles nativos en gama baja.
 - **El desplegable de municipio es `<select>` nativo hasta que hidrata.**
-  Es lo único que funciona en un formulario GET sin JavaScript, que es
-  requisito del tablero.
-- **Las animaciones son solo CSS.** Presupuesto de JS agresivo: el
-  público entra desde Android de gama baja con mala señal.
+  Se quedó así porque funciona bien y no cuesta nada, no porque haga falta:
+  el requisito de funcionar sin JavaScript se quitó en agosto de 2026.
+- **Las animaciones son solo CSS.** No por presupuesto de JS, sino porque
+  una animación que se traba se lee como una aplicación rota.
 
 ## Lo que decide si esto sirve
 

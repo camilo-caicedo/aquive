@@ -47,6 +47,17 @@ export function describirItem(it: {
   return it.por_confirmar ? `${base} · por confirmar` : base
 }
 
+// Cuántas cosas se pueden marcar a la vez en "¿quién necesita lo que
+// tengo?". Es el mismo número que el tope de ítems por solicitud, para no
+// sostener dos cifras distintas en la cabeza.
+//
+// ⚠ Vive aquí y no junto al selector porque ese archivo es `'use client'`:
+// una constante exportada desde un módulo de cliente, importada por un
+// Server Component, no llega como valor sino como referencia de cliente.
+// `slice(0, TOPE_SELECCION)` acababa siendo `slice(0, NaN)` y la selección
+// entera se descartaba en silencio, sin ningún error.
+export const TOPE_SELECCION = 12
+
 // Una solicitud "por vencer" es la que se borra sola en menos de 12 horas.
 // Es el momento en que una respuesta todavía alcanza a servir.
 export const HORAS_POR_VENCER = 12

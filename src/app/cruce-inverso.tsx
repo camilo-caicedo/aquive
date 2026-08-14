@@ -3,69 +3,67 @@ import { SearchX, Info, PackageOpen } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { COLUMNAS_ITEM_PUBLICO } from '@/lib/types'
 import type {
-  Categoria,
   ItemCatalogoPublico,
   MunicipioQueCalza,
   OfrecimientoResumen,
 } from '@/lib/types'
-import { CATEGORIAS } from '@/lib/catalogo'
+import { TOPE_SELECCION } from '@/lib/catalogo'
 import { TarjetaSolicitud } from '@/components/tarjeta-solicitud'
 import { SelectFiltro } from '@/components/select-filtro'
 import { Button } from '@/components/ui/button'
-import { SelectorInsumos, TOPE_SELECCION } from './selector-insumos'
+import { SelectorInsumos } from './selector-insumos'
 
 const POR_PAGINA = 20
-
-const VALIDAS = new Set<string>(CATEGORIAS.map((c) => c.valor))
 
 /**
  * El segundo modo del tablero: "¿quién necesita lo que tengo?".
  *
  * Se marca lo que uno puede dar y salen las solicitudes que lo piden,
- * primero las que coinciden en más cosas. Sin cuenta y sin JavaScript: la
- * selección vive en la URL y el filtro lo hace `solicitudes_que_calzan`.
+ * primero las que coinciden en más cosas. Sin cuenta: ayudar no puede
+ * exigir registrarse. Quien sí tiene cuenta con inventario guardado lo
+ * carga de un toque, pero es un atajo, no un requisito.
  *
- * Quien tiene cuenta con inventario guardado llega con todo precargado de
- * un toque, pero es un atajo, no un requisito: ayudar no puede exigir
- * registrarse.
+ * La selección vive en la URL para que el enlace se pueda compartir y para
+ * que los resultados los arme el servidor; el selector en sí es cliente.
  */
 export async function CruceInverso({
   seleccionCruda,
-  categoriaCruda,
   municipio,
   desde,
 }: {
   seleccionCruda: string[]
-  categoriaCruda: string | undefined
   municipio: string | null
   desde: number
 }) {
   const supabase = await createClient()
 
-  const { data: itemsData } = await supabase
-    .from('catalogo_items')
-    .select(COLUMNAS_ITEM_PUBLICO)
-    .eq('activo', true)
-    .order('orden')
+  const [{ data: itemsData }, { data: sesion }] = await Promise.all([
+    supabase
+      .from('catalogo_items')
+      .select(COLUMNAS_ITEM_PUBLICO)
+      .eq('activo', true)
+      .order('orden')
+      // El catálogo crece por aprobación de sugerencias, y PostgREST corta
+      // en 1000 filas sin avisar: pasado ese punto los ítems del final
+      // desaparecerían del selector sin ningún síntoma.
+      .limit(2000),
+    supabase.auth.getUser(),
+  ])
 
   const items: ItemCatalogoPublico[] = itemsData ?? []
   const idsValidos = new Set(items.map((i) => i.id))
 
   // La selección viene de la URL, así que se valida contra el catálogo y se
-  // recorta al tope antes de tocar la base: nadie decide por query string
-  // cuántas filas se leen.
+  // recorta antes de tocar la base: nadie decide por query string cuántas
+  // filas se leen.
   const seleccion = [...new Set(seleccionCruda)]
     .filter((id) => idsValidos.has(id))
     .slice(0, TOPE_SELECCION)
 
-  const categoriaAbierta: Categoria | null =
-    categoriaCruda && VALIDAS.has(categoriaCruda) ? (categoriaCruda as Categoria) : null
 
-  function href(cambios: { cat?: string | null; tengo?: string[]; municipio?: string | null; desde?: number | null } = {}) {
+  function href(cambios: { tengo?: string[]; municipio?: string | null; desde?: number | null } = {}) {
     const sp = new URLSearchParams()
     sp.set('modo', 'tengo')
-    const cat = 'cat' in cambios ? cambios.cat : categoriaAbierta
-    if (cat) sp.set('cat', cat)
     const muni = 'municipio' in cambios ? cambios.municipio : municipio
     if (muni) sp.set('municipio', muni)
     for (const id of cambios.tengo ?? seleccion) sp.append('tengo', id)
@@ -74,8 +72,29 @@ export async function CruceInverso({
     return `/?${sp.toString()}`
   }
 
-  // Sin nada marcado no se consulta nada: es la pantalla de entrada.
-  const [{ data: calzan }, { data: municipiosData }, { data: inventarioData }] =
+  // `mis_ofrecimientos` exige sesión y lanza excepción sin ella: sin este
+  // guardia, cada visita anónima generaba una consulta de más y una
+  // excepción en la base para nada.
+  const { data: inventarioData } = sesion?.user
+    ? await supabase.rpc('mis_ofrecimientos')
+    : { data: null }
+
+  const inventario = (inventarioData as unknown as OfrecimientoResumen[] | null) ?? []
+  // Solo lo disponible: quien marcó sus cobijas como entregadas no quiere
+  // que el atajo se las vuelva a precargar. Es el mismo criterio que usan
+  // los avisos push, y antes las dos pantallas se contradecían.
+  const idsInventario = inventario
+    .filter((o) => o.disponible)
+    .map((o) => o.item_id)
+    .filter((id): id is string => id !== null && idsValidos.has(id))
+    .slice(0, TOPE_SELECCION)
+
+  const mismoQueInventario =
+    idsInventario.length > 0 &&
+    idsInventario.length === seleccion.length &&
+    idsInventario.every((id) => seleccion.includes(id))
+
+  const [{ data: calzan }, { data: municipiosData }] =
     seleccion.length > 0
       ? await Promise.all([
           supabase.rpc('solicitudes_que_calzan', {
@@ -85,25 +104,11 @@ export async function CruceInverso({
             p_desde: desde,
           }),
           supabase.rpc('municipios_que_calzan', { p_item_ids: seleccion }),
-          supabase.rpc('mis_ofrecimientos'),
         ])
-      : [{ data: null }, { data: null }, await supabase.rpc('mis_ofrecimientos')]
+      : [{ data: null }, { data: null }]
 
   const resultados = calzan ?? []
   const municipiosCalzan = (municipiosData as unknown as MunicipioQueCalza[] | null) ?? []
-
-  // `mis_ofrecimientos` falla sin sesión, y eso está bien: quiere decir que
-  // no hay atajo que ofrecer.
-  const inventario = (inventarioData as unknown as OfrecimientoResumen[] | null) ?? []
-  const idsInventario = inventario
-    .map((o) => o.item_id)
-    .filter((id): id is string => id !== null && idsValidos.has(id))
-    .slice(0, TOPE_SELECCION)
-  const mismoQueInventario =
-    idsInventario.length > 0 &&
-    idsInventario.length === seleccion.length &&
-    idsInventario.every((id) => seleccion.includes(id))
-
   const hayMas = resultados.length === POR_PAGINA
 
   return (
@@ -119,7 +124,7 @@ export async function CruceInverso({
             variant="outline"
             className="w-full sm:w-auto"
             nativeButton={false}
-            render={<Link href={href({ tengo: idsInventario, cat: null })} />}
+            render={<Link href={href({ tengo: idsInventario })} />}
           >
             Usar lo que tengo guardado
           </Button>
@@ -127,19 +132,17 @@ export async function CruceInverso({
       )}
 
       <SelectorInsumos
+        key={seleccion.join(',')}
         items={items}
-        seleccion={seleccion}
-        categoriaAbierta={categoriaAbierta}
+        seleccionInicial={seleccion}
         municipio={municipio}
-        href={href}
       />
 
       {seleccion.length === 0 ? (
         <p className="mt-4 flex items-start gap-1.5 text-base text-muted-foreground">
           <Info className="size-5 shrink-0 translate-y-0.5" aria-hidden="true" />
           <span>
-            Elige una categoría y marca lo que puedas entregar. No necesitas
-            cuenta para esto.
+            Marca lo que puedas entregar. No necesitas cuenta para esto.
           </span>
         </p>
       ) : (
@@ -151,9 +154,11 @@ export async function CruceInverso({
           </h2>
 
           {municipiosCalzan.length > 0 && (
-            <form method="get" className="mt-3 flex flex-col gap-2 rounded-xl border border-border bg-card p-3 sm:flex-row">
+            <form
+              method="get"
+              className="mt-3 flex flex-col gap-2 rounded-xl border border-border bg-card p-3 sm:flex-row"
+            >
               <input type="hidden" name="modo" value="tengo" />
-              {categoriaAbierta && <input type="hidden" name="cat" value={categoriaAbierta} />}
               {seleccion.map((id) => (
                 <input key={id} type="hidden" name="tengo" value={id} />
               ))}
