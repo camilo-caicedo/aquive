@@ -11,7 +11,7 @@ export function PieDePagina() {
   return (
     <footer className="mt-12 border-t border-border bg-secondary">
       <div className="mx-auto max-w-3xl px-4 py-8">
-        <h2 className="text-base font-bold">Líneas de emergencia</h2>
+        <h2 className="font-heading text-lg">Líneas de emergencia</h2>
         <ul className="mt-2 flex flex-wrap gap-2">
           {EMERGENCIAS.map((e) => (
             <li key={e.numero}>

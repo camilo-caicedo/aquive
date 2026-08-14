@@ -270,7 +270,7 @@ export function FormularioPublicar({
               agregue por su cuenta el detalle que sí la identificaría. */}
           {categoria === 'servicios' && (
             <Alert variant="warning">
-              <AlertDescription className="text-amber-900">
+              <AlertDescription>
                 Elige el servicio de la lista y nada más. No escribas tu
                 diagnóstico, tu enfermedad ni lo que te pasó: quien responda
                 no necesita saberlo para ayudarte.

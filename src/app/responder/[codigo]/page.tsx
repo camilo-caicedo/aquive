@@ -27,7 +27,7 @@ export default async function ResponderPage({
   if (!solicitud) {
     return (
       <main className="mx-auto max-w-lg px-4 py-6 text-center">
-        <h1 className="text-2xl font-bold">Solicitud no disponible</h1>
+        <h1 className="font-heading text-3xl">Solicitud no disponible</h1>
         <p className="mt-2 text-base text-muted-foreground">
           Ya fue atendida, venció o el código no existe.
         </p>
@@ -102,7 +102,7 @@ export default async function ResponderPage({
       </div>
 
       <Alert variant="warning" className="mt-4">
-        <AlertDescription className="text-amber-900">
+        <AlertDescription>
           Tu nombre y tu contacto público se muestran a quien publicó la
           solicitud. Esa persona decide si te escribe: la plataforma no tiene
           su teléfono ni le envía mensajes por ti.

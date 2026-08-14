@@ -22,9 +22,9 @@ export default async function PublicarPage() {
 
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="text-2xl font-bold">Publicar solicitud</h1>
+      <h1 className="font-heading text-3xl">Publicar solicitud</h1>
       <Alert variant="warning" className="mt-2">
-        <AlertDescription className="text-amber-900">
+        <AlertDescription>
           Por tu seguridad, no escribas tu nombre, teléfono, dirección exacta
           ni datos de tus hijos. Solo pedimos el barrio y qué necesitas.
         </AlertDescription>

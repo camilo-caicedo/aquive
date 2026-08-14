@@ -102,7 +102,7 @@ export default async function ServidoresPage({
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="text-2xl font-bold">Quién ofrece servicios</h1>
+      <h1 className="font-heading text-3xl">Quién ofrece servicios</h1>
       <p className="mt-1 text-base text-muted-foreground">
         Organizaciones que prestan servicios, y profesionales con matrícula.
         El contacto ocurre por fuera: la plataforma no participa.
@@ -231,11 +231,11 @@ export default async function ServidoresPage({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-lg font-bold">{s.nombre_visible}</span>
                 {s.verificado ? (
-                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-green-300 bg-green-50 px-2.5 py-0.5 text-sm font-medium text-green-900">
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-ok">
                     <span aria-hidden="true">✓</span> Matrícula verificada
                   </span>
                 ) : (
-                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-sm font-medium text-amber-900">
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
                     <span aria-hidden="true">!</span> Sin verificar
                   </span>
                 )}
@@ -249,7 +249,7 @@ export default async function ServidoresPage({
               {s.servicios.length > 0 && (
                 <ul className="mt-3 flex flex-wrap gap-1.5">
                   {s.servicios.map((id) => (
-                    <li key={id} className="rounded-md bg-muted px-2 py-1 text-sm">
+                    <li key={id} className="rounded-full bg-muted px-3.5 py-1.5 text-sm">
                       {nombreServicio.get(id) ?? id}
                     </li>
                   ))}
@@ -260,7 +260,7 @@ export default async function ServidoresPage({
 
               {!s.verificado && (
                 <Alert variant="warning" className="mt-3">
-                  <AlertDescription className="text-amber-900">
+                  <AlertDescription>
                     Esta persona no ha verificado su matrícula profesional.
                     Verifica su identidad antes de recibir cualquier servicio.
                   </AlertDescription>

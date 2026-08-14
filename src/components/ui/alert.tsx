@@ -12,8 +12,11 @@ const alertVariants = cva(
         default: "bg-card text-card-foreground",
         destructive:
           "bg-card text-destructive *:data-[slot=alert-description]:text-destructive/90 *:[svg]:text-current",
-        // Aviso de seguridad (nota permanente sobre el formulario, PLANTILLAS.md sección 4)
-        warning: "border-amber-300 bg-amber-50 text-amber-900",
+        // Aviso de seguridad (nota permanente sobre el formulario, PLANTILLAS.md sección 4).
+        // Terracota tenue, no el ámbar de Tailwind: sobre el papel cálido del
+        // fondo aquel se leía como de otra paleta.
+        warning:
+          "border-primary/25 bg-accent text-accent-foreground *:data-[slot=alert-description]:text-accent-foreground",
       },
     },
     defaultVariants: {

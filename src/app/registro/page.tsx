@@ -42,7 +42,7 @@ export default async function RegistroPage() {
 
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="text-2xl font-bold">
+      <h1 className="font-heading text-3xl">
         {perfil ? 'Editar mi perfil' : 'Crear mi perfil'}
       </h1>
       <p className="mt-2 text-base text-muted-foreground">

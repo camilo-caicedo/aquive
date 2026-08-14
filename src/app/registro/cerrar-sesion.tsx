@@ -15,7 +15,7 @@ export function CerrarSesion() {
 
   return (
     <section className="mt-10 border-t border-border pt-6">
-      <h2 className="text-xl font-bold">Cerrar sesión</h2>
+      <h2 className="font-heading text-2xl">Cerrar sesión</h2>
       <p className="mt-2 text-base text-muted-foreground">
         Sales de tu cuenta en este teléfono. Tu perfil sigue publicado y
         puedes volver a entrar con Google cuando quieras.

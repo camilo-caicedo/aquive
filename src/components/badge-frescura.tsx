@@ -1,14 +1,16 @@
 import { calcularFrescura } from '@/lib/tiempo'
 
+// Los tokens de la identidad, no los verdes y ámbares de Tailwind: sobre el
+// papel cálido del fondo aquellos se veían de otra paleta.
 const ESTILOS = {
-  reciente: 'border-green-300 bg-green-50 text-green-900',
-  activa: 'border-amber-300 bg-amber-50 text-amber-900',
+  reciente: 'border-ok/30 bg-ok-suave text-ok',
+  activa: 'border-primary/25 bg-accent text-accent-foreground',
   antigua: 'border-border bg-muted text-muted-foreground',
 } as const
 
 const PUNTOS = {
-  reciente: 'bg-green-600',
-  activa: 'bg-amber-600',
+  reciente: 'bg-ok',
+  activa: 'bg-primary',
   antigua: 'bg-muted-foreground',
 } as const
 

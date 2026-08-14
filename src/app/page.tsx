@@ -116,7 +116,7 @@ export default async function InicioPage({
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
       <section className="animar-entrada rounded-2xl border border-border bg-secondary p-5 sm:p-8">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+        <h1 className="font-heading text-3xl leading-tight sm:text-4xl">
           Pide lo que necesitas. Sin dar tus datos.
         </h1>
         <p className="mt-2 max-w-prose text-base text-muted-foreground">
@@ -155,7 +155,7 @@ export default async function InicioPage({
             <Stethoscope className="size-6" aria-hidden="true" />
           </span>
           <div className="flex-1">
-            <h2 className="text-xl font-bold">¿Necesitas un profesional?</h2>
+            <h2 className="font-heading text-2xl">¿Necesitas un profesional?</h2>
             <p className="mt-1 text-base text-muted-foreground">
               Psicología, revisión de tu casa, atención médica, asesoría
               jurídica. Cada quien declara su matrícula; a algunos ya les
@@ -175,7 +175,7 @@ export default async function InicioPage({
       </section>
 
       <section className="mt-8">
-        <h2 className="text-xl font-bold">Cómo funciona</h2>
+        <h2 className="font-heading text-2xl">Cómo funciona</h2>
         <ol className="lista-escalonada mt-3 grid gap-3 sm:grid-cols-3">
           {PASOS.map(({ Icono, titulo, texto }, i) => (
             <li
@@ -234,7 +234,7 @@ export default async function InicioPage({
           </div>
         ) : (
         <>
-        <h2 className="mt-4 text-xl font-bold">Solicitudes abiertas</h2>
+        <h2 className="font-heading mt-4 text-2xl">Solicitudes abiertas</h2>
 
         {/* Con el tablero vacío y sin filtros, mostrar filtros sería pedirle
             a la gente que filtre la nada: tres avisos diciendo lo mismo. */}

@@ -18,14 +18,14 @@ export default async function LoginPage({
 
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="text-2xl font-bold">Entrar para ofrecer ayuda</h1>
+      <h1 className="font-heading text-3xl">Entrar para ofrecer ayuda</h1>
       <p className="mt-2 text-base text-muted-foreground">
         Solo necesitan cuenta quienes ofrecen insumos o servicios. Si necesitas
         ayuda, publica tu solicitud sin cuenta y sin dar tus datos.
       </p>
 
       <Alert variant="warning" className="mt-4">
-        <AlertDescription className="text-amber-900">
+        <AlertDescription>
           No guardamos tu correo. De tu cuenta de Google solo conservamos un
           identificador interno.
         </AlertDescription>

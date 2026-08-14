@@ -42,7 +42,7 @@ export function PantallaConfirmacion({
       <p className="text-5xl font-bold tracking-wide">{codigo}</p>
 
       <Alert variant="warning">
-        <AlertDescription className="text-amber-900">
+        <AlertDescription>
           Guarda este enlace. Es la única forma de volver a tu solicitud — no
           podemos recuperarlo si lo pierdes.
         </AlertDescription>

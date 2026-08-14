@@ -148,7 +148,7 @@ export async function CruceInverso({
         </p>
       ) : (
         <section className="mt-6">
-          <h2 className="text-xl font-bold">
+          <h2 className="font-heading text-2xl">
             {resultados.length === 0
               ? 'Nadie está pidiendo eso ahora'
               : `Quién necesita lo que tienes (${resultados.length})`}

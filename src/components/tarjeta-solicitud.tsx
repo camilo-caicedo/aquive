@@ -66,7 +66,7 @@ export function TarjetaSolicitud({
           {solicitud.items.map((it, i) => (
             <li
               key={i}
-              className="rounded-md bg-muted px-2 py-1 text-sm text-foreground"
+              className="rounded-full bg-muted px-3.5 py-1.5 text-sm text-foreground"
             >
               {describirItem(it)}
             </li>

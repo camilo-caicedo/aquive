@@ -456,8 +456,8 @@ function FichaEntidad({
         <span
           className={
             entidad.activa
-              ? 'inline-flex shrink-0 items-center rounded-full border border-green-300 bg-green-50 px-2.5 py-0.5 text-base font-medium text-green-900'
-              : 'inline-flex shrink-0 items-center rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-base font-medium text-amber-900'
+              ? 'inline-flex shrink-0 items-center rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-base font-medium text-ok'
+              : 'inline-flex shrink-0 items-center rounded-full border border-primary/25 bg-accent px-2.5 py-0.5 text-base font-medium text-accent-foreground'
           }
         >
           {entidad.activa ? 'Publicada' : 'Retirada'}
