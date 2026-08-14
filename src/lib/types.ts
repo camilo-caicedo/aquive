@@ -12,7 +12,26 @@ export type Categoria =
   | 'otros'
   | 'servicios'
   | 'mascotas'
-export type TipoPerfil = 'ofertador' | 'servidor'
+// 'aliado' no se elige en /registro: aparece al unirse a una organización.
+// Un aliado no tiene ficha pública ni contacto publicado.
+export type TipoPerfil = 'ofertador' | 'servidor' | 'aliado'
+export type TipoOrganizacion =
+  | 'fundacion'
+  | 'corporacion'
+  | 'entidad_publica'
+  | 'junta'
+  | 'otra'
+export type RolMiembro = 'coordinador' | 'miembro'
+export type EstadoMiembro = 'pendiente' | 'activo' | 'inactivo'
+export type AccionMiembro =
+  | 'aprobar'
+  | 'rechazar'
+  | 'sacar'
+  | 'activar'
+  | 'desactivar'
+  | 'ascender'
+  | 'degradar'
+export type PermisoMiembro = 'puede_ver_identidad' | 'puede_moderar'
 export type ContactoTipo = 'whatsapp' | 'telefono'
 export type EntidadMatricula = 'COPNIA' | 'CPNAA' | 'COLPSIC' | 'ReTHUS' | 'SIRNA' | 'OTRA'
 export type AreaServicio = 'ingenieria' | 'arquitectura' | 'psicologia' | 'salud' | 'derecho'
@@ -95,6 +114,81 @@ export interface EnlaceEntidad {
 // `creada_por`, que es el uuid de `auth.users` de una persona real.
 export const COLUMNAS_ENTIDAD_ADMIN =
   'id, nombre, subtitulo, descripcion, enlaces, pie, cobertura, municipios, orden, activa'
+
+// Una invitación viva, tal como la devuelven `organizaciones_admin` y
+// `mi_aliado`. El `codigo` viaja en claro a propósito —hay que poder
+// reimprimir el QR— pero nunca en una query string: va en el path de
+// /unirse/[slug] o en el cuerpo de la RPC (regla 6).
+export interface InvitacionResumen {
+  id: string
+  codigo: string
+  rol_otorgado: RolMiembro
+  expira_at: string
+  usos: number
+  usos_max: number
+}
+
+// Una fila de `organizaciones_admin()`. Sin `creada_por`: es el uuid de
+// `auth.users` de una persona real, y por eso la lectura va por RPC y no
+// por un `select` sobre la tabla.
+export interface OrganizacionAdmin {
+  id: string
+  nombre: string
+  tipo: TipoOrganizacion
+  nit: string
+  slug: string
+  municipios: string[]
+  direccion_acopio: string | null
+  horario_acopio: string | null
+  activa: boolean
+  coordinadores: number
+  miembros: number
+  pendientes: number
+  invitaciones: InvitacionResumen[]
+}
+
+// Una persona del equipo, tal como la ve un coordinador. Solo llega si
+// quien pregunta es coordinador activo: un miembro raso no ve la lista.
+export interface MiembroEquipo {
+  perfil_id: string
+  nombre_visible: string
+  rol: RolMiembro
+  estado: EstadoMiembro
+  puede_ver_identidad: boolean
+  puede_moderar: boolean
+  creado_at: string
+}
+
+// Lo que devuelve `mi_aliado()`: una entrada por cada organización a la
+// que pertenezco. `equipo` e `invitaciones` llegan vacíos si no soy
+// coordinador activo — el filtro está en SQL, no en la pantalla.
+export interface AliadoResumen {
+  organizacion: {
+    id: string
+    nombre: string
+    slug: string
+    municipios: string[]
+    direccion_acopio: string | null
+    horario_acopio: string | null
+    activa: boolean
+  }
+  yo: {
+    rol: RolMiembro
+    estado: EstadoMiembro
+    puede_ver_identidad: boolean
+    puede_moderar: boolean
+  }
+  equipo: MiembroEquipo[]
+  invitaciones: InvitacionResumen[]
+}
+
+// Lo que devuelve `unirse_a_organizacion`.
+export interface ResultadoUnirse {
+  organizacion: string
+  slug: string
+  estado: EstadoMiembro
+  rol: RolMiembro
+}
 
 // Un ítem tal como se ve en el directorio público de quien ofrece. Sin
 // cantidad a propósito: ver §2 de la migración v2-a7.
@@ -245,7 +339,9 @@ export interface Database {
           nombre_visible: string
           tipo: TipoPerfil
           municipios: string[]
-          contacto_publico: string
+          // NULL solo para un aliado: a un aliado no se le publica ficha,
+          // así que no tiene contacto público que mostrar.
+          contacto_publico: string | null
           contacto_tipo: ContactoTipo
           descripcion: string | null
           acepto_publicacion: boolean
@@ -258,7 +354,7 @@ export interface Database {
           nombre_visible: string
           tipo: TipoPerfil
           municipios?: string[]
-          contacto_publico: string
+          contacto_publico?: string | null
           contacto_tipo?: ContactoTipo
           descripcion?: string | null
           acepto_publicacion?: boolean
@@ -433,6 +529,104 @@ export interface Database {
           es_prueba?: boolean
         }
         Update: Partial<Database['public']['Tables']['entidades']['Insert']>
+        Relationships: []
+      }
+      // Las tres tablas del Flujo 2 están revocadas enteras para `anon` y
+      // `authenticated`: el cliente no las lee ni las escribe nunca, todo
+      // pasa por las RPC. Se tipan por lo mismo que `solicitudes`, para
+      // que el archivo siga siendo el espejo de schema.sql.
+      organizaciones: {
+        Row: {
+          id: string
+          nombre: string
+          tipo: TipoOrganizacion
+          nit: string
+          slug: string
+          municipios: string[]
+          direccion_acopio: string | null
+          horario_acopio: string | null
+          activa: boolean
+          creada_por: string | null
+          creada_at: string
+          actualizada_at: string
+          es_prueba: boolean
+        }
+        Insert: {
+          id?: string
+          nombre: string
+          tipo?: TipoOrganizacion
+          nit: string
+          slug: string
+          municipios: string[]
+          direccion_acopio?: string | null
+          horario_acopio?: string | null
+          activa?: boolean
+          creada_por?: string | null
+          creada_at?: string
+          actualizada_at?: string
+          es_prueba?: boolean
+        }
+        Update: Partial<Database['public']['Tables']['organizaciones']['Insert']>
+        Relationships: []
+      }
+      invitaciones_organizacion: {
+        Row: {
+          id: string
+          organizacion_id: string
+          codigo: string
+          rol_otorgado: RolMiembro
+          creada_por: string | null
+          expira_at: string
+          usos_max: number
+          usos: number
+          activa: boolean
+          creada_at: string
+        }
+        Insert: {
+          id?: string
+          organizacion_id: string
+          codigo: string
+          rol_otorgado?: RolMiembro
+          creada_por?: string | null
+          expira_at: string
+          usos_max?: number
+          usos?: number
+          activa?: boolean
+          creada_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['invitaciones_organizacion']['Insert']>
+        Relationships: []
+      }
+      miembros_organizacion: {
+        Row: {
+          organizacion_id: string
+          perfil_id: string
+          rol: RolMiembro
+          estado: EstadoMiembro
+          puede_ver_identidad: boolean
+          puede_moderar: boolean
+          invitacion_id: string | null
+          creado_at: string
+          aprobado_por: string | null
+          aprobado_at: string | null
+          permiso_identidad_por: string | null
+          permiso_identidad_at: string | null
+        }
+        Insert: {
+          organizacion_id: string
+          perfil_id: string
+          rol?: RolMiembro
+          estado?: EstadoMiembro
+          // No lleva `puede_ver_identidad`: un trigger BEFORE INSERT
+          // rechaza la fila si llega en true. Solo se concede después,
+          // con `otorgar_permiso_miembro`.
+          puede_moderar?: boolean
+          invitacion_id?: string | null
+          creado_at?: string
+          aprobado_por?: string | null
+          aprobado_at?: string | null
+        }
+        Update: Partial<Database['public']['Tables']['miembros_organizacion']['Insert']>
         Relationships: []
       }
       sugerencias_item: {
@@ -783,6 +977,80 @@ export interface Database {
       }
       borrar_entidad: {
         Args: { p_id: string }
+        Returns: undefined
+      }
+      // Organizaciones aliadas (Fase D). Las crea un administrador; nadie
+      // se auto-registra. `p_id` null crea, con valor actualiza.
+      guardar_organizacion: {
+        Args: {
+          p_id: string | null
+          p_nombre: string
+          p_nit: string
+          p_slug: string
+          p_municipios: string[]
+          p_tipo?: TipoOrganizacion
+          p_direccion_acopio?: string | null
+          p_horario_acopio?: string | null
+        }
+        Returns: string
+      }
+      activar_organizacion: {
+        Args: { p_id: string; p_activa: boolean }
+        Returns: undefined
+      }
+      // Devuelve OrganizacionAdmin[]. Va por RPC y no por `select` para
+      // que `creada_por` no llegue nunca al navegador.
+      organizaciones_admin: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      // Devuelve InvitacionResumen más el `slug`, que es lo que hace falta
+      // para armar el enlace y el QR. Un administrador solo puede generar
+      // la de coordinador; el resto del equipo lo arma la organización.
+      crear_invitacion: {
+        Args: {
+          p_organizacion_id: string
+          p_rol?: RolMiembro
+          p_horas?: number
+          p_usos_max?: number
+        }
+        Returns: Json
+      }
+      desactivar_invitacion: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      // Lo único que se puede saber de una organización sin estar dentro:
+      // su nombre. Es la única de este bloque con EXECUTE para `anon`.
+      organizacion_por_slug: {
+        Args: { p_slug: string }
+        Returns: Json
+      }
+      // Devuelve ResultadoUnirse. Sin código válido se entra a la cola de
+      // pendientes, nunca con un error.
+      unirse_a_organizacion: {
+        Args: { p_slug: string; p_nombre_visible: string; p_codigo?: string | null }
+        Returns: Json
+      }
+      // Devuelve AliadoResumen[].
+      mi_aliado: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      gestionar_miembro: {
+        Args: { p_organizacion_id: string; p_perfil_id: string; p_accion: AccionMiembro }
+        Returns: undefined
+      }
+      // Aparte de `gestionar_miembro` a propósito: `puede_ver_identidad`
+      // es lo que deja ver cédulas y no puede viajar como un valor más
+      // dentro de un menú de acciones.
+      otorgar_permiso_miembro: {
+        Args: {
+          p_organizacion_id: string
+          p_perfil_id: string
+          p_permiso: PermisoMiembro
+          p_valor: boolean
+        }
         Returns: undefined
       }
       crear_item_catalogo: {

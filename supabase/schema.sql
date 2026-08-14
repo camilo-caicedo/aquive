@@ -215,21 +215,32 @@ create index if not exists idx_entidades_activa on public.entidades(activa, orde
 create table if not exists public.perfiles (
   id                  uuid primary key references auth.users(id) on delete cascade,
   nombre_visible      text not null check (char_length(nombre_visible) between 3 and 60),
-  tipo                text not null check (tipo in ('ofertador','servidor')),
+  -- 'aliado' no se elige en /registro: lo pone `unirse_a_organizacion`.
+  tipo                text not null check (tipo in ('ofertador','servidor','aliado')),
   municipios          text[] not null default '{}',
   -- Contacto PÚBLICO: la persona acepta explícitamente que se muestre.
-  contacto_publico    text not null check (char_length(contacto_publico) between 7 and 40),
+  -- NULL solo para un aliado, que no tiene ficha pública: el trato con él
+  -- ocurre dentro de una coordinación, no en un directorio.
+  contacto_publico    text,
   contacto_tipo       text not null default 'whatsapp'
                         check (contacto_tipo in ('whatsapp','telefono')),
   descripcion         text check (char_length(descripcion) <= 300),
   acepto_publicacion  boolean not null default false,
   acepto_politica_at  timestamptz not null default now(),
   suspendido          boolean not null default false,
-  creado_at           timestamptz not null default now()
+  creado_at           timestamptz not null default now(),
+  constraint perfiles_contacto_publico_check check (
+    case
+      when tipo = 'aliado'
+        then contacto_publico is null
+          or char_length(contacto_publico) between 7 and 40
+      else char_length(contacto_publico) between 7 and 40
+    end
+  )
 );
 
 comment on column public.perfiles.contacto_publico is
-  'Dato personal deliberadamente público. Requiere acepto_publicacion = true.';
+  'Dato personal deliberadamente público. Requiere acepto_publicacion = true. NULL solo para tipo = aliado: a un aliado no se le publica contacto en ninguna pantalla, el trato con él ocurre dentro de una coordinación.';
 
 create table if not exists public.servidores (
   perfil_id           uuid primary key references public.perfiles(id) on delete cascade,
@@ -305,6 +316,194 @@ revoke execute on function public.es_admin(uuid) from public, anon, authenticate
 -- políticas de más abajo hacen el EXISTS contra `administradores` a mano.
 -- Dentro de una RPC `security definer` sí es válido llamarla: ahí corre
 -- como dueña de la función.
+
+-- ---------------------------------------------------------------------
+-- 2b. Organizaciones aliadas (Flujo 2) — ver migración v2-d1
+--
+-- Dos actos separados: la organización la crea un ADMINISTRADOR —nunca se
+-- auto-registra, y por eso no hay columna `verificada`— y las personas se
+-- unen contra ella trayendo su `slug`. El slug identifica, el código
+-- autoriza: quien llega sin código cae en una cola donde no ve nada.
+-- ---------------------------------------------------------------------
+
+create table if not exists public.organizaciones (
+  id               uuid primary key default gen_random_uuid(),
+  nombre           text not null check (char_length(trim(nombre)) between 3 and 80),
+  tipo             text not null default 'fundacion'
+                     check (tipo in ('fundacion','corporacion','entidad_publica','junta','otra')),
+  nit              text not null unique check (nit ~ '^[0-9]{5,15}(-[0-9])?$'),
+  -- Identifica, no autoriza. Va en la URL de /unirse y en el QR.
+  slug             text not null unique check (slug ~ '^[a-z0-9-]{3,40}$'),
+  municipios       text[] not null default '{}'
+                     check (array_length(municipios, 1) >= 1),
+  -- Dirección de un acopio, no de una persona: una bodega con horario.
+  direccion_acopio text check (char_length(direccion_acopio) <= 200),
+  horario_acopio   text check (char_length(horario_acopio) <= 200),
+  activa           boolean not null default true,
+  -- SET NULL y no CASCADE, por lo mismo que `entidades.creada_por`.
+  creada_por       uuid references auth.users(id) on delete set null,
+  creada_at        timestamptz not null default now(),
+  actualizada_at   timestamptz not null default now(),
+  es_prueba        boolean not null default false
+);
+
+comment on table public.organizaciones is
+  'Aliadas del Flujo 2. LAS CREA UN ADMIN, jamás se auto-registran. Si la fila existe, alguien ya miró el certificado del RUES y el NIT: por eso no hay columna verificada. Ver PLAN-V2 §5.5.';
+
+create table if not exists public.invitaciones_organizacion (
+  id              uuid primary key default gen_random_uuid(),
+  organizacion_id uuid not null references public.organizaciones(id) on delete cascade,
+  -- ⚠ En claro, al revés que `solicitudes.token_hash`: el coordinador
+  -- tiene que poder reimprimir el QR de la pared. Lo que lo acota es que
+  -- caduca, se agota por usos y se desactiva de un clic.
+  codigo          text not null unique check (codigo ~ '^[a-f0-9]{24}$'),
+  rol_otorgado    text not null default 'miembro'
+                    check (rol_otorgado in ('coordinador','miembro')),
+  creada_por      uuid references public.perfiles(id) on delete set null,
+  expira_at       timestamptz not null,
+  usos_max        integer not null default 1 check (usos_max between 1 and 200),
+  usos            integer not null default 0 check (usos >= 0),
+  activa          boolean not null default true,
+  creada_at       timestamptz not null default now()
+);
+
+comment on column public.invitaciones_organizacion.codigo is
+  'En claro a propósito: el coordinador tiene que poder reimprimir el QR. Caduca, se agota por usos y se desactiva de un clic. Nunca aparece en un log ni en una query string de la aplicación (regla 6): viaja en el path de /unirse/[slug]/[codigo] o en el body.';
+
+create index if not exists idx_invitaciones_org
+  on public.invitaciones_organizacion(organizacion_id, activa);
+
+create table if not exists public.miembros_organizacion (
+  organizacion_id       uuid not null references public.organizaciones(id) on delete cascade,
+  perfil_id             uuid not null references public.perfiles(id) on delete cascade,
+  rol                   text not null default 'miembro'
+                          check (rol in ('coordinador','miembro')),
+  estado                text not null default 'pendiente'
+                          check (estado in ('pendiente','activo','inactivo')),
+  -- ⚠ NUNCA nace en true: lo impide `tr_permiso_identidad_al_insertar`.
+  puede_ver_identidad   boolean not null default false,
+  puede_moderar         boolean not null default false,
+  invitacion_id         uuid references public.invitaciones_organizacion(id) on delete set null,
+  creado_at             timestamptz not null default now(),
+  aprobado_por          uuid references public.perfiles(id) on delete set null,
+  aprobado_at           timestamptz,
+  permiso_identidad_por uuid references public.perfiles(id) on delete set null,
+  permiso_identidad_at  timestamptz,
+  primary key (organizacion_id, perfil_id)
+);
+
+comment on column public.miembros_organizacion.puede_ver_identidad is
+  'El permiso más sensible del sistema. Solo lo cambia otorgar_permiso_miembro, y queda registrado en permiso_identidad_por / _at. Un trigger BEFORE INSERT impide que nazca en true, incluso escribiendo desde el editor SQL.';
+
+create index if not exists idx_miembros_perfil
+  on public.miembros_organizacion(perfil_id);
+
+-- Pertenencia. ⚠ Al revés que `es_admin()`, estas llevan el EXECUTE
+-- CONCEDIDO: tienen que poder usarse dentro de una política RLS, y
+-- encapsular la pertenencia aquí es lo que evita la recursión infinita
+-- entre `miembros_organizacion` y `conversaciones` (PLAN-V2 §5.3-4).
+--
+-- Las tres condiciones van juntas de una vez —miembro activo, de una
+-- organización activa— para que ninguna RPC futura tenga que acordarse.
+create or replace function public.es_miembro_activo(
+  p_organizacion_id uuid,
+  p_perfil_id       uuid default auth.uid()
+)
+returns boolean
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select exists (
+    select 1
+      from public.miembros_organizacion m
+      join public.organizaciones o on o.id = m.organizacion_id
+     where m.organizacion_id = p_organizacion_id
+       and m.perfil_id       = p_perfil_id
+       and m.estado          = 'activo'
+       and o.activa
+  );
+$$;
+
+create or replace function public.es_coordinador_activo(
+  p_organizacion_id uuid,
+  p_perfil_id       uuid default auth.uid()
+)
+returns boolean
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select exists (
+    select 1
+      from public.miembros_organizacion m
+      join public.organizaciones o on o.id = m.organizacion_id
+     where m.organizacion_id = p_organizacion_id
+       and m.perfil_id       = p_perfil_id
+       and m.estado          = 'activo'
+       and m.rol             = 'coordinador'
+       and o.activa
+  );
+$$;
+
+grant execute on function public.es_miembro_activo(uuid,uuid)     to authenticated;
+grant execute on function public.es_coordinador_activo(uuid,uuid) to authenticated;
+
+-- Invariante 1: `puede_ver_identidad` nunca nace en true.
+create or replace function public.bloquear_permiso_identidad()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.puede_ver_identidad then
+    raise exception 'El permiso de ver identidad no se concede al crear el miembro: solo con otorgar_permiso_miembro';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists tr_permiso_identidad_al_insertar on public.miembros_organizacion;
+create trigger tr_permiso_identidad_al_insertar
+  before insert on public.miembros_organizacion
+  for each row execute function public.bloquear_permiso_identidad();
+
+-- Invariante 2: una organización con miembros no se queda sin coordinador
+-- activo. Trigger y no comprobación en la RPC porque son cuatro caminos
+-- —degradar, desactivar, borrar el miembro, borrar el perfil— y el último
+-- ni siquiera pasa por una RPC de aliado. `deferrable` para que un traspaso
+-- en dos pasos dentro de una transacción no falle a mitad de camino.
+create or replace function public.exigir_coordinador()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if exists (select 1 from public.organizaciones o where o.id = old.organizacion_id)
+     and exists (select 1 from public.miembros_organizacion m
+                  where m.organizacion_id = old.organizacion_id)
+     and not exists (select 1 from public.miembros_organizacion m
+                      where m.organizacion_id = old.organizacion_id
+                        and m.rol    = 'coordinador'
+                        and m.estado = 'activo')
+  then
+    raise exception 'La organización se quedaría sin ningún coordinador activo';
+  end if;
+  return null;
+end;
+$$;
+
+drop trigger if exists tr_exigir_coordinador on public.miembros_organizacion;
+create constraint trigger tr_exigir_coordinador
+  after update or delete on public.miembros_organizacion
+  deferrable initially deferred
+  for each row execute function public.exigir_coordinador();
+
+revoke execute on function public.bloquear_permiso_identidad() from public, anon, authenticated;
+revoke execute on function public.exigir_coordinador()         from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------
 -- 3. Solicitudes — CERO datos personales
@@ -826,6 +1025,9 @@ alter table public.administradores    enable row level security;
 alter table public.sugerencias_item   enable row level security;
 alter table public.ofrecimientos      enable row level security;
 alter table public.entidades          enable row level security;
+alter table public.organizaciones            enable row level security;
+alter table public.invitaciones_organizacion enable row level security;
+alter table public.miembros_organizacion     enable row level security;
 
 -- Nadie lee `solicitudes` directamente. Solo la vista y las RPC.
 revoke all on public.solicitudes        from anon, authenticated;
@@ -838,6 +1040,13 @@ revoke all on public.solicitud_items    from anon, authenticated;
 -- El público no toca la tabla, toca `entidades_publicas`. Una sola
 -- política, la del administrador, que necesita ver también las retiradas.
 revoke all on public.entidades          from anon, authenticated;
+-- Las tres del Flujo 2 van revocadas y con CERO políticas, como
+-- `solicitudes`: la frontera son sus RPC. Es además la forma más corta de
+-- no caer en la recursión de PLAN-V2 §5.3-4 — sin política que cruce
+-- `miembros_organizacion` con nada, no hay ciclo posible.
+revoke all on public.organizaciones            from anon, authenticated;
+revoke all on public.invitaciones_organizacion from anon, authenticated;
+revoke all on public.miembros_organizacion     from anon, authenticated;
 -- ⚠ Una política FILTRA privilegios, no los concede: sin este grant,
 -- PostgREST —que conecta como `authenticated`— devolvía «permission denied»
 -- para todo el mundo, el administrador incluido, y el panel listaba siempre
@@ -1337,7 +1546,7 @@ begin
     raise exception 'Debes iniciar sesión';
   end if;
 
-  if p_tipo not in ('ofertador','servidor') then
+  if p_tipo not in ('ofertador','servidor','aliado') then
     raise exception 'Tipo de perfil inválido';
   end if;
 
@@ -1345,12 +1554,20 @@ begin
     raise exception 'Elige al menos un municipio';
   end if;
 
+  -- Un aliado no publica contacto ni ficha: lo que llegue en esos dos
+  -- campos se descarta aquí, no se guarda «por si acaso». Nadie se declara
+  -- aliado desde /registro; el tipo aparece al unirse a una organización, y
+  -- esto existe para que un aliado pueda editar su nombre sin que la RPC lo
+  -- rechace.
   insert into public.perfiles (
     id, nombre_visible, tipo, municipios, contacto_publico,
     contacto_tipo, descripcion, acepto_publicacion, acepto_politica_at)
   values (
-    v_uid, p_nombre_visible, p_tipo, p_municipios, p_contacto_publico,
-    p_contacto_tipo, nullif(trim(p_descripcion), ''), true, now())
+    v_uid, p_nombre_visible, p_tipo, p_municipios,
+    case when p_tipo = 'aliado' then null else p_contacto_publico end,
+    case when p_tipo = 'aliado' then 'whatsapp' else p_contacto_tipo end,
+    nullif(trim(p_descripcion), ''),
+    p_tipo <> 'aliado', now())
   on conflict (id) do update set
     nombre_visible     = excluded.nombre_visible,
     tipo               = excluded.tipo,
@@ -1358,7 +1575,7 @@ begin
     contacto_publico   = excluded.contacto_publico,
     contacto_tipo      = excluded.contacto_tipo,
     descripcion        = excluded.descripcion,
-    acepto_publicacion = true,
+    acepto_publicacion = excluded.acepto_publicacion,
     acepto_politica_at = now();
 
   if p_tipo = 'servidor' then
@@ -1837,6 +2054,627 @@ $$;
 
 revoke execute on function public.borrar_entidad(uuid) from public, anon;
 grant  execute on function public.borrar_entidad(uuid) to authenticated;
+
+-- ---------------------------------------------------------------------
+-- Organizaciones aliadas (Flujo 2). Ver migración v2-d1 para el porqué de
+-- cada decisión; aquí va solo el estado final.
+-- ---------------------------------------------------------------------
+
+create or replace function public.guardar_organizacion(
+  p_id               uuid,                    -- null = crear
+  p_nombre           text,
+  p_nit              text,
+  p_slug             text,
+  p_municipios       text[],
+  p_tipo             text default 'fundacion',
+  p_direccion_acopio text default null,
+  p_horario_acopio   text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid  uuid := auth.uid();
+  v_slug text := lower(trim(coalesce(p_slug, '')));
+  v_nit  text := trim(coalesce(p_nit, ''));
+  v_id   uuid;
+begin
+  if not public.es_admin(v_uid) then
+    raise exception 'No autorizado';
+  end if;
+
+  if char_length(trim(coalesce(p_nombre, ''))) not between 3 and 80 then
+    raise exception 'El nombre debe tener entre 3 y 80 caracteres';
+  end if;
+
+  if p_tipo not in ('fundacion','corporacion','entidad_publica','junta','otra') then
+    raise exception 'Tipo de organización inválido';
+  end if;
+
+  if v_nit !~ '^[0-9]{5,15}(-[0-9])?$' then
+    raise exception 'El NIT va en números, con o sin dígito de verificación: 900123456 o 900123456-7';
+  end if;
+
+  if v_slug !~ '^[a-z0-9-]{3,40}$' then
+    raise exception 'La dirección corta va en minúsculas, números y guiones, de 3 a 40 caracteres';
+  end if;
+
+  if coalesce(array_length(p_municipios, 1), 0) = 0 then
+    raise exception 'Elige al menos un municipio';
+  end if;
+
+  if exists (select 1 from unnest(p_municipios) m
+              where m not in (select mu.codigo_dane from public.municipios mu)) then
+    raise exception 'Hay un municipio que no existe';
+  end if;
+
+  -- Mensaje propio en vez del error crudo del índice único: el admin tiene
+  -- que saber cuál de los dos chocó.
+  if exists (select 1 from public.organizaciones o
+              where o.slug = v_slug and (p_id is null or o.id <> p_id)) then
+    raise exception 'Esa dirección corta ya la usa otra organización';
+  end if;
+
+  if exists (select 1 from public.organizaciones o
+              where o.nit = v_nit and (p_id is null or o.id <> p_id)) then
+    raise exception 'Ese NIT ya está registrado';
+  end if;
+
+  if p_id is null then
+    insert into public.organizaciones
+      (nombre, tipo, nit, slug, municipios,
+       direccion_acopio, horario_acopio, creada_por, es_prueba)
+    values
+      (trim(p_nombre), p_tipo, v_nit, v_slug, p_municipios,
+       nullif(trim(p_direccion_acopio), ''),
+       nullif(trim(p_horario_acopio), ''),
+       v_uid,
+       trim(p_nombre) ilike 'prueba%')
+    returning id into v_id;
+  else
+    update public.organizaciones
+       set nombre           = trim(p_nombre),
+           tipo             = p_tipo,
+           nit              = v_nit,
+           slug             = v_slug,
+           municipios       = p_municipios,
+           direccion_acopio = nullif(trim(p_direccion_acopio), ''),
+           horario_acopio   = nullif(trim(p_horario_acopio), ''),
+           -- Se RECALCULA, igual que en `guardar_entidad`.
+           es_prueba        = trim(p_nombre) ilike 'prueba%',
+           actualizada_at   = now()
+     where id = p_id
+    returning id into v_id;
+
+    if v_id is null then
+      raise exception 'Esa organización no existe';
+    end if;
+  end if;
+
+  return v_id;
+end;
+$$;
+
+revoke execute on function public.guardar_organizacion(uuid,text,text,text,text[],text,text,text) from public, anon;
+grant  execute on function public.guardar_organizacion(uuid,text,text,text,text[],text,text,text) to authenticated;
+
+-- Suspender. No borra: `es_miembro_activo()` pasa a devolver falso para
+-- todo su equipo, que es lo que hace falta.
+create or replace function public.activar_organizacion(p_id uuid, p_activa boolean)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.es_admin(auth.uid()) then
+    raise exception 'No autorizado';
+  end if;
+  update public.organizaciones
+     set activa = p_activa, actualizada_at = now()
+   where id = p_id;
+end;
+$$;
+
+revoke execute on function public.activar_organizacion(uuid,boolean) from public, anon;
+grant  execute on function public.activar_organizacion(uuid,boolean) to authenticated;
+
+-- Lo que ve el panel de administración. Por RPC y no por `select` con
+-- política, como `sugerencias_pendientes`: así `creada_por` no sale nunca
+-- hacia el navegador.
+create or replace function public.organizaciones_admin()
+returns jsonb
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select case when not public.es_admin(auth.uid()) then '[]'::jsonb
+         else coalesce(
+           (select jsonb_agg(x order by x->>'nombre')
+              from (
+                select jsonb_build_object(
+                  'id',               o.id,
+                  'nombre',           o.nombre,
+                  'tipo',             o.tipo,
+                  'nit',              o.nit,
+                  'slug',             o.slug,
+                  'municipios',       o.municipios,
+                  'direccion_acopio', o.direccion_acopio,
+                  'horario_acopio',   o.horario_acopio,
+                  'activa',           o.activa,
+                  'coordinadores',    (select count(*) from public.miembros_organizacion m
+                                        where m.organizacion_id = o.id
+                                          and m.rol = 'coordinador' and m.estado = 'activo'),
+                  'miembros',         (select count(*) from public.miembros_organizacion m
+                                        where m.organizacion_id = o.id and m.estado = 'activo'),
+                  'pendientes',       (select count(*) from public.miembros_organizacion m
+                                        where m.organizacion_id = o.id and m.estado = 'pendiente'),
+                  'invitaciones',     (select coalesce(jsonb_agg(jsonb_build_object(
+                                                'id',           i.id,
+                                                'codigo',       i.codigo,
+                                                'rol_otorgado', i.rol_otorgado,
+                                                'expira_at',    i.expira_at,
+                                                'usos',         i.usos,
+                                                'usos_max',     i.usos_max
+                                              ) order by i.creada_at desc), '[]'::jsonb)
+                                         from public.invitaciones_organizacion i
+                                        where i.organizacion_id = o.id
+                                          and i.activa and i.expira_at > now()
+                                          and i.usos < i.usos_max)
+                ) as x
+                from public.organizaciones o
+              ) t),
+           '[]'::jsonb)
+         end;
+$$;
+
+revoke execute on function public.organizaciones_admin() from public, anon;
+grant  execute on function public.organizaciones_admin() to authenticated;
+
+-- Un admin solo genera la invitación de COORDINADOR: es el acto de
+-- entregarle la organización a la fundación, no el de meterle gente. De
+-- ahí en adelante el equipo lo arma el coordinador.
+create or replace function public.crear_invitacion(
+  p_organizacion_id uuid,
+  p_rol             text default 'miembro',
+  p_horas           integer default 168,     -- una semana
+  p_usos_max        integer default 1
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid    uuid := auth.uid();
+  v_admin  boolean := public.es_admin(v_uid);
+  v_codigo text;
+  v_fila   public.invitaciones_organizacion;
+begin
+  if v_uid is null then
+    raise exception 'Debes iniciar sesión';
+  end if;
+
+  if p_rol not in ('coordinador','miembro') then
+    raise exception 'Rol inválido';
+  end if;
+
+  if v_admin then
+    if p_rol <> 'coordinador' then
+      raise exception 'Un administrador solo genera la invitación de coordinador; el resto del equipo lo arma la organización';
+    end if;
+  elsif not public.es_coordinador_activo(p_organizacion_id, v_uid) then
+    raise exception 'No autorizado';
+  end if;
+
+  if not exists (select 1 from public.organizaciones o
+                  where o.id = p_organizacion_id and o.activa) then
+    raise exception 'Esa organización no existe o está desactivada';
+  end if;
+
+  -- Techos duros: un enlace de un año con usos ilimitados es una puerta
+  -- abierta con la llave puesta.
+  if p_horas not between 1 and 720 then
+    raise exception 'La vigencia va entre 1 hora y 30 días';
+  end if;
+
+  if p_usos_max not between 1 and 200 then
+    raise exception 'Los usos van entre 1 y 200';
+  end if;
+
+  if p_rol = 'coordinador' and p_usos_max <> 1 then
+    raise exception 'Una invitación de coordinador es de un solo uso';
+  end if;
+
+  v_codigo := encode(extensions.gen_random_bytes(12), 'hex');
+
+  insert into public.invitaciones_organizacion
+    (organizacion_id, codigo, rol_otorgado, creada_por, expira_at, usos_max)
+  values
+    (p_organizacion_id, v_codigo, p_rol,
+     case when v_admin then null else v_uid end,
+     now() + make_interval(hours => p_horas), p_usos_max)
+  returning * into v_fila;
+
+  return jsonb_build_object(
+    'id',           v_fila.id,
+    'codigo',       v_fila.codigo,
+    'rol_otorgado', v_fila.rol_otorgado,
+    'expira_at',    v_fila.expira_at,
+    'usos',         v_fila.usos,
+    'usos_max',     v_fila.usos_max,
+    'slug',         (select o.slug from public.organizaciones o where o.id = p_organizacion_id)
+  );
+end;
+$$;
+
+revoke execute on function public.crear_invitacion(uuid,text,integer,integer) from public, anon;
+grant  execute on function public.crear_invitacion(uuid,text,integer,integer) to authenticated;
+
+create or replace function public.desactivar_invitacion(p_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_org uuid;
+begin
+  select organizacion_id into v_org
+    from public.invitaciones_organizacion where id = p_id;
+
+  if v_org is null then
+    raise exception 'Esa invitación no existe';
+  end if;
+
+  if not (public.es_admin(auth.uid()) or public.es_coordinador_activo(v_org)) then
+    raise exception 'No autorizado';
+  end if;
+
+  update public.invitaciones_organizacion set activa = false where id = p_id;
+end;
+$$;
+
+revoke execute on function public.desactivar_invitacion(uuid) from public, anon;
+grant  execute on function public.desactivar_invitacion(uuid) to authenticated;
+
+-- Lo único que se puede saber de una organización sin estar dentro: su
+-- nombre. Ni municipios, ni acopio, ni cuánta gente hay. Es la única de
+-- este bloque con EXECUTE para `anon`, porque la pantalla de /unirse tiene
+-- que decir a qué se está entrando antes de pedir la sesión de Google.
+create or replace function public.organizacion_por_slug(p_slug text)
+returns jsonb
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select jsonb_build_object('nombre', o.nombre)
+    from public.organizaciones o
+   where o.slug = lower(trim(p_slug)) and o.activa;
+$$;
+
+grant execute on function public.organizacion_por_slug(text) to anon, authenticated;
+
+-- El código autoriza; el slug solo identifica. Sin código válido se entra
+-- a la cola de pendientes, NUNCA con un error: un código caducado suele
+-- ser un cartel viejo en la pared, no un ataque.
+--
+-- Crea el perfil si no existe. Si ya existe, no le toca el tipo: un
+-- ofertador que además coordina en una fundación sigue siendo ofertador en
+-- su ficha pública.
+create or replace function public.unirse_a_organizacion(
+  p_slug           text,
+  p_nombre_visible text,
+  p_codigo         text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid    uuid := auth.uid();
+  v_org    public.organizaciones;
+  v_inv    public.invitaciones_organizacion;
+  v_actual public.miembros_organizacion;
+  -- Separada del registro: dice si hay que gastarle un uso a la
+  -- invitación, y hay un camino —ya era miembro— donde no se gasta.
+  v_inv_id uuid;
+  v_estado text := 'pendiente';
+  v_rol    text := 'miembro';
+begin
+  if v_uid is null then
+    raise exception 'Debes iniciar sesión';
+  end if;
+
+  select * into v_org from public.organizaciones o
+   where o.slug = lower(trim(p_slug)) and o.activa;
+
+  if v_org.id is null then
+    raise exception 'No encontramos esa organización';
+  end if;
+
+  if char_length(trim(coalesce(p_nombre_visible, ''))) not between 3 and 60 then
+    raise exception 'Tu nombre debe tener entre 3 y 60 caracteres';
+  end if;
+
+  if public.contiene_pii(p_nombre_visible) then
+    raise exception 'El nombre no puede llevar teléfonos, correos ni números de documento';
+  end if;
+
+  if coalesce(trim(p_codigo), '') <> '' then
+    select * into v_inv from public.invitaciones_organizacion i
+     where i.codigo = lower(trim(p_codigo))
+       and i.organizacion_id = v_org.id
+       and i.activa
+       and i.expira_at > now()
+       and i.usos < i.usos_max
+     for update;
+
+    if v_inv.id is not null then
+      v_inv_id := v_inv.id;
+      v_estado := 'activo';
+      v_rol    := v_inv.rol_otorgado;
+    end if;
+  end if;
+
+  -- Sin `contacto_publico` y sin `acepto_publicacion`: a un aliado no se
+  -- le publica ficha, así que no hay nada que autorizar a publicar.
+  insert into public.perfiles (id, nombre_visible, tipo, municipios, acepto_publicacion)
+  values (v_uid, trim(p_nombre_visible), 'aliado', v_org.municipios, false)
+  on conflict (id) do nothing;
+
+  select * into v_actual from public.miembros_organizacion m
+   where m.organizacion_id = v_org.id and m.perfil_id = v_uid;
+
+  if v_actual.perfil_id is null then
+    insert into public.miembros_organizacion
+      (organizacion_id, perfil_id, rol, estado, invitacion_id,
+       aprobado_por, aprobado_at)
+    values
+      (v_org.id, v_uid, v_rol, v_estado, v_inv_id,
+       case when v_estado = 'activo' then v_uid end,
+       case when v_estado = 'activo' then now() end);
+
+  elsif v_actual.estado = 'pendiente' and v_estado = 'activo' then
+    -- Estaba en la cola y volvió con un código bueno: se le abre.
+    update public.miembros_organizacion
+       set rol           = v_rol,
+           estado        = 'activo',
+           invitacion_id = v_inv_id,
+           aprobado_por  = v_uid,
+           aprobado_at   = now()
+     where organizacion_id = v_org.id and perfil_id = v_uid;
+
+  else
+    -- Ya era miembro activo o lo desactivaron. Un código no revive a quien
+    -- un coordinador sacó, y no se gasta un uso por reabrir el enlace.
+    v_estado := v_actual.estado;
+    v_rol    := v_actual.rol;
+    v_inv_id := null;
+  end if;
+
+  if v_inv_id is not null then
+    update public.invitaciones_organizacion
+       set usos = usos + 1
+     where id = v_inv_id;
+  end if;
+
+  return jsonb_build_object(
+    'organizacion', v_org.nombre,
+    'slug',         v_org.slug,
+    'estado',       v_estado,
+    'rol',          v_rol
+  );
+end;
+$$;
+
+revoke execute on function public.unirse_a_organizacion(text,text,text) from public, anon;
+grant  execute on function public.unirse_a_organizacion(text,text,text) to authenticated;
+
+-- Toda la pantalla de /aliado en una sola RPC, como `sugerencias_pendientes`.
+-- El equipo y las invitaciones solo salen para un coordinador activo: un
+-- miembro raso no ve quién más está dentro, y uno pendiente no ve nada.
+create or replace function public.mi_aliado()
+returns jsonb
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select coalesce(
+    (select jsonb_agg(x order by x->'organizacion'->>'nombre')
+       from (
+         select jsonb_build_object(
+           'organizacion', jsonb_build_object(
+             'id',               o.id,
+             'nombre',           o.nombre,
+             'slug',             o.slug,
+             'municipios',       o.municipios,
+             'direccion_acopio', o.direccion_acopio,
+             'horario_acopio',   o.horario_acopio,
+             'activa',           o.activa
+           ),
+           'yo', jsonb_build_object(
+             'rol',                 m.rol,
+             'estado',              m.estado,
+             'puede_ver_identidad', m.puede_ver_identidad,
+             'puede_moderar',       m.puede_moderar
+           ),
+           'equipo', case
+             when m.rol = 'coordinador' and m.estado = 'activo' then (
+               select coalesce(jsonb_agg(jsonb_build_object(
+                        'perfil_id',           mm.perfil_id,
+                        'nombre_visible',      p.nombre_visible,
+                        'rol',                 mm.rol,
+                        'estado',              mm.estado,
+                        'puede_ver_identidad', mm.puede_ver_identidad,
+                        'puede_moderar',       mm.puede_moderar,
+                        'creado_at',           mm.creado_at
+                      ) order by mm.estado, p.nombre_visible), '[]'::jsonb)
+                 from public.miembros_organizacion mm
+                 join public.perfiles p on p.id = mm.perfil_id
+                where mm.organizacion_id = o.id)
+             else '[]'::jsonb end,
+           'invitaciones', case
+             when m.rol = 'coordinador' and m.estado = 'activo' then (
+               select coalesce(jsonb_agg(jsonb_build_object(
+                        'id',           i.id,
+                        'codigo',       i.codigo,
+                        'rol_otorgado', i.rol_otorgado,
+                        'expira_at',    i.expira_at,
+                        'usos',         i.usos,
+                        'usos_max',     i.usos_max
+                      ) order by i.creada_at desc), '[]'::jsonb)
+                 from public.invitaciones_organizacion i
+                where i.organizacion_id = o.id
+                  and i.activa and i.expira_at > now() and i.usos < i.usos_max)
+             else '[]'::jsonb end
+         ) as x
+           from public.miembros_organizacion m
+           join public.organizaciones o on o.id = m.organizacion_id
+          where m.perfil_id = auth.uid()
+       ) t),
+    '[]'::jsonb);
+$$;
+
+revoke execute on function public.mi_aliado() from public, anon;
+grant  execute on function public.mi_aliado() to authenticated;
+
+-- Lo que hace un coordinador con su equipo. Una sola RPC con una acción,
+-- como `resolver_sugerencia`. Lo que NO entra aquí es
+-- `puede_ver_identidad`: tiene función propia, y es a propósito.
+--
+-- Nadie se aplica una acción a sí mismo: es lo que evita que el único
+-- coordinador se degrade solo y deje la organización muda.
+create or replace function public.gestionar_miembro(
+  p_organizacion_id uuid,
+  p_perfil_id       uuid,
+  p_accion          text
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  if not public.es_coordinador_activo(p_organizacion_id, v_uid) then
+    raise exception 'No autorizado';
+  end if;
+
+  if p_perfil_id = v_uid then
+    raise exception 'No puedes aplicarte esto a ti mismo. Pídeselo a otro coordinador';
+  end if;
+
+  if not exists (select 1 from public.miembros_organizacion m
+                  where m.organizacion_id = p_organizacion_id
+                    and m.perfil_id = p_perfil_id) then
+    raise exception 'Esa persona no está en la organización';
+  end if;
+
+  if p_accion = 'aprobar' then
+    update public.miembros_organizacion
+       set estado = 'activo', aprobado_por = v_uid, aprobado_at = now()
+     where organizacion_id = p_organizacion_id and perfil_id = p_perfil_id
+       and estado = 'pendiente';
+
+  elsif p_accion in ('rechazar','sacar') then
+    -- Borrado duro (regla 4). Quien fue rechazado puede volver a intentarlo
+    -- con un código bueno; no queda un renglón de «le dijeron que no».
+    delete from public.miembros_organizacion
+     where organizacion_id = p_organizacion_id and perfil_id = p_perfil_id;
+
+  elsif p_accion = 'desactivar' then
+    update public.miembros_organizacion
+       set estado = 'inactivo', puede_ver_identidad = false,
+           permiso_identidad_por = case when puede_ver_identidad then v_uid
+                                        else permiso_identidad_por end,
+           permiso_identidad_at  = case when puede_ver_identidad then now()
+                                        else permiso_identidad_at end
+     where organizacion_id = p_organizacion_id and perfil_id = p_perfil_id;
+
+  elsif p_accion = 'activar' then
+    update public.miembros_organizacion
+       set estado = 'activo', aprobado_por = v_uid, aprobado_at = now()
+     where organizacion_id = p_organizacion_id and perfil_id = p_perfil_id;
+
+  elsif p_accion = 'ascender' then
+    update public.miembros_organizacion
+       set rol = 'coordinador'
+     where organizacion_id = p_organizacion_id and perfil_id = p_perfil_id
+       and estado = 'activo';
+
+  elsif p_accion = 'degradar' then
+    update public.miembros_organizacion
+       set rol = 'miembro'
+     where organizacion_id = p_organizacion_id and perfil_id = p_perfil_id;
+
+  else
+    raise exception 'Acción inválida';
+  end if;
+end;
+$$;
+
+revoke execute on function public.gestionar_miembro(uuid,uuid,text) from public, anon;
+grant  execute on function public.gestionar_miembro(uuid,uuid,text) to authenticated;
+
+-- Los dos permisos, y solo por aquí. `puede_ver_identidad` es lo que deja
+-- ver cédulas: nunca se otorga solo —ni al entrar por enlace, ni al ser
+-- aprobado, ni al ser coordinador—, siempre como acto explícito de alguien
+-- sobre alguien, y registrado.
+create or replace function public.otorgar_permiso_miembro(
+  p_organizacion_id uuid,
+  p_perfil_id       uuid,
+  p_permiso         text,
+  p_valor           boolean
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  if not public.es_coordinador_activo(p_organizacion_id, v_uid) then
+    raise exception 'No autorizado';
+  end if;
+
+  if p_permiso not in ('puede_ver_identidad','puede_moderar') then
+    raise exception 'Permiso inválido';
+  end if;
+
+  -- Solo a gente activa: darle el permiso de ver cédulas a alguien que
+  -- sigue en la cola de aprobación no tiene ninguna lectura buena.
+  if not exists (select 1 from public.miembros_organizacion m
+                  where m.organizacion_id = p_organizacion_id
+                    and m.perfil_id = p_perfil_id
+                    and m.estado = 'activo') then
+    raise exception 'Esa persona no es un miembro activo de la organización';
+  end if;
+
+  if p_permiso = 'puede_ver_identidad' then
+    update public.miembros_organizacion
+       set puede_ver_identidad   = p_valor,
+           permiso_identidad_por = v_uid,
+           permiso_identidad_at  = now()
+     where organizacion_id = p_organizacion_id and perfil_id = p_perfil_id;
+  else
+    update public.miembros_organizacion
+       set puede_moderar = p_valor
+     where organizacion_id = p_organizacion_id and perfil_id = p_perfil_id;
+  end if;
+end;
+$$;
+
+revoke execute on function public.otorgar_permiso_miembro(uuid,uuid,text,boolean) from public, anon;
+grant  execute on function public.otorgar_permiso_miembro(uuid,uuid,text,boolean) to authenticated;
 
 -- Sugerencias de ítem: aprobar, rechazar o fusionar.
 --
