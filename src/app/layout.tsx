@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   //
   // El código sale de Search Console → propiedad `https://aquive.co` →
   // método "Etiqueta HTML". Va sin el `<meta>`, solo el valor del content.
-  verification: { google: "PEGA-AQUI-EL-CODIGO-DE-SEARCH-CONSOLE" },
+  verification: { google: "T8UgXRMUCyiQScl5ukVyVg5oLL6tkv38cYDv7GKdIEQ" },
   appleWebApp: { capable: true, title: "AquíVe", statusBarStyle: "default" },
   icons: {
     icon: [

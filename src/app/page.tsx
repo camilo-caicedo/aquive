@@ -10,6 +10,7 @@ import {
   Stethoscope,
   Info,
   PackageOpen,
+  LogIn,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import type { Categoria } from '@/lib/types'
@@ -143,6 +144,18 @@ export default async function InicioPage({
           <ShieldCheck className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
           El contacto ocurre por fuera de la plataforma. Nunca vemos tu
           teléfono ni tus conversaciones.
+        </p>
+        {/* Quién entra con Google y para qué, dicho en la portada. Lo pide
+            la revisión de la marca OAuth —el revisor evalúa el cliente, no
+            la aplicación, y sin esto no hay dónde leer para qué sirve ese
+            botón—, pero está aquí porque de todos modos es lo que quiere
+            saber quien duda antes de tocarlo. Y es cierto: el callback usa
+            solo `user.id` y descarta el correo. */}
+        <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
+          <LogIn className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
+          Quien pide ayuda no necesita cuenta. Quien quiere ayudar entra con
+          su cuenta de Google, y de ella solo guardamos un identificador: el
+          correo no se almacena.
         </p>
       </section>
 
