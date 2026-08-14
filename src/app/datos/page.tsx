@@ -4,7 +4,7 @@ import { listarMunicipios } from '@/lib/municipios'
 import { CATEGORIAS } from '@/lib/catalogo'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
-export const metadata = { title: 'Datos abiertos · AquíVe' }
+export const metadata = { title: 'Datos abiertos' }
 
 export default async function DatosPage() {
   const supabase = await createClient()

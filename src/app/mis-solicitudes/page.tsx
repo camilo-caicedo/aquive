@@ -1,6 +1,6 @@
 import { ListaLocal } from './lista-local'
 
-export const metadata = { title: 'Mis solicitudes · AquíVe' }
+export const metadata = { title: 'Mis solicitudes' }
 
 export default function MisSolicitudesPage() {
   return (

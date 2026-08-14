@@ -2,7 +2,7 @@
 // (docs/legal/PLANTILLAS.md sección 3) y en las páginas legales, así que
 // tiene efecto legal. Debe coincidir con lo que diga PLANTILLAS.md.
 export const RESPONSABLE = 'Juan Camilo Caicedo Sepulveda'
-export const CORREO_CONTACTO = 'aquive@coffeaorigen.co'
+export const CORREO_CONTACTO = 'soporte@aquive.co'
 export const FECHA_LEGALES = '14 de agosto de 2026'
 
 export const ENTIDADES_MATRICULA = [
