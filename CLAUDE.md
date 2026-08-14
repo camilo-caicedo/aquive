@@ -96,7 +96,8 @@ correos, cédulas) que **rechaza el envío** con mensaje explicativo.
 
 ### 3. El contacto nunca pasa por la plataforma
 
-No hay mensajería interna. No guardes conversaciones.
+**En el flujo directo**, que es el de siempre y el que se ofrece primero:
+no hay mensajería interna y no se guardan conversaciones.
 
 Flujo correcto:
 1. Necesitado publica solicitud → recibe token
@@ -105,6 +106,17 @@ Flujo correcto:
    llamada) usando el contacto que el ofertador publicó voluntariamente
 
 La plataforma nunca conoce el canal de contacto del necesitado.
+
+**En el flujo acompañado ocurre al revés, y a propósito.** Cuando una
+fundación aliada coordina la entrega, la conversación pasa por aquí —los
+tres a la vez— y el intercambio de teléfonos se **bloquea** (regla M). No
+es una excepción a esta regla: es la misma idea por el otro camino. Si dos
+desconocidos se van a encontrar, o no sabemos nada del encuentro, o hay un
+tercero responsable delante. Lo que no puede existir es el punto medio:
+recolectar datos y además dejarlos solos.
+
+Y ese hilo **no es un archivo**: muere con la solicitud, y se le dice a los
+tres en pantalla.
 
 ### 4. Borrado duro, no lógico
 
@@ -115,6 +127,19 @@ La plataforma nunca conoce el canal de contacto del necesitado.
 - Al borrar, conservar solo una fila anónima en `metricas` (municipio,
   categoría, si se cumplió, horas hasta primera respuesta). Sin texto,
   sin ubicación fina, sin identificadores.
+
+**El acompañamiento no alarga el TTL, solo lo aplaza mientras haya algo
+vivo.** Una solicitud con conversación abierta se auto-renueva, con **techo
+duro de 14 días** desde que se publicó. Al llegar al techo se cierran los
+hilos y se borra igual. La promesa es que esto se borra, no que se borra
+pronto — pero se borra.
+
+**Tres cosas sobreviven al borrado, y ninguna tiene datos personales:**
+`metricas`, `entregas` —qué ítems, cuántos, qué organización, qué
+municipio— y `accesos_identidad`, que dice quién leyó una identidad, cuándo
+y con qué motivo, nunca qué leyó. Por eso `entregas` no tiene llave foránea
+hacia la solicitud y `accesos_identidad` va en `SET NULL` con copia en
+texto: si colgaran de lo que registran, se irían con ello.
 
 ### 5. Alcance cerrado
 
@@ -138,6 +163,15 @@ alcance cerrado no es timidez de producto: es la principal medida de
 protección jurídica del proyecto. Si alguien propone ampliarlo, la
 respuesta por defecto es no.
 
+**Con una salvedad, y solo para el flujo acompañado.** Ahí los datos
+personales de quien pide los trata una fundación aliada: ella es la
+**responsable** del tratamiento y AquíVe es **encargada** — guarda lo que
+la fundación necesita, mientras dura la coordinación, y nada más. Ese
+reparto no reduce el alcance cerrado ni una línea: sigue sin haber
+alojamiento, transporte de personas ni dinero. Lo que cambia es quién
+responde por los datos, y eso exige papel firmado antes de dar de alta a
+la primera organización real (PLAN-V2 §12).
+
 **Excepción: el directorio de entidades.** Desde el 14 de agosto de 2026,
 `/servidores` incluye una lista de organizaciones dada de alta por un
 administrador, puramente informativa. Esas entidades no crean cuenta, no
@@ -160,6 +194,36 @@ comercial, y esa lectura no está resuelta.
 - Nunca poner el token en query string (va en el path o en el body)
 - No loggear cuerpos de request
 - No usar analytics que capturen URLs completas
+- El código de una invitación de organización va en el path, igual
+- Lo mismo con los cuatro últimos del documento: no van en una pantalla
+  pública, ni en un QR, ni en una URL. El código de entrega que se escanea
+  en el acopio es el identificador de la conversación, opaco por
+  construcción
+
+### Reglas del flujo acompañado
+
+Las seis de arriba siguen valiendo enteras. Estas se **suman** cuando hay
+una fundación coordinando, y están desarrolladas en `PLAN-V2.md` §2:
+
+- **K · La identidad vive cifrada, aislada y con fecha de muerte.** Nombre,
+  documento y teléfono van en `identidades`, cifrados con llave del Vault,
+  y mueren con la solicitud o con la cuenta de la que cuelgan.
+- **L · Ninguna conversación puede ser bilateral.** Un hilo sin aliado a
+  cargo no acepta mensajes. Lo sostiene un trigger, no la interfaz.
+- **M · El chat filtra datos de contacto.** Más estricto que el filtro de
+  la nota: cubre `wa.me`, `t.me`, arrobas sueltas y dígitos escritos con
+  letras. Sin esto la regla L es decorativa.
+- **N · Cada lectura de identidad deja rastro**, y ese rastro sobrevive a
+  la identidad.
+- **O · Sin datos de menores.** Solo CC, CE, PEP y PPT, por CHECK.
+- **P · El documento se hashea con pepper del Vault**, nunca del
+  repositorio.
+- **Q · La plataforma no es el archivo de la fundación.** La planilla con
+  nombres se exporta en el momento de la entrega y la custodia ella.
+- **R · Elegir el flujo acompañado nunca puede ser el camino de menor
+  resistencia.** El botón grande es publicar directo. Se ofrece, se
+  explica y se acepta: no se preselecciona, no se pide dos veces y no se
+  pinta en rojo la opción anónima.
 
 ## Stack
 

@@ -330,6 +330,49 @@ export interface HiloResumen {
   mensajes_total: number
 }
 
+// Lo que devuelve `mis_datos`: los artículos 14 y 15 de la Ley 1581
+// hechos pantalla. NO trae el documento descifrado, solo el tipo y los
+// cuatro últimos: ver su propia cédula completa no le dice a nadie nada
+// que no sepa, y multiplica los sitios por donde ese dato puede salir.
+export interface MisDatos {
+  codigo: string
+  flujo: FlujoSolicitud
+  municipio: string
+  barrio: string
+  nota: string | null
+  creada_at: string
+  expira_at: string
+  organizacion: string | null
+  identidad: {
+    documento_tipo: TipoDocumento
+    documento_ultimos4: string
+    tiene_telefono: boolean
+    autorizacion_version: string
+    autorizacion_at: string
+  } | null
+  /** Quién vio esos datos, cuándo y con qué motivo. El derecho a saber. */
+  accesos: Array<{ rol: 'admin' | 'aliado'; motivo: string; cuando: string }>
+  entregas: Array<{
+    item: string
+    cantidad: number
+    unidad: string
+    confirmada: boolean
+  }>
+}
+
+// Lo que devuelve `panel_admin_flujo2()`. Sin PII: la bitácora dice quién
+// leyó y por qué, nunca qué leyó.
+export interface PanelFlujo2 {
+  sin_aliado: Array<{ id: string; codigo: string; municipio: string; creada_at: string }>
+  accesos: Array<{
+    rol: 'admin' | 'aliado'
+    motivo: string
+    cuando: string
+    huerfano: boolean
+  }>
+  hilos_abiertos: number
+}
+
 // Lo que devuelve `unirse_a_organizacion`.
 export interface ResultadoUnirse {
   organizacion: string
@@ -1210,6 +1253,34 @@ export interface Database {
           p_valor: boolean
         }
         Returns: undefined
+      }
+      // Habeas data y ciclo de vida (Fase I).
+      //
+      // `devolver_a_directo` y `expirar_solicitudes` NO están aquí, y es
+      // deliberado: no tienen grant para nadie. La primera la llaman otras
+      // RPC; la segunda, `pg_cron`.
+      //
+      // Devuelve MisDatos.
+      mis_datos: {
+        Args: { p_token: string }
+        Returns: Json
+      }
+      // Borra la identidad, devuelve la solicitud a `directo` y cierra los
+      // hilos. El hilo NO se borra: contiene palabras de otras dos
+      // personas; lo que se reemplaza es el cuerpo de lo que escribió el
+      // titular, dejando rol y fecha.
+      suprimir_mis_datos: {
+        Args: { p_token: string }
+        Returns: Json
+      }
+      bloquear_ofertador: {
+        Args: { p_conversacion_id: string; p_motivo: string }
+        Returns: undefined
+      }
+      // Devuelve PanelFlujo2.
+      panel_admin_flujo2: {
+        Args: Record<string, never>
+        Returns: Json
       }
       // Coincidencias y entregas (Fase H).
       //

@@ -162,6 +162,17 @@ export default async function SolicitudPage({
       <section className="mt-8">
         <h2 className="font-heading text-2xl">Administrar</h2>
         <GestionSolicitud token={token} />
+
+        {/* Solo en Flujo 2: en Flujo 1 no hay nada que consultar, y ofrecer
+            una pantalla de «tus datos» donde no guardamos ninguno haría
+            dudar de lo único que hay que creerse. */}
+        {solicitud.flujo === 'acompanado' && (
+          <p className="mt-3 text-base">
+            <Link href={'/mis-datos/' + token} className="underline">
+              Ver qué datos tuyos guardamos, y borrarlos
+            </Link>
+          </p>
+        )}
       </section>
     </main>
   )

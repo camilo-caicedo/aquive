@@ -59,17 +59,52 @@ export default function PrivacidadPage() {
         Puedes borrar tu perfil completo desde tu cuenta, en cualquier momento.
       </p>
 
+      <h2 className="font-heading mt-6 text-2xl">
+        Si pides que una fundación te acompañe: ahí sí guardamos datos tuyos, cifrados.
+      </h2>
+      <p className="mt-3 text-base">
+        Publicar una solicitud no exige esto y nunca lo va a exigir. Es una opción aparte, que se ofrece solo si
+        hay una organización aliada trabajando en tu municipio, y que solo existe si tú la aceptas.
+      </p>
+      <p className="mt-3 text-base">
+        Si la aceptas, guardamos tu nombre, tu tipo y número de documento y, si nos lo das, un teléfono. Van
+        cifrados, en una tabla aparte, y no aparecen en ninguna página pública ni se le entregan a quien ofrece
+        ayuda. La finalidad es una sola: que la fundación pueda verificar la entrega en su punto de acopio.
+      </p>
+      <p className="mt-3 text-base">
+        No recibimos documentos de menores de edad. Solo cédula de ciudadanía, cédula de extranjería, PEP o PPT.
+      </p>
+      <p className="mt-3 text-base">
+        Cada vez que alguien de la fundación consulta esos datos queda registrado quién fue, cuándo y con qué
+        motivo. Puedes ver ese registro completo desde el enlace de tu solicitud, en «ver qué datos tuyos
+        guardamos», y desde ahí pedir que los borremos.
+      </p>
+      <p className="mt-3 text-base">
+        En este caso la fundación es responsable del tratamiento y nosotros actuamos como encargados: ellos
+        deciden para qué usan esos datos y los custodian en sus propios sistemas; nosotros solo los guardamos
+        mientras dure la coordinación. Se borran con tu solicitud, y la solicitud se borra sola.
+      </p>
+      <p className="mt-3 text-base">
+        La conversación con la fundación y con quien ofrece ocurre dentro de la plataforma, y también se borra
+        con la solicitud. No es un archivo: no la uses para guardar nada que necesites después.
+      </p>
+
       <h2 className="font-heading mt-6 text-2xl">Lo que nunca hacemos</h2>
       <p className="mt-3 text-base">
-        No vendemos ni compartimos información con terceros. No hacemos publicidad. No procesamos dinero. No
-        alojamos las conversaciones entre las personas: cuando contactas a alguien, lo haces por fuera de esta
-        plataforma y nosotros no vemos nada de eso.
+        No vendemos ni compartimos información con terceros. No hacemos publicidad. No procesamos dinero. En el
+        flujo directo no alojamos las conversaciones entre las personas: cuando contactas a alguien, lo haces por
+        fuera de esta plataforma y nosotros no vemos nada de eso.
       </p>
 
       <h2 className="font-heading mt-6 text-2xl">Tus derechos</h2>
       <p className="mt-3 text-base">
         Conforme a la Ley 1581 de 2012 puedes conocer, actualizar, rectificar y suprimir tus datos, y revocar la
-        autorización. Escríbenos a {CORREO_CONTACTO} y respondemos en los términos de ley.
+        autorización. Escríbenos a {CORREO_CONTACTO}: una consulta la respondemos en 10 días hábiles y un reclamo
+        en 15, que son los plazos de los artículos 14 y 15.
+      </p>
+      <p className="mt-3 text-base">
+        Si tu solicitud tiene acompañamiento, no hace falta que escribas: desde el enlace de tu solicitud puedes
+        ver todo lo que guardamos, quién lo ha consultado y borrarlo ahí mismo, sin pedirle permiso a nadie.
       </p>
 
       <h2 className="font-heading mt-6 text-2xl">Esta plataforma es temporal.</h2>

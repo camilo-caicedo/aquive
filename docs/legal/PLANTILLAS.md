@@ -198,6 +198,32 @@ tiene cuánto y en qué municipio es un mapa de existencias.
 Guarda `acepto_publicacion = true` y `acepto_politica_at = now()`. Esa
 marca de tiempo es la prueba de la autorización.
 
+### 3b. Texto de autorización del acompañamiento (Flujo 2)
+
+Este es **otro** consentimiento y va aparte del de arriba: lo firma quien
+pide ayuda, no quien la ofrece, y lo que autoriza no es publicar sino
+entregar unos datos a un tercero.
+
+> Autorizo que [NOMBRE DE LA FUNDACIÓN] trate mi nombre, mi documento y mi
+> teléfono con la única finalidad de coordinar y verificar la entrega de los
+> insumos que pedí. Entiendo que estos datos **no se publican** en ninguna
+> parte, que no se le entregan a quien ofrece la ayuda, y que se borran
+> cuando se borre mi solicitud. He leído la política de privacidad.
+
+Se guarda cifrado en `identidades`, con `autorizacion_version` —la fecha de
+la política que aceptó— y `autorizacion_at`. Esas dos columnas son la
+prueba del consentimiento informado: sin ellas el tratamiento no se puede
+defender.
+
+**Reparto de papeles.** En el Flujo 2 la fundación es **responsable** del
+tratamiento y esta plataforma es **encargada**. Eso exige el contrato de
+transmisión de datos del artículo 25 del Decreto 1377 de 2013, firmado
+**antes** de dar de alta a la primera organización real, y el registro de
+la base en el RNBD a nombre de la fundación.
+
+**Sin datos de menores.** Solo CC, CE, PEP y PPT. TI y RC están prohibidos
+por un CHECK en la base, no por una validación de pantalla.
+
 ---
 
 ## 4. Avisos dentro de la app

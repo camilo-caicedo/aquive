@@ -8,6 +8,7 @@ import type {
   EntidadMatricula,
   MotivoReporte,
   OrganizacionAdmin,
+  PanelFlujo2,
   OrigenSugerencia,
   SugerenciaPendiente,
   TipoObjetoReporte,
@@ -18,6 +19,7 @@ import { AccionesServidor } from './acciones-servidor'
 import { AccionesSugerencia } from './acciones-sugerencia'
 import { PanelEntidades, type EntidadAdmin } from './panel-entidades'
 import { PanelOrganizaciones } from './panel-organizaciones'
+import { PanelFlujoDos } from './panel-flujo2'
 
 const MOTIVOS: Record<MotivoReporte, string> = {
   datos_personales: 'Datos personales',
@@ -87,6 +89,7 @@ export default async function AdminPage() {
     { data: sugerenciasData },
     { data: entidadesData },
     { data: organizacionesData },
+    { data: flujo2Data },
   ] = await Promise.all([
     supabase
       .from('reportes')
@@ -105,11 +108,13 @@ export default async function AdminPage() {
     // Por RPC y no por `select`: la tabla está revocada entera, y así
     // `creada_por` —el uuid de una persona real— no sale al navegador.
     supabase.rpc('organizaciones_admin'),
+    supabase.rpc('panel_admin_flujo2'),
   ])
 
   const sugerencias = (sugerenciasData as unknown as SugerenciaPendiente[]) ?? []
   const entidades: EntidadAdmin[] = entidadesData ?? []
   const organizaciones = (organizacionesData as unknown as OrganizacionAdmin[]) ?? []
+  const flujo2 = flujo2Data as unknown as PanelFlujo2 | null
 
   const porPerfil = new Map((perfiles ?? []).map((p) => [p.id, p]))
 
@@ -271,6 +276,21 @@ export default async function AdminPage() {
         </Alert>
         <PanelOrganizaciones organizaciones={organizaciones} municipios={municipios} />
       </section>
+
+      {flujo2 && (
+        <section className="mt-8">
+          <h2 className="font-heading text-2xl">Acompañamiento</h2>
+          <Alert className="mt-3">
+            <AlertDescription>
+              La bitácora dice quién vio una identidad, cuándo y con qué
+              motivo — nunca qué vio. Es la evidencia de diligencia frente a
+              la fundación y frente a la SIC, y sobrevive al borrado de la
+              identidad que registra.
+            </AlertDescription>
+          </Alert>
+          <PanelFlujoDos datos={flujo2} />
+        </section>
+      )}
     </main>
   )
 }
