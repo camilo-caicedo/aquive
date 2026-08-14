@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { generarToken } from '@/lib/tokens'
-import { validarBarrio, validarNota, contienePII } from '@/lib/validacion'
+import { validarBarrio, validarNota, validarSugerencia } from '@/lib/validacion'
 import { verificarTurnstile } from '@/lib/turnstile'
 import { notificarOfertadores } from '@/lib/push-ofertadores'
 import { CATEGORIAS } from '@/lib/catalogo'
@@ -97,17 +97,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Ítems inválidos' }, { status: 400 })
     }
     const nombre = item.sugerencia.trim()
-    if (nombre.length < 2 || nombre.length > 60) {
-      return NextResponse.json(
-        { error: 'El nombre de cada ítem sugerido debe tener entre 2 y 60 caracteres' },
-        { status: 400 }
-      )
-    }
-    if (contienePII(nombre)) {
-      return NextResponse.json(
-        { error: 'No incluyas teléfonos, correos ni números de identificación' },
-        { status: 400 }
-      )
+    const errorSugerencia = validarSugerencia(nombre)
+    if (errorSugerencia) {
+      return NextResponse.json({ error: errorSugerencia }, { status: 400 })
     }
     numSugerencias++
     if (numSugerencias > MAX_SUGERENCIAS) {

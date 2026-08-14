@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Database, Categoria, ItemSolicitudInput } from '@/lib/types'
+import type { Categoria, ItemCatalogoPublico, ItemSolicitudInput } from '@/lib/types'
 import type { MunicipioBasico as Municipio } from '@/lib/municipios'
 import { CATEGORIAS } from '@/lib/catalogo'
-import { validarBarrio, validarNota, contienePII } from '@/lib/validacion'
+import { validarBarrio, validarNota, validarSugerencia } from '@/lib/validacion'
 import { TurnstileWidget } from '@/components/turnstile-widget'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,7 +23,7 @@ import {
   ComboboxValue,
 } from '@/components/ui/combobox'
 
-type ItemCatalogo = Database['public']['Tables']['catalogo_items']['Row']
+type ItemCatalogo = ItemCatalogoPublico
 
 const MAX_SUGERENCIAS = 3
 
@@ -115,10 +115,7 @@ export function FormularioPublicar({
     setSeleccionados((prev) => prev.filter((_, i) => i !== indice))
   }
 
-  const errorSugerencia =
-    textoSugerencia.trim() && contienePII(textoSugerencia)
-      ? 'No incluyas teléfonos, correos ni números de identificación'
-      : null
+  const errorSugerencia = textoSugerencia.trim() ? validarSugerencia(textoSugerencia) : null
   const puedeAgregarSugerencia =
     textoSugerencia.trim().length >= 2 &&
     !errorSugerencia &&

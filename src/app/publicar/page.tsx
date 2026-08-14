@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
+import { COLUMNAS_ITEM_PUBLICO } from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { FormularioPublicar } from './formulario-publicar'
 
@@ -8,7 +9,13 @@ export default async function PublicarPage() {
 
   const [municipios, { data: items }] = await Promise.all([
     listarMunicipios(supabase),
-    supabase.from('catalogo_items').select('*').eq('activo', true).order('orden'),
+    // Columnas explícitas y no `select('*')`: esta página es anónima y
+    // `catalogo_items` tiene `creado_por`, el uuid de quien aprobó el ítem.
+    supabase
+      .from('catalogo_items')
+      .select(COLUMNAS_ITEM_PUBLICO)
+      .eq('activo', true)
+      .order('orden'),
   ])
 
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ''

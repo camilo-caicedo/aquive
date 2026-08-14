@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
-import type { OfrecimientoResumen } from '@/lib/types'
+import { COLUMNAS_ITEM_PUBLICO, type OfrecimientoResumen } from '@/lib/types'
 import { FormularioRegistro } from './formulario-registro'
 import { AvisosOfertador } from './avisos-ofertador'
 import { CerrarSesion } from './cerrar-sesion'
@@ -33,7 +33,7 @@ export default async function RegistroPage() {
     // servidor y los declara en su propio bloque.
     supabase
       .from('catalogo_items')
-      .select('*')
+      .select(COLUMNAS_ITEM_PUBLICO)
       .eq('activo', true)
       .neq('categoria', 'servicios')
       .order('orden'),

@@ -524,13 +524,116 @@ create policy "admin actualiza reportes" on public.reportes
 
 -- Métricas: lectura pública, escritura solo por el job
 create policy "metricas lectura publica" on public.metricas
-  for select to public using (true);
+  for select to public using (es_prueba = false);
+
+-- Un `revoke select (columna)` NO sirve encima de un `grant select` de
+-- tabla: el permiso de tabla cubre todas las columnas y el revoke de
+-- columna no le resta nada. Hay que quitar el de tabla y volver a
+-- conceder columna por columna. `creado_por` es el uuid de auth.users de
+-- quien aprobó el ítem, y esta tabla la lee una página anónima.
+revoke select on public.catalogo_items from anon, authenticated;
+grant select (id, categoria, nombre, unidad, activo, orden, origen, es_prueba)
+  on public.catalogo_items to anon, authenticated;
 
 -- Sin esta política, `administradores` queda con RLS activo y cero reglas:
 -- la consulta devuelve vacío incluso para un administrador real y /admin
 -- se vuelve inaccesible. Cada quien solo puede ver su propia fila.
 create policy "admin se ve a si mismo" on public.administradores
   for select to authenticated using ((select auth.uid()) = user_id);
+
+create or replace function public.contiene_pii(p_texto text)
+returns boolean
+language sql
+security definer
+set search_path = ''
+immutable
+as $$
+  select p_texto is not null
+     and (
+       -- Correo, o usuario de red social con arroba.
+       p_texto ~* '@[a-zA-Z0-9._-]{2,}'
+       -- Siete o más dígitos seguidos una vez quitados los separadores que
+       -- la gente mete para que un número se lea mejor. Un celular
+       -- colombiano tiene 10, un fijo 7 u 8, una cédula entre 8 y 10.
+       or regexp_replace(p_texto, '[[:space:].()-]', '', 'g') ~ '\d{7,}'
+     );
+$$;
+
+revoke execute on function public.contiene_pii(text) from public, anon, authenticated;
+
+comment on function public.contiene_pii(text) is
+  'Gemela de contienePII en src/lib/validacion.ts. Si cambia una, cambia la otra: son los dos lados del mismo control y ya se separaron una vez.';
+
+-- ---------------------------------------------------------------------
+-- 2. Las sugerencias sobrevivían al borrado duro
+--
+-- La llave foránea va de `solicitud_items` HACIA la sugerencia, así que el
+-- CASCADE de `solicitudes` se lleva el ítem y deja la sugerencia. A las 72
+-- horas la solicitud desaparecía y el texto que escribió esa persona se
+-- quedaba en la tabla para siempre, sin job, sin TTL y sin ninguna ruta de
+-- borrado en la aplicación. La regla 4 promete que al borrar solo
+-- sobrevive una fila anónima en `metricas`, "sin texto".
+--
+-- Trigger y no un `delete` dentro de `expirar_solicitudes`: así cubre
+-- también `cerrar_solicitud` y el `delete` directo de `resolver_reporte`,
+-- que son otras dos rutas de borrado.
+--
+-- Las aprobadas y fusionadas se conservan: su texto ya pasó por moderación
+-- y vive en `catalogo_items`, y `item_resultante_id` es lo que explica de
+-- dónde salió un ítem del catálogo.
+-- ---------------------------------------------------------------------
+
+create or replace function public.limpiar_sugerencia_huerfana()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if old.sugerencia_id is null then
+    return null;
+  end if;
+
+  delete from public.sugerencias_item sg
+   where sg.id = old.sugerencia_id
+     and sg.estado in ('pendiente','rechazada')
+     and not exists (select 1 from public.solicitud_items si
+                      where si.sugerencia_id = sg.id)
+     and not exists (select 1 from public.ofrecimientos o
+                      where o.sugerencia_id = sg.id);
+
+  return null;
+end;
+$$;
+
+-- ⚠ DEFERRABLE INITIALLY DEFERRED, y esto no es un detalle: corren al
+-- COMMIT, no en el momento del `delete`.
+--
+-- Con un trigger normal se rompían dos cosas que se descubrieron probando:
+--
+--   · `guardar_ofrecimientos` empieza con `delete from ofrecimientos where
+--     perfil_id = ...` y vuelve a insertar. En el instante del delete la
+--     sugerencia se queda sin referencias, el trigger la borraba, y el
+--     re-insert con ese `sugerencia_id` fallaba con "Esa sugerencia no es
+--     tuya". O sea: guardar el inventario dos veces reventaba.
+--   · `resolver_sugerencia` borra filas de `solicitud_items` en medio del
+--     remapeo. El trigger se llevaba la sugerencia antes de que la función
+--     alcanzara a escribirle `estado` e `item_resultante_id`, y el update
+--     final no afectaba ninguna fila, en silencio.
+--
+-- Al COMMIT las referencias ya están puestas de vuelta y el estado ya está
+-- escrito, así que el trigger solo alcanza lo que de verdad quedó huérfano.
+drop trigger if exists trg_sugerencia_huerfana on public.solicitud_items;
+create constraint trigger trg_sugerencia_huerfana
+  after delete on public.solicitud_items
+  deferrable initially deferred
+  for each row execute function public.limpiar_sugerencia_huerfana();
+
+drop trigger if exists trg_sugerencia_huerfana_ofr on public.ofrecimientos;
+create constraint trigger trg_sugerencia_huerfana_ofr
+  after delete on public.ofrecimientos
+  deferrable initially deferred
+  for each row execute function public.limpiar_sugerencia_huerfana();
 
 -- ---------------------------------------------------------------------
 -- 9. RPC — toda escritura de solicitudes pasa por aquí
@@ -566,8 +669,8 @@ create or replace function public.crear_solicitud(
   p_barrio      text,
   p_categoria   text,
   p_nota        text,
-  p_items       jsonb,        -- [{"item_id":"pañales_2","cantidad":1}]
-  p_token       text          -- generado en el servidor, 32 bytes base64url
+  p_items       jsonb,
+  p_token       text
 )
 returns table (solicitud_id uuid, codigo text)
 language plpgsql
@@ -583,8 +686,14 @@ declare
   v_n_sugeridos integer := 0;
   v_es_prueba   boolean := trim(p_barrio) ilike 'prueba%';
 begin
-  if p_nota is not null and p_nota ~ '(\+?57)?[ -]?3[0-9]{9}|[0-9]{7,}|@[a-zA-Z0-9._-]+\.[a-z]{2,}' then
+  if public.contiene_pii(p_nota) then
     raise exception 'La nota no puede contener teléfonos ni correos';
+  end if;
+
+  -- El barrio también: se ve en la tarjeta del tablero público, igual que
+  -- la nota, y hasta ahora solo lo filtraba el cliente.
+  if public.contiene_pii(p_barrio) then
+    raise exception 'El barrio no puede contener teléfonos ni correos';
   end if;
 
   if jsonb_array_length(p_items) < 1 or jsonb_array_length(p_items) > 12 then
@@ -593,26 +702,11 @@ begin
 
   v_codigo := public.generar_codigo();
 
-  -- La marca de prueba se deriva del prefijo del barrio en vez de recibirse
-  -- por parámetro: así no cambia la firma —agregarle un argumento a esta
-  -- función con `create or replace` crea una sobrecarga y PostgREST
-  -- devuelve PGRST203 en cada llamada—, no se puede olvidar, y una
-  -- solicitud de prueba publicada desde la interfaz real queda marcada
-  -- sola. El prefijo ya es obligatorio: `barrio` se ve en la tarjeta del
-  -- tablero público y quien la lea tiene que entender que es una prueba
-  -- antes de invertir un viaje.
   insert into public.solicitudes (codigo, token_hash, municipio, barrio, categoria, nota, es_prueba)
   values (v_codigo, encode(extensions.digest(p_token, 'sha256'), 'hex'),
           p_municipio, p_barrio, p_categoria, nullif(trim(p_nota), ''), v_es_prueba)
   returning id into v_id;
 
-  -- Cada ítem viene en una de dos formas:
-  --   {"item_id":"agua","cantidad":5}            ← del catálogo
-  --   {"sugerencia":"Crema dental","cantidad":3} ← escrita por la persona
-  --
-  -- El tope de 3 sugerencias acota el daño: esta función la llama `anon`, y
-  -- doce cadenas libres por envío convertirían la cola de moderación en el
-  -- cuello de botella. Turnstile ya filtra bots; esto filtra insistencia.
   for v_item in select * from jsonb_array_elements(p_items) loop
     v_sugerencia := nullif(trim(v_item->>'sugerencia'), '');
 
@@ -629,8 +723,7 @@ begin
         raise exception 'El nombre de lo que sugieres debe tener entre 2 y 60 caracteres';
       end if;
 
-      -- Mismo patrón que la nota: es texto libre que entra desde fuera.
-      if v_sugerencia ~ '(\+?57)?[ -]?3[0-9]{9}|[0-9]{7,}|@[a-zA-Z0-9._-]+\.[a-z]{2,}' then
+      if public.contiene_pii(v_sugerencia) then
         raise exception 'El nombre de lo que sugieres no puede contener teléfonos ni correos';
       end if;
 
@@ -930,33 +1023,43 @@ set search_path = ''
 as $$
 declare
   v_uid         uuid := auth.uid();
+  v_perfil      public.perfiles;
   v_item        jsonb;
   v_sugerencia  text;
   v_sug_id      uuid;
   v_n_sugeridos integer := 0;
-  v_es_prueba   boolean;
+  v_pendientes  integer;
 begin
   if v_uid is null then raise exception 'Debes iniciar sesión'; end if;
 
-  -- El `select ... into` hace dos cosas de una: comprueba que el perfil
-  -- exista (si no, queda en NULL) y saca de su nombre la marca de prueba
-  -- que van a heredar las sugerencias.
-  select p.nombre_visible ilike 'prueba%' into v_es_prueba
-    from public.perfiles p where p.id = v_uid;
-
-  if v_es_prueba is null then
+  select * into v_perfil from public.perfiles p where p.id = v_uid;
+  if not found then
     raise exception 'Necesitas completar tu perfil';
+  end if;
+
+  -- `responder_solicitud` ya comprobaba esto y aquí faltaba: una cuenta
+  -- suspendida por publicar datos personales conservaba intacto este canal
+  -- de escritura de texto libre.
+  if v_perfil.suspendido then
+    raise exception 'Tu perfil está suspendido';
   end if;
 
   if jsonb_typeof(p_items) <> 'array' then
     raise exception 'Formato de inventario inválido';
   end if;
 
-  -- No es un límite de producto: es una guarda de tamaño de payload en un
-  -- endpoint que escribe. Ningún inventario real se acerca.
   if jsonb_array_length(p_items) > 100 then
     raise exception 'Son demasiados ítems de una sola vez';
   end if;
+
+  -- El tope de 3 es por llamada, así que sin este de aquí una cuenta puede
+  -- llamar en bucle y llenar la cola de moderación. `sugerencias_pendientes`
+  -- recorre el catálogo por cada palabra de cada sugerencia pendiente: con
+  -- unos miles de filas, /admin deja de cargar, y /admin es la única
+  -- herramienta de moderación que tiene el proyecto.
+  select count(*) into v_pendientes
+    from public.sugerencias_item sg
+   where sg.propuesta_por = v_uid and sg.estado = 'pendiente';
 
   delete from public.ofrecimientos where perfil_id = v_uid;
 
@@ -969,17 +1072,20 @@ begin
       if v_n_sugeridos > 3 then
         raise exception 'Puedes sugerir máximo 3 cosas nuevas a la vez';
       end if;
+      if v_pendientes + v_n_sugeridos > 10 then
+        raise exception 'Ya tienes muchas sugerencias esperando revisión. Espera a que las revisen.';
+      end if;
 
       if char_length(v_sugerencia) < 2 or char_length(v_sugerencia) > 60 then
         raise exception 'El nombre de lo que sugieres debe tener entre 2 y 60 caracteres';
       end if;
 
-      if v_sugerencia ~ '(\+?57)?[ -]?3[0-9]{9}|[0-9]{7,}|@[a-zA-Z0-9._-]+\.[a-z]{2,}' then
+      if public.contiene_pii(v_sugerencia) then
         raise exception 'El nombre de lo que sugieres no puede contener teléfonos ni correos';
       end if;
 
       insert into public.sugerencias_item (nombre_propuesto, propuesta_por, origen, es_prueba)
-      values (v_sugerencia, v_uid, 'ofertador', v_es_prueba)
+      values (v_sugerencia, v_uid, 'ofertador', v_perfil.nombre_visible ilike 'prueba%')
       returning id into v_sug_id;
 
     elsif v_sug_id is not null then
@@ -1265,6 +1371,16 @@ begin
     raise exception 'El nombre debe tener entre 2 y 60 caracteres';
   end if;
 
+  -- Antes lo atrapaba el CHECK de la tabla y al administrador le salía en
+  -- pantalla un error crudo de Postgres.
+  if p_categoria not in ('alimentacion','aseo','salud','abrigo','cocina','otros','servicios','mascotas') then
+    raise exception 'Categoría inválida';
+  end if;
+
+  if public.contiene_pii(p_nombre) then
+    raise exception 'El nombre no puede contener teléfonos ni correos';
+  end if;
+
   v_id := public.slug_item(p_nombre);
 
   insert into public.catalogo_items (id, categoria, nombre, unidad, orden, creado_por, origen, es_prueba)
@@ -1278,7 +1394,6 @@ $$;
 
 revoke execute on function public.crear_item_catalogo(text,text,text) from public, anon;
 grant  execute on function public.crear_item_catalogo(text,text,text) to authenticated;
-
 -- ---------------------------------------------------------------------
 -- 3. Resolver una sugerencia
 --
@@ -1294,8 +1409,8 @@ grant  execute on function public.crear_item_catalogo(text,text,text) to authent
 
 create or replace function public.resolver_sugerencia(
   p_sugerencia_id uuid,
-  p_accion        text,             -- 'aprobar' | 'rechazar' | 'fusionar'
-  p_item_destino  text default null, -- solo para 'fusionar'
+  p_accion        text,
+  p_item_destino  text default null,
   p_nota          text default null
 )
 returns text
@@ -1328,10 +1443,24 @@ begin
        set estado = 'rechazada', revisada_por = v_uid, revisada_at = now(),
            nota_revision = nullif(trim(p_nota), '')
      where id = p_sugerencia_id;
+
+    -- Sin esto, el inventario que la referenciaba queda "por confirmar"
+    -- para siempre: nadie lo va a resolver nunca. El inventario se puede
+    -- volver a llenar; la solicitud no se toca, porque su necesidad es real
+    -- y de todos modos se borra sola en menos de 72 horas.
+    delete from public.ofrecimientos where sugerencia_id = p_sugerencia_id;
     return null;
   end if;
 
   if p_accion = 'aprobar' then
+    -- Aprobar copia este texto a `catalogo_items`, que es de lectura
+    -- pública y permanente, y no hay ninguna RPC para borrar de ahí. Un
+    -- clic distraído sobre una sugerencia con un teléfono lo publicaría
+    -- para siempre.
+    if public.contiene_pii(v_sug.nombre_propuesto) then
+      raise exception 'Esa sugerencia trae un teléfono o un correo: recházala, no la apruebes';
+    end if;
+
     v_destino := public.slug_item(v_sug.nombre_propuesto);
     insert into public.catalogo_items (id, categoria, nombre, unidad, orden, creado_por, origen, es_prueba)
     values (v_destino,
@@ -1397,7 +1526,6 @@ $$;
 
 revoke execute on function public.resolver_sugerencia(uuid,text,text,text) from public, anon;
 grant  execute on function public.resolver_sugerencia(uuid,text,text,text) to authenticated;
-
 -- ---------------------------------------------------------------------
 -- 4. La cola, con candidatos para fusionar
 --

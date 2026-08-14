@@ -51,6 +51,20 @@ export interface ItemResumen {
   por_confirmar: boolean
 }
 
+// Lo único del catálogo que necesitan las pantallas de publicar y de
+// registro. Existe para no hacer `select('*')`: la tabla es de lectura
+// pública y desde la Fase A tiene `creado_por`, que es el uuid de
+// `auth.users` de quien aprobó el ítem. Un `select('*')` lo serializaba
+// hacia el navegador en una página anónima (CLAUDE.md regla 6).
+export interface ItemCatalogoPublico {
+  id: string
+  categoria: Categoria
+  nombre: string
+  unidad: string
+}
+
+export const COLUMNAS_ITEM_PUBLICO = 'id, categoria, nombre, unidad'
+
 // Una fila del jsonb que devuelve `mis_ofrecimientos`. `nombre` y `unidad`
 // vienen resueltos: da igual si el ítem salió del catálogo o de una
 // sugerencia sin aprobar todavía.

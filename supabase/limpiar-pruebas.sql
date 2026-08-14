@@ -24,7 +24,11 @@
 --   solicitudes       es_prueba              → solicitud_items, respuestas,
 --                                              push_suscripciones
 --   perfiles          nombre_visible PRUEBA  → ofrecimientos, servidores,
---                                              push_ofertadores
+--                                              push_ofertadores, y también
+--                                              RESPUESTAS: si un perfil de
+--                                              prueba respondió una
+--                                              solicitud real, esa respuesta
+--                                              se va con él
 --   metricas          es_prueba              (sin llave foránea: a mano)
 --   sugerencias_item  es_prueba              (el remapeo borra su origen)
 --   catalogo_items    es_prueba              (`creado_por` es el admin real)
@@ -71,6 +75,13 @@ union all
 select 'push_ofertadores', count(*)
   from public.push_ofertadores po
   join public.perfiles p on p.id = po.perfil_id where p.nombre_visible ilike 'prueba%'
+union all
+-- `respuestas.autor_id` también está en CASCADE desde `perfiles`. Si este
+-- número no es cero, un perfil de prueba respondió solicitudes: mira cuáles
+-- son reales antes de seguir.
+select 'respuestas de perfiles de prueba', count(*)
+  from public.respuestas r
+  join public.perfiles p on p.id = r.autor_id where p.nombre_visible ilike 'prueba%'
 order by 1;
 
 -- Y lo que NO debería salir nunca: filas de prueba enganchadas a algo real.
@@ -116,14 +127,28 @@ delete from public.sugerencias_item where es_prueba;
 -- misma razón: si salta una violación es que algo real los usa.
 delete from public.catalogo_items where es_prueba;
 
--- Verificación: todo tiene que dar 0. Si no, NO hagas commit.
-select
-  (select count(*) from public.metricas         where es_prueba)                     as metricas,
-  (select count(*) from public.solicitudes      where es_prueba)                     as solicitudes,
-  (select count(*) from public.perfiles         where nombre_visible ilike 'prueba%') as perfiles,
-  (select count(*) from public.sugerencias_item where es_prueba)                     as sugerencias,
-  (select count(*) from public.catalogo_items   where es_prueba)                     as items_catalogo,
-  (select count(*) from public.ofrecimientos)                                        as ofrecimientos;
+-- Verificación. Va dentro de un bloque que REVIENTA si algo quedó, en vez
+-- de un `select` que el operador tendría que mirar: el archivo se corre de
+-- una sola vez en el editor SQL, así que un `select` seguido de `commit`
+-- no le da a nadie el momento de decidir. Si esto lanza excepción, la
+-- transacción entera se revierte y no se borra nada.
+do $$
+declare v_restantes integer;
+begin
+  select (select count(*) from public.metricas         where es_prueba)
+       + (select count(*) from public.solicitudes      where es_prueba)
+       + (select count(*) from public.perfiles         where nombre_visible ilike 'prueba%')
+       + (select count(*) from public.sugerencias_item where es_prueba)
+       + (select count(*) from public.catalogo_items   where es_prueba)
+    into v_restantes;
+
+  if v_restantes <> 0 then
+    raise exception 'Quedaron % filas marcadas como prueba. No se borró nada.', v_restantes;
+  end if;
+
+  raise notice 'Limpieza correcta: no queda nada marcado como prueba.';
+end
+$$;
 
 commit;
 

@@ -10,11 +10,13 @@ import type {
   ContactoTipo,
   EntidadMatricula,
   Categoria,
+  ItemCatalogoPublico,
   OfrecimientoResumen,
   OfrecimientoInput,
 } from '@/lib/types'
 import type { MunicipioBasico as Municipio } from '@/lib/municipios'
 import { categoria as categoriaInfo } from '@/lib/catalogo'
+import { validarSugerencia } from '@/lib/validacion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,7 +43,7 @@ import {
 type Perfil = Database['public']['Tables']['perfiles']['Row']
 type Servidor = Database['public']['Tables']['servidores']['Row']
 type Servicio = Database['public']['Tables']['catalogo_servicios']['Row']
-type ItemCatalogo = Database['public']['Tables']['catalogo_items']['Row']
+type ItemCatalogo = ItemCatalogoPublico
 
 const AREAS: Record<Servicio['area'], string> = {
   ingenieria: 'Ingeniería',
@@ -164,7 +166,13 @@ export function FormularioRegistro({
   // guardar_ofrecimientos, repetido aquí para avisar antes de mandar el POST.
   function agregarSugerencia() {
     const texto = busquedaInsumo.trim()
-    if (texto.length < 2 || texto.length > 60) return
+    // Este texto va directo a la base por RPC, sin pasar por ningún route
+    // handler: si no se filtra aquí, el único control es el de Postgres.
+    const errorTexto = validarSugerencia(texto)
+    if (errorTexto) {
+      setErrorInventario(errorTexto)
+      return
+    }
     if (inventario.some((o) => o.nombre.toLowerCase() === texto.toLowerCase())) {
       setErrorInventario('Ya agregaste eso.')
       return
