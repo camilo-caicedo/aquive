@@ -8,6 +8,8 @@ import type { SolicitudConRespuestas } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { ActivarAvisos } from '@/components/activar-avisos'
 import type { AliadoDelMunicipio } from '@/lib/acompanamiento'
+import type { ConversacionDelSolicitante } from '@/lib/types'
+import { Chat } from '@/components/chat'
 import { Acompanamiento } from './acompanamiento'
 import { PantallaConfirmacion } from './pantalla-confirmacion'
 import { GestionSolicitud } from './gestion-solicitud'
@@ -54,6 +56,13 @@ export default async function SolicitudPage({
       ? await supabase.rpc('aliado_en_municipio', { p_municipio: solicitud.municipio })
       : { data: null }
   const aliado = (aliadoData as unknown as AliadoDelMunicipio | null) ?? null
+
+  // Los hilos solo existen en Flujo 2, asi que ni se pregunta en Flujo 1.
+  const { data: hilosData } =
+    solicitud.flujo === 'acompanado'
+      ? await supabase.rpc('mis_conversaciones_token', { p_token: token })
+      : { data: null }
+  const hilos = (hilosData as unknown as ConversacionDelSolicitante[]) ?? []
 
   const headersList = await headers()
   const host = headersList.get('host') ?? 'localhost:3000'
@@ -114,6 +123,28 @@ export default async function SolicitudPage({
         flujo={solicitud.flujo}
         organizacion={solicitud.organizacion}
       />
+
+      {hilos.length > 0 && (
+        <section className="mt-8 space-y-4">
+          <h2 className="font-heading text-2xl">Coordinación</h2>
+          {hilos.map((h) => (
+            <div key={h.id}>
+              <p className="mb-2 text-base text-muted-foreground">
+                {h.ofertador ?? 'Alguien'} ofreció ayuda
+                {h.aliado ? ` · ${h.aliado} coordina` : ' · falta que la fundación se haga cargo'}
+              </p>
+              <Chat
+                conversacionId={h.id}
+                token={token}
+                estado={h.estado}
+                miRol="solicitante"
+                acopio={h.acopio}
+                mensajesIniciales={h.mensajes}
+              />
+            </div>
+          ))}
+        </section>
+      )}
 
       <section className="mt-8 space-y-3">
         <h2 className="font-heading text-2xl">Avisos</h2>

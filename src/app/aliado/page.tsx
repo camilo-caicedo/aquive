@@ -3,9 +3,10 @@ import type { Metadata } from 'next'
 import { MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
-import type { AliadoResumen } from '@/lib/types'
+import type { AliadoResumen, HiloResumen } from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PanelEquipo } from './panel-equipo'
+import { PanelHilos } from './panel-hilos'
 
 export const metadata: Metadata = {
   title: 'Mi organización',
@@ -20,23 +21,39 @@ export default async function AliadoPage() {
 
   if (!user) redirect('/login')
 
-  const [{ data: datos }, municipios] = await Promise.all([
+  const [{ data: datos }, { data: hilosData }, municipios] = await Promise.all([
     supabase.rpc('mi_aliado'),
+    // Tambien para quien solo ofrece: sus hilos salen de aqui igual, y
+    // esta es la unica pantalla donde puede leerlos.
+    supabase.rpc('mis_hilos'),
     listarMunicipios(supabase),
   ])
 
   const organizaciones = (datos as unknown as AliadoResumen[]) ?? []
+  const hilos = (hilosData as unknown as HiloResumen[]) ?? []
   const nombreMunicipio = new Map(municipios.map((m) => [m.codigo_dane, m.nombre]))
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       <h1 className="font-heading text-3xl">Mi organización</h1>
 
+      {/* Esta pantalla es de dos públicos: el equipo de una fundación y
+          quien ofreció ayuda en una solicitud acompañada. El segundo no
+          pertenece a ninguna organización y aun así tiene hilos que leer,
+          así que la lista va primero y el aviso de «no perteneces» solo se
+          muestra cuando además no hay nada que coordinar. */}
+      <section className="mt-6">
+        <h2 className="font-heading text-2xl">Conversaciones</h2>
+        <PanelHilos hilos={hilos} />
+      </section>
+
       {organizaciones.length === 0 ? (
-        <p className="mt-6 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
-          No perteneces a ninguna organización. Para entrar a una hace falta
-          el enlace que reparte su coordinador.
-        </p>
+        hilos.length === 0 && (
+          <p className="mt-6 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
+            No perteneces a ninguna organización. Para entrar a una hace falta
+            el enlace que reparte su coordinador.
+          </p>
+        )
       ) : (
         organizaciones.map(({ organizacion, yo, equipo, invitaciones }) => (
           <section key={organizacion.id} className="mt-6">

@@ -218,6 +218,71 @@ export interface CoincidenciaIdentidad {
   solicitud_codigo: string | null
 }
 
+// Los seis estados de un hilo. `asignada` existe por la regla L: sin él,
+// un hilo con organización pero sin persona a cargo quedaría «abierto» y
+// sería bilateral de hecho, que es justo lo prohibido.
+export type EstadoConversacion =
+  | 'esperando_aliado'
+  | 'asignada'
+  | 'abierta'
+  | 'acordada'
+  | 'entregada'
+  | 'cerrada'
+export type RolEnConversacion = 'solicitante' | 'ofertador' | 'aliado' | 'admin'
+
+// Un mensaje del hilo. `cuerpo` llega en null cuando está oculto: moderar
+// oculta, no borra, y el hueco se ve.
+export interface MensajeChat {
+  id: string
+  rol: RolEnConversacion
+  nombre: string | null
+  cuerpo: string | null
+  oculto: boolean
+  creado_at: string
+}
+
+export interface AcopioResumen {
+  nombre: string
+  direccion: string | null
+  horario: string | null
+}
+
+// Lo que devuelve `leer_conversacion` (por sesión).
+export interface ConversacionDetalle {
+  id: string
+  estado: EstadoConversacion
+  mi_rol: RolEnConversacion
+  codigo: string
+  acopio: AcopioResumen | null
+  mensajes: MensajeChat[]
+}
+
+// Lo que devuelve `mis_conversaciones_token` (por token del solicitante).
+export interface ConversacionDelSolicitante {
+  id: string
+  estado: EstadoConversacion
+  ofertador: string | null
+  aliado: string | null
+  acopio: AcopioResumen | null
+  mensajes: MensajeChat[]
+}
+
+// Una fila de `mis_hilos()`: lo que ve una cuenta, sea porque ofrece en
+// ese hilo o porque es miembro de la organización que lo coordina.
+export interface HiloResumen {
+  id: string
+  estado: EstadoConversacion
+  creada_at: string
+  codigo: string
+  municipio: string
+  barrio: string
+  soy_ofertador: boolean
+  ofertador: string | null
+  aliado: string | null
+  sin_asignar: boolean
+  mensajes_total: number
+}
+
 // Lo que devuelve `unirse_a_organizacion`.
 export interface ResultadoUnirse {
   organizacion: string
@@ -1097,6 +1162,47 @@ export interface Database {
           p_permiso: PermisoMiembro
           p_valor: boolean
         }
+        Returns: undefined
+      }
+      // Chat tripartito (Fase G). Ninguna de estas devuelve un
+      // identificador de cuenta: los mensajes salen con el rol de quien
+      // escribe y su nombre visible, que es lo que hace falta para seguir
+      // la conversación.
+      iniciar_conversacion: {
+        Args: { p_codigo: string; p_mensaje: string }
+        Returns: string
+      }
+      asignar_aliado: {
+        Args: { p_conversacion_id: string }
+        Returns: undefined
+      }
+      enviar_mensaje: {
+        Args: { p_conversacion_id: string; p_cuerpo: string }
+        Returns: string
+      }
+      // Para quien pidió ayuda, que no tiene cuenta. El token no autoriza
+      // «cualquier conversación»: solo las de su propia solicitud.
+      enviar_mensaje_token: {
+        Args: { p_token: string; p_conversacion_id: string; p_cuerpo: string }
+        Returns: string
+      }
+      // Devuelve ConversacionDetalle.
+      leer_conversacion: {
+        Args: { p_conversacion_id: string }
+        Returns: Json
+      }
+      // Devuelve ConversacionDelSolicitante[].
+      mis_conversaciones_token: {
+        Args: { p_token: string }
+        Returns: Json
+      }
+      // Devuelve HiloResumen[].
+      mis_hilos: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      moderar_mensaje: {
+        Args: { p_mensaje_id: string; p_oculto: boolean }
         Returns: undefined
       }
       // Elección de flujo (Fase F). Devuelve {id, nombre} de UNA

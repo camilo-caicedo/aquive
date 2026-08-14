@@ -9,6 +9,7 @@ import { BotonReportar } from '@/components/boton-reportar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { FormularioRespuesta } from './formulario-respuesta'
+import { IniciarHilo } from './iniciar-hilo'
 
 export default async function ResponderPage({
   params,
@@ -101,13 +102,31 @@ export default async function ResponderPage({
         </div>
       </div>
 
-      <Alert variant="warning" className="mt-4">
-        <AlertDescription>
-          Tu nombre y tu contacto público se muestran a quien publicó la
-          solicitud. Esa persona decide si te escribe: la plataforma no tiene
-          su teléfono ni le envía mensajes por ti.
-        </AlertDescription>
-      </Alert>
+      {/* Las dos mitades del proyecto, y aquí se ve la diferencia entera.
+          En el Flujo 1 la plataforma se aparta y el contacto ocurre por
+          fuera. En el Flujo 2 no hay contacto por fuera: se coordina aquí,
+          con la fundación delante, y por eso el aviso es otro. */}
+      {solicitud.flujo === 'acompanado' ? (
+        <Alert className="mt-4">
+          <AlertDescription>
+            Esta solicitud la acompaña una fundación. La entrega es en su
+            punto de acopio, no en la casa de nadie, y allá te van a pedir tu
+            documento para dejar constancia de quién entregó qué — ese dato lo
+            guarda la fundación, no nosotros.
+            <br />
+            Al ofrecer se abre una conversación entre los tres: tú, quien pidió
+            y la fundación. No se intercambian teléfonos.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <Alert variant="warning" className="mt-4">
+          <AlertDescription>
+            Tu nombre y tu contacto público se muestran a quien publicó la
+            solicitud. Esa persona decide si te escribe: la plataforma no tiene
+            su teléfono ni le envía mensajes por ti.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {perfil.suspendido ? (
         <Alert variant="destructive" className="mt-4">
@@ -115,6 +134,8 @@ export default async function ResponderPage({
             Tu perfil está suspendido y no puede responder solicitudes.
           </AlertDescription>
         </Alert>
+      ) : solicitud.flujo === 'acompanado' ? (
+        <IniciarHilo codigo={solicitud.codigo} />
       ) : (
         <FormularioRespuesta codigo={solicitud.codigo} yaRespondio={!!yaRespondio} />
       )}

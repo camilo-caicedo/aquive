@@ -99,6 +99,47 @@ export function validarEnlace(etiqueta: string, url: string): string | null {
 }
 
 // ---------------------------------------------------------------------
+// Regla M — el filtro del chat. Gemela de `public.contiene_contacto`.
+//
+// Aparte de `contienePII` y más estricta que ella, a propósito: aquella
+// protege una nota de solicitud; esta protege un canal de conversación,
+// que es donde alguien va a intentar en serio saltarse el filtro.
+//
+// Sin esto la regla L es decorativa: se pasan el teléfono en el primer
+// mensaje y la conversación sigue por fuera, sin el aliado delante.
+// ---------------------------------------------------------------------
+
+const PATRON_MENSAJERIA =
+  /(wa\.me|api\.whatsapp|chat\.whatsapp|whatsapp\.com|t\.me|telegram\.|m\.me|messenger\.com|instagram\.com|facebook\.com|linktr\.ee)/i
+
+// Una arroba pegada a cualquier cosa, aunque no parezca un correo.
+const PATRON_ARROBA_SUELTA = /@[a-z0-9._-]/i
+
+// Cuatro o más dígitos seguidos escritos con letras: «tres uno cero dos».
+// Cuatro y no tres para no reventar en «los tres niños de la casa dos».
+const PATRON_DIGITOS_EN_LETRAS =
+  /((cero|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)[^a-z0-9]+){3,}(cero|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)/i
+
+export function contieneContacto(texto: string): boolean {
+  if (contienePII(texto)) return true
+  if (PATRON_MENSAJERIA.test(texto)) return true
+  if (PATRON_ARROBA_SUELTA.test(texto)) return true
+  return PATRON_DIGITOS_EN_LETRAS.test(texto)
+}
+
+export const MENSAJE_CONTACTO =
+  'No escribas teléfonos, correos ni enlaces de mensajería. La coordinación ocurre aquí, y así queda constancia de lo que se acordó.'
+
+export function validarMensaje(cuerpo: string): string | null {
+  const limpio = cuerpo.trim()
+  if (limpio.length < 1 || limpio.length > 1000) {
+    return 'El mensaje debe tener entre 1 y 1000 caracteres'
+  }
+  if (contieneContacto(limpio)) return MENSAJE_CONTACTO
+  return null
+}
+
+// ---------------------------------------------------------------------
 // Identidad (Flujo 2). Gemelas de las validaciones de `crear_identidad`.
 //
 // ⚠ NO se validan con `contienePII`, y es a propósito: su `\d{7,}` está
