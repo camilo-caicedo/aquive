@@ -104,6 +104,23 @@ alcance cerrado no es timidez de producto: es la principal medida de
 protección jurídica del proyecto. Si alguien propone ampliarlo, la
 respuesta por defecto es no.
 
+**Excepción: el directorio de entidades.** Desde el 14 de agosto de 2026,
+`/servidores` incluye una lista de organizaciones dada de alta por un
+administrador, puramente informativa. Esas entidades no crean cuenta, no
+reciben solicitudes y no coordinan nada por aquí: la plataforma solo dice
+que existen y enlaza a su sitio.
+
+Por eso el alcance cerrado **no se les aplica**. Lo que esta regla prohíbe
+es que AquíVe *opere* alojamiento, transporte de personas o dinero — no que
+exista un enlace hacia quien sí lo hace. La responsabilidad de emparejar a
+dos personas y la de decir que una organización existe no son la misma.
+
+Lo que sigue prohibido, sin excepción: que la plataforma reciba dinero, que
+exista una pasarela de pago, y que un botón de AquíVe pida donaciones para
+AquíVe. Y antes de enlazar a una página de donación de un tercero, mirar
+`PLAN-V2.md` §13.8: el plan Hobby de Vercel cuenta las donaciones como uso
+comercial, y esa lectura no está resuelta.
+
 ### 6. Sin PII en logs ni en URLs
 
 - Nunca poner el token en query string (va en el path o en el body)
@@ -163,8 +180,9 @@ muestra con advertencia visible.
 - Server Components por defecto; `'use client'` solo donde haga falta
 - Toda escritura pasa por funciones RPC `security definer` en Postgres,
   nunca por `insert` directo del cliente
-- Mobile first, real: la mayoría entra desde un Android de gama baja con
-  mala señal. Presupuesto de JS agresivo, sin animaciones pesadas.
+- Mobile first, real: se usa desde el celular, casi siempre de pie y con
+  prisa. Sin animaciones pesadas y sin traer librerías nuevas por comodidad
+  — pero la interfaz puede ser interactiva donde eso ayude a coordinar.
 
 ## Accesibilidad
 
@@ -174,8 +192,17 @@ con teléfonos viejos. Diseña para eso.
 - Texto base mínimo 16px, contraste AA
 - Áreas táctiles de 48px
 - Flujo de publicar solicitud en máximo 3 pantallas
-- Funciona sin JS para lectura de solicitudes
 - Sin jerga técnica en ningún texto visible
+
+**Ya no se exige que funcione sin JavaScript.** Era requisito para la
+lectura de solicitudes, y se quitó el 14 de agosto de 2026 por decisión del
+responsable: la fase de "gama baja y sin señal" pasó, y ahora lo que hace
+falta es coordinar entregas, que pide más interfaz de la que cabe en
+enlaces y formularios GET.
+
+Lo que **no** cambió: sigue siendo mobile first de verdad, con las áreas
+táctiles, el tamaño de texto y el contraste de arriba. Que se pueda usar
+JavaScript no es permiso para una página de tres megas.
 
 ## Qué hacer si algo no está claro
 

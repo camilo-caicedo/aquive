@@ -3,7 +3,7 @@
 // tiene efecto legal. Debe coincidir con lo que diga PLANTILLAS.md.
 export const RESPONSABLE = 'Juan Camilo Caicedo Sepulveda'
 export const CORREO_CONTACTO = 'aquive@coffeaorigen.co'
-export const FECHA_LEGALES = '13 de agosto de 2026'
+export const FECHA_LEGALES = '14 de agosto de 2026'
 
 export const ENTIDADES_MATRICULA = [
   { valor: 'COPNIA', etiqueta: 'COPNIA — Ingeniería' },

@@ -49,6 +49,11 @@ export function PieDePagina() {
               </Link>
             </li>
             <li>
+              <Link href="/seguridad" className="inline-flex min-h-12 items-center text-base underline">
+                Cómo cuidarte
+              </Link>
+            </li>
+            <li>
               <Link href="/datos" className="inline-flex min-h-12 items-center text-base underline">
                 Datos abiertos
               </Link>

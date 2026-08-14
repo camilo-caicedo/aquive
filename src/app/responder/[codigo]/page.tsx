@@ -3,7 +3,9 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { formatearHoras } from '@/lib/tiempo'
 import { describirItem } from '@/lib/catalogo'
+import { AVISO_RESPONDER } from '@/lib/honestidad'
 import { BadgeFrescura } from '@/components/badge-frescura'
+import { BotonReportar } from '@/components/boton-reportar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { FormularioRespuesta } from './formulario-respuesta'
@@ -82,6 +84,21 @@ export default async function ResponderPage({
         <p className="mt-3 text-sm text-muted-foreground">
           {formatearHoras(solicitud.horas_sin_confirmar)}
         </p>
+
+        {/* La otra mitad del recorrido, y también un paso irreversible:
+            aquí se entrega nombre real y teléfono a alguien anónimo, y
+            después se va a un encuentro físico. Una solicitud falsa para
+            cosechar teléfonos es el fraude obvio de este flujo. */}
+        <p className="mt-3 text-sm text-muted-foreground">
+          {AVISO_RESPONDER}{' '}
+          <Link href="/seguridad" className="underline">
+            Cómo cuidarte
+          </Link>
+        </p>
+
+        <div className="mt-3">
+          <BotonReportar tipoObjeto="solicitud" objetoId={solicitud.id} />
+        </div>
       </div>
 
       <Alert variant="warning" className="mt-4">

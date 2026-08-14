@@ -43,7 +43,7 @@ ese en todos los documentos.
 
 **Cómo tratamos la información en AquíVe**
 
-Última actualización: 13/08/2026
+Última actualización: 14/08/2026
 
 **Quién es responsable**
 Juan Camilo Caicedo Sepulveda, persona natural, Cali, Colombia.
@@ -110,7 +110,7 @@ Cuando eso ocurra, eliminaremos todas las bases de datos.
 
 **Términos de uso de AquíVe**
 
-Última actualización: 13/08/2026
+Última actualización: 14/08/2026
 
 **1. Qué es esto.** Un tablón de anuncios gratuito que permite a personas
 afectadas por el sismo publicar qué artículos necesitan, y a otras
@@ -127,15 +127,34 @@ Civil ni a tu alcaldía. Para emergencias: 123.
 profesional de quienes se registran como profesionales, no verificamos la
 identidad, los antecedentes ni las intenciones de nadie. Un sello de
 matrícula verificada significa únicamente que ese número aparece en el
-registro correspondiente.
+registro correspondiente: no dice nada sobre la identidad de quien lo usa,
+su experiencia ni sus intenciones. Un perfil sin ese sello no ha sido
+revisado en absoluto.
+
+Tampoco calificamos ni recomendamos a nadie. No hay estrellas, ni
+reputación, ni sellos de "confiable", y no los va a haber: un sistema así,
+sin verificación de identidad detrás, solo sirve para que quien quiera
+estafar acumule apariencia de confianza.
+
+**3b. El directorio de entidades.** En la sección de servicios hay una
+lista de organizaciones que un administrador dio de alta. Es informativa:
+esas entidades no tienen cuenta aquí, no reciben solicitudes y no coordinan
+nada por esta plataforma. **Aparecer en esa lista no es una
+recomendación**, ni significa que hayamos comprobado quiénes son, qué hacen
+o cómo lo hacen. Los botones llevan a sitios que no controlamos, y lo que
+ocurra allí —incluido lo que esos sitios te pidan— no es responsabilidad de
+esta plataforma. Si un enlace deja de llevar a donde decía, repórtalo con el
+botón de la ficha.
 
 **4. El contacto ocurre fuera de la plataforma y bajo tu responsabilidad.**
 No intermediamos, no acompañamos y no respondemos por lo que suceda entre
 las partes, incluyendo incumplimientos, pérdidas, daños o delitos.
 
 **5. Recomendaciones de seguridad.** No compartas tu dirección exacta en
-público. Encuéntrate en lugares con gente. Nunca envíes dinero por
-adelantado. Si alguien te pide plata, repórtalo.
+público. Encuéntrate en lugares con gente y de día. Nunca envíes dinero por
+adelantado. Cuéntale a alguien a dónde vas. Si alguien te pide plata,
+repórtalo. Están explicadas una por una en la página «Cómo cuidarte»
+(`/seguridad`).
 
 **6. Prohibido.** Publicar datos personales de terceros o de menores;
 pedir o entregar dinero; ofrecer alojamiento de personas, cuidado de
@@ -194,6 +213,95 @@ marca de tiempo es la prueba de la autorización.
 **Sobre perfiles sin verificar:**
 > Esta persona no ha verificado su matrícula profesional. Verifica su
 > identidad antes de recibir cualquier servicio.
+
+### Avisos sobre la falta de verificación
+
+Todos viven en `src/lib/honestidad.ts`, incluidos los textos largos de la
+página «Cómo cuidarte». **Si cambia uno, cambia el otro**, y se mueve
+`FECHA_LEGALES` en `src/lib/config.ts`: este archivo y ese módulo son las
+dos caras de lo mismo, y la fecha es la prueba de qué versión estaba
+vigente cuando alguien la aceptó.
+
+**Encima de cualquier lista de solicitudes**, una vez y no por tarjeta —
+repetida veinte veces se vuelve textura y deja de leerse:
+> AquíVe no verifica a quien publica ni a quien responde. Ninguna de estas
+> solicitudes está comprobada.
+
+**Al terminar de publicar**, mientras no haya respuestas todavía:
+> Cuando alguien responda vas a ver su nombre y su forma de contacto.
+> AquíVe no verifica quién publica ni quién responde: confirma lo que
+> puedas antes de acordar una entrega, y prefiere lugares públicos.
+
+**Antes de responder una solicitud.** Es la otra mitad del recorrido y
+también un paso irreversible: se entrega nombre y teléfono a alguien
+anónimo. Una solicitud falsa para cosechar teléfonos de gente caritativa es
+el fraude obvio de este flujo:
+> AquíVe no verifica quién publica esta solicitud. Tu nombre y tu forma de
+> contacto quedan visibles para esa persona. Si acuerdan una entrega,
+> prefiere un lugar público y de día.
+
+**Justo antes de abrir el contacto:**
+> AquíVe no verificó la identidad de esta persona. Prefiere un lugar
+> público y de día, y no pagues nada por adelantado.
+
+**Y si esa persona tiene matrícula verificada**, porque decir "no
+verificamos a nadie" ahí sería falso y contradiría el sello que se ve al
+lado. Empieza por lo que el sello NO garantiza, no por "verificamos": quien
+lee en diagonal se lleva la primera palabra.
+> El sello solo dice que ese número de matrícula aparece en el registro. No
+> verificamos su identidad, su experiencia ni sus intenciones. Prefiere un
+> lugar público y de día, y no pagues nada por adelantado.
+
+**Qué significa el sello**, en la página «Cómo cuidarte». En presente
+universal —"le revisamos"— era una promesa que el producto no puede
+cumplir: la revisión es manual, discrecional y de una sola persona, y la
+lista de entidades incluye "OTRA", para la que no hay registro consultable.
+> Cuando alguien se registra como profesional escribe su entidad y su
+> número de matrícula. Una persona los revisa a mano, uno por uno, y cuando
+> el número aparece en el registro de esa entidad el perfil queda con el
+> sello. Eso es todo lo que dice el sello: que el número existe. No
+> verificamos su identidad, ni su experiencia, ni sus intenciones. Si la
+> entidad no tiene registro consultable, o si nadie ha alcanzado a
+> revisarlo, el perfil se queda sin sello — y sin sello no ha sido revisado
+> en absoluto.
+
+**Si algo sale mal.** ⚠ Esta frase obliga: solo es cierta mientras el botón
+de reportar esté en los tres sitios (solicitud, respuesta y perfil).
+> Las solicitudes, las respuestas y los perfiles tienen un botón para
+> reportar. Lo revisa una persona y puede borrar el contenido o suspender
+> la cuenta. Si hay riesgo para alguien ahora mismo, eso no es un reporte:
+> es el 123.
+
+**Contra la suplantación.** ⚠ Decía «ni que entres a ningún otro sitio», y
+el directorio de entidades lo dejó falso: son botones que sacan de AquíVe a
+propósito. Una frase antiphishing que la propia aplicación desmiente es peor
+que no tenerla — enseña a ignorar todos los avisos.
+> Nadie de AquíVe te va a pedir dinero ni el enlace de tu solicitud. En
+> "Entidades" hay botones que llevan a sitios de otras organizaciones, y
+> siempre te decimos a qué dirección te llevan antes de que toques: si algo
+> te lleva a otro lado, o te pide pagar, no sigas.
+
+**Encima de la lista de entidades**, una vez y no por ficha:
+> AquíVe no verifica a estas organizaciones ni las recomienda: aparecer en
+> esta lista no dice nada sobre ellas.
+
+**Pegado a los botones de cada ficha**, porque cada enlace es una decisión
+distinta:
+> Estos botones te sacan de AquíVe. Mira la dirección antes de tocar, y no
+> pagues nada por adelantado.
+
+🔴 **Y lo que sostiene ese último aviso, en la interfaz y no en el texto:**
+antes de cada dirección completa se muestra el dominio aparte —«Te lleva a
+**ejemplo.org**»—, la dirección se envuelve en vez de recortarse, y la
+arroba está prohibida en toda URL. Recortar por el medio con puntos
+suspensivos escondería un `…@evil.com`, que es la forma clásica de que el
+texto visible mienta.
+
+🔴 **Lo que estos textos no pueden hacer, nunca:** sugerir que la
+plataforma respalda, avala o recomienda a alguien. Ni sellos de
+"confiable", ni estrellas, ni reputación. Un sistema de reputación sin
+verificación de identidad detrás es una invitación al fraude por
+acumulación, y arrastra responsabilidad hacia el responsable del proyecto.
 
 **Pie de página, siempre visible:**
 > Emergencias 123 · Cruz Roja 132 · Defensa Civil 144

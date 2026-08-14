@@ -9,6 +9,7 @@ import {
   PhoneCall,
   Stethoscope,
   Info,
+  PackageOpen,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import type { Categoria } from '@/lib/types'
@@ -16,6 +17,8 @@ import { CATEGORIAS, limitePorVencer } from '@/lib/catalogo'
 import { TarjetaSolicitud } from '@/components/tarjeta-solicitud'
 import { SelectFiltro } from '@/components/select-filtro'
 import { Button } from '@/components/ui/button'
+import { AVISO_TABLERO } from '@/lib/honestidad'
+import { CruceInverso } from './cruce-inverso'
 
 const POR_PAGINA = 20
 
@@ -61,18 +64,36 @@ export default async function InicioPage({
     categoria?: string
     antes?: string
     urgentes?: string
+    modo?: string
+    // Repetido en la URL: `?tengo=agua&tengo=arroz`. Vive ahí y no solo en
+    // el estado del selector para que el enlace se pueda compartir y para
+    // que los resultados los arme el servidor.
+    tengo?: string | string[]
+    desde?: string
   }>
 }) {
   const params = await searchParams
   const supabase = await createClient()
 
+  const modoTengo = params.modo === 'tengo'
+  const seleccionCruda =
+    params.tengo === undefined ? [] : Array.isArray(params.tengo) ? params.tengo : [params.tengo]
+
+  // Acotado aquí y no solo en la base: `?desde=1e10` pasa el `> 0`, el cast
+  // a integer de Postgres revienta, y la pantalla acaba diciendo "nadie está
+  // pidiendo eso" cuando en realidad la consulta falló. Un error no puede
+  // disfrazarse de respuesta legítima.
+  const desdeCrudo = Number.parseInt(params.desde ?? '', 10)
+  const desdeSeguro =
+    Number.isFinite(desdeCrudo) && desdeCrudo > 0 ? Math.min(desdeCrudo, 10000) : 0
+
   // Solo municipios con solicitudes abiertas: filtrar por uno vacío no
   // sirve de nada, y mandar los 1.122 del país en cada carga pesaba más
-  // que el resto de la página.
-  const { data: municipios } = await supabase
-    .from('municipios_con_solicitudes')
-    .select('*')
-    .order('nombre')
+  // que el resto de la página. En el segundo modo no se consulta nada de
+  // esto: los datos los trae `CruceInverso` con su propio criterio.
+  const { data: municipios } = modoTengo
+    ? { data: null }
+    : await supabase.from('municipios_con_solicitudes').select('*').order('nombre')
 
   let query = supabase
     .from('solicitudes_publicas')
@@ -85,7 +106,7 @@ export default async function InicioPage({
   if (params.antes) query = query.lt('creada_at', params.antes)
   if (params.urgentes) query = query.lt('expira_at', limitePorVencer())
 
-  const { data: solicitudes } = await query
+  const { data: solicitudes } = modoTengo ? { data: null } : await query
 
   const hayMas = (solicitudes?.length ?? 0) === POR_PAGINA
   const cursorSiguiente = hayMas ? solicitudes![solicitudes!.length - 1].creada_at : null
@@ -137,14 +158,16 @@ export default async function InicioPage({
             <h2 className="text-xl font-bold">¿Necesitas un profesional?</h2>
             <p className="mt-1 text-base text-muted-foreground">
               Psicología, revisión de tu casa, atención médica, asesoría
-              jurídica. Todos con matrícula, y los verificados van de primeros.
+              jurídica. Cada quien declara su matrícula; a algunos ya les
+              revisamos que ese número exista en el registro, y esos aparecen
+              de primeros.
             </p>
           </div>
           <Button
             variant="outline"
             className="w-full sm:w-auto"
             nativeButton={false}
-            render={<Link href="/servidores" />}
+            render={<Link href="/servidores?ver=profesionales" />}
           >
             Ver profesionales
           </Button>
@@ -172,7 +195,46 @@ export default async function InicioPage({
       </section>
 
       <section className="mt-8">
-        <h2 className="text-xl font-bold">Solicitudes abiertas</h2>
+        {/* Los dos modos del tablero. Son enlaces, no pestañas con estado:
+            el modo vive en la URL, así que se puede compartir y funciona
+            con el JavaScript apagado. */}
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Cómo mirar el tablero">
+          <Link
+            href="/"
+            aria-current={modoTengo ? undefined : 'page'}
+            className={`inline-flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-full border px-4 text-base transition-colors sm:flex-initial ${
+              modoTengo
+                ? 'border-border bg-card hover:bg-muted'
+                : 'border-primary bg-primary text-primary-foreground'
+            }`}
+          >
+            Quién necesita ayuda
+          </Link>
+          <Link
+            href="/?modo=tengo"
+            aria-current={modoTengo ? 'page' : undefined}
+            className={`inline-flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-full border px-4 text-base transition-colors sm:flex-initial ${
+              modoTengo
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border bg-card hover:bg-muted'
+            }`}
+          >
+            <PackageOpen className="size-4 shrink-0" aria-hidden="true" />
+            ¿Quién necesita lo que tengo?
+          </Link>
+        </div>
+
+        {modoTengo ? (
+          <div className="mt-4">
+            <CruceInverso
+              seleccionCruda={seleccionCruda}
+              municipio={params.municipio ?? null}
+              desde={desdeSeguro}
+            />
+          </div>
+        ) : (
+        <>
+        <h2 className="mt-4 text-xl font-bold">Solicitudes abiertas</h2>
 
         {/* Con el tablero vacío y sin filtros, mostrar filtros sería pedirle
             a la gente que filtre la nada: tres avisos diciendo lo mismo. */}
@@ -272,11 +334,14 @@ export default async function InicioPage({
             )}
           </div>
         ) : (
-          <ul className="lista-escalonada mt-4 space-y-3">
-            {solicitudes.map((s) => (
-              <TarjetaSolicitud key={s.codigo} solicitud={s} />
-            ))}
-          </ul>
+          <>
+            <p className="mt-4 text-sm text-muted-foreground">{AVISO_TABLERO}</p>
+            <ul className="lista-escalonada mt-3 space-y-3">
+              {solicitudes.map((s) => (
+                <TarjetaSolicitud key={s.codigo} solicitud={s} />
+              ))}
+            </ul>
+          </>
         )}
 
         {hayMas && cursorSiguiente && (
@@ -289,6 +354,8 @@ export default async function InicioPage({
               Ver más solicitudes
             </Button>
           </div>
+        )}
+        </>
         )}
       </section>
     </main>

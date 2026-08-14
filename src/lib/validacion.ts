@@ -52,6 +52,52 @@ export function validarNota(nota: string): string | null {
   return null
 }
 
+// Gemela de `public.enlaces_validos` en Postgres. Si cambia una, cambia la
+// otra — igual que `contienePII`.
+//
+// ⚠ LISTA BLANCA de un solo esquema, nunca lista negra. `javascript:`,
+// `data:`, `vbscript:`, `blob:` y `file:` no se enumeran en ninguna parte:
+// quedan fuera por no estar aquí. Una lista negra pierde siempre contra
+// `java\tscript:` o `JaVaScRiPt:`.
+//
+// Se usa `URL` del navegador en vez de una expresión regular sola porque
+// resuelve gratis dos cosas que a mano salen mal: pasa el host a punycode
+// —lo que delata el homógrafo, «аquive.co» con «а» cirílica— y separa
+// `username`, que es como se monta `https://real.org@evil.com`.
+export function esEnlaceSeguro(url: string): boolean {
+  if (url.length < 12 || url.length > 200) return false
+  // Solo ASCII imprimible: cierra el homógrafo antes de mirar nada más.
+  if (/[^ -~]/.test(url)) return false
+  if (/[\s<>"']/.test(url)) return false
+  if (url.includes('@')) return false
+
+  try {
+    const u = new URL(url)
+    // `http://` también queda fuera: el público entra por wifi de albergue,
+    // y una página en claro es reescribible en tránsito.
+    if (u.protocol !== 'https:') return false
+    if (u.username !== '' || u.password !== '') return false
+    if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(u.hostname)) {
+      return false
+    }
+    return true
+  } catch {
+    return false
+  }
+}
+
+export const MENSAJE_ENLACE =
+  'La dirección debe empezar por https://, sin espacios y sin arroba.'
+
+export function validarEnlace(etiqueta: string, url: string): string | null {
+  const texto = etiqueta.trim()
+  if (texto.length < 2 || texto.length > 40) {
+    return 'El texto del botón debe tener entre 2 y 40 caracteres'
+  }
+  if (!esEnlaceSeguro(url.trim())) return MENSAJE_ENLACE
+  return null
+}
+
 // El nombre de una cosa que alguien propone agregar al catálogo. Se aplica
 // en los dos sitios donde existe ese campo —publicar y registro— y también
 // del lado del servidor.

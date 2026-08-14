@@ -1,14 +1,33 @@
 import Link from 'next/link'
-import { MapPin, MessageSquare, TimerOff } from 'lucide-react'
-import type { Database } from '@/lib/types'
+import { MapPin, MessageSquare, TimerOff, Check } from 'lucide-react'
+import type { Categoria, ItemResumen } from '@/lib/types'
 import { categoria, describirItem, horasParaVencer, HORAS_POR_VENCER } from '@/lib/catalogo'
 import { formatearHoras } from '@/lib/tiempo'
 import { BadgeFrescura } from '@/components/badge-frescura'
 import { Button } from '@/components/ui/button'
 
-type Solicitud = Database['public']['Views']['solicitudes_publicas']['Row']
+// Solo lo que la tarjeta usa, y no la fila entera de la vista: así sirve
+// igual para el tablero y para el cruce inverso, cuya RPC devuelve las
+// mismas columnas más `coincidencias` y sin los arreglos de identificadores.
+interface Solicitud {
+  codigo: string
+  categoria: Categoria
+  municipio_nombre: string
+  barrio: string
+  nota: string | null
+  expira_at: string
+  horas_sin_confirmar: number
+  num_respuestas: number
+  items: ItemResumen[]
+}
 
-export function TarjetaSolicitud({ solicitud }: { solicitud: Solicitud }) {
+export function TarjetaSolicitud({
+  solicitud,
+  coincidencias,
+}: {
+  solicitud: Solicitud
+  coincidencias?: number
+}) {
   const { etiqueta, Icono } = categoria(solicitud.categoria)
   const restantes = horasParaVencer(solicitud.expira_at)
   const porVencer = restantes <= HORAS_POR_VENCER
@@ -32,6 +51,15 @@ export function TarjetaSolicitud({ solicitud }: { solicitud: Solicitud }) {
         <MapPin className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         {solicitud.municipio_nombre} — {solicitud.barrio}
       </p>
+
+      {coincidencias !== undefined && coincidencias > 0 && (
+        <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-accent px-2.5 py-1.5 text-sm font-medium text-accent-foreground">
+          <Check className="size-4 shrink-0" aria-hidden="true" />
+          {coincidencias === 1
+            ? 'Pide una de las cosas que marcaste'
+            : `Pide ${coincidencias} de las cosas que marcaste`}
+        </p>
+      )}
 
       {solicitud.items.length > 0 && (
         <ul className="mt-3 flex flex-wrap gap-1.5">
@@ -77,6 +105,17 @@ export function TarjetaSolicitud({ solicitud }: { solicitud: Solicitud }) {
       >
         Puedo ayudar
       </Button>
+
+      {/* Solo el enlace. La frase completa va una vez encima de la lista:
+          repetida en veinte tarjetas se vuelve textura y deja de leerse, y
+          además la mitad —"ni a quien responde"— le habla de sí mismo a
+          quien está mirando el tablero. El aviso que sí tiene que ir pegado
+          al botón es el de /responder, que es donde se decide. */}
+      <p className="mt-2 text-sm text-muted-foreground">
+        <Link href="/seguridad" className="underline">
+          Cómo cuidarte antes de una entrega
+        </Link>
+      </p>
     </li>
   )
 }

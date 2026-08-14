@@ -13,7 +13,9 @@ import {
 const ENLACES = [
   { href: '/', etiqueta: 'Solicitudes', Icono: HandHeart },
   { href: '/ofertadores', etiqueta: 'Quién ofrece', Icono: PackageOpen },
-  { href: '/servidores', etiqueta: 'Profesionales', Icono: Stethoscope },
+  // "Servicios" y no "Profesionales": esa pantalla ahora tiene dos listas y
+  // la primera son las entidades, así que el nombre anterior engañaba.
+  { href: '/servidores', etiqueta: 'Servicios', Icono: Stethoscope },
   { href: '/mis-solicitudes', etiqueta: 'Mis solicitudes', Icono: ListChecks },
 ]
 

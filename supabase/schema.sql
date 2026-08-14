@@ -86,6 +86,129 @@ comment on table public.sugerencias_item is
 create index if not exists idx_sugerencias_estado on public.sugerencias_item(estado);
 
 -- ---------------------------------------------------------------------
+-- 1. El validador de enlaces
+--
+-- Es la superficie nueva más delicada del proyecto: botones que sacan a
+-- gente vulnerable hacia sitios que no controlamos.
+--
+-- ⚠ LISTA BLANCA DE UN SOLO ESQUEMA, nunca lista negra. `javascript:`,
+-- `data:`, `vbscript:`, `blob:` y `file:` no se enumeran en ninguna parte:
+-- quedan fuera por no estar aquí. Una lista negra pierde siempre contra
+-- `java\tscript:`, `JaVaScRiPt:` o `\x01javascript:`.
+--
+-- `http://` también queda fuera. El público entra por wifi de albergue y
+-- datos compartidos: una página en claro es reescribible en tránsito. Si
+-- una entidad no tiene TLS, esa entidad no debería tener botón.
+--
+-- `tel:` y `mailto:` tampoco, y no es purismo: la regla 3 dice que el
+-- contacto nunca pasa por la plataforma. Si mañana hace falta el teléfono
+-- de una entidad, va como columna propia con su propio tratamiento, no
+-- como enlace libre en un campo que ningún control mira.
+--
+-- `immutable` y sin subconsultas a tablas, para poder usarla dentro de un
+-- CHECK. La llaman DOS sitios a propósito: el CHECK de la tabla, para que
+-- una fila mala no pueda existir ni escribiéndola desde el editor SQL, y
+-- `guardar_entidad`, para que el administrador lea un mensaje en vez de un
+-- error crudo de Postgres — igual que `crear_item_catalogo` con la
+-- categoría.
+--
+-- Gemela de `esEnlaceSeguro` en src/lib/validacion.ts. Si cambia una,
+-- cambia la otra.
+-- ---------------------------------------------------------------------
+
+create or replace function public.enlaces_validos(p_enlaces jsonb)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select jsonb_typeof(p_enlaces) = 'array'
+     and jsonb_array_length(p_enlaces) <= 6
+     and not exists (
+       select 1 from jsonb_array_elements(p_enlaces) e
+        where jsonb_typeof(e) <> 'object'
+           or (select count(*) from jsonb_object_keys(e) k
+                where k not in ('etiqueta','url')) > 0
+           or e->>'etiqueta' is null
+           or e->>'url'      is null
+           or char_length(trim(e->>'etiqueta')) not between 2 and 40
+           or char_length(e->>'url') not between 12 and 200
+           or e->>'url' !~ '^https://[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)+(:([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?(/[!-~]*)?$'
+           or e->>'url' ~ '[^ -~]'
+           or e->>'url' like '%@%'
+           or e->>'url' ~ '[[:space:]<>"'']'
+     );
+$$;
+
+revoke execute on function public.enlaces_validos(jsonb) from public, anon, authenticated;
+
+comment on function public.enlaces_validos(jsonb) is
+  'Gemela de esEnlaceSeguro en src/lib/validacion.ts. Si cambia una, cambia la otra. Lista blanca de https:// — nunca la conviertas en lista negra. El EXECUTE revocado no estorba al CHECK porque todas las rutas de escritura corren como postgres: guardar_entidad y resolver_reporte son security definer suyas, y el editor SQL también. Si algún día se le concede INSERT sobre entidades a otro rol, ese insert fallará con «permission denied for function» en vez del mensaje pensado.';
+
+-- ---------------------------------------------------------------------
+-- 2. La tabla
+--
+-- `cobertura` existe para que el filtro de municipio sea correcto: una
+-- entidad nacional también atiende en Cali, así que filtrar por Cali tiene
+-- que devolver las locales de Cali Y todas las nacionales. Lo nacional
+-- cubre además lo virtual, que no está atado a ningún municipio.
+-- ---------------------------------------------------------------------
+
+create table if not exists public.entidades (
+  id             uuid primary key default gen_random_uuid(),
+  nombre         text not null check (char_length(trim(nombre)) between 3 and 80),
+  subtitulo      text check (char_length(subtitulo) between 1 and 120),
+  descripcion    text check (char_length(descripcion) <= 600),
+  -- [{"etiqueta":"...","url":"https://..."}]. El ORDEN DEL ARRAY es el
+  -- orden en pantalla: por eso jsonb y no tabla aparte — reordenar es
+  -- mover un elemento, no N updates de una columna.
+  enlaces        jsonb not null default '[]'::jsonb,
+  -- Nota de cierre libre: horarios, cobertura, aclaraciones. Es texto
+  -- libre, pero lo escribe el responsable del proyecto, no un usuario: la
+  -- restricción de la regla 2 aquí es la longitud más el hecho de que la
+  -- única ruta de escritura exige `es_admin()`.
+  pie            text check (char_length(pie) <= 400),
+  cobertura      text not null default 'nacional'
+                   check (cobertura in ('nacional','local')),
+  municipios     text[] not null default '{}',
+  orden          integer not null default 0,
+  activa         boolean not null default true,
+  -- ⚠ SET NULL, jamás CASCADE. `limpiar-pruebas.sql` borra cuentas de
+  -- `auth.users` por prefijo de uuid; con CASCADE eso se llevaría fichas
+  -- reales creadas desde una cuenta de prueba con permisos de admin. Y si
+  -- el administrador ejerce su derecho de supresión, un NO ACTION le haría
+  -- fallar el borrado. Mismo criterio que `servidores.verificado_por`.
+  creada_por     uuid references auth.users(id) on delete set null,
+  creada_at      timestamptz not null default now(),
+  actualizada_at timestamptz not null default now(),
+  -- Temporal. La deriva `guardar_entidad` del prefijo del NOMBRE, que es
+  -- un campo visible, nunca por parámetro. `creada_por` es el admin, que
+  -- es una cuenta real: por ahí no se distingue una ficha de prueba.
+  es_prueba      boolean not null default false,
+  -- Una entidad local sin municipios quedaría invisible en el filtro y
+  -- nadie sabría por qué.
+  constraint entidades_cobertura_coherente
+    check (cobertura = 'nacional' or array_length(municipios, 1) >= 1)
+);
+
+-- `add constraint` no es idempotente; el par drop/add sí, y además
+-- revalida las filas que ya estuvieran.
+alter table public.entidades drop constraint if exists entidades_enlaces_validos;
+alter table public.entidades add  constraint entidades_enlaces_validos
+  check (public.enlaces_validos(enlaces));
+
+comment on table public.entidades is
+  'Directorio SIN AVAL. Aparecer aquí no es recomendación ni verificación. Antes de enlazar, mirar dos cosas: que el destino no sea una página de donación —el plan Hobby de Vercel las cuenta como uso comercial, ver PLAN-V2 §13.8— y que la regla 5 no se esté eludiendo por la vía de enlazar a un tercero. Mismo espíritu que el comentario de catalogo_servicios.';
+
+comment on column public.entidades.pie is
+  'Nota de cierre libre del administrador: horarios, cobertura, aclaraciones. Puede llevar el teléfono de la organización — eso no es dato personal de una persona. No lleva filtro de PII a propósito, a diferencia de la nota de una solicitud, porque quien escribe aquí es el responsable del proyecto y no un usuario.';
+
+comment on column public.entidades.enlaces is
+  'Array [{etiqueta,url}] validado por el CHECK entidades_enlaces_validos. Solo https://, sin arroba, solo ASCII, máximo 6.';
+
+create index if not exists idx_entidades_activa on public.entidades(activa, orden);
+
+-- ---------------------------------------------------------------------
 -- 2. Perfiles (ofertadores y servidores) — aquí SÍ hay datos personales
 -- ---------------------------------------------------------------------
 
@@ -279,7 +402,7 @@ create table if not exists public.push_suscripciones (
 
 create table if not exists public.reportes (
   id              uuid primary key default gen_random_uuid(),
-  tipo_objeto     text not null check (tipo_objeto in ('solicitud','respuesta','perfil')),
+  tipo_objeto     text not null check (tipo_objeto in ('solicitud','respuesta','perfil','entidad')),
   objeto_id       uuid not null,
   motivo          text not null check (motivo in
                     ('datos_personales','estafa','contenido_ofensivo',
@@ -342,7 +465,13 @@ select
      from public.solicitud_items si
      left join public.catalogo_items c    on c.id = si.item_id
      left join public.sugerencias_item sg on sg.id = si.sugerencia_id
-    where si.solicitud_id = s.id) as items
+    where si.solicitud_id = s.id) as items,
+  -- Los identificadores, aparte del jsonb legible. Son lo que permite
+  -- cruzar: el jsonb sirve para mostrar, estos para comparar.
+  (select coalesce(array_agg(si.item_id) filter (where si.item_id is not null), '{}')
+     from public.solicitud_items si where si.solicitud_id = s.id) as item_ids,
+  (select coalesce(array_agg(si.sugerencia_id) filter (where si.sugerencia_id is not null), '{}')
+     from public.solicitud_items si where si.solicitud_id = s.id) as sugerencia_ids
 from public.solicitudes s
 join public.municipios m on m.codigo_dane = s.municipio
 where s.estado = 'abierta'
@@ -452,6 +581,24 @@ where p.tipo = 'servidor'
 grant select on public.municipios_con_solicitudes to anon, authenticated;
 grant select on public.municipios_con_servidores  to anon, authenticated;
 
+create or replace view public.entidades_publicas as
+select e.id, e.nombre, e.subtitulo, e.descripcion, e.enlaces, e.pie,
+       e.cobertura, e.municipios, e.orden
+from public.entidades e
+where e.activa;
+
+grant select on public.entidades_publicas to anon, authenticated;
+
+-- Solo los municipios de las entidades locales: las nacionales están en
+-- todos y no aportan nada al desplegable.
+create or replace view public.municipios_con_entidades as
+select distinct m.codigo_dane, m.nombre, m.departamento
+from public.municipios m
+join public.entidades e on m.codigo_dane = any(e.municipios)
+where e.activa and e.cobertura = 'local';
+
+grant select on public.municipios_con_entidades to anon, authenticated;
+
 -- Los 1.122 municipios del país en una sola fila jsonb.
 --
 -- PostgREST corta cualquier respuesta en 1000 filas y Supabase impone ese
@@ -482,6 +629,187 @@ $$;
 grant execute on function public.listar_municipios() to anon, authenticated;
 
 -- ---------------------------------------------------------------------
+-- La consulta del cruce
+--
+-- Devuelve las solicitudes abiertas que piden alguno de los ítems
+-- marcados, primero las que coinciden en más cosas.
+--
+-- La llama `anon` a propósito: ayudar no debería exigir cuenta. Quien sí
+-- la tiene llega con su inventario precargado, pero es un atajo, no un
+-- requisito.
+--
+-- No expone nada que no exponga ya el tablero: lee `solicitudes_publicas`,
+-- que es la frontera de seguridad y no incluye `token_hash`.
+-- ---------------------------------------------------------------------
+
+create index if not exists idx_items_item on public.solicitud_items(item_id)
+  where item_id is not null;
+
+create or replace function public.solicitudes_que_calzan(
+  p_item_ids  text[],
+  p_municipio text default null,
+  p_limite    integer default 20,
+  p_desde     integer default 0
+)
+returns table (
+  id               uuid,
+  codigo           text,
+  municipio        text,
+  municipio_nombre text,
+  barrio           text,
+  categoria        text,
+  nota             text,
+  creada_at        timestamptz,
+  confirmada_at    timestamptz,
+  expira_at        timestamptz,
+  horas_sin_confirmar numeric,
+  num_respuestas   bigint,
+  items            jsonb,
+  coincidencias    integer
+)
+language plpgsql
+security definer
+set search_path = ''
+stable
+as $$
+declare
+  v_limite integer := least(greatest(coalesce(p_limite, 20), 1), 50);
+  v_desde  integer := least(greatest(coalesce(p_desde, 0), 0), 10000);
+begin
+  if p_item_ids is null or cardinality(p_item_ids) = 0 then
+    return;
+  end if;
+  if cardinality(p_item_ids) > 12 then
+    raise exception 'Puedes marcar máximo 12 cosas a la vez';
+  end if;
+
+  return query
+  with calces as (
+    select si.solicitud_id, count(*)::integer as n
+      from public.solicitud_items si
+     where si.item_id = any(p_item_ids)
+     group by si.solicitud_id
+  )
+  select sp.id, sp.codigo, sp.municipio, sp.municipio_nombre, sp.barrio,
+         sp.categoria, sp.nota, sp.creada_at, sp.confirmada_at, sp.expira_at,
+         sp.horas_sin_confirmar, sp.num_respuestas, sp.items, c.n
+    from calces c
+    join public.solicitudes_publicas sp on sp.id = c.solicitud_id
+   where p_municipio is null or sp.municipio = p_municipio
+   order by c.n desc, sp.creada_at desc
+   limit v_limite offset v_desde;
+end;
+$$;
+
+grant execute on function public.solicitudes_que_calzan(text[],text,integer,integer)
+  to anon, authenticated;
+
+create or replace function public.municipios_que_calzan(p_item_ids text[])
+returns jsonb
+language sql
+security definer
+set search_path = ''
+stable
+as $$
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'codigo_dane', t.municipio,
+           'nombre',      t.municipio_nombre,
+           'total',       t.total
+         ) order by t.municipio_nombre), '[]'::jsonb)
+  from (
+    select sp.municipio, sp.municipio_nombre, count(*) as total
+      from (
+        select distinct si.solicitud_id
+          from public.solicitud_items si
+         where p_item_ids is not null
+           and cardinality(p_item_ids) between 1 and 12
+           and si.item_id = any(p_item_ids)
+      ) c
+      join public.solicitudes_publicas sp on sp.id = c.solicitud_id
+     group by sp.municipio, sp.municipio_nombre
+     -- Cota dura: el desplegable no puede crecer sin techo, y sin ella
+     -- esta función agregaba la vista entera en cada llamada anónima.
+     limit 100
+  ) t;
+$$;
+
+grant execute on function public.municipios_que_calzan(text[]) to anon, authenticated;
+
+-- ---------------------------------------------------------------------
+-- 2. A quién avisar, resuelto en la base
+--
+-- Antes se traían todos los `ofrecimientos` de los perfiles del municipio
+-- y se cruzaba en TypeScript. Dos fallos silenciosos ahí:
+--
+--   · PostgREST corta en 1000 filas —el mismo tope que obligó a crear
+--     `listar_municipios`— y la llave de servicio no exime. Con 150
+--     perfiles de 10 ítems, la lista llegaba truncada y sin orden: alguien
+--     con inventario podía quedar clasificado como "tiene, pero no calza"
+--     y perderse justo el aviso que le interesaba.
+--   · `.in('perfil_id', [...])` mete todos los uuid en el query string de
+--     un GET. Con unos cientos de perfiles la URL revienta, la respuesta
+--     vuelve nula, y el filtro desaparece entero sin ningún síntoma.
+--
+-- De paso deja de mandar uuid de personas por la URL (regla 6).
+--
+-- `tiene_inventario` NO mira `disponible`: quien marcó todo lo suyo como
+-- no disponible está diciendo "ahora no", no "no me llenaste el perfil".
+-- Devolverlo a la rama de "avísame todo" era lo contrario de lo que pidió.
+-- ---------------------------------------------------------------------
+
+create or replace function public.destinatarios_aviso(
+  p_municipio text,
+  p_item_ids  text[]
+)
+returns table (
+  suscripcion_id uuid,
+  endpoint       text,
+  p256dh         text,
+  auth_key       text,
+  calza          boolean
+)
+language sql
+security definer
+set search_path = ''
+stable
+as $$
+  select po.id, po.endpoint, po.p256dh, po.auth_key,
+         coalesce(cal.calza, false)
+    from public.push_ofertadores po
+    join public.perfiles p on p.id = po.perfil_id
+    left join lateral (
+      select bool_or(o.item_id = any(p_item_ids)) as calza,
+             count(*) > 0                        as tiene
+        from public.ofrecimientos o
+       where o.perfil_id = p.id
+    ) inv on true
+    left join lateral (
+      select bool_or(o.item_id = any(p_item_ids)) as calza
+        from public.ofrecimientos o
+       where o.perfil_id = p.id and o.disponible
+    ) cal on true
+   where p.suspendido = false
+     and p_municipio = any(p.municipios)
+     -- Sin inventario declarado: recibe todo lo de sus municipios, como
+     -- siempre. El inventario es opcional y no puede volverse el precio de
+     -- enterarse.
+     and (
+       coalesce(inv.tiene, false) = false
+       -- Con inventario: solo si la solicitud pide algo suyo…
+       or coalesce(cal.calza, false)
+       -- …o si la solicitud no trae ningún ítem del catálogo con el que
+       -- cruzar, que pasa cuando todo lo que pidió es una sugerencia. Sin
+       -- esto, quien se tomó el trabajo de declarar qué tiene era el único
+       -- que no se enteraba.
+       or p_item_ids is null
+       or cardinality(p_item_ids) = 0
+     );
+$$;
+
+revoke execute on function public.destinatarios_aviso(text,text[])
+  from public, anon, authenticated;
+
+-- ---------------------------------------------------------------------
 -- 8. RLS
 -- ---------------------------------------------------------------------
 
@@ -497,6 +825,7 @@ alter table public.metricas           enable row level security;
 alter table public.administradores    enable row level security;
 alter table public.sugerencias_item   enable row level security;
 alter table public.ofrecimientos      enable row level security;
+alter table public.entidades          enable row level security;
 
 -- Nadie lee `solicitudes` directamente. Solo la vista y las RPC.
 revoke all on public.solicitudes        from anon, authenticated;
@@ -505,6 +834,20 @@ revoke all on public.push_ofertadores    from anon, authenticated;
 -- Igual que `solicitudes`: cero políticas es deliberado. La frontera son
 -- `guardar_ofrecimientos` y `mis_ofrecimientos`, no una política.
 revoke all on public.ofrecimientos      from anon, authenticated;
+revoke all on public.solicitud_items    from anon, authenticated;
+-- El público no toca la tabla, toca `entidades_publicas`. Una sola
+-- política, la del administrador, que necesita ver también las retiradas.
+revoke all on public.entidades          from anon, authenticated;
+-- ⚠ Una política FILTRA privilegios, no los concede: sin este grant,
+-- PostgREST —que conecta como `authenticated`— devolvía «permission denied»
+-- para todo el mundo, el administrador incluido, y el panel listaba siempre
+-- «No hay entidades». `solicitudes` lleva revoke y CERO políticas;
+-- `sugerencias_item` lleva política y ningún revoke. Esta es del segundo
+-- tipo. `anon` sigue sin nada: lo público sale de la vista.
+grant select on public.entidades to authenticated;
+create policy "admin lee entidades" on public.entidades
+  for select to authenticated
+  using (exists (select 1 from public.administradores a where a.user_id = (select auth.uid())));
 grant select on public.solicitudes_publicas to anon, authenticated;
 grant select on public.servidores_publicos  to anon, authenticated;
 
@@ -519,9 +862,12 @@ create policy "municipios lectura publica" on public.municipios
 create policy "servicios lectura publica" on public.catalogo_servicios
   for select to public using (activo = true);
 
--- Ítems: legibles porque no contienen nada personal
-create policy "items lectura publica" on public.solicitud_items
-  for select to public using (true);
+-- Ítems: NO legibles por el cliente. Tuvo política `using (true)` hasta
+-- agosto de 2026, y eso contradecía que la vista sea la frontera:
+-- `GET /rest/v1/solicitud_items` devolvía los ítems de TODAS las
+-- solicitudes, incluidas las cumplidas y las vencidas que el job todavía no
+-- ha borrado, que es justo lo que `solicitudes_publicas` oculta. Nada de
+-- `src/` la lee directo: todo pasa por la vista o por RPC.
 
 -- Sugerencias: nadie escribe directo, solo por RPC. La única lectura de
 -- tabla es la del administrador, que necesita la cola en /admin. El resto
@@ -1252,7 +1598,7 @@ security definer
 set search_path = ''
 as $$
 begin
-  if p_tipo_objeto not in ('solicitud','respuesta','perfil') then
+  if p_tipo_objeto not in ('solicitud','respuesta','perfil','entidad') then
     raise exception 'Tipo de contenido inválido';
   end if;
   if p_motivo not in ('datos_personales','estafa','contenido_ofensivo',
@@ -1333,6 +1679,11 @@ begin
       delete from public.respuestas where id = v_rep.objeto_id;
     elsif v_rep.tipo_objeto = 'perfil' then
       update public.perfiles set suspendido = true where id = v_rep.objeto_id;
+    elsif v_rep.tipo_objeto = 'entidad' then
+      -- Se retira, no se borra: si el enlace se recupera, se vuelve a subir
+      -- sin tener que escribir la ficha entera otra vez.
+      update public.entidades set activa = false, actualizada_at = now()
+       where id = v_rep.objeto_id;
     end if;
   end if;
 
@@ -1342,6 +1693,150 @@ $$;
 
 revoke execute on function public.resolver_reporte(uuid,boolean) from public, anon;
 grant  execute on function public.resolver_reporte(uuid,boolean) to authenticated;
+
+-- ---------------------------------------------------------------------
+-- 4. Alta y edición
+-- ---------------------------------------------------------------------
+
+create or replace function public.guardar_entidad(
+  p_id          uuid,                          -- null = crear
+  p_nombre      text,
+  p_subtitulo   text    default null,
+  p_descripcion text    default null,
+  p_enlaces     jsonb   default '[]'::jsonb,
+  p_pie         text    default null,
+  p_cobertura   text    default 'nacional',
+  p_municipios  text[]  default '{}',
+  p_orden       integer default 0
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_id  uuid;
+  v_mun text[];
+begin
+  if not public.es_admin(v_uid) then
+    raise exception 'No autorizado';
+  end if;
+
+  if char_length(trim(coalesce(p_nombre, ''))) not between 3 and 80 then
+    raise exception 'El nombre debe tener entre 3 y 80 caracteres';
+  end if;
+
+  if p_cobertura not in ('nacional','local') then
+    raise exception 'La cobertura debe ser nacional o local';
+  end if;
+
+  if p_cobertura = 'local' and coalesce(array_length(p_municipios, 1), 0) = 0 then
+    raise exception 'Una entidad local necesita al menos un municipio';
+  end if;
+
+  if p_cobertura = 'local' and exists (
+       select 1 from unnest(p_municipios) m
+        where m not in (select mu.codigo_dane from public.municipios mu)) then
+    raise exception 'Hay un municipio que no existe';
+  end if;
+
+  -- El mismo control que el CHECK, aquí para que salga un mensaje legible
+  -- y no un error crudo de Postgres.
+  if not public.enlaces_validos(coalesce(p_enlaces, '[]'::jsonb)) then
+    raise exception 'Cada enlace necesita un texto de 2 a 40 caracteres y una dirección que empiece por https://, sin espacios y sin arroba. Máximo 6 enlaces.';
+  end if;
+
+  v_mun := case when p_cobertura = 'local' then p_municipios else '{}'::text[] end;
+
+  if p_id is null then
+    insert into public.entidades
+      (nombre, subtitulo, descripcion, enlaces, pie,
+       cobertura, municipios, orden, creada_por, es_prueba)
+    values
+      (trim(p_nombre),
+       nullif(trim(p_subtitulo), ''),
+       nullif(trim(p_descripcion), ''),
+       coalesce(p_enlaces, '[]'::jsonb),
+       nullif(trim(p_pie), ''),
+       p_cobertura, v_mun, coalesce(p_orden, 0), v_uid,
+       trim(p_nombre) ilike 'prueba%')
+    returning id into v_id;
+  else
+    update public.entidades
+       set nombre         = trim(p_nombre),
+           subtitulo      = nullif(trim(p_subtitulo), ''),
+           descripcion    = nullif(trim(p_descripcion), ''),
+           enlaces        = coalesce(p_enlaces, '[]'::jsonb),
+           pie            = nullif(trim(p_pie), ''),
+           cobertura      = p_cobertura,
+           municipios     = v_mun,
+           orden          = coalesce(p_orden, 0),
+           -- Se RECALCULA, no se conserva. La marca tiene que seguir
+           -- diciendo lo que se ve en pantalla: si alguien renombra
+           -- «PRUEBA Fundación X» a «Fundación X», dejó de ser de prueba, y
+           -- conservarla haría que la limpieza borrara una ficha real.
+           es_prueba      = trim(p_nombre) ilike 'prueba%',
+           actualizada_at = now()
+     where id = p_id
+    returning id into v_id;
+
+    if v_id is null then
+      raise exception 'Esa entidad no existe';
+    end if;
+  end if;
+
+  return v_id;
+end;
+$$;
+
+revoke execute on function public.guardar_entidad(uuid,text,text,text,jsonb,text,text,text[],integer) from public, anon;
+grant  execute on function public.guardar_entidad(uuid,text,text,text,jsonb,text,text,text[],integer) to authenticated;
+
+-- ---------------------------------------------------------------------
+-- 5. Bajar, subir y borrar
+--
+-- `activar_entidad` va aparte y no dentro de `guardar_entidad`: retirar
+-- una ficha tiene que ser un clic desde la lista, sin reenviar el
+-- formulario y sin que uno a medio llenar blanquee la fila. Misma forma
+-- que `suspender_perfil` y `verificar_servidor`.
+-- ---------------------------------------------------------------------
+
+create or replace function public.activar_entidad(p_id uuid, p_activa boolean)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.es_admin(auth.uid()) then
+    raise exception 'No autorizado';
+  end if;
+  update public.entidades
+     set activa = p_activa, actualizada_at = now()
+   where id = p_id;
+end;
+$$;
+
+revoke execute on function public.activar_entidad(uuid,boolean) from public, anon;
+grant  execute on function public.activar_entidad(uuid,boolean) to authenticated;
+
+create or replace function public.borrar_entidad(p_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if not public.es_admin(auth.uid()) then
+    raise exception 'No autorizado';
+  end if;
+  delete from public.entidades where id = p_id;
+end;
+$$;
+
+revoke execute on function public.borrar_entidad(uuid) from public, anon;
+grant  execute on function public.borrar_entidad(uuid) to authenticated;
 
 -- Sugerencias de ítem: aprobar, rechazar o fusionar.
 --

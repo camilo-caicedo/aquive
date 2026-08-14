@@ -136,7 +136,13 @@ export async function POST(request: Request) {
 
     if (municipio) {
       const etiqueta = ETIQUETA.get(body.categoria) ?? 'insumos'
-      await notificarOfertadores(body.municipio, municipio.nombre, etiqueta)
+      // Los ítems del catálogo, para que quien tenga inventario reciba el
+      // aviso solo si la solicitud pide algo suyo. Los sugeridos no
+      // cuentan: todavía no son un ítem con el que se pueda cruzar.
+      const idsPedidos = itemsValidados
+        .filter((i): i is { item_id: string; cantidad: number } => 'item_id' in i)
+        .map((i) => i.item_id)
+      await notificarOfertadores(body.municipio, municipio.nombre, etiqueta, idsPedidos)
     }
   } catch {
     // Silencioso: no se loggea nada del cuerpo (CLAUDE.md regla 6).

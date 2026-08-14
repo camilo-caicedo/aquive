@@ -38,32 +38,43 @@ interface ErrorWebPush {
 export async function notificarOfertadores(
   municipioCodigo: string,
   municipioNombre: string,
-  categoriaEtiqueta: string
+  categoriaEtiqueta: string,
+  itemIds: string[] = []
 ) {
   const supabase = createServiceClient()
 
-  const { data: perfiles } = await supabase
-    .from('perfiles')
-    .select('id')
-    .eq('suspendido', false)
-    .contains('municipios', [municipioCodigo])
+  // Quién recibe se decide en la base, en una sola consulta, y no trayendo
+  // los inventarios para cruzarlos aquí. Dos razones, las dos descubiertas
+  // en revisión y las dos silenciosas:
+  //
+  //   · PostgREST corta en 1000 filas —el mismo tope que obligó a crear
+  //     `listar_municipios`— y la llave de servicio no exime. Con 150
+  //     perfiles de 10 ítems, la lista llegaba truncada y sin orden, y
+  //     alguien con exactamente lo que se pedía podía perderse el aviso.
+  //   · `.in('perfil_id', [...])` mete todos los uuid en el query string de
+  //     un GET: con unos cientos de perfiles la URL revienta, la respuesta
+  //     vuelve nula y el filtro desaparece entero.
+  //
+  // Y de paso deja de mandar uuid de personas por la URL (regla 6).
+  const { data: destinatarios } = await supabase.rpc('destinatarios_aviso', {
+    p_municipio: municipioCodigo,
+    p_item_ids: itemIds,
+  })
 
-  if (!perfiles || perfiles.length === 0) return
-
-  const { data: suscripciones } = await supabase
-    .from('push_ofertadores')
-    .select('id, endpoint, p256dh, auth_key')
-    .in(
-      'perfil_id',
-      perfiles.map((p) => p.id)
-    )
-
-  if (!suscripciones || suscripciones.length === 0) return
+  if (!destinatarios || destinatarios.length === 0) return
 
   configurar()
 
-  const payload = JSON.stringify({
+  // Dos mensajes, ninguno con nada que permita acercarse a quién pidió: el
+  // municipio y la categoría ya están en el tablero público. El de
+  // coincidencia no dice cuál ítem calzó.
+  const generico = JSON.stringify({
     body: `Alguien necesita ${categoriaEtiqueta.toLowerCase()} en ${municipioNombre}`,
+    tag: `solicitud-${municipioCodigo}`,
+    url: 'https://aquive.co/?municipio=' + municipioCodigo,
+  })
+  const conCoincidencia = JSON.stringify({
+    body: `Alguien necesita algo que tienes en ${municipioNombre}`,
     tag: `solicitud-${municipioCodigo}`,
     url: 'https://aquive.co/?municipio=' + municipioCodigo,
   })
@@ -71,15 +82,15 @@ export async function notificarOfertadores(
   const muertas: string[] = []
 
   await Promise.all(
-    suscripciones.map(async (s) => {
+    destinatarios.map(async (d) => {
       try {
         await webpush.sendNotification(
-          { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth_key } },
-          payload
+          { endpoint: d.endpoint, keys: { p256dh: d.p256dh, auth: d.auth_key } },
+          d.calza ? conCoincidencia : generico
         )
       } catch (error) {
         const codigo = (error as ErrorWebPush).statusCode
-        if (codigo === 404 || codigo === 410) muertas.push(s.id)
+        if (codigo === 404 || codigo === 410) muertas.push(d.suscripcion_id)
       }
     })
   )

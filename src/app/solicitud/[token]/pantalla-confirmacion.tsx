@@ -1,11 +1,22 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import qrcode from 'qrcode-generator'
+import { AVISO_PUBLICAR } from '@/lib/honestidad'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
-export function PantallaConfirmacion({ link, codigo }: { link: string; codigo: string }) {
+export function PantallaConfirmacion({
+  link,
+  codigo,
+  sinRespuestas,
+}: {
+  link: string
+  codigo: string
+  /** El aviso habla en futuro, así que sobra cuando ya hay respuestas. */
+  sinRespuestas: boolean
+}) {
   const [copiado, setCopiado] = useState(false)
 
   const qrDataUrl = useMemo(() => {
@@ -36,6 +47,19 @@ export function PantallaConfirmacion({ link, codigo }: { link: string; codigo: s
           podemos recuperarlo si lo pierdes.
         </AlertDescription>
       </Alert>
+
+      {/* Solo mientras no haya respuestas: esta pantalla se ve en cada
+          visita al enlace, no solo al publicar, y el aviso habla en futuro.
+          Con respuestas ya visibles abajo, el que aplica es el que va
+          pegado a cada botón de contacto. */}
+      {sinRespuestas && (
+        <p className="text-left text-sm text-muted-foreground">
+          {AVISO_PUBLICAR}{' '}
+          <Link href="/seguridad" className="underline">
+            Cómo cuidarte
+          </Link>
+        </p>
+      )}
 
       <div className="break-all rounded-lg border border-border p-3 text-sm">{link}</div>
 
