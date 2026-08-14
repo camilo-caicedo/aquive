@@ -240,15 +240,17 @@ export function FormularioRegistro({
     // Va después de crear_perfil porque guardar_ofrecimientos exige que el
     // perfil ya exista. Si esto falla, el perfil de todos modos quedó
     // guardado: solo se pierde el inventario, no el perfil.
-    if (tipo === 'ofertador') {
-      const { error: inventarioError } = await supabase.rpc('guardar_ofrecimientos', {
-        p_items: inventario.map(aOfrecimientoInput),
-      })
-      if (inventarioError) {
-        setError(inventarioError.message)
-        setGuardando(false)
-        return
-      }
+    //
+    // Para los dos tipos: un profesional con matrícula también puede tener
+    // cobijas en la casa, y no había ninguna razón para negárselo. La RPC
+    // nunca miró el tipo; el que lo bloqueaba era este `if`.
+    const { error: inventarioError } = await supabase.rpc('guardar_ofrecimientos', {
+      p_items: inventario.map(aOfrecimientoInput),
+    })
+    if (inventarioError) {
+      setError(inventarioError.message)
+      setGuardando(false)
+      return
     }
 
     router.push(tipo === 'servidor' ? '/servidores' : '/')
@@ -278,7 +280,7 @@ export function FormularioRegistro({
         <p className="mt-2 text-sm text-muted-foreground">
           {tipo === 'ofertador'
             ? 'Puedes entregar cosas: agua, alimentos, cobijas, aseo.'
-            : 'Eres profesional con matrícula: ingeniería, arquitectura, psicología, salud o derecho.'}
+            : 'Eres profesional con matrícula: ingeniería, arquitectura, psicología, salud o derecho. Más abajo también puedes contar qué insumos tienes.'}
         </p>
       </fieldset>
 
@@ -388,127 +390,6 @@ export function FormularioRegistro({
         </p>
       </div>
 
-      {tipo === 'ofertador' && (
-        <div className="space-y-2 rounded-lg border border-border p-4">
-          <Label className="mb-1">Qué tengo para dar (opcional)</Label>
-          <p className="text-sm text-muted-foreground">
-            Si nos cuentas qué tienes, te avisamos cuando alguien cerca lo
-            necesite. Puedes llenarlo después. Sin esto no apareces en las
-            coincidencias ni recibes avisos, pero igual puedes navegar y
-            responder solicitudes.
-          </p>
-
-          <Combobox
-            multiple
-            items={poolInsumos}
-            value={elegidosInsumos}
-            onValueChange={alCambiarInsumos}
-            itemToStringLabel={(o: OpcionInsumo) => o.nombre}
-            isItemEqualToValue={(a: OpcionInsumo, b: OpcionInsumo) => a.id === b.id}
-            inputValue={busquedaInsumo}
-            onInputValueChange={setBusquedaInsumo}
-          >
-            <ComboboxChips className="min-h-12 py-2">
-              {inventario.map((o) => (
-                <ComboboxChip key={claveOfrecimiento(o)} className="h-8 px-2 text-sm">
-                  {o.nombre}
-                </ComboboxChip>
-              ))}
-              <ComboboxChipsInput
-                placeholder={inventario.length === 0 ? 'Escribe para buscar lo que tienes' : ''}
-                className="min-h-8 text-base"
-              />
-            </ComboboxChips>
-            <ComboboxContent>
-              <ComboboxEmpty>
-                <div className="flex flex-col items-center gap-2 py-1">
-                  <span>No encontramos eso en la lista.</span>
-                  {busquedaInsumo.trim().length >= 2 && (
-                    <Button type="button" variant="outline" onClick={agregarSugerencia}>
-                      Agregar &ldquo;{busquedaInsumo.trim()}&rdquo; como sugerencia
-                    </Button>
-                  )}
-                </div>
-              </ComboboxEmpty>
-              <ComboboxList>
-                {(o: OpcionInsumo) => (
-                  <ComboboxItem key={o.id} value={o}>
-                    <span className="flex min-w-0 flex-col">
-                      <span>{o.nombre}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {o.categoria ? categoriaInfo(o.categoria).etiqueta : ''}
-                      </span>
-                    </span>
-                  </ComboboxItem>
-                )}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
-          {errorInventario && <p className="text-sm text-destructive">{errorInventario}</p>}
-
-          {inventario.length > 0 && (
-            <ul className="space-y-2 pt-1">
-              {inventario.map((o) => (
-                <li
-                  key={claveOfrecimiento(o)}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-border p-2"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-base">
-                      {o.nombre}
-                      {o.por_confirmar && (
-                        <span className="ml-1 text-sm font-normal text-muted-foreground">
-                          · por confirmar
-                        </span>
-                      )}
-                    </p>
-                    {o.categoria && (
-                      <p className="text-sm text-muted-foreground">
-                        {categoriaInfo(o.categoria).etiqueta}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="size-12"
-                      aria-label={`Restar cantidad de ${o.nombre}`}
-                      onClick={() =>
-                        cambiarCantidadInsumo(
-                          claveOfrecimiento(o),
-                          o.cantidad === null || o.cantidad <= 1 ? null : o.cantidad - 1
-                        )
-                      }
-                    >
-                      −
-                    </Button>
-                    <span className="w-8 text-center text-base tabular-nums">
-                      {o.cantidad ?? '—'}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="size-12"
-                      aria-label={`Sumar cantidad de ${o.nombre}`}
-                      onClick={() => cambiarCantidadInsumo(claveOfrecimiento(o), (o.cantidad ?? 0) + 1)}
-                    >
-                      +
-                    </Button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-          <p className="text-sm text-muted-foreground">
-            La cantidad es solo un cálculo aproximado, no hace falta que sea
-            exacta.
-          </p>
-        </div>
-      )}
-
       {tipo === 'servidor' && (
         <div className="space-y-4 rounded-lg border border-border p-4">
           <div>
@@ -607,6 +488,132 @@ export function FormularioRegistro({
           </div>
         </div>
       )}
+
+      {/* Para los dos tipos: alguien con matrícula también puede tener
+          cobijas en la casa, y negárselo no protegía nada. Va después del
+          bloque de matrícula para que un profesional lea primero su
+          profesión y después qué insumos tiene. */}
+      <div className="space-y-2 rounded-lg border border-border p-4">
+        <Label className="mb-1">Qué tengo para dar (opcional)</Label>
+        <p className="text-sm text-muted-foreground">
+          {tipo === 'servidor'
+            ? 'Además de tus servicios profesionales, cuéntanos si tienes insumos para entregar: agua, alimentos, cobijas, aseo. '
+            : ''}
+          Si nos cuentas qué tienes, te avisamos cuando alguien cerca lo
+          necesite. Puedes llenarlo después. Sin esto no apareces en las
+          coincidencias ni recibes avisos, pero igual puedes navegar y
+          responder solicitudes.
+        </p>
+
+        <Combobox
+          multiple
+          items={poolInsumos}
+          value={elegidosInsumos}
+          onValueChange={alCambiarInsumos}
+          itemToStringLabel={(o: OpcionInsumo) => o.nombre}
+          isItemEqualToValue={(a: OpcionInsumo, b: OpcionInsumo) => a.id === b.id}
+          inputValue={busquedaInsumo}
+          onInputValueChange={setBusquedaInsumo}
+        >
+          <ComboboxChips className="min-h-12 py-2">
+            {inventario.map((o) => (
+              <ComboboxChip key={claveOfrecimiento(o)} className="h-8 px-2 text-sm">
+                {o.nombre}
+              </ComboboxChip>
+            ))}
+            <ComboboxChipsInput
+              placeholder={inventario.length === 0 ? 'Escribe para buscar lo que tienes' : ''}
+              className="min-h-8 text-base"
+            />
+          </ComboboxChips>
+          <ComboboxContent>
+            <ComboboxEmpty>
+              <div className="flex flex-col items-center gap-2 py-1">
+                <span>No encontramos eso en la lista.</span>
+                {busquedaInsumo.trim().length >= 2 && (
+                  <Button type="button" variant="outline" onClick={agregarSugerencia}>
+                    Agregar &ldquo;{busquedaInsumo.trim()}&rdquo; como sugerencia
+                  </Button>
+                )}
+              </div>
+            </ComboboxEmpty>
+            <ComboboxList>
+              {(o: OpcionInsumo) => (
+                <ComboboxItem key={o.id} value={o}>
+                  <span className="flex min-w-0 flex-col">
+                    <span>{o.nombre}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {o.categoria ? categoriaInfo(o.categoria).etiqueta : ''}
+                    </span>
+                  </span>
+                </ComboboxItem>
+              )}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
+        {errorInventario && <p className="text-sm text-destructive">{errorInventario}</p>}
+
+        {inventario.length > 0 && (
+          <ul className="space-y-2 pt-1">
+            {inventario.map((o) => (
+              <li
+                key={claveOfrecimiento(o)}
+                className="flex items-center justify-between gap-2 rounded-lg border border-border p-2"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-base">
+                    {o.nombre}
+                    {o.por_confirmar && (
+                      <span className="ml-1 text-sm font-normal text-muted-foreground">
+                        · por confirmar
+                      </span>
+                    )}
+                  </p>
+                  {o.categoria && (
+                    <p className="text-sm text-muted-foreground">
+                      {categoriaInfo(o.categoria).etiqueta}
+                    </p>
+                  )}
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="size-12"
+                    aria-label={`Restar cantidad de ${o.nombre}`}
+                    onClick={() =>
+                      cambiarCantidadInsumo(
+                        claveOfrecimiento(o),
+                        o.cantidad === null || o.cantidad <= 1 ? null : o.cantidad - 1
+                      )
+                    }
+                  >
+                    −
+                  </Button>
+                  <span className="w-8 text-center text-base tabular-nums">
+                    {o.cantidad ?? '—'}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="size-12"
+                    aria-label={`Sumar cantidad de ${o.nombre}`}
+                    onClick={() => cambiarCantidadInsumo(claveOfrecimiento(o), (o.cantidad ?? 0) + 1)}
+                  >
+                    +
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="text-sm text-muted-foreground">
+          La cantidad es solo un cálculo aproximado, no hace falta que sea
+          exacta.
+        </p>
+      </div>
 
       <div>
         <Label htmlFor="descripcion" className="mb-1">
