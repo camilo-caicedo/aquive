@@ -52,6 +52,33 @@ niños, niñas y adolescentes está proscrito salvo datos de naturaleza
 pública. Si la solicitud no permite identificar a nadie, no hay titular
 y buena parte de la ley no se activa.
 
+**Esta regla no tiene excepciones en la solicitud.** Ni una. Lo de arriba
+sigue prohibido en `solicitudes`, en `solicitud_items` y en la nota, sin
+importar qué flujo se elija.
+
+Lo que sí existe, desde el 14 de agosto de 2026, es una tabla aparte:
+`identidades` (PLAN-V2 §5.2, reglas K a P). Guarda nombre, documento y
+teléfono **cifrados con llave del Vault**, para el acompañamiento de una
+organización aliada, y es otra cosa que un campo en la solicitud:
+
+- **Se pide, no se recoge.** Publicar directo no la toca. Elegir
+  acompañamiento es un acto explícito, con su texto de autorización, y
+  nunca puede ser el camino de menor resistencia (regla R del plan).
+- **Vive aislada.** Tabla revocada entera, cero políticas, ninguna vista
+  pública la toca. La única puerta son tres RPC.
+- **Muere con lo que acompaña.** La de quien pide cuelga de su solicitud
+  y se va con ella a las 72 horas; la de quien ofrece cuelga de su perfil
+  y se va con su cuenta.
+- **Sin datos de menores, por CHECK.** Solo CC, CE, PEP y PPT. TI y RC no
+  aparecen ni en la base ni en un desplegable.
+- **Cada lectura deja rastro** en `accesos_identidad`, y ese rastro
+  sobrevive a la identidad. Sin PII.
+
+Nada de esto se usa todavía: no hay pantalla que lo llame. Antes de que
+la haya tienen que estar los papeles de PLAN-V2 §12 — contrato de
+transmisión de datos con la fundación, registro en el RNBD, canal de
+habeas data y texto de autorización revisado.
+
 ### 2. Sin campo de texto libre sin restricción
 
 Los ítems se eligen de un **catálogo predefinido** (`catalogo_items`).
