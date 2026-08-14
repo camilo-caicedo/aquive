@@ -1,5 +1,6 @@
 import { BadgeCheck, TriangleAlert, Inbox } from 'lucide-react'
 import type { SolicitudConRespuestas } from '@/lib/types'
+import { enlaceWhatsapp } from '@/lib/contacto'
 import { Button } from '@/components/ui/button'
 import { BotonReportar } from '@/components/boton-reportar'
 
@@ -48,7 +49,7 @@ export function ListaRespuestas({ respuestas }: { respuestas: Respuesta[] }) {
               <a
                 href={
                   r.contacto_tipo === 'whatsapp'
-                    ? `https://wa.me/57${r.contacto.replace(/\D/g, '')}`
+                    ? enlaceWhatsapp(r.contacto)
                     : `tel:${r.contacto}`
                 }
                 target={r.contacto_tipo === 'whatsapp' ? '_blank' : undefined}

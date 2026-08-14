@@ -646,7 +646,7 @@ returns void
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $$
 declare v_uid uuid := auth.uid();
 begin
   if v_uid is null then raise exception 'Debes iniciar sesión'; end if;
@@ -658,7 +658,7 @@ begin
      where perfil_id = v_uid and endpoint = p_endpoint;
   end if;
 end;
-$;
+$$;
 
 revoke execute on function public.quitar_push_ofertador(text) from public, anon;
 grant  execute on function public.quitar_push_ofertador(text) to authenticated;

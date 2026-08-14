@@ -66,7 +66,12 @@ En Supabase, en este orden:
 
 1. `supabase/schema.sql` — tablas, RLS, RPC, vistas y el job de expiración
 2. `supabase/seed-municipios.sql` — los 1.122 municipios con código DANE
-3. `supabase/seed-catalogo.sql` — 117 insumos y los servicios pedibles
+3. `supabase/seed-servicios.sql` — los 36 servicios profesionales
+4. `supabase/seed-catalogo.sql` — 145 insumos y los servicios pedibles
+
+El 3 va antes del 4 y no es negociable: `seed-catalogo.sql` deriva los ítems
+`serv_*` con un `select` sobre `catalogo_servicios`. Al revés no deriva nada
+y te quedas sin la categoría de servicios, sin ningún error visible.
 
 Después: activa Google como proveedor de Auth, pon el dominio en
 **Authentication → URL Configuration**, y **confirma que Point-in-Time
@@ -86,6 +91,7 @@ en `administradores` con el id del usuario que va a moderar.
 | `docs/legal/PLANTILLAS.md` | Aviso de privacidad, términos y autorización. |
 | `supabase/schema.sql` | Esquema completo. Fuente de verdad de la base. |
 | `supabase/seed-*.sql` | Municipios, insumos y servicios. Re-ejecutables. |
+| `migracion/` | Levantar la base en un proyecto nuevo: runbook, configuración y verificación. |
 | `src/lib/config.ts` | Responsable, correo y fecha de los legales. Tiene efecto legal. |
 | `src/lib/types.ts` | Tipos de la base, escritos a mano. Actualizar junto al esquema. |
 | `src/proxy.ts` | Refresca la sesión de Supabase (en Next 16 ya no se llama `middleware`). |
