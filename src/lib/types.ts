@@ -123,6 +123,7 @@ export interface Database {
           orden: number
           creado_por: string | null
           origen: OrigenItem
+          es_prueba: boolean
         }
         Insert: {
           id: string
@@ -133,6 +134,7 @@ export interface Database {
           orden?: number
           creado_por?: string | null
           origen?: OrigenItem
+          es_prueba?: boolean
         }
         Update: Partial<Database['public']['Tables']['catalogo_items']['Insert']>
         Relationships: []
@@ -342,6 +344,7 @@ export interface Database {
           revisada_at: string | null
           nota_revision: string | null
           creada_at: string
+          es_prueba: boolean
         }
         Insert: {
           id?: string
@@ -356,6 +359,7 @@ export interface Database {
           revisada_at?: string | null
           nota_revision?: string | null
           creada_at?: string
+          es_prueba?: boolean
         }
         Update: Partial<Database['public']['Tables']['sugerencias_item']['Insert']>
         Relationships: []

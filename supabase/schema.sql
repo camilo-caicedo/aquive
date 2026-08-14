@@ -23,7 +23,13 @@ create table if not exists public.catalogo_items (
   orden         integer not null default 0,
   creado_por    uuid references auth.users(id) on delete set null,
   origen        text not null default 'semilla'
-                  check (origen in ('semilla','admin','aliado','sugerencia'))
+                  check (origen in ('semilla','admin','aliado','sugerencia')),
+  -- Temporal. La propagan `resolver_sugerencia` y `crear_item_catalogo`.
+  -- Hace falta porque `creado_por` es el administrador, que es una cuenta
+  -- real: por ahí no se distingue un ítem creado probando de uno de verdad,
+  -- y un ítem huérfano sale en la lista de publicar. Ninguna pantalla
+  -- filtra por ella: en pruebas hay que poder ver lo que uno crea.
+  es_prueba     boolean not null default false
 );
 
 create table if not exists public.municipios (
@@ -67,7 +73,11 @@ create table if not exists public.sugerencias_item (
   revisada_por        uuid references auth.users(id) on delete set null,
   revisada_at         timestamptz,
   nota_revision       text check (char_length(nota_revision) <= 300),
-  creada_at           timestamptz not null default now()
+  creada_at           timestamptz not null default now(),
+  -- Temporal. Se hereda de la solicitud o del perfil que la propuso, y no
+  -- se deduce después: `resolver_sugerencia` borra esa referencia al
+  -- remapear, que es justo su trabajo.
+  es_prueba           boolean not null default false
 );
 
 comment on table public.sugerencias_item is
@@ -571,6 +581,7 @@ declare
   v_sugerencia  text;
   v_sug_id      uuid;
   v_n_sugeridos integer := 0;
+  v_es_prueba   boolean := trim(p_barrio) ilike 'prueba%';
 begin
   if p_nota is not null and p_nota ~ '(\+?57)?[ -]?3[0-9]{9}|[0-9]{7,}|@[a-zA-Z0-9._-]+\.[a-z]{2,}' then
     raise exception 'La nota no puede contener teléfonos ni correos';
@@ -592,8 +603,7 @@ begin
   -- antes de invertir un viaje.
   insert into public.solicitudes (codigo, token_hash, municipio, barrio, categoria, nota, es_prueba)
   values (v_codigo, encode(extensions.digest(p_token, 'sha256'), 'hex'),
-          p_municipio, p_barrio, p_categoria, nullif(trim(p_nota), ''),
-          trim(p_barrio) ilike 'prueba%')
+          p_municipio, p_barrio, p_categoria, nullif(trim(p_nota), ''), v_es_prueba)
   returning id into v_id;
 
   -- Cada ítem viene en una de dos formas:
@@ -624,8 +634,8 @@ begin
         raise exception 'El nombre de lo que sugieres no puede contener teléfonos ni correos';
       end if;
 
-      insert into public.sugerencias_item (nombre_propuesto, categoria_sugerida, origen)
-      values (v_sugerencia, p_categoria, 'solicitante')
+      insert into public.sugerencias_item (nombre_propuesto, categoria_sugerida, origen, es_prueba)
+      values (v_sugerencia, p_categoria, 'solicitante', v_es_prueba)
       returning id into v_sug_id;
 
       insert into public.solicitud_items (solicitud_id, sugerencia_id, cantidad)
@@ -924,10 +934,17 @@ declare
   v_sugerencia  text;
   v_sug_id      uuid;
   v_n_sugeridos integer := 0;
+  v_es_prueba   boolean;
 begin
   if v_uid is null then raise exception 'Debes iniciar sesión'; end if;
 
-  if not exists (select 1 from public.perfiles p where p.id = v_uid) then
+  -- El `select ... into` hace dos cosas de una: comprueba que el perfil
+  -- exista (si no, queda en NULL) y saca de su nombre la marca de prueba
+  -- que van a heredar las sugerencias.
+  select p.nombre_visible ilike 'prueba%' into v_es_prueba
+    from public.perfiles p where p.id = v_uid;
+
+  if v_es_prueba is null then
     raise exception 'Necesitas completar tu perfil';
   end if;
 
@@ -961,8 +978,8 @@ begin
         raise exception 'El nombre de lo que sugieres no puede contener teléfonos ni correos';
       end if;
 
-      insert into public.sugerencias_item (nombre_propuesto, propuesta_por, origen)
-      values (v_sugerencia, v_uid, 'ofertador')
+      insert into public.sugerencias_item (nombre_propuesto, propuesta_por, origen, es_prueba)
+      values (v_sugerencia, v_uid, 'ofertador', v_es_prueba)
       returning id into v_sug_id;
 
     elsif v_sug_id is not null then
@@ -1250,9 +1267,10 @@ begin
 
   v_id := public.slug_item(p_nombre);
 
-  insert into public.catalogo_items (id, categoria, nombre, unidad, orden, creado_por, origen)
+  insert into public.catalogo_items (id, categoria, nombre, unidad, orden, creado_por, origen, es_prueba)
   values (v_id, p_categoria, trim(p_nombre),
-          coalesce(nullif(trim(p_unidad), ''), 'unidad'), 9999, v_uid, 'admin');
+          coalesce(nullif(trim(p_unidad), ''), 'unidad'), 9999, v_uid, 'admin',
+          trim(p_nombre) ilike 'prueba%');
 
   return v_id;
 end;
@@ -1315,12 +1333,12 @@ begin
 
   if p_accion = 'aprobar' then
     v_destino := public.slug_item(v_sug.nombre_propuesto);
-    insert into public.catalogo_items (id, categoria, nombre, unidad, orden, creado_por, origen)
+    insert into public.catalogo_items (id, categoria, nombre, unidad, orden, creado_por, origen, es_prueba)
     values (v_destino,
             coalesce(v_sug.categoria_sugerida, 'otros'),
             trim(v_sug.nombre_propuesto),
             coalesce(nullif(trim(v_sug.unidad_sugerida), ''), 'unidad'),
-            9999, v_uid, 'sugerencia');
+            9999, v_uid, 'sugerencia', v_sug.es_prueba);
     v_estado := 'aprobada';
   else
     v_destino := p_item_destino;
