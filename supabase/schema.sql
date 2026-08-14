@@ -14,13 +14,22 @@ create extension if not exists pg_cron;
 -- ---------------------------------------------------------------------
 
 create table if not exists public.catalogo_items (
-  id            text primary key,
+  id            text primary key,          -- PK legible, no uuid
   categoria     text not null check (categoria in
                   ('alimentacion','aseo','salud','abrigo','cocina','otros','servicios','mascotas')),
   nombre        text not null,
   unidad        text not null default 'unidad',
   activo        boolean not null default true,
-  orden         integer not null default 0
+  orden         integer not null default 0,
+  creado_por    uuid references auth.users(id) on delete set null,
+  origen        text not null default 'semilla'
+                  check (origen in ('semilla','admin','aliado','sugerencia')),
+  -- Temporal. La propagan `resolver_sugerencia` y `crear_item_catalogo`.
+  -- Hace falta porque `creado_por` es el administrador, que es una cuenta
+  -- real: por ahí no se distingue un ítem creado probando de uno de verdad,
+  -- y un ítem huérfano sale en la lista de publicar. Ninguna pantalla
+  -- filtra por ella: en pruebas hay que poder ver lo que uno crea.
+  es_prueba     boolean not null default false
 );
 
 create table if not exists public.municipios (
@@ -42,6 +51,39 @@ create table if not exists public.catalogo_servicios (
 
 comment on table public.catalogo_servicios is
   'PROHIBIDO agregar rescate, búsqueda de personas, urgencias o atención prehospitalaria: es competencia de bomberos, Defensa Civil y la línea 123, y ofrecerlo aquí contradice los términos de uso. Ver CLAUDE.md regla 5.';
+
+-- Lo que alguien pidió y no estaba en el catálogo. La solicitud se publica
+-- igual, con el ítem marcado "por confirmar"; después un administrador
+-- aprueba, rechaza o fusiona con un ítem que ya existía. Sin la fusión
+-- terminaríamos con "crema dental", "crema de dientes" y "pasta dental"
+-- como tres ítems distintos, y el cruce dejaría de encontrar nada.
+create table if not exists public.sugerencias_item (
+  id                  uuid primary key default gen_random_uuid(),
+  nombre_propuesto    text not null check (char_length(trim(nombre_propuesto)) between 2 and 60),
+  categoria_sugerida  text check (categoria_sugerida in
+                        ('alimentacion','aseo','salud','abrigo','cocina','otros','servicios','mascotas')),
+  unidad_sugerida     text check (char_length(unidad_sugerida) between 1 and 20),
+  -- SET NULL y no cascada: si quien la propuso borra su cuenta, la
+  -- sugerencia sobrevive. No es un dato suyo, es el nombre de una cosa.
+  propuesta_por       uuid references auth.users(id) on delete set null,
+  origen              text not null check (origen in ('solicitante','ofertador','aliado')),
+  estado              text not null default 'pendiente'
+                        check (estado in ('pendiente','aprobada','rechazada','fusionada')),
+  item_resultante_id  text references public.catalogo_items(id) on delete set null,
+  revisada_por        uuid references auth.users(id) on delete set null,
+  revisada_at         timestamptz,
+  nota_revision       text check (char_length(nota_revision) <= 300),
+  creada_at           timestamptz not null default now(),
+  -- Temporal. Se hereda de la solicitud o del perfil que la propuso, y no
+  -- se deduce después: `resolver_sugerencia` borra esa referencia al
+  -- remapear, que es justo su trabajo.
+  es_prueba           boolean not null default false
+);
+
+comment on table public.sugerencias_item is
+  'PROHIBIDO usarla como campo de notas. Es el nombre de una cosa, nunca de una persona ni de una situación. El filtro de teléfonos y correos vive en las RPC que escriben. Ver CLAUDE.md regla 2.';
+
+create index if not exists idx_sugerencias_estado on public.sugerencias_item(estado);
 
 -- ---------------------------------------------------------------------
 -- 2. Perfiles (ofertadores y servidores) — aquí SÍ hay datos personales
@@ -82,6 +124,39 @@ create table if not exists public.servidores (
   servicios           text[] not null default '{}',
   unique (entidad_matricula, numero_matricula)
 );
+
+-- Inventario de quien ofrece: qué tiene, para poder cruzar en los dos
+-- sentidos y no solo de solicitud hacia oferta. Es OPCIONAL — hay
+-- ofertadores registrados sin él y obligarlos produce datos inventados,
+-- que envenenan el cruce. Sin columna de categoría a propósito: un
+-- ofertador cruza categorías libremente.
+--
+-- `cantidad` es NULLABLE, al revés que `solicitud_items.cantidad`: "tengo
+-- cobijas, no sé cuántas" es el caso honesto más común. La cifra dura se
+-- establece en la entrega, cuando alguien tiene la caja enfrente.
+create table if not exists public.ofrecimientos (
+  id             uuid primary key default gen_random_uuid(),
+  perfil_id      uuid not null references public.perfiles(id) on delete cascade,
+  item_id        text references public.catalogo_items(id),
+  sugerencia_id  uuid references public.sugerencias_item(id) on delete restrict,
+  cantidad       numeric(8,2) check (cantidad is null or (cantidad > 0 and cantidad <= 9999)),
+  disponible     boolean not null default true,
+  actualizado_at timestamptz not null default now(),
+  constraint ofrecimientos_uno_u_otro check (num_nonnulls(item_id, sugerencia_id) = 1)
+);
+
+comment on table public.ofrecimientos is
+  'Inventario de quien ofrece. Sin datos personales: ítems y cantidades colgando de un perfil.';
+
+-- ⚠ Índices únicos PARCIALES y no restricción de tabla: un UNIQUE de tabla
+-- no admite WHERE, y sin el WHERE los NULL de la columna que no aplica no
+-- se comparan entre sí y el índice no serviría de nada.
+create unique index if not exists ofrecimientos_item_uniq
+  on public.ofrecimientos (perfil_id, item_id) where item_id is not null;
+create unique index if not exists ofrecimientos_sug_uniq
+  on public.ofrecimientos (perfil_id, sugerencia_id) where sugerencia_id is not null;
+create index if not exists idx_ofrecimientos_item on public.ofrecimientos(item_id)
+  where disponible;
 
 create table if not exists public.administradores (
   user_id     uuid primary key references auth.users(id) on delete cascade,
@@ -125,7 +200,12 @@ create table if not exists public.solicitudes (
                     check (estado in ('abierta','cumplida')),
   creada_at       timestamptz not null default now(),
   confirmada_at   timestamptz not null default now(),
-  expira_at       timestamptz not null default now() + interval '72 hours'
+  expira_at       timestamptz not null default now() + interval '72 hours',
+  -- Temporal, mientras dure el periodo de pruebas. La deriva
+  -- `crear_solicitud` del prefijo del barrio y la propagan
+  -- `cerrar_solicitud` y `expirar_solicitudes` a `metricas`, que no tiene
+  -- FK por donde limpiar después. Se elimina al terminar las pruebas.
+  es_prueba       boolean not null default false
 );
 
 comment on table public.solicitudes is
@@ -136,15 +216,22 @@ create index if not exists idx_solicitudes_categoria on public.solicitudes(categ
 create index if not exists idx_solicitudes_expira    on public.solicitudes(expira_at);
 create index if not exists idx_solicitudes_token     on public.solicitudes(token_hash);
 
+-- Un ítem apunta al catálogo O a una sugerencia, nunca a los dos ni a
+-- ninguno. `on delete restrict` en `sugerencia_id`: borrar la sugerencia
+-- dejaría esta fila violando su propio CHECK. Las sugerencias no se
+-- borran, cambian de estado.
 create table if not exists public.solicitud_items (
   id              uuid primary key default gen_random_uuid(),
   solicitud_id    uuid not null references public.solicitudes(id) on delete cascade,
-  item_id         text not null references public.catalogo_items(id),
+  item_id         text references public.catalogo_items(id),
+  sugerencia_id   uuid references public.sugerencias_item(id) on delete restrict,
   cantidad        numeric(8,2) not null check (cantidad > 0 and cantidad <= 9999),
-  cubierto        boolean not null default false
+  cubierto        boolean not null default false,
+  constraint solicitud_items_uno_u_otro check (num_nonnulls(item_id, sugerencia_id) = 1)
 );
 
-create index if not exists idx_items_solicitud on public.solicitud_items(solicitud_id);
+create index if not exists idx_items_solicitud  on public.solicitud_items(solicitud_id);
+create index if not exists idx_items_sugerencia on public.solicitud_items(sugerencia_id);
 
 -- ---------------------------------------------------------------------
 -- 4. Respuestas
@@ -211,7 +298,12 @@ create table if not exists public.metricas (
   horas_hasta_respuesta   numeric(6,2),
   horas_hasta_cierre      numeric(6,2),
   num_respuestas          integer not null default 0,
-  registrada_at           timestamptz not null default now()
+  registrada_at           timestamptz not null default now(),
+  -- Sin esta columna no habría forma de identificar después las filas que
+  -- dejan las solicitudes de prueba: esta tabla no tiene ninguna FK y para
+  -- cuando uno quiera limpiarla ya no existe la solicitud que la originó.
+  -- `/datos` publica siempre con `es_prueba = false`.
+  es_prueba               boolean not null default false
 );
 
 comment on table public.metricas is
@@ -235,11 +327,21 @@ select
   s.expira_at,
   extract(epoch from (now() - s.confirmada_at)) / 3600 as horas_sin_confirmar,
   (select count(*) from public.respuestas r where r.solicitud_id = s.id) as num_respuestas,
+  -- ⚠ `left join` porque un ítem sugerido no tiene fila en el catálogo, y
+  -- `coalesce` sobre las TRES columnas, no solo sobre el nombre: la
+  -- agregación usa `c.nombre`, `c.unidad` y `order by c.orden`. Con el
+  -- left join a secas, `unidad` queda en NULL y `describirItem()` en
+  -- src/lib/catalogo.ts renderiza "3 null de Crema dental" aquí, en el
+  -- tablero público. Los sugeridos van al final: `coalesce(c.orden, 9999)`.
   (select coalesce(jsonb_agg(jsonb_build_object(
-             'nombre', c.nombre, 'cantidad', si.cantidad, 'unidad', c.unidad
-           ) order by c.orden), '[]'::jsonb)
+             'nombre',        coalesce(c.nombre, sg.nombre_propuesto),
+             'cantidad',      si.cantidad,
+             'unidad',        coalesce(c.unidad, sg.unidad_sugerida, 'unidad'),
+             'por_confirmar', si.sugerencia_id is not null
+           ) order by coalesce(c.orden, 9999)), '[]'::jsonb)
      from public.solicitud_items si
-     join public.catalogo_items c on c.id = si.item_id
+     left join public.catalogo_items c    on c.id = si.item_id
+     left join public.sugerencias_item sg on sg.id = si.sugerencia_id
     where si.solicitud_id = s.id) as items
 from public.solicitudes s
 join public.municipios m on m.codigo_dane = s.municipio
@@ -278,22 +380,65 @@ where s.estado = 'abierta' and s.expira_at > now();
 -- `servidores_publicos`, NO expone `contacto_publico`: el contacto ocurre
 -- cuando el ofertador responde una solicitud, no al revés. Así se expone
 -- menos dato y nadie queda sujeto a que lo llamen 200 personas a la vez.
+-- Directorio de quienes ofrecen insumos. A diferencia de
+-- `servidores_publicos`, NO expone `contacto_publico`: el contacto ocurre
+-- cuando el ofertador responde una solicitud, no al revés. Así se expone
+-- menos dato y nadie queda sujeto a que lo llamen 200 personas a la vez.
+--
+-- Sale quien tenga `tipo = ofertador` Y TAMBIÉN cualquiera que haya
+-- declarado insumos: desde que el inventario dejó de ser exclusivo de los
+-- ofertadores, alguien con matrícula que además tiene cobijas tiene que
+-- poder verse en las dos listas. Un ofertador sin inventario sigue
+-- saliendo: el inventario es opcional y no puede volverse un requisito
+-- por la puerta de atrás.
+--
+-- ⚠ `items` trae los NOMBRES, nunca las cantidades. Una lista pública de
+-- quién tiene cuántos litros de agua y dónde es un mapa de existencias, y
+-- además el texto de autorización que la persona acepta enumera lo que se
+-- publica: las cantidades no están ahí. Ver docs/legal/PLANTILLAS.md §3.
 create or replace view public.ofertadores_publicos as
-select p.id, p.nombre_visible, p.municipios, p.descripcion, p.creado_at
+select
+  p.id,
+  p.nombre_visible,
+  p.municipios,
+  p.descripcion,
+  p.creado_at,
+  (select coalesce(jsonb_agg(x order by x->>'nombre'), '[]'::jsonb)
+     from (
+       select jsonb_build_object(
+                'nombre',        coalesce(c.nombre, sg.nombre_propuesto),
+                'por_confirmar', o.sugerencia_id is not null
+              ) as x
+         from public.ofrecimientos o
+         left join public.catalogo_items c    on c.id = o.item_id
+         left join public.sugerencias_item sg on sg.id = o.sugerencia_id
+        where o.perfil_id = p.id and o.disponible
+        order by coalesce(c.orden, 9999)
+        limit 12
+     ) t) as items,
+  (select count(*) from public.ofrecimientos o
+    where o.perfil_id = p.id and o.disponible) as total_items
 from public.perfiles p
-where p.tipo = 'ofertador'
-  and p.suspendido = false
-  and p.acepto_publicacion = true;
+where p.suspendido = false
+  and p.acepto_publicacion = true
+  and (
+    p.tipo = 'ofertador'
+    or exists (select 1 from public.ofrecimientos o where o.perfil_id = p.id)
+  );
+
+grant select on public.ofertadores_publicos to anon, authenticated;
 
 create or replace view public.municipios_con_ofertadores as
 select distinct m.codigo_dane, m.nombre, m.departamento
 from public.municipios m
 join public.perfiles p on m.codigo_dane = any(p.municipios)
-where p.tipo = 'ofertador'
-  and p.suspendido = false
-  and p.acepto_publicacion = true;
+where p.suspendido = false
+  and p.acepto_publicacion = true
+  and (
+    p.tipo = 'ofertador'
+    or exists (select 1 from public.ofrecimientos o where o.perfil_id = p.id)
+  );
 
-grant select on public.ofertadores_publicos       to anon, authenticated;
 grant select on public.municipios_con_ofertadores to anon, authenticated;
 
 create or replace view public.municipios_con_servidores as
@@ -350,11 +495,16 @@ alter table public.push_ofertadores    enable row level security;
 alter table public.reportes           enable row level security;
 alter table public.metricas           enable row level security;
 alter table public.administradores    enable row level security;
+alter table public.sugerencias_item   enable row level security;
+alter table public.ofrecimientos      enable row level security;
 
 -- Nadie lee `solicitudes` directamente. Solo la vista y las RPC.
 revoke all on public.solicitudes        from anon, authenticated;
 revoke all on public.push_suscripciones from anon, authenticated;
 revoke all on public.push_ofertadores    from anon, authenticated;
+-- Igual que `solicitudes`: cero políticas es deliberado. La frontera son
+-- `guardar_ofrecimientos` y `mis_ofrecimientos`, no una política.
+revoke all on public.ofrecimientos      from anon, authenticated;
 grant select on public.solicitudes_publicas to anon, authenticated;
 grant select on public.servidores_publicos  to anon, authenticated;
 
@@ -372,6 +522,13 @@ create policy "servicios lectura publica" on public.catalogo_servicios
 -- Ítems: legibles porque no contienen nada personal
 create policy "items lectura publica" on public.solicitud_items
   for select to public using (true);
+
+-- Sugerencias: nadie escribe directo, solo por RPC. La única lectura de
+-- tabla es la del administrador, que necesita la cola en /admin. El resto
+-- del mundo las ve resueltas dentro del jsonb de las vistas y las RPC.
+create policy "admin lee sugerencias" on public.sugerencias_item
+  for select to authenticated
+  using (exists (select 1 from public.administradores a where a.user_id = (select auth.uid())));
 
 -- Perfiles: solo el dueño lee la fila cruda; el público usa la vista
 create policy "perfil propio lectura" on public.perfiles
@@ -410,13 +567,116 @@ create policy "admin actualiza reportes" on public.reportes
 
 -- Métricas: lectura pública, escritura solo por el job
 create policy "metricas lectura publica" on public.metricas
-  for select to public using (true);
+  for select to public using (es_prueba = false);
+
+-- Un `revoke select (columna)` NO sirve encima de un `grant select` de
+-- tabla: el permiso de tabla cubre todas las columnas y el revoke de
+-- columna no le resta nada. Hay que quitar el de tabla y volver a
+-- conceder columna por columna. `creado_por` es el uuid de auth.users de
+-- quien aprobó el ítem, y esta tabla la lee una página anónima.
+revoke select on public.catalogo_items from anon, authenticated;
+grant select (id, categoria, nombre, unidad, activo, orden, origen, es_prueba)
+  on public.catalogo_items to anon, authenticated;
 
 -- Sin esta política, `administradores` queda con RLS activo y cero reglas:
 -- la consulta devuelve vacío incluso para un administrador real y /admin
 -- se vuelve inaccesible. Cada quien solo puede ver su propia fila.
 create policy "admin se ve a si mismo" on public.administradores
   for select to authenticated using ((select auth.uid()) = user_id);
+
+create or replace function public.contiene_pii(p_texto text)
+returns boolean
+language sql
+security definer
+set search_path = ''
+immutable
+as $$
+  select p_texto is not null
+     and (
+       -- Correo, o usuario de red social con arroba.
+       p_texto ~* '@[a-zA-Z0-9._-]{2,}'
+       -- Siete o más dígitos seguidos una vez quitados los separadores que
+       -- la gente mete para que un número se lea mejor. Un celular
+       -- colombiano tiene 10, un fijo 7 u 8, una cédula entre 8 y 10.
+       or regexp_replace(p_texto, '[[:space:].()-]', '', 'g') ~ '\d{7,}'
+     );
+$$;
+
+revoke execute on function public.contiene_pii(text) from public, anon, authenticated;
+
+comment on function public.contiene_pii(text) is
+  'Gemela de contienePII en src/lib/validacion.ts. Si cambia una, cambia la otra: son los dos lados del mismo control y ya se separaron una vez.';
+
+-- ---------------------------------------------------------------------
+-- 2. Las sugerencias sobrevivían al borrado duro
+--
+-- La llave foránea va de `solicitud_items` HACIA la sugerencia, así que el
+-- CASCADE de `solicitudes` se lleva el ítem y deja la sugerencia. A las 72
+-- horas la solicitud desaparecía y el texto que escribió esa persona se
+-- quedaba en la tabla para siempre, sin job, sin TTL y sin ninguna ruta de
+-- borrado en la aplicación. La regla 4 promete que al borrar solo
+-- sobrevive una fila anónima en `metricas`, "sin texto".
+--
+-- Trigger y no un `delete` dentro de `expirar_solicitudes`: así cubre
+-- también `cerrar_solicitud` y el `delete` directo de `resolver_reporte`,
+-- que son otras dos rutas de borrado.
+--
+-- Las aprobadas y fusionadas se conservan: su texto ya pasó por moderación
+-- y vive en `catalogo_items`, y `item_resultante_id` es lo que explica de
+-- dónde salió un ítem del catálogo.
+-- ---------------------------------------------------------------------
+
+create or replace function public.limpiar_sugerencia_huerfana()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if old.sugerencia_id is null then
+    return null;
+  end if;
+
+  delete from public.sugerencias_item sg
+   where sg.id = old.sugerencia_id
+     and sg.estado in ('pendiente','rechazada')
+     and not exists (select 1 from public.solicitud_items si
+                      where si.sugerencia_id = sg.id)
+     and not exists (select 1 from public.ofrecimientos o
+                      where o.sugerencia_id = sg.id);
+
+  return null;
+end;
+$$;
+
+-- ⚠ DEFERRABLE INITIALLY DEFERRED, y esto no es un detalle: corren al
+-- COMMIT, no en el momento del `delete`.
+--
+-- Con un trigger normal se rompían dos cosas que se descubrieron probando:
+--
+--   · `guardar_ofrecimientos` empieza con `delete from ofrecimientos where
+--     perfil_id = ...` y vuelve a insertar. En el instante del delete la
+--     sugerencia se queda sin referencias, el trigger la borraba, y el
+--     re-insert con ese `sugerencia_id` fallaba con "Esa sugerencia no es
+--     tuya". O sea: guardar el inventario dos veces reventaba.
+--   · `resolver_sugerencia` borra filas de `solicitud_items` en medio del
+--     remapeo. El trigger se llevaba la sugerencia antes de que la función
+--     alcanzara a escribirle `estado` e `item_resultante_id`, y el update
+--     final no afectaba ninguna fila, en silencio.
+--
+-- Al COMMIT las referencias ya están puestas de vuelta y el estado ya está
+-- escrito, así que el trigger solo alcanza lo que de verdad quedó huérfano.
+drop trigger if exists trg_sugerencia_huerfana on public.solicitud_items;
+create constraint trigger trg_sugerencia_huerfana
+  after delete on public.solicitud_items
+  deferrable initially deferred
+  for each row execute function public.limpiar_sugerencia_huerfana();
+
+drop trigger if exists trg_sugerencia_huerfana_ofr on public.ofrecimientos;
+create constraint trigger trg_sugerencia_huerfana_ofr
+  after delete on public.ofrecimientos
+  deferrable initially deferred
+  for each row execute function public.limpiar_sugerencia_huerfana();
 
 -- ---------------------------------------------------------------------
 -- 9. RPC — toda escritura de solicitudes pasa por aquí
@@ -452,8 +712,8 @@ create or replace function public.crear_solicitud(
   p_barrio      text,
   p_categoria   text,
   p_nota        text,
-  p_items       jsonb,        -- [{"item_id":"pañales_2","cantidad":1}]
-  p_token       text          -- generado en el servidor, 32 bytes base64url
+  p_items       jsonb,
+  p_token       text
 )
 returns table (solicitud_id uuid, codigo text)
 language plpgsql
@@ -461,12 +721,22 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_id     uuid;
-  v_codigo text;
-  v_item   jsonb;
+  v_id          uuid;
+  v_codigo      text;
+  v_item        jsonb;
+  v_sugerencia  text;
+  v_sug_id      uuid;
+  v_n_sugeridos integer := 0;
+  v_es_prueba   boolean := trim(p_barrio) ilike 'prueba%';
 begin
-  if p_nota is not null and p_nota ~ '(\+?57)?[ -]?3[0-9]{9}|[0-9]{7,}|@[a-zA-Z0-9._-]+\.[a-z]{2,}' then
+  if public.contiene_pii(p_nota) then
     raise exception 'La nota no puede contener teléfonos ni correos';
+  end if;
+
+  -- El barrio también: se ve en la tarjeta del tablero público, igual que
+  -- la nota, y hasta ahora solo lo filtraba el cliente.
+  if public.contiene_pii(p_barrio) then
+    raise exception 'El barrio no puede contener teléfonos ni correos';
   end if;
 
   if jsonb_array_length(p_items) < 1 or jsonb_array_length(p_items) > 12 then
@@ -475,14 +745,38 @@ begin
 
   v_codigo := public.generar_codigo();
 
-  insert into public.solicitudes (codigo, token_hash, municipio, barrio, categoria, nota)
+  insert into public.solicitudes (codigo, token_hash, municipio, barrio, categoria, nota, es_prueba)
   values (v_codigo, encode(extensions.digest(p_token, 'sha256'), 'hex'),
-          p_municipio, p_barrio, p_categoria, nullif(trim(p_nota), ''))
+          p_municipio, p_barrio, p_categoria, nullif(trim(p_nota), ''), v_es_prueba)
   returning id into v_id;
 
   for v_item in select * from jsonb_array_elements(p_items) loop
-    insert into public.solicitud_items (solicitud_id, item_id, cantidad)
-    values (v_id, v_item->>'item_id', (v_item->>'cantidad')::numeric);
+    v_sugerencia := nullif(trim(v_item->>'sugerencia'), '');
+
+    if v_sugerencia is null then
+      insert into public.solicitud_items (solicitud_id, item_id, cantidad)
+      values (v_id, v_item->>'item_id', (v_item->>'cantidad')::numeric);
+    else
+      v_n_sugeridos := v_n_sugeridos + 1;
+      if v_n_sugeridos > 3 then
+        raise exception 'Puedes sugerir máximo 3 cosas que no estén en la lista';
+      end if;
+
+      if char_length(v_sugerencia) < 2 or char_length(v_sugerencia) > 60 then
+        raise exception 'El nombre de lo que sugieres debe tener entre 2 y 60 caracteres';
+      end if;
+
+      if public.contiene_pii(v_sugerencia) then
+        raise exception 'El nombre de lo que sugieres no puede contener teléfonos ni correos';
+      end if;
+
+      insert into public.sugerencias_item (nombre_propuesto, categoria_sugerida, origen, es_prueba)
+      values (v_sugerencia, p_categoria, 'solicitante', v_es_prueba)
+      returning id into v_sug_id;
+
+      insert into public.solicitud_items (solicitud_id, sugerencia_id, cantidad)
+      values (v_id, v_sug_id, (v_item->>'cantidad')::numeric);
+    end if;
   end loop;
 
   return query select v_id, v_codigo;
@@ -522,12 +816,19 @@ begin
     left join public.servidores sv on sv.perfil_id = p.id
    where r.solicitud_id = v_sol.id and p.suspendido = false;
 
+  -- Mismo left join con coalesce triple que `solicitudes_publicas`: sin él,
+  -- el ítem sugerido no aparecería aquí, ni siquiera para quien lo pidió.
   select coalesce(jsonb_agg(jsonb_build_object(
-           'nombre', c.nombre, 'cantidad', si.cantidad,
-           'unidad', c.unidad, 'cubierto', si.cubierto)), '[]'::jsonb)
+           'nombre',        coalesce(c.nombre, sg.nombre_propuesto),
+           'cantidad',      si.cantidad,
+           'unidad',        coalesce(c.unidad, sg.unidad_sugerida, 'unidad'),
+           'cubierto',      si.cubierto,
+           'por_confirmar', si.sugerencia_id is not null
+         ) order by coalesce(c.orden, 9999)), '[]'::jsonb)
     into v_items
     from public.solicitud_items si
-    join public.catalogo_items c on c.id = si.item_id
+    left join public.catalogo_items c    on c.id = si.item_id
+    left join public.sugerencias_item sg on sg.id = si.sugerencia_id
    where si.solicitud_id = v_sol.id;
 
   return jsonb_build_object(
@@ -578,11 +879,11 @@ begin
 
   insert into public.metricas (
     municipio, categoria, cumplida, horas_hasta_respuesta,
-    horas_hasta_cierre, num_respuestas)
+    horas_hasta_cierre, num_respuestas, es_prueba)
   select v_sol.municipio, v_sol.categoria, p_cumplida,
          extract(epoch from (min(r.creada_at) - v_sol.creada_at)) / 3600,
          extract(epoch from (now() - v_sol.creada_at)) / 3600,
-         count(r.id)
+         count(r.id), v_sol.es_prueba
     from public.respuestas r where r.solicitud_id = v_sol.id;
 
   delete from public.solicitudes where id = v_sol.id;   -- CASCADE limpia todo
@@ -749,6 +1050,149 @@ $$;
 revoke execute on function public.crear_perfil(text,text,text[],text,text,text,text,text,text,text[]) from public, anon;
 grant  execute on function public.crear_perfil(text,text,text[],text,text,text,text,text,text,text[]) to authenticated;
 
+-- Reemplaza el inventario completo del perfil que llama. Cada ítem viene
+-- en una de tres formas, y exactamente una:
+--
+--   {"item_id":"agua","cantidad":40}            ← del catálogo
+--   {"sugerencia_id":"<uuid>","cantidad":null}  ← sugerencia ya guardada
+--   {"sugerencia":"Crema dental"}               ← sugerencia nueva
+--
+-- `cantidad` y `disponible` son opcionales en las tres.
+create or replace function public.guardar_ofrecimientos(p_items jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid         uuid := auth.uid();
+  v_perfil      public.perfiles;
+  v_item        jsonb;
+  v_sugerencia  text;
+  v_sug_id      uuid;
+  v_n_sugeridos integer := 0;
+  v_pendientes  integer;
+begin
+  if v_uid is null then raise exception 'Debes iniciar sesión'; end if;
+
+  select * into v_perfil from public.perfiles p where p.id = v_uid;
+  if not found then
+    raise exception 'Necesitas completar tu perfil';
+  end if;
+
+  -- `responder_solicitud` ya comprobaba esto y aquí faltaba: una cuenta
+  -- suspendida por publicar datos personales conservaba intacto este canal
+  -- de escritura de texto libre.
+  if v_perfil.suspendido then
+    raise exception 'Tu perfil está suspendido';
+  end if;
+
+  if jsonb_typeof(p_items) <> 'array' then
+    raise exception 'Formato de inventario inválido';
+  end if;
+
+  if jsonb_array_length(p_items) > 100 then
+    raise exception 'Son demasiados ítems de una sola vez';
+  end if;
+
+  -- El tope de 3 es por llamada, así que sin este de aquí una cuenta puede
+  -- llamar en bucle y llenar la cola de moderación. `sugerencias_pendientes`
+  -- recorre el catálogo por cada palabra de cada sugerencia pendiente: con
+  -- unos miles de filas, /admin deja de cargar, y /admin es la única
+  -- herramienta de moderación que tiene el proyecto.
+  select count(*) into v_pendientes
+    from public.sugerencias_item sg
+   where sg.propuesta_por = v_uid and sg.estado = 'pendiente';
+
+  delete from public.ofrecimientos where perfil_id = v_uid;
+
+  for v_item in select * from jsonb_array_elements(p_items) loop
+    v_sugerencia := nullif(trim(v_item->>'sugerencia'), '');
+    v_sug_id     := nullif(v_item->>'sugerencia_id', '')::uuid;
+
+    if v_sugerencia is not null then
+      v_n_sugeridos := v_n_sugeridos + 1;
+      if v_n_sugeridos > 3 then
+        raise exception 'Puedes sugerir máximo 3 cosas nuevas a la vez';
+      end if;
+      if v_pendientes + v_n_sugeridos > 10 then
+        raise exception 'Ya tienes muchas sugerencias esperando revisión. Espera a que las revisen.';
+      end if;
+
+      if char_length(v_sugerencia) < 2 or char_length(v_sugerencia) > 60 then
+        raise exception 'El nombre de lo que sugieres debe tener entre 2 y 60 caracteres';
+      end if;
+
+      if public.contiene_pii(v_sugerencia) then
+        raise exception 'El nombre de lo que sugieres no puede contener teléfonos ni correos';
+      end if;
+
+      insert into public.sugerencias_item (nombre_propuesto, propuesta_por, origen, es_prueba)
+      values (v_sugerencia, v_uid, 'ofertador', v_perfil.nombre_visible ilike 'prueba%')
+      returning id into v_sug_id;
+
+    elsif v_sug_id is not null then
+      -- Solo sugerencias propias: sin esto, cualquiera podría enganchar su
+      -- inventario a la sugerencia de otro pasando un uuid a mano.
+      if not exists (select 1 from public.sugerencias_item sg
+                      where sg.id = v_sug_id and sg.propuesta_por = v_uid) then
+        raise exception 'Esa sugerencia no es tuya';
+      end if;
+    end if;
+
+    insert into public.ofrecimientos (perfil_id, item_id, sugerencia_id, cantidad, disponible)
+    values (
+      v_uid,
+      case when v_sug_id is null then v_item->>'item_id' else null end,
+      v_sug_id,
+      nullif(v_item->>'cantidad', '')::numeric,
+      coalesce((v_item->>'disponible')::boolean, true)
+    );
+  end loop;
+end;
+$$;
+
+revoke execute on function public.guardar_ofrecimientos(jsonb) from public, anon;
+grant  execute on function public.guardar_ofrecimientos(jsonb) to authenticated;
+
+-- Existe para que `ofrecimientos` no necesite ninguna política de lectura:
+-- la pantalla de perfil llama esto y recibe los nombres ya resueltos,
+-- vengan del catálogo o de una sugerencia todavía sin aprobar.
+create or replace function public.mis_ofrecimientos()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_out jsonb;
+begin
+  if v_uid is null then raise exception 'Debes iniciar sesión'; end if;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'item_id',       o.item_id,
+           'sugerencia_id', o.sugerencia_id,
+           'nombre',        coalesce(c.nombre, sg.nombre_propuesto),
+           'categoria',     coalesce(c.categoria, sg.categoria_sugerida),
+           'unidad',        coalesce(c.unidad, sg.unidad_sugerida, 'unidad'),
+           'cantidad',      o.cantidad,
+           'disponible',    o.disponible,
+           'por_confirmar', o.sugerencia_id is not null
+         ) order by coalesce(c.orden, 9999), coalesce(c.nombre, sg.nombre_propuesto)), '[]'::jsonb)
+    into v_out
+    from public.ofrecimientos o
+    left join public.catalogo_items c    on c.id = o.item_id
+    left join public.sugerencias_item sg on sg.id = o.sugerencia_id
+   where o.perfil_id = v_uid;
+
+  return v_out;
+end;
+$$;
+
+revoke execute on function public.mis_ofrecimientos() from public, anon;
+grant  execute on function public.mis_ofrecimientos() to authenticated;
+
 -- Responder una solicitud. Se identifica por código público, nunca por token:
 -- quien ofrece jamás necesita ni recibe el token del solicitante.
 create or replace function public.responder_solicitud(p_codigo text, p_mensaje text)
@@ -899,6 +1343,291 @@ $$;
 revoke execute on function public.resolver_reporte(uuid,boolean) from public, anon;
 grant  execute on function public.resolver_reporte(uuid,boolean) to authenticated;
 
+-- Sugerencias de ítem: aprobar, rechazar o fusionar.
+--
+-- `aprobar` y `fusionar` son la misma operación —apuntar todo lo que
+-- referenciaba la sugerencia a un ítem del catálogo— y lo único que cambia
+-- es si ese ítem se acaba de crear o ya existía. Tratarlas como una sola es
+-- lo que evita que aprobar deje filas en "por confirmar" para siempre.
+--
+-- Y ninguna de las dos termina al escribir `estado`: hay que remapear las
+-- filas que ya apuntaban a la sugerencia, o un ofertador con
+-- `sugerencia_id = X` y una solicitud con `item_id = crema_dental` dejan de
+-- cruzar para siempre.
+
+create or replace function public.slug_item(p_nombre text)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_base text;
+  v_try  text;
+  v_n    integer := 1;
+begin
+  v_base := lower(trim(p_nombre));
+  v_base := translate(v_base, 'áéíóúüñÁÉÍÓÚÜÑ', 'aeiouunAEIOUUN');
+  v_base := regexp_replace(v_base, '[^a-z0-9]+', '_', 'g');
+  v_base := trim(both '_' from v_base);
+  v_base := left(v_base, 40);
+
+  if v_base = '' then
+    raise exception 'Ese nombre no sirve para crear un ítem';
+  end if;
+
+  v_try := v_base;
+  while exists (select 1 from public.catalogo_items c where c.id = v_try) loop
+    v_n := v_n + 1;
+    v_try := left(v_base, 37) || '_' || v_n;
+  end loop;
+
+  return v_try;
+end;
+$$;
+
+revoke execute on function public.slug_item(text) from public, anon, authenticated;
+
+-- ---------------------------------------------------------------------
+-- 2. Alta manual de un ítem
+-- ---------------------------------------------------------------------
+
+create or replace function public.crear_item_catalogo(
+  p_nombre    text,
+  p_categoria text,
+  p_unidad    text default 'unidad'
+)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_id  text;
+begin
+  if not public.es_admin(v_uid) then
+    raise exception 'No autorizado';
+  end if;
+
+  if char_length(trim(p_nombre)) < 2 or char_length(trim(p_nombre)) > 60 then
+    raise exception 'El nombre debe tener entre 2 y 60 caracteres';
+  end if;
+
+  -- Antes lo atrapaba el CHECK de la tabla y al administrador le salía en
+  -- pantalla un error crudo de Postgres.
+  if p_categoria not in ('alimentacion','aseo','salud','abrigo','cocina','otros','servicios','mascotas') then
+    raise exception 'Categoría inválida';
+  end if;
+
+  if public.contiene_pii(p_nombre) then
+    raise exception 'El nombre no puede contener teléfonos ni correos';
+  end if;
+
+  v_id := public.slug_item(p_nombre);
+
+  insert into public.catalogo_items (id, categoria, nombre, unidad, orden, creado_por, origen, es_prueba)
+  values (v_id, p_categoria, trim(p_nombre),
+          coalesce(nullif(trim(p_unidad), ''), 'unidad'), 9999, v_uid, 'admin',
+          trim(p_nombre) ilike 'prueba%');
+
+  return v_id;
+end;
+$$;
+
+revoke execute on function public.crear_item_catalogo(text,text,text) from public, anon;
+grant  execute on function public.crear_item_catalogo(text,text,text) to authenticated;
+-- ---------------------------------------------------------------------
+-- 3. Resolver una sugerencia
+--
+-- `aprobar` y `fusionar` son la misma operación: apuntar todo lo que
+-- referenciaba la sugerencia a un ítem del catálogo. Lo único que cambia
+-- es si ese ítem se acaba de crear o ya existía. Tratarlas como una sola
+-- es lo que garantiza que aprobar tampoco deje filas colgando en "por
+-- confirmar" para siempre.
+--
+-- En la Fase D esto lo podrá llamar también un aliado activo. Hoy solo
+-- administrador: el rol todavía no existe.
+-- ---------------------------------------------------------------------
+
+create or replace function public.resolver_sugerencia(
+  p_sugerencia_id uuid,
+  p_accion        text,
+  p_item_destino  text default null,
+  p_nota          text default null
+)
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid     uuid := auth.uid();
+  v_sug     public.sugerencias_item;
+  v_destino text;
+  v_estado  text;
+begin
+  if not public.es_admin(v_uid) then
+    raise exception 'No autorizado';
+  end if;
+
+  if p_accion not in ('aprobar','rechazar','fusionar') then
+    raise exception 'Acción inválida';
+  end if;
+
+  select * into v_sug from public.sugerencias_item where id = p_sugerencia_id;
+  if not found then raise exception 'Sugerencia no encontrada'; end if;
+  if v_sug.estado <> 'pendiente' then
+    raise exception 'Esa sugerencia ya fue resuelta';
+  end if;
+
+  if p_accion = 'rechazar' then
+    update public.sugerencias_item
+       set estado = 'rechazada', revisada_por = v_uid, revisada_at = now(),
+           nota_revision = nullif(trim(p_nota), '')
+     where id = p_sugerencia_id;
+
+    -- Sin esto, el inventario que la referenciaba queda "por confirmar"
+    -- para siempre: nadie lo va a resolver nunca. El inventario se puede
+    -- volver a llenar; la solicitud no se toca, porque su necesidad es real
+    -- y de todos modos se borra sola en menos de 72 horas.
+    delete from public.ofrecimientos where sugerencia_id = p_sugerencia_id;
+    return null;
+  end if;
+
+  if p_accion = 'aprobar' then
+    -- Aprobar copia este texto a `catalogo_items`, que es de lectura
+    -- pública y permanente, y no hay ninguna RPC para borrar de ahí. Un
+    -- clic distraído sobre una sugerencia con un teléfono lo publicaría
+    -- para siempre.
+    if public.contiene_pii(v_sug.nombre_propuesto) then
+      raise exception 'Esa sugerencia trae un teléfono o un correo: recházala, no la apruebes';
+    end if;
+
+    v_destino := public.slug_item(v_sug.nombre_propuesto);
+    insert into public.catalogo_items (id, categoria, nombre, unidad, orden, creado_por, origen, es_prueba)
+    values (v_destino,
+            coalesce(v_sug.categoria_sugerida, 'otros'),
+            trim(v_sug.nombre_propuesto),
+            coalesce(nullif(trim(v_sug.unidad_sugerida), ''), 'unidad'),
+            9999, v_uid, 'sugerencia', v_sug.es_prueba);
+    v_estado := 'aprobada';
+  else
+    v_destino := p_item_destino;
+    if v_destino is null then
+      raise exception 'Indica con qué ítem se fusiona';
+    end if;
+    if not exists (select 1 from public.catalogo_items c where c.id = v_destino) then
+      raise exception 'Ese ítem no existe en el catálogo';
+    end if;
+    v_estado := 'fusionada';
+  end if;
+
+  -- ⚠ Antes del remapeo: si un perfil ya tenía el ítem destino Y la
+  -- sugerencia, el update chocaría contra `ofrecimientos_item_uniq`. Se
+  -- descarta la fila de la sugerencia, que es la duplicada. No se suman
+  -- las cantidades porque en el inventario son estimaciones, no cifras.
+  delete from public.ofrecimientos o
+   where o.sugerencia_id = p_sugerencia_id
+     and exists (select 1 from public.ofrecimientos o2
+                  where o2.perfil_id = o.perfil_id and o2.item_id = v_destino);
+
+  update public.ofrecimientos
+     set item_id = v_destino, sugerencia_id = null, actualizado_at = now()
+   where sugerencia_id = p_sugerencia_id;
+
+  -- ⚠ Y en `solicitud_items` el problema es al revés: no hay índice único,
+  -- así que el remapeo NO falla — deja dos filas del mismo ítem en la misma
+  -- solicitud, y el tablero público muestra "4 unidad de Jabón" y "3 unidad
+  -- de Jabón" una debajo de otra, que se lee como un error. Aquí sí se
+  -- suman: es lo que la persona necesita, y la suma es la cifra correcta.
+  update public.solicitud_items dst
+     set cantidad = least(9999, dst.cantidad + src.cantidad)
+    from public.solicitud_items src
+   where src.sugerencia_id = p_sugerencia_id
+     and dst.solicitud_id = src.solicitud_id
+     and dst.item_id = v_destino;
+
+  delete from public.solicitud_items src
+   where src.sugerencia_id = p_sugerencia_id
+     and exists (select 1 from public.solicitud_items d
+                  where d.solicitud_id = src.solicitud_id and d.item_id = v_destino);
+
+  update public.solicitud_items
+     set item_id = v_destino, sugerencia_id = null
+   where sugerencia_id = p_sugerencia_id;
+
+  update public.sugerencias_item
+     set estado = v_estado, item_resultante_id = v_destino,
+         revisada_por = v_uid, revisada_at = now(),
+         nota_revision = nullif(trim(p_nota), '')
+   where id = p_sugerencia_id;
+
+  return v_destino;
+end;
+$$;
+
+revoke execute on function public.resolver_sugerencia(uuid,text,text,text) from public, anon;
+grant  execute on function public.resolver_sugerencia(uuid,text,text,text) to authenticated;
+-- ---------------------------------------------------------------------
+-- 4. La cola, con candidatos para fusionar
+--
+-- Existe por un error que apareció probando: el catálogo ya tenía
+-- "Cepillo de dientes" y aprobar la sugerencia del mismo nombre creó
+-- `cepillo_de_dientes` al lado de `cepillo_dientes` — exactamente la
+-- duplicación que la fusión existe para evitar. Aprobar es un clic más
+-- fácil que fusionar, así que si la pantalla no pone el ítem parecido
+-- enfrente, nadie va a ir a buscarlo.
+--
+-- La coincidencia es por palabras de 4 letras o más, sin tildes. No hace
+-- falta `pg_trgm` para esto y no vale la pena instalarla.
+-- ---------------------------------------------------------------------
+
+create or replace function public.sugerencias_pendientes()
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare v_out jsonb;
+begin
+  if not public.es_admin(auth.uid()) then
+    raise exception 'No autorizado';
+  end if;
+
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'id',                 sg.id,
+           'nombre_propuesto',   sg.nombre_propuesto,
+           'categoria_sugerida', sg.categoria_sugerida,
+           'origen',             sg.origen,
+           'creada_at',          sg.creada_at,
+           'usos',               (select count(*) from public.solicitud_items si
+                                   where si.sugerencia_id = sg.id)
+                               + (select count(*) from public.ofrecimientos o
+                                   where o.sugerencia_id = sg.id),
+           'parecidos', (
+             select coalesce(jsonb_agg(jsonb_build_object(
+                      'id', c.id, 'nombre', c.nombre, 'categoria', c.categoria)), '[]'::jsonb)
+               from public.catalogo_items c
+              where c.activo
+                and exists (
+                  select 1 from unnest(string_to_array(
+                           lower(translate(sg.nombre_propuesto, 'áéíóúü', 'aeiouu')), ' ')) w
+                   where char_length(w) >= 4
+                     and lower(translate(c.nombre, 'áéíóúü', 'aeiouu')) like '%' || w || '%')
+           )
+         ) order by sg.creada_at), '[]'::jsonb)
+    into v_out
+    from public.sugerencias_item sg
+   where sg.estado = 'pendiente';
+
+  return v_out;
+end;
+$$;
+
+revoke execute on function public.sugerencias_pendientes() from public, anon;
+grant  execute on function public.sugerencias_pendientes() to authenticated;
+
 -- El administrador necesita leer la ficha completa para poder verificarla.
 create policy "admin lee perfiles" on public.perfiles
   for select to authenticated using (exists (select 1 from public.administradores a where a.user_id = (select auth.uid())));
@@ -919,15 +1648,15 @@ declare v_n integer;
 begin
   insert into public.metricas (
     municipio, categoria, cumplida, horas_hasta_respuesta,
-    horas_hasta_cierre, num_respuestas)
+    horas_hasta_cierre, num_respuestas, es_prueba)
   select s.municipio, s.categoria, false,
          extract(epoch from (min(r.creada_at) - s.creada_at)) / 3600,
          extract(epoch from (s.expira_at - s.creada_at)) / 3600,
-         count(r.id)
+         count(r.id), s.es_prueba
     from public.solicitudes s
     left join public.respuestas r on r.solicitud_id = s.id
    where s.expira_at <= now()
-   group by s.id, s.municipio, s.categoria, s.creada_at, s.expira_at;
+   group by s.id, s.municipio, s.categoria, s.creada_at, s.expira_at, s.es_prueba;
 
   delete from public.solicitudes where expira_at <= now();
   get diagnostics v_n = row_count;

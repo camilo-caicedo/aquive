@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { generarToken } from '@/lib/tokens'
-import { validarBarrio, validarNota } from '@/lib/validacion'
+import { validarBarrio, validarNota, validarSugerencia } from '@/lib/validacion'
 import { verificarTurnstile } from '@/lib/turnstile'
 import { notificarOfertadores } from '@/lib/push-ofertadores'
 import { CATEGORIAS } from '@/lib/catalogo'
-import type { Categoria, Json } from '@/lib/types'
+import type { Categoria, ItemSolicitudInput, Json } from '@/lib/types'
 
 // Ambas se derivan de CATEGORIAS: antes la lista de categorías válidas
 // estaba escrita otra vez aquí, y agregar una nueva obligaba a acordarse
@@ -13,25 +13,33 @@ import type { Categoria, Json } from '@/lib/types'
 const VALIDAS: readonly Categoria[] = CATEGORIAS.map((c) => c.valor)
 const ETIQUETA = new Map(CATEGORIAS.map((c) => [c.valor, c.etiqueta]))
 
-interface ItemBody {
-  item_id: string
-  cantidad: number
-}
+const MAX_SUGERENCIAS = 3
 
 interface CuerpoSolicitud {
   municipio: string
   barrio: string
   categoria: Categoria
   nota: string | null
-  items: ItemBody[]
+  items: unknown[]
   turnstileToken: string
 }
 
-function esItemValido(item: unknown): item is ItemBody {
+function esItemCatalogoValido(item: unknown): item is { item_id: string; cantidad: number } {
   if (typeof item !== 'object' || item === null) return false
   const candidato = item as Record<string, unknown>
   return (
     typeof candidato.item_id === 'string' &&
+    typeof candidato.cantidad === 'number' &&
+    candidato.cantidad > 0 &&
+    candidato.cantidad <= 9999
+  )
+}
+
+function esSugerenciaValida(item: unknown): item is { sugerencia: string; cantidad: number } {
+  if (typeof item !== 'object' || item === null) return false
+  const candidato = item as Record<string, unknown>
+  return (
+    typeof candidato.sugerencia === 'string' &&
     typeof candidato.cantidad === 'number' &&
     candidato.cantidad > 0 &&
     candidato.cantidad <= 9999
@@ -74,8 +82,30 @@ export async function POST(request: Request) {
   if (!Array.isArray(body.items) || body.items.length < 1 || body.items.length > 12) {
     return NextResponse.json({ error: 'Debe incluir entre 1 y 12 ítems' }, { status: 400 })
   }
-  if (!body.items.every(esItemValido)) {
-    return NextResponse.json({ error: 'Ítems inválidos' }, { status: 400 })
+
+  // Se normaliza aparte (en vez de solo validar) porque la sugerencia hay
+  // que recortarla antes de mandarla a la RPC: el cliente ya recorta, pero
+  // el servidor no puede confiar en eso.
+  const itemsValidados: ItemSolicitudInput[] = []
+  let numSugerencias = 0
+  for (const item of body.items) {
+    if (esItemCatalogoValido(item)) {
+      itemsValidados.push(item)
+      continue
+    }
+    if (!esSugerenciaValida(item)) {
+      return NextResponse.json({ error: 'Ítems inválidos' }, { status: 400 })
+    }
+    const nombre = item.sugerencia.trim()
+    const errorSugerencia = validarSugerencia(nombre)
+    if (errorSugerencia) {
+      return NextResponse.json({ error: errorSugerencia }, { status: 400 })
+    }
+    numSugerencias++
+    if (numSugerencias > MAX_SUGERENCIAS) {
+      return NextResponse.json({ error: 'Máximo 3 ítems sugeridos por solicitud' }, { status: 400 })
+    }
+    itemsValidados.push({ sugerencia: nombre, cantidad: item.cantidad })
   }
 
   const token = generarToken()
@@ -86,7 +116,7 @@ export async function POST(request: Request) {
     p_barrio: body.barrio.trim(),
     p_categoria: body.categoria,
     p_nota: nota,
-    p_items: body.items as unknown as Json,
+    p_items: itemsValidados as unknown as Json,
     p_token: token,
   })
 

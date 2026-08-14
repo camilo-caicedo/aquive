@@ -32,9 +32,19 @@ export function categoria(valor: Categoria) {
 
 // Un servicio no se cuenta por unidades: "1 servicio de Fisioterapia" se
 // lee mal. En esos ítems se muestra solo el nombre.
-export function describirItem(it: { nombre: string; cantidad: number; unidad: string }) {
-  if (it.unidad === 'servicio') return it.nombre
-  return `${it.cantidad} ${it.unidad} de ${it.nombre}`
+//
+// El "por confirmar" va aquí y no en cada pantalla porque son tres —el
+// tablero, la pantalla de responder y la del propio solicitante— y la
+// única forma de que digan lo mismo es que salga del mismo sitio. Es
+// texto, no un badge: funciona sin JavaScript y no gasta nada.
+export function describirItem(it: {
+  nombre: string
+  cantidad: number
+  unidad: string
+  por_confirmar?: boolean
+}) {
+  const base = it.unidad === 'servicio' ? it.nombre : `${it.cantidad} ${it.unidad} de ${it.nombre}`
+  return it.por_confirmar ? `${base} · por confirmar` : base
 }
 
 // Una solicitud "por vencer" es la que se borra sola en menos de 12 horas.

@@ -163,12 +163,18 @@ explicación previa, especialmente si hay riesgo para alguien.
 ## 3. Texto de autorización (checkbox al registrarse)
 
 > Autorizo a Juan Camilo Caicedo Sepulveda, responsable de esta plataforma, a
-> tratar los datos que estoy entregando —nombre visible, municipios, forma de contacto, descripción
-> y, si aplica, profesión y matrícula— con la finalidad de publicarlos de
+> tratar los datos que estoy entregando —nombre visible, municipios, forma de contacto, descripción,
+> los insumos que diga tener y, si aplica, profesión y matrícula— con la finalidad de publicarlos de
 > forma **pública** en esta plataforma para que personas afectadas puedan
 > contactarme. Entiendo que esta información será visible para cualquiera
 > en internet, que puedo borrarla en cualquier momento, y he leído el
 > aviso de privacidad.
+
+Esta lista enumera lo que se publica, y por eso hay que ampliarla **antes**
+de publicar un dato nuevo: el directorio de quien ofrece muestra desde la
+Fase A los nombres de los insumos declarados. Las **cantidades no se
+publican** y por eso no están en la lista — una lista pública de quién
+tiene cuánto y en qué municipio es un mapa de existencias.
 
 Guarda `acepto_publicacion = true` y `acepto_politica_at = now()`. Esa
 marca de tiempo es la prueba de la autorización.

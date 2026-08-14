@@ -17,6 +17,10 @@ export type ContactoTipo = 'whatsapp' | 'telefono'
 export type EntidadMatricula = 'COPNIA' | 'CPNAA' | 'COLPSIC' | 'ReTHUS' | 'SIRNA' | 'OTRA'
 export type AreaServicio = 'ingenieria' | 'arquitectura' | 'psicologia' | 'salud' | 'derecho'
 export type EstadoSolicitud = 'abierta' | 'cumplida'
+export type OrigenItem = 'semilla' | 'admin' | 'aliado' | 'sugerencia'
+export type OrigenSugerencia = 'solicitante' | 'ofertador' | 'aliado'
+export type EstadoSugerencia = 'pendiente' | 'aprobada' | 'rechazada' | 'fusionada'
+export type AccionSugerencia = 'aprobar' | 'rechazar' | 'fusionar'
 export type TipoObjetoReporte = 'solicitud' | 'respuesta' | 'perfil'
 export type MotivoReporte =
   | 'datos_personales'
@@ -26,17 +30,81 @@ export type MotivoReporte =
   | 'menor_de_edad'
   | 'otro'
 
-// Forma del ítem dentro del jsonb p_items que recibe crear_solicitud
-export interface ItemSolicitudInput {
-  item_id: string
-  cantidad: number
-}
+// Forma del ítem dentro del jsonb p_items que recibe crear_solicitud. Es
+// uno de los dos, nunca los dos: el CHECK de solicitud_items lo impone.
+export type ItemSolicitudInput =
+  | { item_id: string; cantidad: number }
+  | { sugerencia: string; cantidad: number }
 
-// Ítem resumido tal como lo devuelve el jsonb `items` de solicitudes_publicas
+// Ítem resumido tal como lo devuelve el jsonb `items` de solicitudes_publicas.
+//
+// `unidad` sigue siendo `string` y no `string | null` porque la vista hace
+// `coalesce(c.unidad, sg.unidad_sugerida, 'unidad')`: un ítem sugerido no
+// tiene fila en el catálogo, pero nunca llega sin unidad. Es lo que evita
+// que `describirItem()` escriba "3 null de Crema dental" en el tablero.
 export interface ItemResumen {
   nombre: string
   cantidad: number
   unidad: string
+  // El ítem no está en el catálogo: alguien lo escribió y falta que un
+  // administrador lo apruebe.
+  por_confirmar: boolean
+}
+
+// Un ítem tal como se ve en el directorio público de quien ofrece. Sin
+// cantidad a propósito: ver §2 de la migración v2-a7.
+export interface ItemOfrecido {
+  nombre: string
+  por_confirmar: boolean
+}
+
+// Lo único del catálogo que necesitan las pantallas de publicar y de
+// registro. Existe para no hacer `select('*')`: la tabla es de lectura
+// pública y desde la Fase A tiene `creado_por`, que es el uuid de
+// `auth.users` de quien aprobó el ítem. Un `select('*')` lo serializaba
+// hacia el navegador en una página anónima (CLAUDE.md regla 6).
+export interface ItemCatalogoPublico {
+  id: string
+  categoria: Categoria
+  nombre: string
+  unidad: string
+}
+
+export const COLUMNAS_ITEM_PUBLICO = 'id, categoria, nombre, unidad'
+
+// Una fila del jsonb que devuelve `mis_ofrecimientos`. `nombre` y `unidad`
+// vienen resueltos: da igual si el ítem salió del catálogo o de una
+// sugerencia sin aprobar todavía.
+export interface OfrecimientoResumen {
+  item_id: string | null
+  sugerencia_id: string | null
+  nombre: string
+  categoria: Categoria | null
+  unidad: string
+  cantidad: number | null
+  disponible: boolean
+  por_confirmar: boolean
+}
+
+// Lo que recibe `guardar_ofrecimientos`. Exactamente una de las tres
+// llaves identifica el ítem; el CHECK de la tabla lo impone.
+export type OfrecimientoInput = { cantidad?: number | null; disponible?: boolean } & (
+  | { item_id: string }
+  | { sugerencia_id: string }
+  | { sugerencia: string }
+)
+
+// Una fila del jsonb que devuelve `sugerencias_pendientes`. `parecidos`
+// son los ítems del catálogo que comparten alguna palabra con el nombre
+// propuesto: están ahí para que fusionar cueste lo mismo que aprobar.
+export interface SugerenciaPendiente {
+  id: string
+  nombre_propuesto: string
+  categoria_sugerida: Categoria | null
+  origen: OrigenSugerencia
+  creada_at: string
+  usos: number
+  parecidos: Array<{ id: string; nombre: string; categoria: Categoria }>
 }
 
 // Forma del jsonb que devuelve leer_solicitud
@@ -49,12 +117,7 @@ export interface SolicitudConRespuestas {
   nota: string | null
   estado: EstadoSolicitud
   expira_at: string
-  items: Array<{
-    nombre: string
-    cantidad: number
-    unidad: string
-    cubierto: boolean
-  }>
+  items: Array<ItemResumen & { cubierto: boolean }>
   respuestas: Array<{
     id: string
     mensaje: string
@@ -79,6 +142,9 @@ export interface Database {
           unidad: string
           activo: boolean
           orden: number
+          creado_por: string | null
+          origen: OrigenItem
+          es_prueba: boolean
         }
         Insert: {
           id: string
@@ -87,6 +153,9 @@ export interface Database {
           unidad?: string
           activo?: boolean
           orden?: number
+          creado_por?: string | null
+          origen?: OrigenItem
+          es_prueba?: boolean
         }
         Update: Partial<Database['public']['Tables']['catalogo_items']['Insert']>
         Relationships: []
@@ -214,6 +283,9 @@ export interface Database {
           creada_at: string
           confirmada_at: string
           expira_at: string
+          // Temporal, mientras dure el periodo de pruebas. La deriva
+          // `crear_solicitud` del prefijo del barrio.
+          es_prueba: boolean
         }
         Insert: {
           id?: string
@@ -227,26 +299,90 @@ export interface Database {
           creada_at?: string
           confirmada_at?: string
           expira_at?: string
+          es_prueba?: boolean
         }
         Update: Partial<Database['public']['Tables']['solicitudes']['Insert']>
         Relationships: []
       }
+      // Exactamente uno de `item_id` y `sugerencia_id` está puesto: lo
+      // impone el CHECK `solicitud_items_uno_u_otro`.
       solicitud_items: {
         Row: {
           id: string
           solicitud_id: string
-          item_id: string
+          item_id: string | null
+          sugerencia_id: string | null
           cantidad: number
           cubierto: boolean
         }
         Insert: {
           id?: string
           solicitud_id: string
-          item_id: string
+          item_id?: string | null
+          sugerencia_id?: string | null
           cantidad: number
           cubierto?: boolean
         }
         Update: Partial<Database['public']['Tables']['solicitud_items']['Insert']>
+        Relationships: []
+      }
+      // El cliente nunca la lee ni la escribe directamente: el GRANT está
+      // revocado y la frontera son `guardar_ofrecimientos` y
+      // `mis_ofrecimientos`. Se tipa para uso del lado del servidor.
+      ofrecimientos: {
+        Row: {
+          id: string
+          perfil_id: string
+          item_id: string | null
+          sugerencia_id: string | null
+          cantidad: number | null
+          disponible: boolean
+          actualizado_at: string
+        }
+        Insert: {
+          id?: string
+          perfil_id: string
+          item_id?: string | null
+          sugerencia_id?: string | null
+          cantidad?: number | null
+          disponible?: boolean
+          actualizado_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['ofrecimientos']['Insert']>
+        Relationships: []
+      }
+      sugerencias_item: {
+        Row: {
+          id: string
+          nombre_propuesto: string
+          categoria_sugerida: Categoria | null
+          unidad_sugerida: string | null
+          propuesta_por: string | null
+          origen: OrigenSugerencia
+          estado: EstadoSugerencia
+          item_resultante_id: string | null
+          revisada_por: string | null
+          revisada_at: string | null
+          nota_revision: string | null
+          creada_at: string
+          es_prueba: boolean
+        }
+        Insert: {
+          id?: string
+          nombre_propuesto: string
+          categoria_sugerida?: Categoria | null
+          unidad_sugerida?: string | null
+          propuesta_por?: string | null
+          origen: OrigenSugerencia
+          estado?: EstadoSugerencia
+          item_resultante_id?: string | null
+          revisada_por?: string | null
+          revisada_at?: string | null
+          nota_revision?: string | null
+          creada_at?: string
+          es_prueba?: boolean
+        }
+        Update: Partial<Database['public']['Tables']['sugerencias_item']['Insert']>
         Relationships: []
       }
       respuestas: {
@@ -339,6 +475,9 @@ export interface Database {
           horas_hasta_cierre: number | null
           num_respuestas: number
           registrada_at: string
+          // Esta tabla no tiene FK: sin esta columna, las filas que dejan
+          // las solicitudes de prueba no se pueden identificar después.
+          es_prueba: boolean
         }
         Insert: {
           id?: number
@@ -349,6 +488,7 @@ export interface Database {
           horas_hasta_cierre?: number | null
           num_respuestas?: number
           registrada_at?: string
+          es_prueba?: boolean
         }
         Update: Partial<Database['public']['Tables']['metricas']['Insert']>
         Relationships: []
@@ -390,6 +530,11 @@ export interface Database {
       }
       // Sin `contacto_publico` a propósito: el contacto ocurre cuando el
       // ofertador responde una solicitud, no al revés.
+      //
+      // `items` trae los NOMBRES de lo que tiene disponible, nunca las
+      // cantidades: una lista pública de quién tiene cuánto y dónde es un
+      // mapa de existencias. Vienen hasta 12; `total_items` dice cuántos
+      // hay en realidad.
       ofertadores_publicos: {
         Row: {
           id: string
@@ -397,6 +542,8 @@ export interface Database {
           municipios: string[]
           descripcion: string | null
           creado_at: string
+          items: ItemOfrecido[]
+          total_items: number
         }
         Relationships: []
       }
@@ -452,6 +599,33 @@ export interface Database {
       quitar_push_ofertador: {
         Args: { p_endpoint?: string | null }
         Returns: undefined
+      }
+      guardar_ofrecimientos: {
+        Args: { p_items: Json }
+        Returns: undefined
+      }
+      // Devuelve cada sugerencia pendiente con los ítems parecidos del
+      // catálogo, para que fusionar cueste lo mismo que aprobar.
+      sugerencias_pendientes: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      resolver_sugerencia: {
+        Args: {
+          p_sugerencia_id: string
+          p_accion: AccionSugerencia
+          p_item_destino?: string | null
+          p_nota?: string | null
+        }
+        Returns: string | null
+      }
+      crear_item_catalogo: {
+        Args: { p_nombre: string; p_categoria: Categoria; p_unidad?: string }
+        Returns: string
+      }
+      mis_ofrecimientos: {
+        Args: Record<string, never>
+        Returns: Json
       }
       crear_perfil: {
         Args: {

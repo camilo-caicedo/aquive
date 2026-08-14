@@ -18,7 +18,7 @@ interface ErrorWebPush {
 }
 
 /**
- * Avisa a quienes ofrecen insumos en ese municipio que hay una solicitud
+ * Avisa a quienes ofrecen ayuda en ese municipio que hay una solicitud
  * nueva.
  *
  * El aviso solo lleva municipio y categoría: son datos que ya están en el
@@ -28,6 +28,12 @@ interface ErrorWebPush {
  * Solo se notifica a quien tenga ese municipio entre los suyos: enterarse
  * de solicitudes del otro lado del país no ayuda a nadie y haría que la
  * gente apague los avisos.
+ *
+ * No se filtra por `tipo`. Antes se pedía `tipo = 'ofertador'`, y eso hacía
+ * que un servidor que activaba los avisos en su perfil no recibiera nunca
+ * ninguno: la pantalla se los ofrecía y el servidor los descartaba en
+ * silencio. Lo que decide aquí es tener una suscripción en
+ * `push_ofertadores`, que solo existe si la persona la activó a propósito.
  */
 export async function notificarOfertadores(
   municipioCodigo: string,
@@ -39,7 +45,6 @@ export async function notificarOfertadores(
   const { data: perfiles } = await supabase
     .from('perfiles')
     .select('id')
-    .eq('tipo', 'ofertador')
     .eq('suspendido', false)
     .contains('municipios', [municipioCodigo])
 
