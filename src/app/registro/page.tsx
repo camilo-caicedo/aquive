@@ -8,7 +8,7 @@ import { AvisosOfertador } from './avisos-ofertador'
 import { CerrarSesion } from './cerrar-sesion'
 import { BorrarPerfil } from './borrar-perfil'
 
-type Vista = 'perfil' | 'cuenta'
+type Vista = 'perfil' | 'ajustes'
 
 export default async function RegistroPage({
   searchParams,
@@ -16,7 +16,7 @@ export default async function RegistroPage({
   searchParams: Promise<{ ver?: string }>
 }) {
   const { ver } = await searchParams
-  const vista: Vista = ver === 'cuenta' ? 'cuenta' : 'perfil'
+  const vista: Vista = ver === 'ajustes' ? 'ajustes' : 'perfil'
 
   const supabase = await createClient()
   const {
@@ -32,7 +32,7 @@ export default async function RegistroPage({
     .maybeSingle()
 
   // El catálogo, los servicios y el inventario solo hacen falta para
-  // dibujar el formulario. La pestaña de cuenta no los toca.
+  // dibujar el formulario. La pestaña de ajustes no los toca.
   const [municipios, { data: servidor }, { data: servicios }, { data: itemsCatalogo }, { data: ofrecimientos }] =
     vista === 'perfil'
       ? await Promise.all([
@@ -60,8 +60,8 @@ export default async function RegistroPage({
       </h1>
 
       {/* Solo hay dos pestañas cuando ya hay perfil: mientras se está
-          creando, no existe cuenta que administrar y una barra con una
-          opción muerta es peor que ninguna barra. */}
+          creando no hay nada que ajustar, y una barra con una opción
+          muerta es peor que ninguna barra. */}
       {perfil && (
         <div className="mt-4">
           <Pestanas
@@ -69,9 +69,9 @@ export default async function RegistroPage({
             pestanas={[
               { href: '/registro', etiqueta: 'Mi perfil', activa: vista === 'perfil' },
               {
-                href: '/registro?ver=cuenta',
-                etiqueta: 'Mi cuenta',
-                activa: vista === 'cuenta',
+                href: '/registro?ver=ajustes',
+                etiqueta: 'Ajustes',
+                activa: vista === 'ajustes',
               },
             ]}
           />
