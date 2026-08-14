@@ -50,6 +50,28 @@ export interface ItemResumen {
   por_confirmar: boolean
 }
 
+// Una fila del jsonb que devuelve `mis_ofrecimientos`. `nombre` y `unidad`
+// vienen resueltos: da igual si el ítem salió del catálogo o de una
+// sugerencia sin aprobar todavía.
+export interface OfrecimientoResumen {
+  item_id: string | null
+  sugerencia_id: string | null
+  nombre: string
+  categoria: Categoria | null
+  unidad: string
+  cantidad: number | null
+  disponible: boolean
+  por_confirmar: boolean
+}
+
+// Lo que recibe `guardar_ofrecimientos`. Exactamente una de las tres
+// llaves identifica el ítem; el CHECK de la tabla lo impone.
+export type OfrecimientoInput = { cantidad?: number | null; disponible?: boolean } & (
+  | { item_id: string }
+  | { sugerencia_id: string }
+  | { sugerencia: string }
+)
+
 // Forma del jsonb que devuelve leer_solicitud
 export interface SolicitudConRespuestas {
   id: string
@@ -265,6 +287,31 @@ export interface Database {
           cubierto?: boolean
         }
         Update: Partial<Database['public']['Tables']['solicitud_items']['Insert']>
+        Relationships: []
+      }
+      // El cliente nunca la lee ni la escribe directamente: el GRANT está
+      // revocado y la frontera son `guardar_ofrecimientos` y
+      // `mis_ofrecimientos`. Se tipa para uso del lado del servidor.
+      ofrecimientos: {
+        Row: {
+          id: string
+          perfil_id: string
+          item_id: string | null
+          sugerencia_id: string | null
+          cantidad: number | null
+          disponible: boolean
+          actualizado_at: string
+        }
+        Insert: {
+          id?: string
+          perfil_id: string
+          item_id?: string | null
+          sugerencia_id?: string | null
+          cantidad?: number | null
+          disponible?: boolean
+          actualizado_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['ofrecimientos']['Insert']>
         Relationships: []
       }
       sugerencias_item: {
@@ -506,6 +553,14 @@ export interface Database {
       quitar_push_ofertador: {
         Args: { p_endpoint?: string | null }
         Returns: undefined
+      }
+      guardar_ofrecimientos: {
+        Args: { p_items: Json }
+        Returns: undefined
+      }
+      mis_ofrecimientos: {
+        Args: Record<string, never>
+        Returns: Json
       }
       crear_perfil: {
         Args: {
