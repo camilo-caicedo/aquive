@@ -136,6 +136,16 @@ reputación, ni sellos de "confiable", y no los va a haber: un sistema así,
 sin verificación de identidad detrás, solo sirve para que quien quiera
 estafar acumule apariencia de confianza.
 
+**3b. El directorio de entidades.** En la sección de servicios hay una
+lista de organizaciones que un administrador dio de alta. Es informativa:
+esas entidades no tienen cuenta aquí, no reciben solicitudes y no coordinan
+nada por esta plataforma. **Aparecer en esa lista no es una
+recomendación**, ni significa que hayamos comprobado quiénes son, qué hacen
+o cómo lo hacen. Los botones llevan a sitios que no controlamos, y lo que
+ocurra allí —incluido lo que esos sitios te pidan— no es responsabilidad de
+esta plataforma. Si un enlace deja de llevar a donde decía, repórtalo con el
+botón de la ficha.
+
 **4. El contacto ocurre fuera de la plataforma y bajo tu responsabilidad.**
 No intermediamos, no acompañamos y no respondemos por lo que suceda entre
 las partes, incluyendo incumplimientos, pérdidas, daños o delitos.
@@ -262,10 +272,30 @@ de reportar esté en los tres sitios (solicitud, respuesta y perfil).
 > la cuenta. Si hay riesgo para alguien ahora mismo, eso no es un reporte:
 > es el 123.
 
-**Contra la suplantación:**
-> Nadie de AquíVe te va a pedir dinero, ni el enlace de tu solicitud, ni
-> que entres a ningún otro sitio. Si alguien lo hace diciendo que es de la
-> plataforma, está mintiendo.
+**Contra la suplantación.** ⚠ Decía «ni que entres a ningún otro sitio», y
+el directorio de entidades lo dejó falso: son botones que sacan de AquíVe a
+propósito. Una frase antiphishing que la propia aplicación desmiente es peor
+que no tenerla — enseña a ignorar todos los avisos.
+> Nadie de AquíVe te va a pedir dinero ni el enlace de tu solicitud. En
+> "Entidades" hay botones que llevan a sitios de otras organizaciones, y
+> siempre te decimos a qué dirección te llevan antes de que toques: si algo
+> te lleva a otro lado, o te pide pagar, no sigas.
+
+**Encima de la lista de entidades**, una vez y no por ficha:
+> AquíVe no verifica a estas organizaciones ni las recomienda: aparecer en
+> esta lista no dice nada sobre ellas.
+
+**Pegado a los botones de cada ficha**, porque cada enlace es una decisión
+distinta:
+> Estos botones te sacan de AquíVe. Mira la dirección antes de tocar, y no
+> pagues nada por adelantado.
+
+🔴 **Y lo que sostiene ese último aviso, en la interfaz y no en el texto:**
+antes de cada dirección completa se muestra el dominio aparte —«Te lleva a
+**ejemplo.org**»—, la dirección se envuelve en vez de recortarse, y la
+arroba está prohibida en toda URL. Recortar por el medio con puntos
+suspensivos escondería un `…@evil.com`, que es la forma clásica de que el
+texto visible mienta.
 
 🔴 **Lo que estos textos no pueden hacer, nunca:** sugerir que la
 plataforma respalda, avala o recomienda a alguien. Ni sellos de

@@ -35,6 +35,9 @@
 --   metricas          es_prueba              (sin llave foránea: a mano)
 --   sugerencias_item  es_prueba              (el remapeo borra su origen)
 --   catalogo_items    es_prueba              (`creado_por` es el admin real)
+--   entidades         es_prueba              (`creada_por` es el admin real;
+--                                              los enlaces viven en su jsonb,
+--                                              así que no arrastra nada)
 --
 -- Actualizar en CADA fase que agregue una tabla.
 -- =====================================================================
@@ -55,6 +58,8 @@ union all
 select 'sugerencias_item', count(*) from public.sugerencias_item where es_prueba
 union all
 select 'catalogo_items', count(*) from public.catalogo_items where es_prueba
+union all
+select 'entidades', count(*) from public.entidades where es_prueba
 order by 1;
 
 -- Lo que arrastra el CASCADE, para que el número no sorprenda:
@@ -144,6 +149,11 @@ delete from public.sugerencias_item where es_prueba;
 -- misma razón: si salta una violación es que algo real los usa.
 delete from public.catalogo_items where es_prueba;
 
+-- Las entidades no cuelgan de nada ni nada cuelga de ellas: los enlaces
+-- viven en su propio jsonb. `creada_por` está en `on delete set null`, así
+-- que el borrado de `auth.users` de más arriba no las toca.
+delete from public.entidades where es_prueba;
+
 -- Verificación. Va dentro de un bloque que REVIENTA si algo quedó, en vez
 -- de un `select` que el operador tendría que mirar: el archivo se corre de
 -- una sola vez en el editor SQL, así que un `select` seguido de `commit`
@@ -157,6 +167,7 @@ begin
        + (select count(*) from public.perfiles         where nombre_visible ilike 'prueba%')
        + (select count(*) from public.sugerencias_item where es_prueba)
        + (select count(*) from public.catalogo_items   where es_prueba)
+       + (select count(*) from public.entidades        where es_prueba)
        + (select count(*) from auth.users where id::text like '00000000-0000-4000-8000-%')
     into v_restantes;
 

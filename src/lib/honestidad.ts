@@ -117,7 +117,48 @@ export const SI_ALGO_SALE_MAL =
   'la cuenta. Si hay riesgo para alguien ahora mismo, eso no es un ' +
   'reporte: es el 123.'
 
+/**
+ * ⚠ Este texto decía «ni que entres a ningún otro sitio», y el directorio
+ * de entidades lo dejó falso: son botones que sacan de AquíVe a propósito.
+ *
+ * Una frase antiphishing que la propia aplicación desmiente es peor que no
+ * tenerla: enseña a ignorar todos los avisos. Así que dice lo que de verdad
+ * distingue un enlace nuestro de uno de un estafador — que nosotros siempre
+ * mostramos el dominio antes de que toques.
+ */
 export const NADIE_TE_PIDE =
-  'Nadie de AquíVe te va a pedir dinero, ni el enlace de tu solicitud, ni ' +
-  'que entres a ningún otro sitio. Si alguien lo hace diciendo que es de ' +
-  'la plataforma, está mintiendo.'
+  'Nadie de AquíVe te va a pedir dinero ni el enlace de tu solicitud. En ' +
+  '"Entidades" hay botones que llevan a sitios de otras organizaciones, y ' +
+  'siempre te decimos a qué dirección te llevan antes de que toques: si ' +
+  'algo te lleva a otro lado, o te pide pagar, no sigas.'
+
+/** Encabezado de la pestaña de entidades. Se dice una vez, no por ficha. */
+export const AVISO_ENTIDADES =
+  'AquíVe no verifica a estas organizaciones ni las recomienda: aparecer ' +
+  'en esta lista no dice nada sobre ellas.'
+
+/**
+ * Pegado a los botones de cada ficha. Va por ficha y no solo arriba porque
+ * cada enlace es una decisión distinta — el mismo criterio que ya se tomó
+ * dos veces, en el tablero y en la lista de respuestas.
+ */
+export const AVISO_SALIR_DEL_SITIO =
+  'Estos botones te sacan de AquíVe. Mira la dirección antes de tocar, y ' +
+  'no pagues nada por adelantado.'
+
+/**
+ * El dominio de una URL, para ponerlo delante de la dirección completa.
+ *
+ * En 320px una dirección larga empuja el dominio fuera de la vista, y el
+ * dominio es lo único que decide a dónde vas. Por eso se muestra aparte y
+ * primero, y la dirección completa se envuelve en vez de recortarse:
+ * recortar por el medio con puntos suspensivos es exactamente lo que
+ * escondería un `…@evil.com`.
+ */
+export function dominioDe(url: string): string {
+  try {
+    return new URL(url).hostname
+  } catch {
+    return url
+  }
+}

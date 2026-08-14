@@ -34,6 +34,16 @@ export default function TerminosPage() {
         sirve para que quien quiera estafar acumule apariencia de confianza.
       </p>
 
+      <h2 className="mt-6 text-xl font-bold">3b. El directorio de entidades.</h2>
+      <p className="mt-3 text-base">
+        En la sección de servicios hay una lista de organizaciones que un administrador dio de alta. Es
+        informativa: esas entidades no tienen cuenta aquí, no reciben solicitudes y no coordinan nada por esta
+        plataforma. <strong>Aparecer en esa lista no es una recomendación</strong>, ni significa que hayamos
+        comprobado quiénes son, qué hacen o cómo lo hacen. Los botones llevan a sitios que no controlamos, y lo
+        que ocurra allí —incluido lo que esos sitios te pidan— no es responsabilidad de esta plataforma. Si un
+        enlace deja de llevar a donde decía, repórtalo con el botón de la ficha.
+      </p>
+
       <h2 className="mt-6 text-xl font-bold">4. El contacto ocurre fuera de la plataforma y bajo tu responsabilidad.</h2>
       <p className="mt-3 text-base">
         No intermediamos, no acompañamos y no respondemos por lo que suceda entre las partes, incluyendo

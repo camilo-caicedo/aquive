@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
 import { ENTIDADES_MATRICULA } from '@/lib/config'
 import { categoria } from '@/lib/catalogo'
+import { COLUMNAS_ENTIDAD_ADMIN } from '@/lib/types'
 import type {
   EntidadMatricula,
   MotivoReporte,
@@ -14,6 +15,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AccionesReporte } from './acciones-reporte'
 import { AccionesServidor } from './acciones-servidor'
 import { AccionesSugerencia } from './acciones-sugerencia'
+import { PanelEntidades, type EntidadAdmin } from './panel-entidades'
 
 const MOTIVOS: Record<MotivoReporte, string> = {
   datos_personales: 'Datos personales',
@@ -28,6 +30,7 @@ const TIPOS_OBJETO: Record<TipoObjetoReporte, string> = {
   solicitud: 'Solicitud',
   respuesta: 'Respuesta',
   perfil: 'Perfil',
+  entidad: 'Entidad del directorio',
 }
 
 const ORIGENES_SUGERENCIA: Record<OrigenSugerencia, string> = {
@@ -80,6 +83,7 @@ export default async function AdminPage() {
     { data: servidores },
     { data: perfiles },
     { data: sugerenciasData },
+    { data: entidadesData },
   ] = await Promise.all([
     supabase
       .from('reportes')
@@ -92,9 +96,13 @@ export default async function AdminPage() {
     // nombre" y el administrador no sabría a quién está verificando.
     supabase.from('perfiles').select('id, nombre_visible, municipios, suspendido'),
     supabase.rpc('sugerencias_pendientes'),
+    // Columnas explícitas: `select('*')` arrastraría `creada_por`, el uuid
+    // de `auth.users` de quien dio de alta la entidad.
+    supabase.from('entidades').select(COLUMNAS_ENTIDAD_ADMIN).order('orden').order('nombre'),
   ])
 
   const sugerencias = (sugerenciasData as unknown as SugerenciaPendiente[]) ?? []
+  const entidades: EntidadAdmin[] = entidadesData ?? []
 
   const porPerfil = new Map((perfiles ?? []).map((p) => [p.id, p]))
 
@@ -221,6 +229,22 @@ export default async function AdminPage() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-xl font-bold">Entidades</h2>
+        <Alert className="mt-3">
+          <AlertDescription>
+            Aparecer en este directorio no es una recomendación de AquíVe:
+            solo dice que la organización existe. Antes de enlazar a un
+            sitio, revisa dos cosas: que no sea una página de donación de un
+            tercero —el plan Hobby de Vercel las cuenta como uso comercial— y
+            que enlazarla no sea una forma de dar, por otra vía, algo que el
+            alcance cerrado prohíbe (alojamiento, transporte de personas,
+            dinero).
+          </AlertDescription>
+        </Alert>
+        <PanelEntidades entidades={entidades} municipios={municipios} />
       </section>
     </main>
   )

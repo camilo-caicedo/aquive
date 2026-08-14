@@ -1,13 +1,17 @@
 import Link from 'next/link'
-import { Info, Inbox } from 'lucide-react'
+import { Info, Inbox, Building2, Stethoscope } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { ENTIDADES_MATRICULA } from '@/lib/config'
 import { enlaceWhatsapp } from '@/lib/contacto'
-import { AVISO_CONTACTO, AVISO_CONTACTO_VERIFICADO } from '@/lib/honestidad'
+import { AVISO_CONTACTO, AVISO_CONTACTO_VERIFICADO, AVISO_ENTIDADES } from '@/lib/honestidad'
+import { listarMunicipios } from '@/lib/municipios'
+import { ListaEntidades } from './lista-entidades'
 import { BotonReportar } from '@/components/boton-reportar'
 import type { EntidadMatricula, AreaServicio } from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+
+export const metadata = { title: 'Quién ofrece servicios · AquíVe' }
 import { SelectFiltro } from '@/components/select-filtro'
 
 const AREAS: Record<AreaServicio, string> = {
@@ -25,15 +29,49 @@ function etiquetaEntidad(valor: EntidadMatricula) {
 export default async function ServidoresPage({
   searchParams,
 }: {
-  searchParams: Promise<{ municipio?: string; servicio?: string }>
+  searchParams: Promise<{ municipio?: string; servicio?: string; ver?: string }>
 }) {
   const params = await searchParams
   const supabase = await createClient()
 
-  const [{ data: municipios }, { data: catalogoServicios }] = await Promise.all([
-    supabase.from('municipios_con_servidores').select('*').order('nombre'),
-    supabase.from('catalogo_servicios').select('*').eq('activo', true).order('orden'),
-  ])
+  // Entidades es la pestaña por defecto: son las que el administrador
+  // revisó una por una, y quien busca ayuda las lee primero.
+  const verProfesionales = params.ver === 'profesionales'
+
+  // Cada pestaña consulta lo suyo y nada más, igual que los dos modos de la
+  // portada. Sin esto, entrar al directorio traía media base de datos.
+  const [{ data: municipios }, { data: catalogoServicios }] = verProfesionales
+    ? await Promise.all([
+        supabase.from('municipios_con_servidores').select('*').order('nombre'),
+        supabase.from('catalogo_servicios').select('*').eq('activo', true).order('orden'),
+      ])
+    : [{ data: null }, { data: null }]
+
+  // El filtro por municipio devuelve las entidades locales de ese municipio
+  // Y TODAS las nacionales: una entidad nacional también atiende ahí. Es lo
+  // que más fácil se implementa mal.
+  const consultaEntidades = supabase
+    .from('entidades_publicas')
+    .select('*')
+    .order('orden')
+    .order('nombre')
+
+  const [{ data: entidades }, { data: municipiosEntidades }, todosLosMunicipios] =
+    verProfesionales
+      ? [{ data: null }, { data: null }, null]
+      : await Promise.all([
+          params.municipio
+            ? consultaEntidades.or(
+                `cobertura.eq.nacional,municipios.cs.{${params.municipio}}`
+              )
+            : consultaEntidades,
+          supabase.from('municipios_con_entidades').select('*').order('nombre'),
+          listarMunicipios(supabase),
+        ])
+
+  const nombreMunicipio = new Map(
+    (todosLosMunicipios ?? []).map((m) => [m.codigo_dane, m.nombre])
+  )
 
   const nombreServicio = new Map((catalogoServicios ?? []).map((s) => [s.id, s.nombre]))
 
@@ -48,15 +86,47 @@ export default async function ServidoresPage({
   if (params.servicio) query = query.contains('servicios', [params.servicio])
 
   const { data: servidores } = await query
-  const hayFiltro = !!(params.municipio || params.servicio)
-  const mostrarFiltros = (municipios?.length ?? 0) > 0 || hayFiltro
+  const listaMunicipios = verProfesionales ? municipios : municipiosEntidades
+  const hayFiltro = !!(params.municipio || (verProfesionales && params.servicio))
+  const mostrarFiltros = (listaMunicipios?.length ?? 0) > 0 || hayFiltro
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="text-2xl font-bold">Profesionales que ofrecen servicios</h1>
+      <h1 className="text-2xl font-bold">Quién ofrece servicios</h1>
       <p className="mt-1 text-base text-muted-foreground">
-        Escríbeles directamente. La plataforma no participa en el contacto.
+        Organizaciones y profesionales con matrícula. El contacto ocurre por
+        fuera: la plataforma no participa.
       </p>
+
+      {/* Enlaces, no pestañas con estado: la pestaña vive en la URL, así
+          que el enlace se puede compartir. Mismo patrón que los dos modos
+          de la portada. */}
+      <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Qué lista ver">
+        <Link
+          href="/servidores"
+          aria-current={verProfesionales ? undefined : 'page'}
+          className={`inline-flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-full border px-4 text-base transition-colors sm:flex-initial ${
+            verProfesionales
+              ? 'border-border bg-card hover:bg-muted'
+              : 'border-primary bg-primary text-primary-foreground'
+          }`}
+        >
+          <Building2 className="size-4 shrink-0" aria-hidden="true" />
+          Entidades
+        </Link>
+        <Link
+          href="/servidores?ver=profesionales"
+          aria-current={verProfesionales ? 'page' : undefined}
+          className={`inline-flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-full border px-4 text-base transition-colors sm:flex-initial ${
+            verProfesionales
+              ? 'border-primary bg-primary text-primary-foreground'
+              : 'border-border bg-card hover:bg-muted'
+          }`}
+        >
+          <Stethoscope className="size-4 shrink-0" aria-hidden="true" />
+          Profesionales
+        </Link>
+      </div>
 
       {/* Mismo criterio que el tablero: sin nadie registrado y sin filtros,
           los desplegables solo estorban. */}
@@ -66,18 +136,22 @@ export default async function ServidoresPage({
         method="get"
         className="mt-4 flex flex-col gap-2 rounded-lg border border-border bg-muted/40 p-3 sm:flex-row"
       >
+        {/* Un GET reemplaza el query string entero: sin esto, filtrar te
+            devuelve a la pestaña de entidades. */}
+        {verProfesionales && <input type="hidden" name="ver" value="profesionales" />}
         <SelectFiltro
           name="municipio"
           label="Filtrar por municipio"
           placeholder="Todos los municipios"
           valorInicial={params.municipio ?? ''}
           conBusqueda
-          opciones={(municipios ?? []).map((m) => ({
+          opciones={(listaMunicipios ?? []).map((m) => ({
             valor: m.codigo_dane,
             etiqueta: m.nombre,
             detalle: m.departamento,
           }))}
         />
+        {verProfesionales && (
         <SelectFiltro
           name="servicio"
           label="Filtrar por servicio"
@@ -90,6 +164,7 @@ export default async function ServidoresPage({
             detalle: AREAS[s.area],
           }))}
         />
+        )}
         <Button type="submit" className="w-full sm:w-auto">
           Filtrar
         </Button>
@@ -100,15 +175,23 @@ export default async function ServidoresPage({
       <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
         <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
         <span>
-          La lista de municipios solo muestra los {municipios?.length ?? 0} donde
-          ya hay profesionales registrados. La de servicios los muestra todos,
-          aunque nadie los ofrezca todavía.
+          {verProfesionales
+            ? `La lista de municipios solo muestra los ${listaMunicipios?.length ?? 0} donde ya hay profesionales registrados. La de servicios los muestra todos, aunque nadie los ofrezca todavía.`
+            : `La lista solo muestra los ${listaMunicipios?.length ?? 0} municipios con entidades locales. Las de cobertura nacional salen siempre, filtres por donde filtres.`}
         </span>
       </p>
       </>
       )}
 
-      {!servidores || servidores.length === 0 ? (
+      {!verProfesionales ? (
+        <>
+          <p className="mt-4 text-sm text-muted-foreground">{AVISO_ENTIDADES}</p>
+          <ListaEntidades
+            entidades={entidades ?? []}
+            nombreMunicipio={nombreMunicipio}
+          />
+        </>
+      ) : !servidores || servidores.length === 0 ? (
         <div className="mt-6 rounded-lg border border-dashed border-border p-8 text-center">
           <Inbox className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
           <p className="mt-2 text-base text-muted-foreground">

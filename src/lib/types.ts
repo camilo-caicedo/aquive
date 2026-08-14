@@ -21,7 +21,11 @@ export type OrigenItem = 'semilla' | 'admin' | 'aliado' | 'sugerencia'
 export type OrigenSugerencia = 'solicitante' | 'ofertador' | 'aliado'
 export type EstadoSugerencia = 'pendiente' | 'aprobada' | 'rechazada' | 'fusionada'
 export type AccionSugerencia = 'aprobar' | 'rechazar' | 'fusionar'
-export type TipoObjetoReporte = 'solicitud' | 'respuesta' | 'perfil'
+export type TipoObjetoReporte = 'solicitud' | 'respuesta' | 'perfil' | 'entidad'
+// Nacional cubre lo virtual: un servicio en línea no está atado a ningún
+// municipio. El filtro por municipio devuelve las locales de ese municipio
+// y todas las nacionales.
+export type CoberturaEntidad = 'nacional' | 'local'
 export type MotivoReporte =
   | 'datos_personales'
   | 'estafa'
@@ -78,6 +82,19 @@ export interface MunicipioQueCalza {
   nombre: string
   total: number
 }
+
+// Un botón de una ficha del directorio. La URL se muestra completa debajo
+// del botón, y la valida `esEnlaceSeguro` en los dos lados.
+export interface EnlaceEntidad {
+  etiqueta: string
+  url: string
+}
+
+// Las columnas que el panel necesita de `entidades`. Existe por lo mismo
+// que `COLUMNAS_ITEM_PUBLICO`: un `select('*')` sobre esta tabla arrastra
+// `creada_por`, que es el uuid de `auth.users` de una persona real.
+export const COLUMNAS_ENTIDAD_ADMIN =
+  'id, nombre, subtitulo, descripcion, enlaces, pie, cobertura, municipios, orden, activa'
 
 // Un ítem tal como se ve en el directorio público de quien ofrece. Sin
 // cantidad a propósito: ver §2 de la migración v2-a7.
@@ -379,6 +396,45 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['ofrecimientos']['Insert']>
         Relationships: []
       }
+      // El cliente nunca la lee directamente: el GRANT está revocado y lo
+      // público sale de `entidades_publicas`. El panel la lee con
+      // `COLUMNAS_ENTIDAD_ADMIN`, jamás con `select('*')`.
+      entidades: {
+        Row: {
+          id: string
+          nombre: string
+          subtitulo: string | null
+          descripcion: string | null
+          enlaces: EnlaceEntidad[]
+          pie: string | null
+          cobertura: CoberturaEntidad
+          municipios: string[]
+          orden: number
+          activa: boolean
+          creada_por: string | null
+          creada_at: string
+          actualizada_at: string
+          es_prueba: boolean
+        }
+        Insert: {
+          id?: string
+          nombre: string
+          subtitulo?: string | null
+          descripcion?: string | null
+          enlaces?: EnlaceEntidad[]
+          pie?: string | null
+          cobertura?: CoberturaEntidad
+          municipios?: string[]
+          orden?: number
+          activa?: boolean
+          creada_por?: string | null
+          creada_at?: string
+          actualizada_at?: string
+          es_prueba?: boolean
+        }
+        Update: Partial<Database['public']['Tables']['entidades']['Insert']>
+        Relationships: []
+      }
       sugerencias_item: {
         Row: {
           id: string
@@ -561,6 +617,28 @@ export interface Database {
         Row: { codigo_dane: string; nombre: string; departamento: string }
         Relationships: []
       }
+      // Solo los de las entidades locales: las nacionales están en todos y
+      // no aportan nada al desplegable.
+      municipios_con_entidades: {
+        Row: { codigo_dane: string; nombre: string; departamento: string }
+        Relationships: []
+      }
+      // Sin `creada_por` ni `es_prueba`: la vista ES la frontera, igual que
+      // en `solicitudes_publicas`.
+      entidades_publicas: {
+        Row: {
+          id: string
+          nombre: string
+          subtitulo: string | null
+          descripcion: string | null
+          enlaces: EnlaceEntidad[]
+          pie: string | null
+          cobertura: CoberturaEntidad
+          municipios: string[]
+          orden: number
+        }
+        Relationships: []
+      }
       // Sin `contacto_publico` a propósito: el contacto ocurre cuando el
       // ofertador responde una solicitud, no al revés.
       //
@@ -682,6 +760,30 @@ export interface Database {
           p_nota?: string | null
         }
         Returns: string | null
+      }
+      // `p_id` null crea, con valor actualiza. Una sola función porque el
+      // formulario del panel es el mismo en los dos casos.
+      guardar_entidad: {
+        Args: {
+          p_id: string | null
+          p_nombre: string
+          p_subtitulo?: string | null
+          p_descripcion?: string | null
+          p_enlaces?: Json
+          p_pie?: string | null
+          p_cobertura?: CoberturaEntidad
+          p_municipios?: string[]
+          p_orden?: number
+        }
+        Returns: string
+      }
+      activar_entidad: {
+        Args: { p_id: string; p_activa: boolean }
+        Returns: undefined
+      }
+      borrar_entidad: {
+        Args: { p_id: string }
+        Returns: undefined
       }
       crear_item_catalogo: {
         Args: { p_nombre: string; p_categoria: Categoria; p_unidad?: string }
