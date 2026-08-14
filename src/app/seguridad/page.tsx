@@ -1,6 +1,12 @@
 import Link from 'next/link'
 import { ShieldAlert, Phone } from 'lucide-react'
-import { AVISO_CORTO, CONSEJOS } from '@/lib/honestidad'
+import {
+  AVISO_TABLERO,
+  CONSEJOS,
+  NADIE_TE_PIDE,
+  SI_ALGO_SALE_MAL,
+  SOBRE_LOS_PROFESIONALES,
+} from '@/lib/honestidad'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 
@@ -15,10 +21,10 @@ export default function SeguridadPage() {
       </h1>
 
       <p className="mt-3 max-w-prose text-base">
-        {AVISO_CORTO} Cualquiera puede publicar una solicitud sin dar sus
+        {AVISO_TABLERO} Cualquiera puede publicar una solicitud sin dar sus
         datos, y cualquiera con una cuenta de Google puede responder. Eso es
         lo que hace que la plataforma sirva rápido, y también lo que hace que
-        estos cinco consejos importen.
+        estos consejos importen — vayas a pedir o a ofrecer.
       </p>
 
       <ul className="mt-6 space-y-4">
@@ -40,27 +46,16 @@ export default function SeguridadPage() {
 
       <h2 className="mt-8 text-xl font-bold">Sobre los profesionales</h2>
       <p className="mt-2 max-w-prose text-base text-muted-foreground">
-        A quien se registra como profesional le revisamos que su número de
-        matrícula aparezca en el registro de su entidad —COPNIA, CPNAA,
-        ReTHUS y las demás—. Eso es todo lo que dice el sello: que el número
-        existe. No verificamos su identidad, ni su experiencia, ni sus
-        intenciones. Un perfil sin ese sello no ha sido revisado en absoluto.
+        {SOBRE_LOS_PROFESIONALES}
       </p>
 
       <h2 className="mt-8 text-xl font-bold">Si algo sale mal</h2>
       <p className="mt-2 max-w-prose text-base text-muted-foreground">
-        Cada solicitud, cada respuesta y cada perfil tienen un botón para
-        reportar. Lo revisa una persona y puede borrar el contenido o
-        suspender la cuenta. Si hay riesgo para alguien ahora mismo, eso no
-        es un reporte: es el 123.
+        {SI_ALGO_SALE_MAL}
       </p>
 
       <Alert variant="warning" className="mt-4">
-        <AlertDescription className="text-amber-900">
-          Nadie de AquíVe te va a pedir dinero, ni tus claves, ni el enlace
-          de tu solicitud. Si alguien lo hace diciendo que es de la
-          plataforma, está mintiendo.
-        </AlertDescription>
+        <AlertDescription className="text-amber-900">{NADIE_TE_PIDE}</AlertDescription>
       </Alert>
 
       <div className="mt-6 flex flex-col gap-2 sm:flex-row">

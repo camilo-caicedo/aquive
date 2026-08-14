@@ -3,6 +3,8 @@ import { Info, Inbox } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { ENTIDADES_MATRICULA } from '@/lib/config'
 import { enlaceWhatsapp } from '@/lib/contacto'
+import { AVISO_CONTACTO, AVISO_CONTACTO_VERIFICADO } from '@/lib/honestidad'
+import { BotonReportar } from '@/components/boton-reportar'
 import type { EntidadMatricula, AreaServicio } from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -38,7 +40,7 @@ export default async function ServidoresPage({
   let query = supabase
     .from('servidores_publicos')
     .select('*')
-    // Verificados primero: es la única señal de confianza que damos.
+    // Verificados primero: es el único dato comprobado que tenemos, no una recomendación.
     .order('verificado', { ascending: false })
     .order('nombre_visible')
 
@@ -172,6 +174,16 @@ export default async function ServidoresPage({
                 </Alert>
               )}
 
+              {/* Pegado al botón, no en el aviso del final de la lista:
+                  cada profesional es una decisión distinta y en un teléfono
+                  ese aviso queda a varias pantallas de aquí. */}
+              <p className="mt-3 text-sm text-muted-foreground">
+                {s.verificado ? AVISO_CONTACTO_VERIFICADO : AVISO_CONTACTO}{' '}
+                <Link href="/seguridad" className="underline">
+                  Cómo cuidarte
+                </Link>
+              </p>
+
               <Button
                 className="mt-3 w-full"
                 nativeButton={false}
@@ -189,6 +201,10 @@ export default async function ServidoresPage({
               >
                 {s.contacto_tipo === 'whatsapp' ? 'Escribir por WhatsApp' : 'Llamar'}
               </Button>
+
+              <div className="mt-2">
+                <BotonReportar tipoObjeto="perfil" objetoId={s.id} />
+              </div>
             </li>
           ))}
         </ul>

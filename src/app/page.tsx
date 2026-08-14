@@ -17,6 +17,7 @@ import { CATEGORIAS, limitePorVencer } from '@/lib/catalogo'
 import { TarjetaSolicitud } from '@/components/tarjeta-solicitud'
 import { SelectFiltro } from '@/components/select-filtro'
 import { Button } from '@/components/ui/button'
+import { AVISO_TABLERO } from '@/lib/honestidad'
 import { CruceInverso } from './cruce-inverso'
 
 const POR_PAGINA = 20
@@ -157,7 +158,9 @@ export default async function InicioPage({
             <h2 className="text-xl font-bold">¿Necesitas un profesional?</h2>
             <p className="mt-1 text-base text-muted-foreground">
               Psicología, revisión de tu casa, atención médica, asesoría
-              jurídica. Todos con matrícula, y los verificados van de primeros.
+              jurídica. Cada quien declara su matrícula; a algunos ya les
+              revisamos que ese número exista en el registro, y esos aparecen
+              de primeros.
             </p>
           </div>
           <Button
@@ -331,11 +334,14 @@ export default async function InicioPage({
             )}
           </div>
         ) : (
-          <ul className="lista-escalonada mt-4 space-y-3">
-            {solicitudes.map((s) => (
-              <TarjetaSolicitud key={s.codigo} solicitud={s} />
-            ))}
-          </ul>
+          <>
+            <p className="mt-4 text-sm text-muted-foreground">{AVISO_TABLERO}</p>
+            <ul className="lista-escalonada mt-3 space-y-3">
+              {solicitudes.map((s) => (
+                <TarjetaSolicitud key={s.codigo} solicitud={s} />
+              ))}
+            </ul>
+          </>
         )}
 
         {hayMas && cursorSiguiente && (

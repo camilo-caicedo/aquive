@@ -4,7 +4,6 @@ import { MessageSquare, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { horasParaVencer, describirItem, categoria } from '@/lib/catalogo'
 import type { SolicitudConRespuestas } from '@/lib/types'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { ActivarAvisos } from '@/components/activar-avisos'
 import { PantallaConfirmacion } from './pantalla-confirmacion'
@@ -47,7 +46,11 @@ export default async function SolicitudPage({
 
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
-      <PantallaConfirmacion link={link} codigo={solicitud.codigo} />
+      <PantallaConfirmacion
+        link={link}
+        codigo={solicitud.codigo}
+        sinRespuestas={solicitud.respuestas.length === 0}
+      />
 
       <section className="mt-8">
         <h2 className="text-xl font-bold">Lo que pediste</h2>
@@ -79,15 +82,6 @@ export default async function SolicitudPage({
           <MessageSquare className="size-5" aria-hidden="true" />
           Respuestas ({solicitud.respuestas.length})
         </h2>
-
-        {solicitud.respuestas.length > 0 && (
-          <Alert variant="warning" className="mt-2">
-            <AlertDescription className="text-amber-900">
-              Tú decides a quién escribir. No compartas tu dirección hasta
-              estar seguro. Nunca envíes dinero por adelantado.
-            </AlertDescription>
-          </Alert>
-        )}
 
         <ListaRespuestas respuestas={solicitud.respuestas} />
       </section>

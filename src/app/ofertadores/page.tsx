@@ -5,6 +5,7 @@ import { listarMunicipios } from '@/lib/municipios'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { SelectFiltro } from '@/components/select-filtro'
+import { BotonReportar } from '@/components/boton-reportar'
 
 export const metadata = { title: 'Quién está ofreciendo · AquíVe' }
 
@@ -170,6 +171,10 @@ export default async function OfertadoresPage({
                   </p>
                 )
               )}
+
+              <div className="mt-3">
+                <BotonReportar tipoObjeto="perfil" objetoId={o.id} />
+              </div>
             </li>
           ))}
         </ul>

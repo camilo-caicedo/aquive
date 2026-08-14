@@ -7,7 +7,16 @@ import { AVISO_PUBLICAR } from '@/lib/honestidad'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
-export function PantallaConfirmacion({ link, codigo }: { link: string; codigo: string }) {
+export function PantallaConfirmacion({
+  link,
+  codigo,
+  sinRespuestas,
+}: {
+  link: string
+  codigo: string
+  /** El aviso habla en futuro, así que sobra cuando ya hay respuestas. */
+  sinRespuestas: boolean
+}) {
   const [copiado, setCopiado] = useState(false)
 
   const qrDataUrl = useMemo(() => {
@@ -39,15 +48,18 @@ export function PantallaConfirmacion({ link, codigo }: { link: string; codigo: s
         </AlertDescription>
       </Alert>
 
-      {/* El segundo de los cuatro puntos donde va el aviso de honestidad:
-          acaba de publicar y todavía no ha hablado con nadie, así que es
-          cuando puede leerlo con calma. */}
-      <p className="text-left text-sm text-muted-foreground">
-        {AVISO_PUBLICAR}{' '}
-        <Link href="/seguridad" className="underline">
-          Cómo cuidarte
-        </Link>
-      </p>
+      {/* Solo mientras no haya respuestas: esta pantalla se ve en cada
+          visita al enlace, no solo al publicar, y el aviso habla en futuro.
+          Con respuestas ya visibles abajo, el que aplica es el que va
+          pegado a cada botón de contacto. */}
+      {sinRespuestas && (
+        <p className="text-left text-sm text-muted-foreground">
+          {AVISO_PUBLICAR}{' '}
+          <Link href="/seguridad" className="underline">
+            Cómo cuidarte
+          </Link>
+        </p>
+      )}
 
       <div className="break-all rounded-lg border border-border p-3 text-sm">{link}</div>
 

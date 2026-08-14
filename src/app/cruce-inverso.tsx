@@ -8,6 +8,7 @@ import type {
   OfrecimientoResumen,
 } from '@/lib/types'
 import { TOPE_SELECCION } from '@/lib/catalogo'
+import { AVISO_TABLERO } from '@/lib/honestidad'
 import { TarjetaSolicitud } from '@/components/tarjeta-solicitud'
 import { SelectFiltro } from '@/components/select-filtro'
 import { Button } from '@/components/ui/button'
@@ -200,7 +201,9 @@ export async function CruceInverso({
               )}
             </div>
           ) : (
-            <ul className="lista-escalonada mt-4 space-y-3">
+            <>
+            <p className="mt-4 text-sm text-muted-foreground">{AVISO_TABLERO}</p>
+            <ul className="lista-escalonada mt-3 space-y-3">
               {resultados.map((s) => (
                 <TarjetaSolicitud
                   key={s.codigo}
@@ -209,6 +212,7 @@ export async function CruceInverso({
                 />
               ))}
             </ul>
+            </>
           )}
 
           {hayMas && (
