@@ -38,7 +38,8 @@ interface ErrorWebPush {
 export async function notificarOfertadores(
   municipioCodigo: string,
   municipioNombre: string,
-  categoriaEtiqueta: string
+  categoriaEtiqueta: string,
+  itemIds: string[] = []
 ) {
   const supabase = createServiceClient()
 
@@ -50,20 +51,50 @@ export async function notificarOfertadores(
 
   if (!perfiles || perfiles.length === 0) return
 
+  const ids = perfiles.map((p) => p.id)
+
+  // Quien nos contó qué tiene recibe aviso solo si la solicitud pide algo
+  // de su lista. Quien no llenó inventario sigue recibiendo todo lo de sus
+  // municipios, como hasta ahora: el inventario es opcional y no puede
+  // convertirse en el precio de enterarse.
+  //
+  // Es la mitad que faltaba del cruce: hasta aquí uno tenía que entrar a
+  // mirar el tablero para saber que alguien necesitaba lo suyo.
+  const { data: inventarios } = await supabase
+    .from('ofrecimientos')
+    .select('perfil_id, item_id')
+    .in('perfil_id', ids)
+    .eq('disponible', true)
+
+  const tieneInventario = new Set((inventarios ?? []).map((o) => o.perfil_id))
+  const pedido = new Set(itemIds)
+  const calzan = new Set(
+    (inventarios ?? [])
+      .filter((o) => o.item_id !== null && pedido.has(o.item_id))
+      .map((o) => o.perfil_id)
+  )
+
+  const destinatarios = ids.filter((id) => !tieneInventario.has(id) || calzan.has(id))
+  if (destinatarios.length === 0) return
+
   const { data: suscripciones } = await supabase
     .from('push_ofertadores')
-    .select('id, endpoint, p256dh, auth_key')
-    .in(
-      'perfil_id',
-      perfiles.map((p) => p.id)
-    )
+    .select('id, perfil_id, endpoint, p256dh, auth_key')
+    .in('perfil_id', destinatarios)
 
   if (!suscripciones || suscripciones.length === 0) return
 
   configurar()
 
-  const payload = JSON.stringify({
+  // Dos mensajes, ninguno con nada que permita acercarse a quién pidió: el
+  // municipio y la categoría ya están en el tablero público.
+  const generico = JSON.stringify({
     body: `Alguien necesita ${categoriaEtiqueta.toLowerCase()} en ${municipioNombre}`,
+    tag: `solicitud-${municipioCodigo}`,
+    url: 'https://aquive.co/?municipio=' + municipioCodigo,
+  })
+  const conCoincidencia = JSON.stringify({
+    body: `Alguien necesita algo que tienes en ${municipioNombre}`,
     tag: `solicitud-${municipioCodigo}`,
     url: 'https://aquive.co/?municipio=' + municipioCodigo,
   })
@@ -75,7 +106,7 @@ export async function notificarOfertadores(
       try {
         await webpush.sendNotification(
           { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth_key } },
-          payload
+          calzan.has(s.perfil_id) ? conCoincidencia : generico
         )
       } catch (error) {
         const codigo = (error as ErrorWebPush).statusCode
