@@ -48,13 +48,16 @@ export default async function AliadoPage({
   const vista: Vista =
     ver === 'coincidencias' || ver === 'equipo' ? ver : 'conversaciones'
 
-  const [{ data: hilosData }, { data: cruceData }, { data: aliadoData }] =
+  const [{ data: hilosData }, { data: cruceData }, { data: ofrecidasData }, { data: aliadoData }] =
     await Promise.all([
       vista === 'conversaciones'
         ? supabase.rpc('mis_hilos')
         : Promise.resolve({ data: null }),
       vista === 'coincidencias' && esAliado
         ? supabase.rpc('coincidencias_para_aliado')
+        : Promise.resolve({ data: null }),
+      vista === 'coincidencias' && esAliado
+        ? supabase.rpc('respuestas_por_coordinar')
         : Promise.resolve({ data: null }),
       vista === 'equipo' && esAliado
         ? supabase.rpc('mi_aliado')
@@ -63,6 +66,7 @@ export default async function AliadoPage({
 
   const hilos = (hilosData as unknown as HiloResumen[]) ?? []
   const coincidencias = (cruceData as unknown as Coincidencia[]) ?? []
+  const yaOfrecieron = (ofrecidasData as unknown as Coincidencia[]) ?? []
   const organizaciones = (aliadoData as unknown as AliadoResumen[]) ?? []
 
   return (
@@ -110,13 +114,32 @@ export default async function AliadoPage({
       )}
 
       {vista === 'coincidencias' && (
-        <section className="mt-6">
-          <p className="text-base text-muted-foreground">
-            Gente de tus municipios que declaró tener justo lo que pide una
-            solicitud acompañada.
-          </p>
-          <PanelCoincidencias coincidencias={coincidencias} />
-        </section>
+        <>
+          {/* Primero quien YA se ofreció: es mejor señal que el cruce por
+              inventario. Esa persona no solo tiene la cosa — ya dijo que
+              quiere ayudar en esta solicitud concreta. Aparecen aquí
+              porque respondieron antes de que se pidiera acompañamiento,
+              así que su ofrecimiento se quedó fuera de la coordinación. */}
+          {yaOfrecieron.length > 0 && (
+            <section className="mt-6">
+              <h2 className="font-heading text-2xl">Ya ofrecieron ayuda</h2>
+              <p className="mt-1 text-base text-muted-foreground">
+                Respondieron antes de que se pidiera acompañamiento, así que
+                todavía no están en ninguna conversación.
+              </p>
+              <PanelCoincidencias coincidencias={yaOfrecieron} />
+            </section>
+          )}
+
+          <section className="mt-8">
+            <h2 className="font-heading text-2xl">Quién tiene lo que piden</h2>
+            <p className="mt-1 text-base text-muted-foreground">
+              Gente de tus municipios que declaró tener justo lo que pide una
+              solicitud acompañada.
+            </p>
+            <PanelCoincidencias coincidencias={coincidencias} />
+          </section>
+        </>
       )}
 
       {vista === 'equipo' && <Equipo organizaciones={organizaciones} miId={user.id} />}

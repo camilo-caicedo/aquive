@@ -73,21 +73,32 @@ export function PanelCoincidencias({ coincidencias }: { coincidencias: Coinciden
               <span className="text-base text-muted-foreground">{c.municipio}</span>
             </div>
 
-            <p className="mt-1 text-base">
-              {c.ofertador} tiene {c.items_coincidentes}{' '}
-              {c.items_coincidentes === 1 ? 'cosa' : 'cosas'} de las que piden
-            </p>
+            {/* Dos fuentes, la misma tarjeta: el cruce por inventario trae
+                ítems, y quien ya se ofreció trae lo que escribió. */}
+            {c.mensaje ? (
+              <>
+                <p className="mt-1 text-base">{c.ofertador} respondió esta solicitud</p>
+                <p className="mt-2 text-base text-muted-foreground">{c.mensaje}</p>
+              </>
+            ) : (
+              <>
+                <p className="mt-1 text-base">
+                  {c.ofertador} tiene {c.items_coincidentes}{' '}
+                  {c.items_coincidentes === 1 ? 'cosa' : 'cosas'} de las que piden
+                </p>
 
-            <ul className="mt-2 flex flex-wrap gap-1.5">
-              {c.detalle.map((d, i) => (
-                <li
-                  key={i}
-                  className="rounded-full bg-muted px-3.5 py-1.5 text-sm text-foreground"
-                >
-                  {d.cantidad} {d.unidad} de {d.nombre}
-                </li>
-              ))}
-            </ul>
+                <ul className="mt-2 flex flex-wrap gap-1.5">
+                  {c.detalle.map((d, i) => (
+                    <li
+                      key={i}
+                      className="rounded-full bg-muted px-3.5 py-1.5 text-sm text-foreground"
+                    >
+                      {d.cantidad} {d.unidad} de {d.nombre}
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
 
             {c.ya_hay_hilo ? (
               <p className="mt-3 text-base text-ok">Ya están en conversación</p>

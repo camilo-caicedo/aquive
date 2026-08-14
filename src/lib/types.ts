@@ -281,6 +281,12 @@ export interface Coincidencia {
   items_coincidentes: number
   detalle: Array<{ nombre: string; cantidad: number; unidad: string }>
   ya_hay_hilo: boolean
+  /**
+   * Solo cuando la fila viene de `respuestas_por_coordinar`: lo que esa
+   * persona escribió al ofrecerse. Con el cruce por inventario no hay
+   * mensaje, hay ítems.
+   */
+  mensaje?: string
 }
 
 // Lo que devuelve `exportar_planilla`. LLEVA DATOS PERSONALES y cada vez
@@ -387,6 +393,8 @@ export interface MiRespuesta {
   flujo: FlujoSolicitud
   expira_at: string
   num_respuestas: number
+  /** Si ya hay conversacion abierta con esta persona en esa solicitud. */
+  tiene_hilo: boolean
 }
 
 // Lo que devuelve `unirse_a_organizacion`.
@@ -1281,6 +1289,12 @@ export interface Database {
       // `respuestas` —que sí tiene política de fila propia— porque hace
       // falta el código y el municipio, y `solicitudes` está revocada.
       mis_respuestas: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      // Devuelve Coincidencia[], con `mensaje` en vez de ítems: quien ya
+      // ofreció ayuda en una solicitud acompañada y sigue sin hilo.
+      respuestas_por_coordinar: {
         Args: Record<string, never>
         Returns: Json
       }
