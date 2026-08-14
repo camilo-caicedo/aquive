@@ -4,8 +4,8 @@
   "description": "Publica qué insumos necesitas tras el sismo, sin dar datos personales.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#b45309",
+  "background_color": "#f5ead8",
+  "theme_color": "#8c491a",
   "lang": "es-CO",
   "icons": [
     {

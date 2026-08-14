@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { Marca } from '@/components/marca'
 import { Button } from '@/components/ui/button'
 import { Navegacion } from '@/components/navegacion'
 import { BotonAvisos } from '@/components/boton-avisos'
@@ -29,11 +29,13 @@ export async function Encabezado() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2">
-        <Link href="/" className="flex shrink-0 items-center gap-2">
-          <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <MapPin className="size-5" aria-hidden="true" />
-          </span>
-          <span className="text-lg font-bold tracking-tight">AquíVe</span>
+        {/* El gato va suelto, sin caja: la identidad dice que no se encierra
+            en un cuadro con borde cuando ya hay fondo. Antes había un
+            alfiler de mapa aquí, y ese alfiler prometía un mapa que AquíVe
+            no es. */}
+        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+          <Marca className="size-9 text-primary" />
+          <span className="font-heading text-2xl leading-none">AquíVe</span>
         </Link>
 
         <div className="flex shrink-0 items-center gap-2">
