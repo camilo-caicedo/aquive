@@ -89,6 +89,39 @@ Ese `181` frente a `182` es correcto: `panal_mascota` queda desactivado a
 propósito por el propio seed, para no romper referencias históricas desde
 `solicitud_items`.
 
+En un proyecto nuevo el total es `181`, no `182`: `panal_mascota` era una
+fila heredada del proyecto viejo y ningún archivo la crea.
+
+### Después del paso 5, siempre
+
+Insertar filas en `auth.users` a mano deja en `NULL` unas columnas que
+GoTrue lee como texto, y el login falla con un error que no menciona nada
+de esto:
+
+```
+sql: Scan error on column index 3, name "confirmation_token":
+converting NULL to string is unsupported
+```
+
+El proveedor de Google queda bien configurado, los registros de Auth
+muestran `/authorize` y `/callback` en `302` sin error, y aun así nadie
+puede entrar. Se arregla con cadenas vacías:
+
+```sql
+update auth.users set
+  confirmation_token         = coalesce(confirmation_token, ''),
+  recovery_token             = coalesce(recovery_token, ''),
+  email_change_token_new     = coalesce(email_change_token_new, ''),
+  email_change_token_current = coalesce(email_change_token_current, ''),
+  email_change               = coalesce(email_change, ''),
+  phone_change               = coalesce(phone_change, ''),
+  phone_change_token         = coalesce(phone_change_token, ''),
+  reauthentication_token     = coalesce(reauthentication_token, '');
+```
+
+`phone` **sí** se deja en `NULL`: tiene índice único y varias cadenas
+vacías chocarían entre sí.
+
 ---
 
 ## Consola — lo que no se puede automatizar
