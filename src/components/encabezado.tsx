@@ -14,23 +14,25 @@ export async function Encabezado() {
   // Solo se consulta si hay sesión: para un visitante anónimo no tiene
   // sentido pagar las consultas en cada carga. La RLS de `administradores`
   // solo deja ver la propia fila, así que esto no revela quién más lo es.
-  const [admin, perfil] = user
+  const [admin, perfil, aliado] = user
     ? await Promise.all([
         supabase.from('administradores').select('user_id').eq('user_id', user.id).maybeSingle(),
-        supabase.from('perfiles').select('id, tipo').eq('id', user.id).maybeSingle(),
+        supabase.from('perfiles').select('id').eq('id', user.id).maybeSingle(),
+        // La pertenencia REAL, no el tipo del perfil. Al principio esto se
+        // resolvía con `tipo = 'aliado'` para ahorrar una consulta, y la
+        // primera coordinadora de verdad no encontró su propio panel:
+        // tenía perfil de ofertador, que es lo que queda en cuanto alguien
+        // guarda un contacto en /registro. Una consulta más por carga es
+        // más barata que una persona que no encuentra dónde trabajar.
+        supabase.rpc('soy_aliado'),
       ])
-    : [null, null]
+    : [null, null, null]
 
   const esAdmin = !!admin?.data
   // El interruptor de avisos solo tiene sentido con perfil: los avisos
   // son de solicitudes en TUS municipios, y sin perfil no hay municipios.
   const tienePerfil = !!perfil?.data
-  // Del tipo del perfil y no de la pertenencia real: preguntar por la
-  // pertenencia costaría una consulta más en CADA carga de CADA página.
-  // Quien se unió a una organización teniendo ya perfil de ofertador no ve
-  // la pestaña; llega a /aliado por el enlace de la invitación, que es por
-  // donde llegó la primera vez.
-  const esAliado = perfil?.data?.tipo === 'aliado'
+  const esAliado = aliado?.data === true
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">

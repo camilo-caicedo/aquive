@@ -5204,3 +5204,27 @@ grant  execute on function public.panel_admin_flujo2() to authenticated;
 --   -- `suprimir_mis_datos` deja la solicitud en `directo`, sin identidad,
 --   -- con los hilos cerrados y los mensajes del titular reemplazados.
 
+
+create or replace function public.soy_aliado()
+returns boolean
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select exists (
+    select 1
+      from public.miembros_organizacion m
+      join public.organizaciones o on o.id = m.organizacion_id
+     where m.perfil_id = auth.uid()
+       and m.estado in ('activo','pendiente')
+       and o.activa
+  );
+$$;
+
+revoke execute on function public.soy_aliado() from public, anon;
+grant  execute on function public.soy_aliado() to authenticated;
+
+comment on function public.soy_aliado() is
+  'Solo para decidir si el encabezado muestra la pestaña «Mi organización». No autoriza nada: quien decide qué puede hacer un miembro es es_miembro_activo(), y cada RPC lo vuelve a comprobar.';
+

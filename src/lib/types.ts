@@ -1258,6 +1258,13 @@ export interface Database {
         }
         Returns: undefined
       }
+      // Solo para decidir si el encabezado muestra la pestaña «Mi
+      // organización». NO autoriza nada: quien decide qué puede hacer un
+      // miembro es es_miembro_activo(), y cada RPC lo vuelve a comprobar.
+      soy_aliado: {
+        Args: Record<string, never>
+        Returns: boolean
+      }
       // Habeas data y ciclo de vida (Fase I).
       //
       // `devolver_a_directo` y `expirar_solicitudes` NO están aquí, y es
