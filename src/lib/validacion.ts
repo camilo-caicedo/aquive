@@ -98,6 +98,56 @@ export function validarEnlace(etiqueta: string, url: string): string | null {
   return null
 }
 
+// ---------------------------------------------------------------------
+// Identidad (Flujo 2). Gemelas de las validaciones de `crear_identidad`.
+//
+// ⚠ NO se validan con `contienePII`, y es a propósito: su `\d{7,}` está
+// bien para una nota o un barrio —ahí siete dígitos seguidos son un
+// teléfono— y aquí rechazaría justo lo que hay que aceptar. Son funciones
+// nuevas y separadas; `contienePII` no se toca.
+//
+// La normalización tiene que dar lo mismo que `normalizar_documento` y
+// `normalizar_telefono` en Postgres: el hash con pepper se calcula sobre
+// el texto normalizado, y si los dos lados no coinciden, buscar a alguien
+// por su cédula no encuentra nada y nadie entiende por qué.
+// ---------------------------------------------------------------------
+
+// Regla O: sin datos de menores. TI y RC no aparecen aquí, y tampoco en
+// ningún desplegable — quedan fuera por no estar, no por una advertencia.
+export const TIPOS_DOCUMENTO = [
+  { valor: 'CC', etiqueta: 'Cédula de ciudadanía' },
+  { valor: 'CE', etiqueta: 'Cédula de extranjería' },
+  { valor: 'PEP', etiqueta: 'Permiso Especial de Permanencia' },
+  { valor: 'PPT', etiqueta: 'Permiso por Protección Temporal' },
+] as const
+
+function normalizarDocumento(documento: string) {
+  return documento.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+}
+
+function normalizarTelefono(telefono: string) {
+  const digitos = telefono.replace(/\D/g, '')
+  // La misma persona escribe +57 300…, 57300… y 300… según el día.
+  return digitos.length === 12 && digitos.startsWith('57') ? digitos.slice(2) : digitos
+}
+
+export function validarDocumento(tipo: string, numero: string): string | null {
+  if (!TIPOS_DOCUMENTO.some((t) => t.valor === tipo)) {
+    return 'Elige un tipo de documento'
+  }
+  if (!/^[A-Z0-9]{5,20}$/.test(normalizarDocumento(numero))) {
+    return 'El número de documento va entre 5 y 20 caracteres, sin espacios ni signos'
+  }
+  return null
+}
+
+export function validarTelefono(telefono: string): string | null {
+  if (!/^[0-9]{7,10}$/.test(normalizarTelefono(telefono))) {
+    return 'El teléfono va entre 7 y 10 dígitos'
+  }
+  return null
+}
+
 // El nombre de una cosa que alguien propone agregar al catálogo. Se aplica
 // en los dos sitios donde existe ese campo —publicar y registro— y también
 // del lado del servidor.

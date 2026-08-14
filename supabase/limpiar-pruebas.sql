@@ -41,6 +41,13 @@
 --   organizaciones    es_prueba              → invitaciones_organizacion y
 --                                              miembros_organizacion, las dos
 --                                              en CASCADE
+--   accesos_identidad es_prueba              (sin llave foránea viva: la
+--                                              bitácora SOBREVIVE a la
+--                                              identidad a propósito, así que
+--                                              hay que borrarla a mano. Las
+--                                              `identidades` en cambio se van
+--                                              solas con su solicitud o su
+--                                              perfil)
 --
 -- Actualizar en CADA fase que agregue una tabla.
 -- =====================================================================
@@ -65,6 +72,10 @@ union all
 select 'entidades', count(*) from public.entidades where es_prueba
 union all
 select 'organizaciones', count(*) from public.organizaciones where es_prueba
+union all
+select 'accesos_identidad', count(*) from public.accesos_identidad where es_prueba
+union all
+select 'identidades', count(*) from public.identidades where es_prueba
 order by 1;
 
 -- Lo que arrastra el CASCADE, para que el número no sorprenda:
@@ -133,6 +144,13 @@ begin;
 -- originó.
 delete from public.metricas where es_prueba;
 
+-- La bitácora de lecturas de identidad sobrevive a la identidad por diseño
+-- (regla N), así que ningún CASCADE se la lleva y hay que borrarla aquí.
+-- Va ANTES que las solicitudes solo por claridad: con `identidad_id` en ON
+-- DELETE SET NULL, el orden da igual, pero leerlo junto a `metricas`
+-- —lo otro que no cuelga de nada— es lo que evita que se olvide.
+delete from public.accesos_identidad where es_prueba;
+
 -- CASCADE: solicitud_items, respuestas, push_suscripciones.
 delete from public.solicitudes where es_prueba;
 
@@ -193,6 +211,8 @@ begin
        + (select count(*) from public.catalogo_items   where es_prueba)
        + (select count(*) from public.entidades        where es_prueba)
        + (select count(*) from public.organizaciones   where es_prueba)
+       + (select count(*) from public.accesos_identidad where es_prueba)
+       + (select count(*) from public.identidades      where es_prueba)
        + (select count(*) from auth.users where id::text like '00000000-0000-4000-8000-%')
     into v_restantes;
 

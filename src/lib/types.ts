@@ -22,6 +22,10 @@ export type TipoOrganizacion =
   | 'junta'
   | 'otra'
 export type RolMiembro = 'coordinador' | 'miembro'
+// Regla O: sin datos de menores. TI y RC no están, y no es un olvido —
+// un CHECK de la base los rechaza aunque alguien los escriba a mano.
+export type TipoDocumento = 'CC' | 'CE' | 'PEP' | 'PPT'
+export type TitularIdentidad = 'solicitante' | 'ofertador' | 'aliado'
 export type EstadoMiembro = 'pendiente' | 'activo' | 'inactivo'
 export type AccionMiembro =
   | 'aprobar'
@@ -180,6 +184,30 @@ export interface AliadoResumen {
   }
   equipo: MiembroEquipo[]
   invitaciones: InvitacionResumen[]
+}
+
+// Lo que devuelve `leer_identidad`. Cada vez que este objeto existe, hay
+// una fila nueva en `accesos_identidad` diciendo quién lo pidió y por qué
+// (regla N). No lo pases a un Client Component ni lo metas en un log.
+export interface IdentidadDescifrada {
+  id: string
+  titular_tipo: TitularIdentidad
+  nombre: string
+  documento_tipo: TipoDocumento
+  documento: string
+  telefono: string | null
+  autorizacion_version: string
+  autorizacion_at: string
+}
+
+// Lo que devuelve `buscar_identidad_presencial`. NO descifra nada: son los
+// cuatro últimos dígitos —que quien busca acaba de teclear— y el código de
+// la solicitud, que es lo que hace falta para seguir.
+export interface CoincidenciaIdentidad {
+  id: string
+  titular_tipo: TitularIdentidad
+  documento_ultimos4: string
+  solicitud_codigo: string | null
 }
 
 // Lo que devuelve `unirse_a_organizacion`.
@@ -1052,6 +1080,40 @@ export interface Database {
           p_valor: boolean
         }
         Returns: undefined
+      }
+      // Identidad cifrada (Fase E). `identidades` y `accesos_identidad` NO
+      // están tipadas como tablas, y es deliberado: están revocadas enteras
+      // y no hay ninguna lectura legítima que no pase por estas RPC, ni
+      // siquiera del lado del servidor. Tiparlas sería una invitación a
+      // hacer el `select` que no debe existir.
+      //
+      // Interna: la llama el servidor con la llave de servicio, como
+      // `destinatarios_aviso`. No cifra en el cliente y no devuelve nada
+      // descifrado.
+      crear_identidad: {
+        Args: {
+          p_titular_tipo: TitularIdentidad
+          p_nombre: string
+          p_documento_tipo: TipoDocumento
+          p_documento: string
+          p_autorizacion_version: string
+          p_telefono?: string | null
+          p_solicitud_id?: string | null
+          p_perfil_id?: string | null
+        }
+        Returns: string
+      }
+      // Devuelve IdentidadDescifrada y escribe bitácora ANTES de devolver.
+      // Falla si el motivo viene vacío.
+      leer_identidad: {
+        Args: { p_id: string; p_motivo: string }
+        Returns: Json
+      }
+      // Devuelve CoincidenciaIdentidad[]. Deja rastro incluso cuando no
+      // encuentra nada: una búsqueda a ciegas también es un acceso.
+      buscar_identidad_presencial: {
+        Args: { p_documento: string; p_motivo: string }
+        Returns: Json
       }
       crear_item_catalogo: {
         Args: { p_nombre: string; p_categoria: Categoria; p_unidad?: string }
