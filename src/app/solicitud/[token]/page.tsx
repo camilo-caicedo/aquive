@@ -7,6 +7,8 @@ import { horasParaVencer, describirItem, categoria } from '@/lib/catalogo'
 import type { SolicitudConRespuestas } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { ActivarAvisos } from '@/components/activar-avisos'
+import type { AliadoDelMunicipio } from '@/lib/acompanamiento'
+import { Acompanamiento } from './acompanamiento'
 import { PantallaConfirmacion } from './pantalla-confirmacion'
 import { GestionSolicitud } from './gestion-solicitud'
 import { ListaRespuestas } from './lista-respuestas'
@@ -44,6 +46,14 @@ export default async function SolicitudPage({
   }
 
   const solicitud = data as unknown as SolicitudConRespuestas
+
+  // Solo se pregunta si todavía no hay acompañamiento: si ya lo tiene, la
+  // organización viene con la solicitud y esta consulta sobra.
+  const { data: aliadoData } =
+    solicitud.flujo === 'directo'
+      ? await supabase.rpc('aliado_en_municipio', { p_municipio: solicitud.municipio })
+      : { data: null }
+  const aliado = (aliadoData as unknown as AliadoDelMunicipio | null) ?? null
 
   const headersList = await headers()
   const host = headersList.get('host') ?? 'localhost:3000'
@@ -94,6 +104,16 @@ export default async function SolicitudPage({
 
         <ListaRespuestas respuestas={solicitud.respuestas} />
       </section>
+
+      {/* Después de las respuestas y antes de los avisos: quien entra a esta
+          pantalla viene a ver si alguien le respondió, no a que le pidan
+          datos. El enlace está, pero no primero. */}
+      <Acompanamiento
+        token={token}
+        aliado={aliado}
+        flujo={solicitud.flujo}
+        organizacion={solicitud.organizacion}
+      />
 
       <section className="mt-8 space-y-3">
         <h2 className="font-heading text-2xl">Avisos</h2>

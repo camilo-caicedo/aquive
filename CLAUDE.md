@@ -74,10 +74,17 @@ organización aliada, y es otra cosa que un campo en la solicitud:
 - **Cada lectura deja rastro** en `accesos_identidad`, y ese rastro
   sobrevive a la identidad. Sin PII.
 
-Nada de esto se usa todavía: no hay pantalla que lo llame. Antes de que
-la haya tienen que estar los papeles de PLAN-V2 §12 — contrato de
-transmisión de datos con la fundación, registro en el RNBD, canal de
-habeas data y texto de autorización revisado.
+Desde la Fase F hay una pantalla que lo pide: en `/solicitud/[token]`,
+detrás de un enlace que empieza cerrado, y solo si el municipio tiene una
+organización activa. **Nada de eso puede desplegarse** hasta que estén los
+papeles de PLAN-V2 §12 — contrato de transmisión de datos con la
+fundación, registro en el RNBD, canal de habeas data y texto de
+autorización revisado.
+
+Y la forma de la interfaz también es regla, no gusto (regla R del plan):
+el botón grande es publicar directo, el acompañamiento se anuncia una vez
+en el paso de municipio y se acepta después, nunca viene preseleccionado,
+y la opción anónima no se pinta como la mala.
 
 ### 2. Sin campo de texto libre sin restricción
 

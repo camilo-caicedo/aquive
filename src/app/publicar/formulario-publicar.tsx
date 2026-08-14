@@ -6,12 +6,14 @@ import type { Categoria, ItemCatalogoPublico, ItemSolicitudInput } from '@/lib/t
 import type { MunicipioBasico as Municipio } from '@/lib/municipios'
 import { CATEGORIAS } from '@/lib/catalogo'
 import { validarBarrio, validarNota, validarSugerencia } from '@/lib/validacion'
+import { createClient } from '@/lib/supabase/client'
+import { AVISO_ALIADO_MUNICIPIO, type AliadoDelMunicipio } from '@/lib/acompanamiento'
 import { TurnstileWidget } from '@/components/turnstile-widget'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   Combobox,
   ComboboxContent,
@@ -74,6 +76,25 @@ export function FormularioPublicar({
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [aliado, setAliado] = useState<AliadoDelMunicipio | null>(null)
+  const [nombreMunicipio, setNombreMunicipio] = useState('')
+
+  // Se pregunta al elegir municipio y no en un efecto: es una consecuencia
+  // de lo que la persona acaba de tocar, no una sincronización. Si la
+  // consulta falla, no pasa nada — la tarjeta no aparece y publicar directo
+  // sigue funcionando igual, que es el camino por defecto.
+  async function elegirMunicipio(m: Municipio | null) {
+    setMunicipio(m?.codigo_dane ?? '')
+    setNombreMunicipio(m?.nombre ?? '')
+    setAliado(null)
+    if (!m) return
+
+    const supabase = createClient()
+    const { data } = await supabase.rpc('aliado_en_municipio', {
+      p_municipio: m.codigo_dane,
+    })
+    setAliado((data as unknown as AliadoDelMunicipio | null) ?? null)
+  }
 
   const errorBarrio = barrio ? validarBarrio(barrio) : null
   const errorNota = nota ? validarNota(nota) : null
@@ -193,7 +214,7 @@ export function FormularioPublicar({
             <Combobox
               items={municipios}
               value={municipios.find((m) => m.codigo_dane === municipio) ?? null}
-              onValueChange={(m: Municipio | null) => setMunicipio(m?.codigo_dane ?? '')}
+              onValueChange={elegirMunicipio}
               itemToStringLabel={(m: Municipio) => m.nombre}
               isItemEqualToValue={(a: Municipio, b: Municipio) => a.codigo_dane === b.codigo_dane}
             >
@@ -238,6 +259,22 @@ export function FormularioPublicar({
             />
             {errorBarrio && <p className="mt-1 text-sm text-destructive">{errorBarrio}</p>}
           </div>
+          {/* Regla R: esto ANUNCIA, no ofrece un camino alternativo. No hay
+              botón, no hay casilla y no hay nada preseleccionado — el único
+              botón de esta pantalla sigue siendo «Continuar», que publica
+              directo. Los datos se piden después, en la pantalla de la
+              solicitud, y solo si la persona vuelve a decir que sí. */}
+          {aliado && (
+            <Alert>
+              <AlertTitle>
+                En {nombreMunicipio} hay una fundación que puede acompañarte
+              </AlertTitle>
+              <AlertDescription>
+                {aliado.nombre}. {AVISO_ALIADO_MUNICIPIO}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Button className="w-full" disabled={!puedeAvanzarPaso1} onClick={() => setPaso(2)}>
             Continuar
           </Button>

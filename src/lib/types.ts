@@ -39,7 +39,15 @@ export type PermisoMiembro = 'puede_ver_identidad' | 'puede_moderar'
 export type ContactoTipo = 'whatsapp' | 'telefono'
 export type EntidadMatricula = 'COPNIA' | 'CPNAA' | 'COLPSIC' | 'ReTHUS' | 'SIRNA' | 'OTRA'
 export type AreaServicio = 'ingenieria' | 'arquitectura' | 'psicologia' | 'salud' | 'derecho'
-export type EstadoSolicitud = 'abierta' | 'cumplida'
+// 'en_coordinacion' y 'entregada_parcial' entran con la Fase F. Todavia
+// no los escribe nadie —los ponen G y H—, pero el predicado que los cubre
+// (estado_activo) ya esta en las cuatro consultas que filtraban 'abierta'.
+export type EstadoSolicitud =
+  | 'abierta'
+  | 'en_coordinacion'
+  | 'entregada_parcial'
+  | 'cumplida'
+export type FlujoSolicitud = 'directo' | 'acompanado'
 export type OrigenItem = 'semilla' | 'admin' | 'aliado' | 'sugerencia'
 export type OrigenSugerencia = 'solicitante' | 'ofertador' | 'aliado'
 export type EstadoSugerencia = 'pendiente' | 'aprobada' | 'rechazada' | 'fusionada'
@@ -284,6 +292,9 @@ export interface SolicitudConRespuestas {
   nota: string | null
   estado: EstadoSolicitud
   expira_at: string
+  flujo: FlujoSolicitud
+  /** Nombre de la fundacion que acompaña, o null en Flujo 1. Nunca su id. */
+  organizacion: string | null
   items: Array<ItemResumen & { cubierto: boolean }>
   respuestas: Array<{
     id: string
@@ -781,6 +792,10 @@ export interface Database {
           horas_hasta_cierre: number | null
           num_respuestas: number
           registrada_at: string
+          // De qué flujo venía. Sin esto, la única pregunta interesante que
+          // se puede responder después —si acompañar sirvió de algo— queda
+          // sin respuesta, y metricas es lo que sobrevive al proyecto.
+          flujo: FlujoSolicitud
           // Esta tabla no tiene FK: sin esta columna, las filas que dejan
           // las solicitudes de prueba no se pueden identificar después.
           es_prueba: boolean
@@ -821,6 +836,9 @@ export interface Database {
           // necesita lo que tengo?" no se puede filtrar.
           item_ids: string[]
           sugerencia_ids: string[]
+          // Solo si hay acompañamiento o no. De la organizacion y de la
+          // identidad no sale NADA por esta vista, que la lee anon.
+          flujo: FlujoSolicitud
         }
         Relationships: []
       }
@@ -1080,6 +1098,28 @@ export interface Database {
           p_valor: boolean
         }
         Returns: undefined
+      }
+      // Elección de flujo (Fase F). Devuelve {id, nombre} de UNA
+      // organización activa que cubra ese municipio, o null. Es lo único
+      // que se puede saber sin haber elegido nada todavía.
+      aliado_en_municipio: {
+        Args: { p_municipio: string }
+        Returns: Json
+      }
+      // Crea la identidad cifrada y marca la solicitud, en una sola
+      // transacción. Si falla, la solicitud se queda en 'directo', que es
+      // el modo seguro de fallar. No hay camino de vuelta (§7).
+      activar_acompanamiento: {
+        Args: {
+          p_token: string
+          p_organizacion_id: string
+          p_nombre: string
+          p_documento_tipo: TipoDocumento
+          p_documento: string
+          p_autorizacion_version: string
+          p_telefono?: string | null
+        }
+        Returns: Json
       }
       // Identidad cifrada (Fase E). `identidades` y `accesos_identidad` NO
       // están tipadas como tablas, y es deliberado: están revocadas enteras

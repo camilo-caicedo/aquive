@@ -518,8 +518,22 @@ create table if not exists public.solicitudes (
   categoria       text not null check (categoria in
                     ('alimentacion','aseo','salud','abrigo','cocina','otros','servicios','mascotas')),
   nota            text check (char_length(nota) <= 140),
+  -- `en_coordinacion` y `entregada_parcial` los escriben las Fases G y H.
+  -- Quien filtre por estado usa `estado_activo()`, nunca `= 'abierta'`:
+  -- esa es la trampa §5.3-1 del plan, y hacía desaparecer del tablero una
+  -- solicitud en coordinación.
   estado          text not null default 'abierta'
-                    check (estado in ('abierta','cumplida')),
+                    check (estado in ('abierta','en_coordinacion','entregada_parcial','cumplida')),
+  -- Flujo 1 o Flujo 2. `acompanado` significa que una organización aliada
+  -- coordina la entrega y que existe una fila en `identidades` colgando de
+  -- esta solicitud. Solo se pasa de uno a otro por
+  -- `activar_acompanamiento`; el camino de vuelta es automático (§7).
+  flujo           text not null default 'directo'
+                    check (flujo in ('directo','acompanado')),
+  -- SET NULL y no CASCADE: si la organización se borra, la solicitud NO se
+  -- va con ella. Quien pidió ayuda no pierde su solicitud porque la
+  -- fundación dejó de operar.
+  organizacion_id uuid references public.organizaciones(id) on delete set null,
   creada_at       timestamptz not null default now(),
   confirmada_at   timestamptz not null default now(),
   expira_at       timestamptz not null default now() + interval '72 hours',
@@ -527,11 +541,18 @@ create table if not exists public.solicitudes (
   -- `crear_solicitud` del prefijo del barrio y la propagan
   -- `cerrar_solicitud` y `expirar_solicitudes` a `metricas`, que no tiene
   -- FK por donde limpiar después. Se elimina al terminar las pruebas.
-  es_prueba       boolean not null default false
+  es_prueba       boolean not null default false,
+  -- `directo` no puede tener organización y `acompanado` no puede quedarse
+  -- sin ella. Va como CHECK y no como buena costumbre porque las dos rutas
+  -- que lo escriben son distintas.
+  constraint solicitudes_flujo_coherente check (
+    (flujo = 'directo'    and organizacion_id is null)
+    or (flujo = 'acompanado' and organizacion_id is not null)
+  )
 );
 
 comment on table public.solicitudes is
-  'PROHIBIDO agregar columnas con datos personales. Ver CLAUDE.md regla 1.';
+  'PROHIBIDO agregar columnas con datos personales. Ver CLAUDE.md regla 1. La identidad del Flujo 2 NO va aquí: vive cifrada en `identidades`, colgando de esta fila y muriendo con ella.';
 
 create index if not exists idx_solicitudes_municipio on public.solicitudes(municipio);
 create index if not exists idx_solicitudes_categoria on public.solicitudes(categoria);
@@ -621,6 +642,10 @@ create table if not exists public.metricas (
   horas_hasta_cierre      numeric(6,2),
   num_respuestas          integer not null default 0,
   registrada_at           timestamptz not null default now(),
+  -- De qué flujo venía. Sin esto, la única pregunta interesante que se
+  -- puede responder después —si acompañar sirvió de algo— queda sin
+  -- respuesta, y esta tabla es lo que sobrevive al proyecto.
+  flujo                   text not null default 'directo',
   -- Sin esta columna no habría forma de identificar después las filas que
   -- dejan las solicitudes de prueba: esta tabla no tiene ninguna FK y para
   -- cuando uno quiera limpiarla ya no existe la solicitud que la originó.
@@ -852,6 +877,20 @@ create index if not exists idx_accesos_identidad
 -- 7. Vistas públicas — lo único que el cliente puede leer
 -- ---------------------------------------------------------------------
 
+-- Los estados en los que una solicitud sigue viva y visible. Si algún día
+-- se agrega un estado, se agrega AQUÍ y no en cada consulta: los cuatro
+-- sitios que filtraban «estado = abierta» a mano son la trampa §5.3-1.
+create or replace function public.estado_activo(p_estado text)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as 2665
+  select p_estado in ('abierta','en_coordinacion','entregada_parcial');
+2665;
+
+revoke execute on function public.estado_activo(text) from public, anon, authenticated;
+
 create or replace view public.solicitudes_publicas as
 select
   s.id,
@@ -887,10 +926,14 @@ select
   (select coalesce(array_agg(si.item_id) filter (where si.item_id is not null), '{}')
      from public.solicitud_items si where si.solicitud_id = s.id) as item_ids,
   (select coalesce(array_agg(si.sugerencia_id) filter (where si.sugerencia_id is not null), '{}')
-     from public.solicitud_items si where si.solicitud_id = s.id) as sugerencia_ids
+     from public.solicitud_items si where si.solicitud_id = s.id) as sugerencia_ids,
+  -- ⚠ El flujo, y NADA más de la organización ni de la identidad. Esta
+  -- vista la lee `anon`: aquí no entra ni el nombre de quien pidió, ni los
+  -- cuatro últimos dígitos de su documento, ni el id de la fundación.
+  s.flujo
 from public.solicitudes s
 join public.municipios m on m.codigo_dane = s.municipio
-where s.estado = 'abierta'
+where public.estado_activo(s.estado)
   and s.expira_at > now();
 
 create or replace view public.servidores_publicos as
@@ -919,7 +962,7 @@ create or replace view public.municipios_con_solicitudes as
 select distinct m.codigo_dane, m.nombre, m.departamento
 from public.municipios m
 join public.solicitudes s on s.municipio = m.codigo_dane
-where s.estado = 'abierta' and s.expira_at > now();
+where public.estado_activo(s.estado) and s.expira_at > now();
 
 -- Directorio de quienes ofrecen insumos. A diferencia de
 -- `servidores_publicos`, NO expone `contacto_publico`: el contacto ocurre
@@ -1614,6 +1657,11 @@ begin
     'id', v_sol.id, 'codigo', v_sol.codigo, 'municipio', v_sol.municipio,
     'barrio', v_sol.barrio, 'categoria', v_sol.categoria, 'nota', v_sol.nota,
     'estado', v_sol.estado, 'expira_at', v_sol.expira_at,
+    'flujo', v_sol.flujo,
+    -- El NOMBRE de la organización, nunca su identificador ni nada de la
+    -- identidad: los datos que entregó no se le vuelven a mostrar.
+    'organizacion', (select o.nombre from public.organizaciones o
+                      where o.id = v_sol.organizacion_id),
     'items', v_items, 'respuestas', v_resp
   );
 end;
@@ -1633,7 +1681,7 @@ begin
   update public.solicitudes
      set expira_at = now() + interval '72 hours', confirmada_at = now()
    where token_hash = encode(extensions.digest(p_token, 'sha256'), 'hex')
-     and estado = 'abierta'
+     and public.estado_activo(estado)
   returning expira_at into v_expira;
 
   if not found then raise exception 'Solicitud no encontrada'; end if;
@@ -1658,11 +1706,11 @@ begin
 
   insert into public.metricas (
     municipio, categoria, cumplida, horas_hasta_respuesta,
-    horas_hasta_cierre, num_respuestas, es_prueba)
+    horas_hasta_cierre, num_respuestas, es_prueba, flujo)
   select v_sol.municipio, v_sol.categoria, p_cumplida,
          extract(epoch from (min(r.creada_at) - v_sol.creada_at)) / 3600,
          extract(epoch from (now() - v_sol.creada_at)) / 3600,
-         count(r.id), v_sol.es_prueba
+         count(r.id), v_sol.es_prueba, v_sol.flujo
     from public.respuestas r where r.solicitud_id = v_sol.id;
 
   delete from public.solicitudes where id = v_sol.id;   -- CASCADE limpia todo
@@ -2004,7 +2052,7 @@ begin
   select s.id into v_solicitud_id
     from public.solicitudes s
    where s.codigo = upper(trim(p_codigo))
-     and s.estado = 'abierta'
+     and public.estado_activo(s.estado)
      and s.expira_at > now();
 
   if v_solicitud_id is null then
@@ -3063,8 +3111,27 @@ security definer
 stable
 set search_path = ''
 as $$
-  select public.es_admin(auth.uid())
-     and exists (select 1 from public.identidades i where i.id = p_identidad_id);
+  select
+    (public.es_admin(auth.uid())
+       and exists (select 1 from public.identidades i where i.id = p_identidad_id))
+    -- Cuatro condiciones, todas: miembro activo, con permiso, de la
+    -- organización que acompaña ESA solicitud, y con la organización
+    -- activa. Las identidades que cuelgan de un perfil —ofertadores y
+    -- aliados— siguen siendo solo del administrador: quién puede verlas
+    -- depende de la conversación en la que aparezcan, y eso es de la
+    -- Fase G.
+    or exists (
+      select 1
+        from public.identidades i
+        join public.solicitudes s          on s.id = i.solicitud_id
+        join public.miembros_organizacion m on m.organizacion_id = s.organizacion_id
+        join public.organizaciones o        on o.id = m.organizacion_id
+       where i.id = p_identidad_id
+         and s.flujo             = 'acompanado'
+         and m.perfil_id         = auth.uid()
+         and m.estado            = 'activo'
+         and m.puede_ver_identidad
+         and o.activa);
 $$;
 
 revoke execute on function public.puede_leer_identidad(uuid) from public, anon, authenticated;
@@ -3205,6 +3272,106 @@ $$;
 
 revoke execute on function public.buscar_identidad_presencial(text,text) from public, anon;
 grant  execute on function public.buscar_identidad_presencial(text,text) to authenticated;
+
+-- ---------------------------------------------------------------------
+-- Elección de flujo (Fase F). Ver migración v2-f1.
+--
+-- `aliado_en_municipio` devuelve UNA organización activa que cubra ese
+-- municipio, con su nombre y su id, y nada más: ni cuántas hay, ni dónde
+-- queda su acopio, ni cuánta gente tiene dentro. Devuelve una sola a
+-- propósito — un desplegable de fundaciones convertiría una oferta en una
+-- decisión de compras, y quien publica a las tres de la mañana no está
+-- para elegir proveedor.
+-- ---------------------------------------------------------------------
+
+create or replace function public.aliado_en_municipio(p_municipio text)
+returns jsonb
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select jsonb_build_object('id', o.id, 'nombre', o.nombre)
+    from public.organizaciones o
+   where o.activa
+     and p_municipio = any(o.municipios)
+   order by o.creada_at
+   limit 1;
+$$;
+
+grant execute on function public.aliado_en_municipio(text) to anon, authenticated;
+
+-- Una sola transacción: crea la identidad cifrada y marca la solicitud. Si
+-- el cifrado falla —por ejemplo porque falta el secreto del Vault—, no
+-- queda una solicitud acompañada sin identidad: no queda nada.
+--
+-- La autoriza el token portador, que es lo único que tiene quien pidió
+-- ayuda. NO existe el camino de vuelta: quien se arrepienta borra y
+-- republica, que además es su derecho de supresión (§7).
+create or replace function public.activar_acompanamiento(
+  p_token                text,
+  p_organizacion_id      uuid,
+  p_nombre               text,
+  p_documento_tipo       text,
+  p_documento            text,
+  p_autorizacion_version text,
+  p_telefono             text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_sol public.solicitudes;
+  v_org public.organizaciones;
+begin
+  select * into v_sol from public.solicitudes s
+   where s.token_hash = encode(extensions.digest(p_token, 'sha256'), 'hex')
+     and public.estado_activo(s.estado)
+     and s.expira_at > now();
+
+  if v_sol.id is null then
+    raise exception 'Solicitud no encontrada o vencida';
+  end if;
+
+  if v_sol.flujo = 'acompanado' then
+    raise exception 'Esta solicitud ya tiene acompañamiento';
+  end if;
+
+  select * into v_org from public.organizaciones o
+   where o.id = p_organizacion_id and o.activa;
+
+  if v_org.id is null then
+    raise exception 'Esa organización no está disponible';
+  end if;
+
+  -- Que la fundación trabaje donde está la solicitud. Sin esto, quien
+  -- conozca un identificador de organización podría colgarle solicitudes
+  -- de cualquier parte del país.
+  if not (v_sol.municipio = any(v_org.municipios)) then
+    raise exception 'Esa organización no trabaja en el municipio de esta solicitud';
+  end if;
+
+  -- Primero la identidad: si algo de esto falla, la solicitud no llega a
+  -- marcarse y se queda como estaba.
+  perform public.crear_identidad(
+    'solicitante', p_nombre, p_documento_tipo, p_documento,
+    p_autorizacion_version, p_telefono, v_sol.id, null);
+
+  update public.solicitudes
+     set flujo = 'acompanado', organizacion_id = v_org.id
+   where id = v_sol.id;
+
+  return jsonb_build_object(
+    'codigo',       v_sol.codigo,
+    'organizacion', v_org.nombre
+  );
+end;
+$$;
+
+grant execute on function public.activar_acompanamiento(text,uuid,text,text,text,text,text)
+  to anon, authenticated;
 
 -- Sugerencias de ítem: aprobar, rechazar o fusionar.
 --
@@ -3511,15 +3678,15 @@ declare v_n integer;
 begin
   insert into public.metricas (
     municipio, categoria, cumplida, horas_hasta_respuesta,
-    horas_hasta_cierre, num_respuestas, es_prueba)
+    horas_hasta_cierre, num_respuestas, es_prueba, flujo)
   select s.municipio, s.categoria, false,
          extract(epoch from (min(r.creada_at) - s.creada_at)) / 3600,
          extract(epoch from (s.expira_at - s.creada_at)) / 3600,
-         count(r.id), s.es_prueba
+         count(r.id), s.es_prueba, s.flujo
     from public.solicitudes s
     left join public.respuestas r on r.solicitud_id = s.id
    where s.expira_at <= now()
-   group by s.id, s.municipio, s.categoria, s.creada_at, s.expira_at, s.es_prueba;
+   group by s.id, s.municipio, s.categoria, s.creada_at, s.expira_at, s.es_prueba, s.flujo;
 
   delete from public.solicitudes where expira_at <= now();
   get diagnostics v_n = row_count;
