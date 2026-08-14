@@ -8,7 +8,7 @@ import { FormularioUnirse } from './formulario-unirse'
 // va en el path —/unirse/<slug>/<código>— y sin él la misma pantalla
 // sirve para entrar a la cola de aprobación.
 export const metadata: Metadata = {
-  title: 'Unirse a una organización · AquíVe',
+  title: 'Unirse a una organización',
   // Un enlace de invitación no tiene por qué acabar indexado.
   robots: { index: false, follow: false },
 }

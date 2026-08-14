@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PanelEquipo } from './panel-equipo'
 
 export const metadata: Metadata = {
-  title: 'Mi organización · AquíVe',
+  title: 'Mi organización',
   robots: { index: false, follow: false },
 }
 
