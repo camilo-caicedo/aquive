@@ -654,6 +654,20 @@ export interface Database {
         Args: { p_item_ids: string[] }
         Returns: Json
       }
+      // Interna: solo la llama el route handler con la llave de servicio.
+      // Resuelve en la base a quién avisar, porque traer los inventarios
+      // para cruzarlos en TypeScript chocaba con el tope de 1000 filas de
+      // PostgREST y metía uuid de personas en la URL de un GET.
+      destinatarios_aviso: {
+        Args: { p_municipio: string; p_item_ids: string[] }
+        Returns: Array<{
+          suscripcion_id: string
+          endpoint: string
+          p256dh: string
+          auth_key: string
+          calza: boolean
+        }>
+      }
       // Devuelve cada sugerencia pendiente con los ítems parecidos del
       // catálogo, para que fusionar cueste lo mismo que aprobar.
       sugerencias_pendientes: {

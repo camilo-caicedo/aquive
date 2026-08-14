@@ -43,51 +43,31 @@ export async function notificarOfertadores(
 ) {
   const supabase = createServiceClient()
 
-  const { data: perfiles } = await supabase
-    .from('perfiles')
-    .select('id')
-    .eq('suspendido', false)
-    .contains('municipios', [municipioCodigo])
-
-  if (!perfiles || perfiles.length === 0) return
-
-  const ids = perfiles.map((p) => p.id)
-
-  // Quien nos contó qué tiene recibe aviso solo si la solicitud pide algo
-  // de su lista. Quien no llenó inventario sigue recibiendo todo lo de sus
-  // municipios, como hasta ahora: el inventario es opcional y no puede
-  // convertirse en el precio de enterarse.
+  // Quién recibe se decide en la base, en una sola consulta, y no trayendo
+  // los inventarios para cruzarlos aquí. Dos razones, las dos descubiertas
+  // en revisión y las dos silenciosas:
   //
-  // Es la mitad que faltaba del cruce: hasta aquí uno tenía que entrar a
-  // mirar el tablero para saber que alguien necesitaba lo suyo.
-  const { data: inventarios } = await supabase
-    .from('ofrecimientos')
-    .select('perfil_id, item_id')
-    .in('perfil_id', ids)
-    .eq('disponible', true)
+  //   · PostgREST corta en 1000 filas —el mismo tope que obligó a crear
+  //     `listar_municipios`— y la llave de servicio no exime. Con 150
+  //     perfiles de 10 ítems, la lista llegaba truncada y sin orden, y
+  //     alguien con exactamente lo que se pedía podía perderse el aviso.
+  //   · `.in('perfil_id', [...])` mete todos los uuid en el query string de
+  //     un GET: con unos cientos de perfiles la URL revienta, la respuesta
+  //     vuelve nula y el filtro desaparece entero.
+  //
+  // Y de paso deja de mandar uuid de personas por la URL (regla 6).
+  const { data: destinatarios } = await supabase.rpc('destinatarios_aviso', {
+    p_municipio: municipioCodigo,
+    p_item_ids: itemIds,
+  })
 
-  const tieneInventario = new Set((inventarios ?? []).map((o) => o.perfil_id))
-  const pedido = new Set(itemIds)
-  const calzan = new Set(
-    (inventarios ?? [])
-      .filter((o) => o.item_id !== null && pedido.has(o.item_id))
-      .map((o) => o.perfil_id)
-  )
-
-  const destinatarios = ids.filter((id) => !tieneInventario.has(id) || calzan.has(id))
-  if (destinatarios.length === 0) return
-
-  const { data: suscripciones } = await supabase
-    .from('push_ofertadores')
-    .select('id, perfil_id, endpoint, p256dh, auth_key')
-    .in('perfil_id', destinatarios)
-
-  if (!suscripciones || suscripciones.length === 0) return
+  if (!destinatarios || destinatarios.length === 0) return
 
   configurar()
 
   // Dos mensajes, ninguno con nada que permita acercarse a quién pidió: el
-  // municipio y la categoría ya están en el tablero público.
+  // municipio y la categoría ya están en el tablero público. El de
+  // coincidencia no dice cuál ítem calzó.
   const generico = JSON.stringify({
     body: `Alguien necesita ${categoriaEtiqueta.toLowerCase()} en ${municipioNombre}`,
     tag: `solicitud-${municipioCodigo}`,
@@ -102,15 +82,15 @@ export async function notificarOfertadores(
   const muertas: string[] = []
 
   await Promise.all(
-    suscripciones.map(async (s) => {
+    destinatarios.map(async (d) => {
       try {
         await webpush.sendNotification(
-          { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth_key } },
-          calzan.has(s.perfil_id) ? conCoincidencia : generico
+          { endpoint: d.endpoint, keys: { p256dh: d.p256dh, auth: d.auth_key } },
+          d.calza ? conCoincidencia : generico
         )
       } catch (error) {
         const codigo = (error as ErrorWebPush).statusCode
-        if (codigo === 404 || codigo === 410) muertas.push(s.id)
+        if (codigo === 404 || codigo === 410) muertas.push(d.suscripcion_id)
       }
     })
   )

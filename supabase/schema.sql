@@ -501,6 +501,9 @@ grant execute on function public.listar_municipios() to anon, authenticated;
 -- que es la frontera de seguridad y no incluye `token_hash`.
 -- ---------------------------------------------------------------------
 
+create index if not exists idx_items_item on public.solicitud_items(item_id)
+  where item_id is not null;
+
 create or replace function public.solicitudes_que_calzan(
   p_item_ids  text[],
   p_municipio text default null,
@@ -530,11 +533,8 @@ stable
 as $$
 declare
   v_limite integer := least(greatest(coalesce(p_limite, 20), 1), 50);
-  v_desde  integer := greatest(coalesce(p_desde, 0), 0);
+  v_desde  integer := least(greatest(coalesce(p_desde, 0), 0), 10000);
 begin
-  -- Guardas de tamaño en un endpoint que llama `anon`. El tope de 12 es el
-  -- mismo que el de ítems por solicitud, para que la cabeza no tenga que
-  -- sostener dos números distintos.
   if p_item_ids is null or cardinality(p_item_ids) = 0 then
     return;
   end if;
@@ -543,26 +543,25 @@ begin
   end if;
 
   return query
+  with calces as (
+    select si.solicitud_id, count(*)::integer as n
+      from public.solicitud_items si
+     where si.item_id = any(p_item_ids)
+     group by si.solicitud_id
+  )
   select sp.id, sp.codigo, sp.municipio, sp.municipio_nombre, sp.barrio,
          sp.categoria, sp.nota, sp.creada_at, sp.confirmada_at, sp.expira_at,
-         sp.horas_sin_confirmar, sp.num_respuestas, sp.items,
-         cardinality(array(
-           select unnest(sp.item_ids) intersect select unnest(p_item_ids)
-         ))::integer as coincidencias
-    from public.solicitudes_publicas sp
-   where sp.item_ids && p_item_ids
-     and (p_municipio is null or sp.municipio = p_municipio)
-   order by coincidencias desc, sp.creada_at desc
+         sp.horas_sin_confirmar, sp.num_respuestas, sp.items, c.n
+    from calces c
+    join public.solicitudes_publicas sp on sp.id = c.solicitud_id
+   where p_municipio is null or sp.municipio = p_municipio
+   order by c.n desc, sp.creada_at desc
    limit v_limite offset v_desde;
 end;
 $$;
 
 grant execute on function public.solicitudes_que_calzan(text[],text,integer,integer)
   to anon, authenticated;
-
--- ---------------------------------------------------------------------
--- Los municipios donde hay algo que calce, para el filtro del segundo modo
--- ---------------------------------------------------------------------
 
 create or replace function public.municipios_que_calzan(p_item_ids text[])
 returns jsonb
@@ -578,15 +577,96 @@ as $$
          ) order by t.municipio_nombre), '[]'::jsonb)
   from (
     select sp.municipio, sp.municipio_nombre, count(*) as total
-      from public.solicitudes_publicas sp
-     where p_item_ids is not null
-       and cardinality(p_item_ids) between 1 and 12
-       and sp.item_ids && p_item_ids
+      from (
+        select distinct si.solicitud_id
+          from public.solicitud_items si
+         where p_item_ids is not null
+           and cardinality(p_item_ids) between 1 and 12
+           and si.item_id = any(p_item_ids)
+      ) c
+      join public.solicitudes_publicas sp on sp.id = c.solicitud_id
      group by sp.municipio, sp.municipio_nombre
+     -- Cota dura: el desplegable no puede crecer sin techo, y sin ella
+     -- esta función agregaba la vista entera en cada llamada anónima.
+     limit 100
   ) t;
 $$;
 
 grant execute on function public.municipios_que_calzan(text[]) to anon, authenticated;
+
+-- ---------------------------------------------------------------------
+-- 2. A quién avisar, resuelto en la base
+--
+-- Antes se traían todos los `ofrecimientos` de los perfiles del municipio
+-- y se cruzaba en TypeScript. Dos fallos silenciosos ahí:
+--
+--   · PostgREST corta en 1000 filas —el mismo tope que obligó a crear
+--     `listar_municipios`— y la llave de servicio no exime. Con 150
+--     perfiles de 10 ítems, la lista llegaba truncada y sin orden: alguien
+--     con inventario podía quedar clasificado como "tiene, pero no calza"
+--     y perderse justo el aviso que le interesaba.
+--   · `.in('perfil_id', [...])` mete todos los uuid en el query string de
+--     un GET. Con unos cientos de perfiles la URL revienta, la respuesta
+--     vuelve nula, y el filtro desaparece entero sin ningún síntoma.
+--
+-- De paso deja de mandar uuid de personas por la URL (regla 6).
+--
+-- `tiene_inventario` NO mira `disponible`: quien marcó todo lo suyo como
+-- no disponible está diciendo "ahora no", no "no me llenaste el perfil".
+-- Devolverlo a la rama de "avísame todo" era lo contrario de lo que pidió.
+-- ---------------------------------------------------------------------
+
+create or replace function public.destinatarios_aviso(
+  p_municipio text,
+  p_item_ids  text[]
+)
+returns table (
+  suscripcion_id uuid,
+  endpoint       text,
+  p256dh         text,
+  auth_key       text,
+  calza          boolean
+)
+language sql
+security definer
+set search_path = ''
+stable
+as $$
+  select po.id, po.endpoint, po.p256dh, po.auth_key,
+         coalesce(cal.calza, false)
+    from public.push_ofertadores po
+    join public.perfiles p on p.id = po.perfil_id
+    left join lateral (
+      select bool_or(o.item_id = any(p_item_ids)) as calza,
+             count(*) > 0                        as tiene
+        from public.ofrecimientos o
+       where o.perfil_id = p.id
+    ) inv on true
+    left join lateral (
+      select bool_or(o.item_id = any(p_item_ids)) as calza
+        from public.ofrecimientos o
+       where o.perfil_id = p.id and o.disponible
+    ) cal on true
+   where p.suspendido = false
+     and p_municipio = any(p.municipios)
+     -- Sin inventario declarado: recibe todo lo de sus municipios, como
+     -- siempre. El inventario es opcional y no puede volverse el precio de
+     -- enterarse.
+     and (
+       coalesce(inv.tiene, false) = false
+       -- Con inventario: solo si la solicitud pide algo suyo…
+       or coalesce(cal.calza, false)
+       -- …o si la solicitud no trae ningún ítem del catálogo con el que
+       -- cruzar, que pasa cuando todo lo que pidió es una sugerencia. Sin
+       -- esto, quien se tomó el trabajo de declarar qué tiene era el único
+       -- que no se enteraba.
+       or p_item_ids is null
+       or cardinality(p_item_ids) = 0
+     );
+$$;
+
+revoke execute on function public.destinatarios_aviso(text,text[])
+  from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------
 -- 8. RLS
@@ -612,6 +692,7 @@ revoke all on public.push_ofertadores    from anon, authenticated;
 -- Igual que `solicitudes`: cero políticas es deliberado. La frontera son
 -- `guardar_ofrecimientos` y `mis_ofrecimientos`, no una política.
 revoke all on public.ofrecimientos      from anon, authenticated;
+revoke all on public.solicitud_items    from anon, authenticated;
 grant select on public.solicitudes_publicas to anon, authenticated;
 grant select on public.servidores_publicos  to anon, authenticated;
 
@@ -626,9 +707,12 @@ create policy "municipios lectura publica" on public.municipios
 create policy "servicios lectura publica" on public.catalogo_servicios
   for select to public using (activo = true);
 
--- Ítems: legibles porque no contienen nada personal
-create policy "items lectura publica" on public.solicitud_items
-  for select to public using (true);
+-- Ítems: NO legibles por el cliente. Tuvo política `using (true)` hasta
+-- agosto de 2026, y eso contradecía que la vista sea la frontera:
+-- `GET /rest/v1/solicitud_items` devolvía los ítems de TODAS las
+-- solicitudes, incluidas las cumplidas y las vencidas que el job todavía no
+-- ha borrado, que es justo lo que `solicitudes_publicas` oculta. Nada de
+-- `src/` la lee directo: todo pasa por la vista o por RPC.
 
 -- Sugerencias: nadie escribe directo, solo por RPC. La única lectura de
 -- tabla es la del administrador, que necesita la cola en /admin. El resto
