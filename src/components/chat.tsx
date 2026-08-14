@@ -23,16 +23,22 @@ const ETIQUETA_ROL: Record<RolEnConversacion, string> = {
   admin: 'Moderación de AquíVe',
 }
 
-// Treinta segundos, y solo con la pestaña a la vista.
+// Cinco segundos, y solo con la pestaña a la vista. Además se refresca al
+// volver a la pestaña, que es el momento en que de verdad se nota el
+// retraso: uno vuelve del WhatsApp y quiere ver si contestaron.
 //
 // El plan pedía Supabase Realtime «no polling», y su razón era de cuota:
 // sondear desde Vercel se come el millón de invocaciones del plan Hobby.
 // Aquí el sondeo va del NAVEGADOR a Supabase, sin pasar por Vercel, así
-// que no gasta ni una invocación. Y Realtime no se puede usar tal cual:
-// `postgres_changes` respeta RLS, estas tablas están revocadas enteras, y
-// uno de los tres participantes es anónimo con token, así que no hay
-// `auth.uid()` con el que autorizarlo.
-const CADA_MS = 30_000
+// que no gasta ni una invocación.
+//
+// Y `postgres_changes` no sirve tal cual: respeta RLS, estas tablas están
+// revocadas enteras, y uno de los tres participantes es anónimo con token,
+// así que no hay `auth.uid()` con el que autorizarlo. La vía que sí
+// funcionaría es un broadcast SIN contenido —«pasó algo en este hilo»— que
+// dispare esta misma consulta; queda pendiente si cinco segundos se
+// quedan cortos.
+const CADA_MS = 5_000
 
 export function Chat({
   conversacionId,
@@ -80,7 +86,16 @@ export function Chat({
     }
 
     const id = setInterval(refrescar, CADA_MS)
-    return () => clearInterval(id)
+    // Al volver a la pestaña no se espera al siguiente turno del reloj:
+    // ese es justo el instante en que el retraso se siente.
+    document.addEventListener('visibilitychange', refrescar)
+    window.addEventListener('focus', refrescar)
+
+    return () => {
+      clearInterval(id)
+      document.removeEventListener('visibilitychange', refrescar)
+      window.removeEventListener('focus', refrescar)
+    }
   }, [conversacionId, token])
 
   async function enviar() {
