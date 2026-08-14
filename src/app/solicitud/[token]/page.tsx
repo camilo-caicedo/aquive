@@ -1,8 +1,8 @@
-import { headers } from 'next/headers'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MessageSquare, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { origenDelSitio } from '@/lib/origen'
 import { horasParaVencer, describirItem, categoria } from '@/lib/catalogo'
 import type { SolicitudConRespuestas } from '@/lib/types'
 import { Button } from '@/components/ui/button'
@@ -65,11 +65,7 @@ export default async function SolicitudPage({
       : { data: null }
   const hilos = (hilosData as unknown as ConversacionDelSolicitante[]) ?? []
 
-  const headersList = await headers()
-  const host = headersList.get('host') ?? 'localhost:3000'
-  const protocol =
-    headersList.get('x-forwarded-proto') ?? (host.startsWith('localhost') ? 'http' : 'https')
-  const link = `${protocol}://${host}/solicitud/${token}`
+  const link = `${await origenDelSitio()}/solicitud/${token}`
 
   const horasRestantes = Math.max(0, Math.round(horasParaVencer(solicitud.expira_at)))
 

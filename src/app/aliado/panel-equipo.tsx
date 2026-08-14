@@ -21,15 +21,17 @@ function fecha(iso: string) {
 function Invitacion({
   invitacion,
   slug,
+  origen,
   onCambio,
 }: {
   invitacion: InvitacionResumen
   slug: string
+  origen: string
   onCambio: () => void
 }) {
   const [copiado, setCopiado] = useState(false)
   const [enviando, setEnviando] = useState(false)
-  const enlace = enlaceInvitacion(slug, invitacion.codigo)
+  const enlace = enlaceInvitacion(origen, slug, invitacion.codigo)
 
   // Mismo QR que la pantalla de confirmación de una solicitud: se genera
   // en el navegador, no viaja a ningún servicio de terceros.
@@ -271,12 +273,15 @@ function Miembro({
 export function PanelEquipo({
   organizacionId,
   slug,
+  origen,
   miId,
   equipo,
   invitaciones,
 }: {
   organizacionId: string
   slug: string
+  /** Calculado en el servidor: un cliente no puede sin romper la hidratación. */
+  origen: string
   miId: string
   equipo: MiembroEquipo[]
   invitaciones: InvitacionResumen[]
@@ -339,6 +344,7 @@ export function PanelEquipo({
                 key={i.id}
                 invitacion={i}
                 slug={slug}
+                origen={origen}
                 onCambio={() => router.refresh()}
               />
             ))}

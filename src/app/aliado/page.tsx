@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { origenDelSitio } from '@/lib/origen'
 import { listarMunicipios } from '@/lib/municipios'
 import type { AliadoResumen, Coincidencia, HiloResumen } from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -34,6 +35,7 @@ export default async function AliadoPage() {
   const organizaciones = (datos as unknown as AliadoResumen[]) ?? []
   const hilos = (hilosData as unknown as HiloResumen[]) ?? []
   const coincidencias = (cruceData as unknown as Coincidencia[]) ?? []
+  const origen = await origenDelSitio()
   const nombreMunicipio = new Map(municipios.map((m) => [m.codigo_dane, m.nombre]))
 
   return (
@@ -128,6 +130,7 @@ export default async function AliadoPage() {
                   <PanelEquipo
                     organizacionId={organizacion.id}
                     slug={organizacion.slug}
+                    origen={origen}
                     miId={user.id}
                     equipo={equipo}
                     invitaciones={invitaciones}

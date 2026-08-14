@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { origenDelSitio } from '@/lib/origen'
 import { listarMunicipios } from '@/lib/municipios'
 import { ENTIDADES_MATRICULA } from '@/lib/config'
 import { categoria } from '@/lib/catalogo'
@@ -120,6 +121,7 @@ export default async function AdminPage() {
 
   // El código DANE no le dice nada a quien está verificando una matrícula.
   const municipios = await listarMunicipios(supabase)
+  const origen = await origenDelSitio()
   const nombreMunicipio = new Map(
     (municipios ?? []).map((m) => [m.codigo_dane, m.nombre])
   )
@@ -274,7 +276,11 @@ export default async function AdminPage() {
             en adelante el equipo lo arma la organización.
           </AlertDescription>
         </Alert>
-        <PanelOrganizaciones organizaciones={organizaciones} municipios={municipios} />
+        <PanelOrganizaciones
+          organizaciones={organizaciones}
+          municipios={municipios}
+          origen={origen}
+        />
       </section>
 
       {flujo2 && (

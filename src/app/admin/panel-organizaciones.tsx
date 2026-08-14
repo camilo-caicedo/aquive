@@ -257,15 +257,17 @@ function FormularioOrganizacion({
 function Invitacion({
   invitacion,
   slug,
+  origen,
   onCambio,
 }: {
   invitacion: InvitacionResumen
   slug: string
+  origen: string
   onCambio: () => void
 }) {
   const [copiado, setCopiado] = useState(false)
   const [enviando, setEnviando] = useState(false)
-  const enlace = enlaceInvitacion(slug, invitacion.codigo)
+  const enlace = enlaceInvitacion(origen, slug, invitacion.codigo)
 
   async function copiar() {
     await navigator.clipboard.writeText(enlace)
@@ -310,10 +312,12 @@ function Invitacion({
 function FichaOrganizacion({
   organizacion,
   nombreMunicipio,
+  origen,
   onEditar,
 }: {
   organizacion: OrganizacionAdmin
   nombreMunicipio: (codigo: string) => string
+  origen: string
   onEditar: () => void
 }) {
   const router = useRouter()
@@ -379,6 +383,7 @@ function FichaOrganizacion({
               key={i.id}
               invitacion={i}
               slug={organizacion.slug}
+              origen={origen}
               onCambio={() => router.refresh()}
             />
           ))}
@@ -435,9 +440,12 @@ function FichaOrganizacion({
 export function PanelOrganizaciones({
   organizaciones,
   municipios,
+  origen,
 }: {
   organizaciones: OrganizacionAdmin[]
   municipios: Municipio[]
+  /** Calculado en el servidor: un cliente no puede sin romper la hidratación. */
+  origen: string
 }) {
   const [creando, setCreando] = useState(false)
   const [editandoId, setEditandoId] = useState<string | null>(null)
@@ -483,6 +491,7 @@ export function PanelOrganizaciones({
                 key={o.id}
                 organizacion={o}
                 nombreMunicipio={nombreMunicipio}
+                origen={origen}
                 onEditar={() => setEditandoId(o.id)}
               />
             )

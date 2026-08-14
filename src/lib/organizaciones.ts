@@ -6,8 +6,13 @@
 // cualquier sitio al que la persona navegue después, y en los registros de
 // acceso de cualquier intermediario. PLAN-V2 §5.5 lo escribía como
 // `?c=<código>`; esto es lo mismo, por el camino que no se filtra solo.
-export function enlaceInvitacion(slug: string, codigo: string) {
-  const origen = typeof window === 'undefined' ? '' : window.location.origin
+// ⚠ El origen llega como parámetro, calculado en el servidor a partir de
+// las cabeceras. La primera versión lo sacaba de `window.location.origin`,
+// que en el servidor no existe: el HTML salía con la ruta relativa, el
+// navegador la reemplazaba por la absoluta y React reventaba con un error
+// de hidratación. `/solicitud/[token]` ya resolvía esto bien; esto sigue
+// ese mismo camino.
+export function enlaceInvitacion(origen: string, slug: string, codigo: string) {
   return `${origen}/unirse/${slug}/${codigo}`
 }
 
