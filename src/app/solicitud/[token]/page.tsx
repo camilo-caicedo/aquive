@@ -11,6 +11,7 @@ import type { AliadoDelMunicipio } from '@/lib/acompanamiento'
 import type { ConversacionDelSolicitante } from '@/lib/types'
 import { Chat } from '@/components/chat'
 import { Acompanamiento } from './acompanamiento'
+import { ConfirmarRecepcion } from './confirmar-recepcion'
 import { PantallaConfirmacion } from './pantalla-confirmacion'
 import { GestionSolicitud } from './gestion-solicitud'
 import { ListaRespuestas } from './lista-respuestas'
@@ -141,6 +142,13 @@ export default async function SolicitudPage({
                 acopio={h.acopio}
                 mensajesIniciales={h.mensajes}
               />
+
+              {/* La segunda confirmación. Aparece cuando la fundación ya
+                  registró la entrega, que es exactamente cuando hay algo
+                  que confirmar. */}
+              {h.estado === 'entregada' && (
+                <ConfirmarRecepcion token={token} conversacionId={h.id} />
+              )}
             </div>
           ))}
         </section>

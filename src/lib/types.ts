@@ -247,6 +247,18 @@ export interface AcopioResumen {
   horario: string | null
 }
 
+// Un ítem que todavía no ha llegado. Lleva su identificador porque la
+// pantalla de la entrega es una lista de botones grandes y cada uno manda
+// ese id: se usa a media luz, en un acopio, y con las manos ocupadas.
+export interface ItemPendiente {
+  id: string
+  item_id: string | null
+  sugerencia_id: string | null
+  nombre: string
+  cantidad: number
+  unidad: string
+}
+
 // Lo que devuelve `leer_conversacion` (por sesión).
 export interface ConversacionDetalle {
   id: string
@@ -254,7 +266,42 @@ export interface ConversacionDetalle {
   mi_rol: RolEnConversacion
   codigo: string
   acopio: AcopioResumen | null
+  pendientes: ItemPendiente[]
   mensajes: MensajeChat[]
+}
+
+// Una fila de `coincidencias_para_aliado()`: una solicitud acompañada de
+// sus municipios cruzada con alguien que tiene justo eso.
+export interface Coincidencia {
+  solicitud_id: string
+  codigo: string
+  municipio: string
+  ofertador_id: string
+  ofertador: string
+  items_coincidentes: number
+  detalle: Array<{ nombre: string; cantidad: number; unidad: string }>
+  ya_hay_hilo: boolean
+}
+
+// Lo que devuelve `exportar_planilla`. LLEVA DATOS PERSONALES y cada vez
+// que existe hay una fila nueva en `accesos_identidad`. Es para entregarla
+// a la fundación en el momento: no la guardes, no la registres en un log y
+// no la pases a un Client Component más de lo imprescindible.
+export interface Planilla {
+  codigo: string
+  nombre: string
+  documento_tipo: TipoDocumento
+  documento: string
+  telefono: string | null
+  autorizacion_version: string
+  autorizacion_at: string
+  entregas: Array<{
+    item: string
+    cantidad: number
+    unidad: string
+    recibido_at: string
+    confirmada: boolean
+  }>
 }
 
 // Lo que devuelve `mis_conversaciones_token` (por token del solicitante).
@@ -1163,6 +1210,45 @@ export interface Database {
           p_valor: boolean
         }
         Returns: undefined
+      }
+      // Coincidencias y entregas (Fase H).
+      //
+      // `v_cruces` NO está tipada como vista, y es deliberado: no tiene
+      // grant para nadie y la única puerta legítima es esta RPC.
+      // Devuelve Coincidencia[].
+      coincidencias_para_aliado: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      // El aliado abre el hilo desde una coincidencia. Nace `abierta` y con
+      // él ya a cargo, y el primer mensaje lo firma él: quien ofrece recibe
+      // una invitación, no un mensaje suyo que no escribió.
+      invitar_a_conversacion: {
+        Args: { p_solicitud_id: string; p_ofertador_id: string; p_mensaje: string }
+        Returns: string
+      }
+      // Solo la fundación. Registra qué llegó, tacha esos ítems y deja la
+      // solicitud en `cumplida` o `entregada_parcial`.
+      registrar_entrega: {
+        Args: { p_conversacion_id: string; p_items: Json }
+        Returns: Json
+      }
+      // La segunda confirmación, la de quien pidió. Sin ella «entregado»
+      // sería la palabra de una sola parte.
+      confirmar_recepcion: {
+        Args: { p_token: string; p_conversacion_id: string }
+        Returns: number
+      }
+      marcar_item_cubierto: {
+        Args: { p_item_id: string; p_cubierto: boolean; p_token?: string | null }
+        Returns: undefined
+      }
+      // Devuelve Planilla. LLEVA PII y escribe bitácora: mismo permiso que
+      // leer_identidad, porque una planilla es una identidad con una lista
+      // de cosas al lado.
+      exportar_planilla: {
+        Args: { p_conversacion_id: string; p_motivo: string }
+        Returns: Json
       }
       // Chat tripartito (Fase G). Ninguna de estas devuelve un
       // identificador de cuenta: los mensajes salen con el rol de quien

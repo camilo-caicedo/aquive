@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Chat } from '@/components/chat'
+import { RegistrarEntrega } from './registrar-entrega'
 import type { ConversacionDetalle, EstadoConversacion, HiloResumen } from '@/lib/types'
 
 const ETIQUETA_ESTADO: Record<EstadoConversacion, string> = {
@@ -132,6 +133,16 @@ export function PanelHilos({ hilos }: { hilos: HiloResumen[] }) {
                 acopio={abierto.acopio}
                 mensajesIniciales={abierto.mensajes}
               />
+
+              {/* Solo la fundación registra entregas: el sentido de que la
+                  entrega sea en el acopio es que hay un tercero mirando.
+                  La RPC lo vuelve a comprobar. */}
+              {abierto.mi_rol === 'aliado' && (
+                <RegistrarEntrega
+                  conversacionId={abierto.id}
+                  pendientes={abierto.pendientes}
+                />
+              )}
             </div>
           )}
         </div>

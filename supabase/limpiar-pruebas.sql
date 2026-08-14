@@ -41,6 +41,9 @@
 --   organizaciones    es_prueba              → invitaciones_organizacion y
 --                                              miembros_organizacion, las dos
 --                                              en CASCADE
+--   entregas          es_prueba              (SOBREVIVE a la solicitud a
+--                                              propósito: no tiene FK hacia
+--                                              ella, solo el código en texto)
 --   accesos_identidad es_prueba              (sin llave foránea viva: la
 --                                              bitácora SOBREVIVE a la
 --                                              identidad a propósito, así que
@@ -76,6 +79,8 @@ union all
 select 'accesos_identidad', count(*) from public.accesos_identidad where es_prueba
 union all
 select 'identidades', count(*) from public.identidades where es_prueba
+union all
+select 'entregas', count(*) from public.entregas where es_prueba
 order by 1;
 
 -- Lo que arrastra el CASCADE, para que el número no sorprenda:
@@ -151,6 +156,10 @@ delete from public.metricas where es_prueba;
 -- —lo otro que no cuelga de nada— es lo que evita que se olvide.
 delete from public.accesos_identidad where es_prueba;
 
+-- Lo mismo con las entregas: no cuelgan de la solicitud a propósito —el
+-- código va copiado en texto— así que ningún CASCADE se las lleva.
+delete from public.entregas where es_prueba;
+
 -- CASCADE: solicitud_items, respuestas, push_suscripciones.
 delete from public.solicitudes where es_prueba;
 
@@ -212,6 +221,7 @@ begin
        + (select count(*) from public.entidades        where es_prueba)
        + (select count(*) from public.organizaciones   where es_prueba)
        + (select count(*) from public.accesos_identidad where es_prueba)
+       + (select count(*) from public.entregas        where es_prueba)
        + (select count(*) from public.identidades      where es_prueba)
        + (select count(*) from auth.users where id::text like '00000000-0000-4000-8000-%')
     into v_restantes;

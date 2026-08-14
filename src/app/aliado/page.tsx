@@ -3,10 +3,11 @@ import type { Metadata } from 'next'
 import { MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
-import type { AliadoResumen, HiloResumen } from '@/lib/types'
+import type { AliadoResumen, Coincidencia, HiloResumen } from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PanelEquipo } from './panel-equipo'
 import { PanelHilos } from './panel-hilos'
+import { PanelCoincidencias } from './panel-coincidencias'
 
 export const metadata: Metadata = {
   title: 'Mi organización',
@@ -21,16 +22,18 @@ export default async function AliadoPage() {
 
   if (!user) redirect('/login')
 
-  const [{ data: datos }, { data: hilosData }, municipios] = await Promise.all([
+  const [{ data: datos }, { data: hilosData }, { data: cruceData }, municipios] = await Promise.all([
     supabase.rpc('mi_aliado'),
     // Tambien para quien solo ofrece: sus hilos salen de aqui igual, y
     // esta es la unica pantalla donde puede leerlos.
     supabase.rpc('mis_hilos'),
+    supabase.rpc('coincidencias_para_aliado'),
     listarMunicipios(supabase),
   ])
 
   const organizaciones = (datos as unknown as AliadoResumen[]) ?? []
   const hilos = (hilosData as unknown as HiloResumen[]) ?? []
+  const coincidencias = (cruceData as unknown as Coincidencia[]) ?? []
   const nombreMunicipio = new Map(municipios.map((m) => [m.codigo_dane, m.nombre]))
 
   return (
@@ -40,8 +43,19 @@ export default async function AliadoPage() {
       {/* Esta pantalla es de dos públicos: el equipo de una fundación y
           quien ofreció ayuda en una solicitud acompañada. El segundo no
           pertenece a ninguna organización y aun así tiene hilos que leer,
-          así que la lista va primero y el aviso de «no perteneces» solo se
-          muestra cuando además no hay nada que coordinar. */}
+          así que el aviso de «no perteneces» solo sale cuando además no
+          hay nada que coordinar.
+
+          Las coincidencias van primero para quien coordina: es la pantalla
+          donde se decide a quién invitar, y las conversaciones son la
+          consecuencia. Para quien solo ofrece, esta lista llega vacía. */}
+      {organizaciones.length > 0 && (
+        <section className="mt-6">
+          <h2 className="font-heading text-2xl">Quién tiene lo que piden</h2>
+          <PanelCoincidencias coincidencias={coincidencias} />
+        </section>
+      )}
+
       <section className="mt-6">
         <h2 className="font-heading text-2xl">Conversaciones</h2>
         <PanelHilos hilos={hilos} />
@@ -118,12 +132,7 @@ export default async function AliadoPage() {
                     equipo={equipo}
                     invitaciones={invitaciones}
                   />
-                ) : (
-                  <p className="mt-3 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
-                    Todavía no hay solicitudes coordinadas por aquí. Cuando las
-                    haya, aparecerán en esta pantalla.
-                  </p>
-                )}
+                ) : null}
               </>
             )}
           </section>
