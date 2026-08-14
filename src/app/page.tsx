@@ -117,13 +117,28 @@ export default async function InicioPage({
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
       <section className="animar-entrada rounded-2xl border border-border bg-secondary p-5 sm:p-8">
+        {/* El nombre va en el encabezado principal, no solo en la barra de
+            arriba. Google rechazó la verificación de la marca dos veces por
+            esto: su revisor compara el nombre de la pantalla de
+            consentimiento con el de la portada, y «Pide lo que necesitas»
+            no contenía ninguno. */}
         <h1 className="font-heading text-3xl leading-tight sm:text-4xl">
-          Pide lo que necesitas. Sin dar tus datos.
+          AquíVe: pide lo que necesitas, sin dar tus datos.
         </h1>
+        {/* Y qué ES esto, dicho de frente. Lo pide la misma revisión —una
+            portada tiene que describir para qué sirve la aplicación— pero
+            hace falta igual: alguien que llega por un volante pegado en un
+            albergue no tiene de dónde deducirlo. */}
+        <p className="mt-3 max-w-prose text-base">
+          AquíVe es una plataforma gratuita que conecta, en Colombia, a quien
+          necesita insumos tras el sismo del 10 de agosto de 2026 con quien
+          puede entregarlos: alimentos, agua, aseo, abrigo y servicios de
+          profesionales con matrícula.
+        </p>
         <p className="mt-2 max-w-prose text-base text-muted-foreground">
-          Publica qué te hace falta tras el sismo del 10 de agosto. No pedimos
-          tu nombre, tu teléfono ni tu dirección: solo el barrio y qué
-          necesitas. Todo se borra solo a las 72 horas.
+          Publica qué te hace falta. No pedimos tu nombre, tu teléfono ni tu
+          dirección: solo el barrio y qué necesitas. Todo se borra solo a las
+          72 horas.
         </p>
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
           <Button className="w-full sm:w-auto" nativeButton={false} render={<Link href="/publicar" />}>
@@ -154,7 +169,8 @@ export default async function InicioPage({
         <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
           <LogIn className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
           Quien pide ayuda no necesita cuenta. Quien quiere ayudar entra con
-          su cuenta de Google, y de ella solo guardamos un identificador: el
+          su cuenta de Google para poder responder solicitudes y sostener su
+          perfil; de esa cuenta solo guardamos un identificador interno, y el
           correo no se almacena.
         </p>
       </section>
