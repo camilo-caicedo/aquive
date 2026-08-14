@@ -6,7 +6,7 @@ export default function NoEncontrado() {
   return (
     <main className="mx-auto max-w-lg px-4 py-12 text-center">
       <Compass className="mx-auto size-10 text-muted-foreground" aria-hidden="true" />
-      <h1 className="mt-4 text-2xl font-bold">Esta página no existe</h1>
+      <h1 className="font-heading mt-4 text-3xl">Esta página no existe</h1>
       <p className="mt-2 text-base text-muted-foreground">
         Puede que el enlace esté mal escrito, o que la solicitud ya se haya
         borrado. Las solicitudes se borran solas a las 72 horas.

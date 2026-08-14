@@ -91,7 +91,7 @@ export function ActivarAvisos({ token }: { token: string }) {
     return (
       <Alert variant="warning">
         <Share className="size-5" />
-        <AlertDescription className="text-amber-900">
+        <AlertDescription>
           En iPhone los avisos solo funcionan si agregas AquíVe a tu pantalla
           de inicio: toca <strong>Compartir</strong> y luego{' '}
           <strong>Agregar a pantalla de inicio</strong>. Si prefieres, guarda

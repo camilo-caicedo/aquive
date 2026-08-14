@@ -47,7 +47,7 @@ export default async function OfertadoresPage({
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="text-2xl font-bold">Quién está ofreciendo insumos</h1>
+      <h1 className="font-heading text-3xl">Quién está ofreciendo insumos</h1>
       <p className="mt-1 text-base text-muted-foreground">
         Personas y negocios que ya dijeron con qué pueden ayudar. Mira si
         alguien tiene lo que necesitas y publica tu solicitud: ellos la ven y
@@ -55,7 +55,7 @@ export default async function OfertadoresPage({
       </p>
 
       <Alert variant="warning" className="mt-4">
-        <AlertDescription className="text-amber-900">
+        <AlertDescription>
           Desde aquí no se les escribe directamente. Publica lo que necesitas
           —sin dar tus datos— y quien pueda ayudarte te responde con su
           contacto. Así tú decides a quién le escribes.
@@ -145,7 +145,7 @@ export default async function OfertadoresPage({
                   {o.items.map((it) => (
                     <li
                       key={it.nombre}
-                      className="rounded-md bg-muted px-2 py-1 text-sm text-foreground"
+                      className="rounded-full bg-muted px-3.5 py-1.5 text-sm text-foreground"
                     >
                       {it.nombre}
                       {it.por_confirmar && (
@@ -181,7 +181,7 @@ export default async function OfertadoresPage({
       )}
 
       <div className="mt-8 rounded-xl border border-border bg-secondary p-5">
-        <h2 className="text-xl font-bold">¿Necesitas algo de esto?</h2>
+        <h2 className="font-heading text-2xl">¿Necesitas algo de esto?</h2>
         <p className="mt-1 text-base text-muted-foreground">
           Publica qué te hace falta. No pedimos tu nombre, tu teléfono ni tu
           dirección.

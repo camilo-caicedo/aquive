@@ -29,7 +29,7 @@ export function BorrarPerfil({ tienePerfil }: { tienePerfil: boolean }) {
 
   return (
     <section className="mt-10 border-t border-border pt-6">
-      <h2 className="text-xl font-bold">Borrar mi cuenta</h2>
+      <h2 className="font-heading text-2xl">Borrar mi cuenta</h2>
       <p className="mt-2 text-base text-muted-foreground">
         {tienePerfil
           ? 'Se borra tu perfil, tu matrícula y todas las respuestas que hayas enviado. También se borra tu cuenta: no queda nada tuyo, ni siquiera el identificador de Google.'

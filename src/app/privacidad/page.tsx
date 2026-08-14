@@ -3,10 +3,10 @@ import { RESPONSABLE, CORREO_CONTACTO, FECHA_LEGALES } from '@/lib/config'
 export default function PrivacidadPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="text-2xl font-bold">Cómo tratamos la información en AquíVe</h1>
+      <h1 className="font-heading text-3xl">Cómo tratamos la información en AquíVe</h1>
       <p className="mt-3 text-base">Última actualización: {FECHA_LEGALES}</p>
 
-      <h2 className="mt-6 text-xl font-bold">Quién es responsable</h2>
+      <h2 className="font-heading mt-6 text-2xl">Quién es responsable</h2>
       <p className="mt-3 text-base">
         {RESPONSABLE}, persona natural, Cali, Colombia.
       </p>
@@ -19,7 +19,7 @@ export default function PrivacidadPage() {
         ni entidad detrás.
       </p>
 
-      <h2 className="mt-6 text-xl font-bold">Si publicas una solicitud de ayuda: no guardamos ningún dato tuyo.</h2>
+      <h2 className="font-heading mt-6 text-2xl">Si publicas una solicitud de ayuda: no guardamos ningún dato tuyo.</h2>
       <p className="mt-3 text-base">
         No pedimos ni almacenamos tu nombre, cédula, teléfono, correo, dirección exacta, edad ni la de tu
         familia. Una solicitud contiene únicamente el municipio, el barrio, los artículos que necesitas y una
@@ -42,7 +42,7 @@ export default function PrivacidadPage() {
         no permite identificar a nadie y sirve para entender qué se necesitó y dónde.
       </p>
 
-      <h2 className="mt-6 text-xl font-bold">Si ofreces ayuda o servicios: sí guardamos algunos datos, y son públicos.</h2>
+      <h2 className="font-heading mt-6 text-2xl">Si ofreces ayuda o servicios: sí guardamos algunos datos, y son públicos.</h2>
       <p className="mt-3 text-base">
         Guardamos tu nombre visible, municipios donde puedes ayudar, tu forma de contacto, tu descripción y, si
         eres profesional, tu profesión y número de matrícula. Estos datos se muestran públicamente, porque esa es
@@ -59,20 +59,20 @@ export default function PrivacidadPage() {
         Puedes borrar tu perfil completo desde tu cuenta, en cualquier momento.
       </p>
 
-      <h2 className="mt-6 text-xl font-bold">Lo que nunca hacemos</h2>
+      <h2 className="font-heading mt-6 text-2xl">Lo que nunca hacemos</h2>
       <p className="mt-3 text-base">
         No vendemos ni compartimos información con terceros. No hacemos publicidad. No procesamos dinero. No
         alojamos las conversaciones entre las personas: cuando contactas a alguien, lo haces por fuera de esta
         plataforma y nosotros no vemos nada de eso.
       </p>
 
-      <h2 className="mt-6 text-xl font-bold">Tus derechos</h2>
+      <h2 className="font-heading mt-6 text-2xl">Tus derechos</h2>
       <p className="mt-3 text-base">
         Conforme a la Ley 1581 de 2012 puedes conocer, actualizar, rectificar y suprimir tus datos, y revocar la
         autorización. Escríbenos a {CORREO_CONTACTO} y respondemos en los términos de ley.
       </p>
 
-      <h2 className="mt-6 text-xl font-bold">Esta plataforma es temporal.</h2>
+      <h2 className="font-heading mt-6 text-2xl">Esta plataforma es temporal.</h2>
       <p className="mt-3 text-base">
         Fue creada para la emergencia del sismo del 10 de agosto de 2026 y dejará de operar cuando deje de ser
         útil. Cuando eso ocurra, eliminaremos todas las bases de datos.

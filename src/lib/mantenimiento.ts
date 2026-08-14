@@ -45,7 +45,7 @@ const PAGINA = `<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Volvemos pronto · AquíVe</title>
-<link rel="icon" href="/icono-192.png">
+<link rel="icon" href="/favicon-32.png">
 <style>
   :root { color-scheme: light }
   * { box-sizing: border-box }
@@ -56,8 +56,8 @@ const PAGINA = `<!doctype html>
     align-items: center;
     justify-content: center;
     padding: 1.5rem;
-    background: #fdf8f3;
-    color: #292524;
+    background: #f5ead8;
+    color: #201e1d;
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     font-size: 1rem;
     line-height: 1.6;
@@ -65,8 +65,8 @@ const PAGINA = `<!doctype html>
   main {
     max-width: 32rem;
     width: 100%;
-    background: #fff;
-    border: 1px solid #e7e0d8;
+    background: #f9f4ed;
+    border: 1px solid #dcd3c4;
     border-radius: 1rem;
     padding: 2rem 1.5rem;
     text-align: center;
@@ -77,17 +77,17 @@ const PAGINA = `<!doctype html>
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #b45309;
+    color: #8c491a;
   }
   h1 { margin: 0.75rem 0 0; font-size: 1.75rem; line-height: 1.25 }
   p { margin: 1rem 0 0; font-size: 1.0625rem }
-  .apagado { color: #57534e }
+  .apagado { color: #645c50 }
   .aviso {
     margin-top: 1.5rem;
     padding: 1rem;
     border-radius: 0.75rem;
-    background: #fffbeb;
-    border: 1px solid #fde68a;
+    background: #ffe1d0;
+    border: 1px solid #f6a06b;
     text-align: left;
   }
   .aviso strong { display: block; margin-bottom: 0.25rem }
@@ -97,9 +97,9 @@ const PAGINA = `<!doctype html>
     margin-top: 0.5rem;
     min-height: 48px;
     padding: 0.75rem 1.25rem;
-    border-radius: 0.75rem;
-    background: #b45309;
-    color: #fff;
+    border-radius: 999px;
+    background: #8c491a;
+    color: #f9f4ed;
     font-weight: 600;
     text-decoration: none;
   }

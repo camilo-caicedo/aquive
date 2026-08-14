@@ -4,35 +4,42 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Paleta cálida y sobria: tierra y ámbar sobre papel, alto contraste.
+/* Identidad AquíVe v1 (14 de agosto de 2026): terracota y salvia sobre
+   papel. Es la paleta que ya había, corrida hacia la arcilla — el ámbar se
+   volvió terracota y el blanco se volvió papel de verdad.
    Un solo tema claro a propósito — el modo oscuro automático rompía el
    contraste de los controles nativos en gama baja. */
 :root {
   color-scheme: light;
-  --background: oklch(0.994 0.004 85);
-  --foreground: oklch(0.235 0.018 55);
-  --card: oklch(1 0.002 85);
-  --card-foreground: oklch(0.235 0.018 55);
-  --popover: oklch(1 0.002 85);
-  --popover-foreground: oklch(0.235 0.018 55);
-  --primary: oklch(0.505 0.135 48);
-  --primary-foreground: oklch(0.99 0.005 85);
-  --secondary: oklch(0.955 0.014 80);
-  --secondary-foreground: oklch(0.33 0.05 50);
-  --muted: oklch(0.962 0.011 82);
-  --muted-foreground: oklch(0.475 0.024 60);
-  --accent: oklch(0.935 0.032 72);
-  --accent-foreground: oklch(0.32 0.07 48);
+  --background: #f5ead8; /* papel */
+  --foreground: #201e1d; /* tinta */
+  --card: #f9f4ed;
+  --card-foreground: #201e1d;
+  --popover: #f9f4ed;
+  --popover-foreground: #201e1d;
+  --primary: #8c491a; /* terracota 700, botón sólido */
+  --primary-foreground: #f9f4ed;
+  --secondary: #ebddc5; /* arena, franjas y pie de página */
+  --secondary-foreground: #643312;
+  --muted: #eee7db;
+  --muted-foreground: #645c50;
+  --accent: #ffe1d0; /* relleno tenue de iconos y avisos */
+  --accent-foreground: #643312;
+  /* Salvia: la segunda voz. Verificado y cumplido — nunca decorativa, y
+     nunca sola: siempre acompañada de texto o de un icono, porque el
+     estado no puede depender de percibir un color. */
+  --ok: #56633f;
+  --ok-suave: #e1eecc;
   --destructive: oklch(0.505 0.19 27);
-  --border: oklch(0.895 0.014 76);
-  --input: oklch(0.875 0.016 76);
-  --ring: oklch(0.585 0.115 50);
+  --border: #dcd3c4;
+  --input: #c0b6a5;
+  --ring: #c67139;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --radius: 1rem; /* antes 0.625rem: la identidad pide esquinas redondas */
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -46,9 +53,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-figtree);
+  --font-heading: var(--font-caprasimo);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --color-ok: var(--ok);
+  --color-ok-suave: var(--ok-suave);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -126,10 +135,16 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
   }
   html {
     @apply font-sans;
+  }
+  /* Los iconos de lucide vienen con trazo 2; la identidad usa un trazo
+     grueso y redondo, y con el trazo fino se veían de otra familia que la
+     marca. Vale también para gama baja: engorda el icono sin pesar más. */
+  .lucide {
+    stroke-width: 2.75;
   }
 }
 

@@ -114,10 +114,10 @@ export default async function AdminPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="text-2xl font-bold">Administración</h1>
+      <h1 className="font-heading text-3xl">Administración</h1>
 
       <section className="mt-6">
-        <h2 className="text-xl font-bold">Reportes pendientes</h2>
+        <h2 className="font-heading text-2xl">Reportes pendientes</h2>
         {!reportes || reportes.length === 0 ? (
           <p className="mt-3 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
             No hay reportes pendientes.
@@ -144,7 +144,7 @@ export default async function AdminPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-xl font-bold">Matrículas por verificar</h2>
+        <h2 className="font-heading text-2xl">Matrículas por verificar</h2>
         <Alert className="mt-3">
           <AlertDescription>
             Consulta el número en el registro de la entidad antes de marcarlo
@@ -166,7 +166,7 @@ export default async function AdminPage() {
                       {perfil?.nombre_visible ?? 'Perfil sin nombre'}
                     </span>
                     {perfil?.suspendido && (
-                      <span className="inline-flex shrink-0 items-center rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-base font-medium text-amber-900">
+                      <span className="inline-flex shrink-0 items-center rounded-full border border-primary/25 bg-accent px-2.5 py-0.5 text-base font-medium text-accent-foreground">
                         Suspendido
                       </span>
                     )}
@@ -193,7 +193,7 @@ export default async function AdminPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-xl font-bold">Ítems sugeridos</h2>
+        <h2 className="font-heading text-2xl">Ítems sugeridos</h2>
         <Alert className="mt-3">
           <AlertDescription>
             Aprobar crea un ítem nuevo en el catálogo. Fusionar reutiliza uno
@@ -232,7 +232,7 @@ export default async function AdminPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-xl font-bold">Entidades</h2>
+        <h2 className="font-heading text-2xl">Entidades</h2>
         <Alert className="mt-3">
           <AlertDescription>
             Aparecer en este directorio no es una recomendación de AquíVe:

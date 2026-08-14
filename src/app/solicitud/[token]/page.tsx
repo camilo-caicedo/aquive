@@ -22,7 +22,7 @@ export default async function SolicitudPage({
   if (error || !data) {
     return (
       <main className="mx-auto max-w-lg px-4 py-6 text-center">
-        <h1 className="text-2xl font-bold">Solicitud no encontrada</h1>
+        <h1 className="font-heading text-3xl">Solicitud no encontrada</h1>
         <p className="mt-2 text-base text-muted-foreground">
           Este enlace no existe, ya venció (72 horas) o fue borrado. No es
           posible recuperar una solicitud perdida.
@@ -53,7 +53,7 @@ export default async function SolicitudPage({
       />
 
       <section className="mt-8">
-        <h2 className="text-xl font-bold">Lo que pediste</h2>
+        <h2 className="font-heading text-2xl">Lo que pediste</h2>
         <div className="mt-2 rounded-lg border border-border p-4">
           <p className="text-base">
             {solicitud.barrio} · {categoria(solicitud.categoria).etiqueta}
@@ -78,7 +78,7 @@ export default async function SolicitudPage({
       </section>
 
       <section className="mt-8">
-        <h2 className="flex items-center gap-2 text-xl font-bold">
+        <h2 className="font-heading flex items-center gap-2 text-2xl">
           <MessageSquare className="size-5" aria-hidden="true" />
           Respuestas ({solicitud.respuestas.length})
         </h2>
@@ -87,12 +87,12 @@ export default async function SolicitudPage({
       </section>
 
       <section className="mt-8 space-y-3">
-        <h2 className="text-xl font-bold">Avisos</h2>
+        <h2 className="font-heading text-2xl">Avisos</h2>
         <ActivarAvisos token={token} />
       </section>
 
       <section className="mt-8">
-        <h2 className="text-xl font-bold">Administrar</h2>
+        <h2 className="font-heading text-2xl">Administrar</h2>
         <GestionSolicitud token={token} />
       </section>
     </main>

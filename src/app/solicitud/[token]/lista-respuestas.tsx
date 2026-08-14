@@ -28,12 +28,12 @@ export function ListaRespuestas({ respuestas }: { respuestas: Respuesta[] }) {
             <span className="text-lg font-bold">{r.nombre}</span>
             {r.tipo === 'servidor' &&
               (r.verificado ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-green-300 bg-green-50 px-2 py-0.5 text-sm font-medium text-green-900">
+                <span className="inline-flex items-center gap-1 rounded-full border border-ok/30 bg-ok-suave px-2 py-0.5 text-sm font-medium text-ok">
                   <BadgeCheck className="size-4" aria-hidden="true" />
                   Matrícula verificada
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-sm font-medium text-amber-900">
+                <span className="inline-flex items-center gap-1 rounded-full border border-primary/25 bg-accent px-2 py-0.5 text-sm font-medium text-accent-foreground">
                   <TriangleAlert className="size-4" aria-hidden="true" />
                   Sin verificar
                 </span>

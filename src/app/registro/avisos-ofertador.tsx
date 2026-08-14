@@ -45,7 +45,7 @@ export function AvisosOfertador({ municipios }: { municipios: number }) {
 
   return (
     <section className="mt-10 border-t border-border pt-6">
-      <h2 className="text-xl font-bold">Avisarme cuando alguien pida ayuda</h2>
+      <h2 className="font-heading text-2xl">Avisarme cuando alguien pida ayuda</h2>
       <p className="mt-2 text-base text-muted-foreground">
         Te llega un aviso a este teléfono cuando alguien publica una solicitud
         en {municipios === 1 ? 'tu municipio' : 'alguno de tus municipios'}. El
@@ -56,7 +56,7 @@ export function AvisosOfertador({ municipios }: { municipios: number }) {
       {estado === 'ios' && (
         <Alert variant="warning" className="mt-3">
           <Share className="size-5" />
-          <AlertDescription className="text-amber-900">
+          <AlertDescription>
             En iPhone los avisos solo funcionan si agregas AquíVe a tu pantalla
             de inicio: toca <strong>Compartir</strong> y luego{' '}
             <strong>Agregar a pantalla de inicio</strong>.
