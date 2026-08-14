@@ -52,7 +52,21 @@ Authentication → URL Configuration, **distinto en cada uno**:
 | | Site URL | Redirect URLs |
 |---|---|---|
 | **Prod** | `https://<tu-dominio-real>` | el dominio real |
-| **Test** | `http://localhost:3000` | `http://localhost:3000`, y las URLs de preview de Vercel que uses |
+| **Test** | `https://aquive-test.vercel.app` | `https://aquive-test.vercel.app` y `http://localhost:3000` |
+
+> **Por eso el alias fijo de preview importa.** Las URLs que Vercel genera
+> por despliegue son aleatorias (`aquive-8f1jpwuh3-aqui-ve.vercel.app`) y
+> cambian cada vez: no se pueden meter en una lista blanca. Con
+> `aquive-test.vercel.app` fijo, hay un solo hostname que autorizar.
+>
+> Configúralo una vez en Vercel → Settings → Domains, asignando
+> `aquive-test.vercel.app` a la rama `develop`. Cada push a `develop` lo
+> recibe solo. Si prefieres hacerlo a mano tras cada despliegue:
+> `vercel alias set <url-del-despliegue> aquive-test.vercel.app`.
+>
+> Si el login con Google falla en preview, esto es lo primero que hay que
+> revisar: casi siempre es que el hostname desde el que se abrió no está
+> en las *Redirect URLs*.
 
 ### La pantalla de consentimiento
 
@@ -80,9 +94,14 @@ Lo que importa es que dentro de **un mismo proyecto**, la fila de
 
 En pruebas **usa las llaves de prueba oficiales de Cloudflare**. No son un
 atajo sucio: están documentadas para esto y **no tienen restricción de
-hostname**, así que funcionan en `localhost` y en cualquier URL de preview
-de Vercel — que son aleatorias (`aquive-git-rama-xxxx.vercel.app`) y por
-eso jamás podrías meterlas todas en una lista blanca.
+hostname**, así que funcionan en `localhost`, en `aquive-test.vercel.app` y
+en cualquier URL aleatoria de preview.
+
+Aunque tengas el alias fijo, las llaves de prueba siguen siendo lo correcto
+aquí: el alias resuelve el problema de Supabase —que necesita un hostname
+exacto en la lista— pero un preview de una rama distinta a `develop` seguirá
+saliendo con URL aleatoria, y no quieres que el captcha sea lo que te frene
+al probar.
 
 ### Pruebas
 
@@ -242,6 +261,9 @@ Supabase muestra el `REF` del proyecto en el dominio.
 Vale la pena anotar los dos `REF` en algún lado antes de que se confundan:
 
 ```
-PROD: https://__________.supabase.co
-TEST: https://__________.supabase.co
+PROD Supabase: https://__________.supabase.co
+TEST Supabase: https://__________.supabase.co
+
+PROD app:      https://__________
+TEST app:      https://aquive-test.vercel.app
 ```
