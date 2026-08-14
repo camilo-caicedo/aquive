@@ -147,9 +147,27 @@ solo `sha256(token)`. El token se muestra una vez y se guarda en
 `localStorage`. Quien tenga el token puede ver respuestas, renovar y
 borrar esa solicitud. Nada más.
 
-**Ofertadores y servidores → Supabase Auth con Google.**
+**Ofertadores, servidores y aliados → Supabase Auth con Google.**
 En el callback se persiste **únicamente el `sub`** de Google. El correo
 se descarta y no se almacena en ninguna tabla.
+
+**Aliados (desde el 14 de agosto de 2026).** Un aliado es alguien que
+trabaja en una organización dada de alta por un administrador. No se
+declara aliado nadie: el tipo aparece al entrar por `/unirse/[slug]`, y la
+organización **nunca se auto-registra** —si la fila existe, un
+administrador ya miró el certificado del RUES y el NIT—.
+
+- **El slug identifica, el código autoriza.** Quien llega con código de
+  invitación queda activo; quien llega sin él, en una cola donde no ve
+  absolutamente nada. El código va en el path, nunca en una query string.
+- **Un aliado no tiene ficha pública** ni contacto publicado. No sale en
+  `/ofertadores` ni en `/servidores`.
+- **`puede_ver_identidad` no se otorga solo.** Ni al entrar por enlace, ni
+  al ser aprobado, ni al ser coordinador: siempre es un acto explícito de
+  un coordinador sobre una persona concreta, y queda registrado. Un
+  trigger impide que nazca en `true`.
+- **Una organización con equipo no se queda sin coordinador activo.** Lo
+  sostiene un trigger, no la interfaz.
 
 ## Notificaciones
 
