@@ -42,6 +42,7 @@ código".
 | Renovar, cerrar y borrado duro a 72 h | Probado, incluido el job de `pg_cron` |
 | Panel de moderación y verificación de matrículas | Probado |
 | Borrado permanente de cuenta | Implementado |
+| Inventario de quien ofrece, e ítems sugeridos | Probado en el proyecto de pruebas |
 
 Bug abierto: en `/mis-solicitudes` la lista guardada en `localStorage` no
 siempre aparece. El enlace directo y el QR sí funcionan.
@@ -73,6 +74,11 @@ El 3 va antes del 4 y no es negociable: `seed-catalogo.sql` deriva los ítems
 `serv_*` con un `select` sobre `catalogo_servicios`. Al revés no deriva nada
 y te quedas sin la categoría de servicios, sin ningún error visible.
 
+Eso es para levantar un proyecto **desde cero**. Sobre una base que ya
+existe van los archivos de `supabase/migraciones/`, en orden de nombre.
+`schema.sql` es el espejo de todos ellos y sigue siendo la fuente de verdad:
+cada migración se refleja ahí en el mismo commit.
+
 Después: activa Google como proveedor de Auth, pon el dominio en
 **Authentication → URL Configuration**, y **confirma que Point-in-Time
 Recovery está desactivado** (si está activo, el aviso de privacidad
@@ -91,6 +97,8 @@ en `administradores` con el id del usuario que va a moderar.
 | `docs/legal/PLANTILLAS.md` | Aviso de privacidad, términos y autorización. |
 | `supabase/schema.sql` | Esquema completo. Fuente de verdad de la base. |
 | `supabase/seed-*.sql` | Municipios, insumos y servicios. Re-ejecutables. |
+| `supabase/migraciones/` | Cambios sobre una base que ya existe, en orden de nombre. |
+| `supabase/limpiar-pruebas.sql` | Borra lo marcado como prueba. Cuenta primero, borra después. |
 | `migracion/` | Levantar la base en un proyecto nuevo: runbook, configuración y verificación. |
 | `src/lib/config.ts` | Responsable, correo y fecha de los legales. Tiene efecto legal. |
 | `src/lib/types.ts` | Tipos de la base, escritos a mano. Actualizar junto al esquema. |
