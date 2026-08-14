@@ -223,8 +223,10 @@ security definer
 stable
 set search_path = ''
 as $$
+  -- El rol de PARTICIPANTE gana sobre el de administrador: en un proyecto
+  -- que opera una sola persona, el admin que ademas ofrece en ese hilo no
+  -- es un caso raro, y aparecia como «Moderacion de AquiVe» al escribir.
   select case
-    when public.es_admin(auth.uid()) then 'admin'
     when exists (select 1 from public.conversaciones c
                   where c.id = p_conversacion_id and c.ofertador_id = auth.uid())
       then 'ofertador'
@@ -232,6 +234,7 @@ as $$
                   where c.id = p_conversacion_id
                     and public.es_miembro_activo(c.organizacion_id, auth.uid()))
       then 'aliado'
+    when public.es_admin(auth.uid()) then 'admin'
   end;
 $$;
 
