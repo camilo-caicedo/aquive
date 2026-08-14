@@ -17,6 +17,9 @@ export type ContactoTipo = 'whatsapp' | 'telefono'
 export type EntidadMatricula = 'COPNIA' | 'CPNAA' | 'COLPSIC' | 'ReTHUS' | 'SIRNA' | 'OTRA'
 export type AreaServicio = 'ingenieria' | 'arquitectura' | 'psicologia' | 'salud' | 'derecho'
 export type EstadoSolicitud = 'abierta' | 'cumplida'
+export type OrigenItem = 'semilla' | 'admin' | 'aliado' | 'sugerencia'
+export type OrigenSugerencia = 'solicitante' | 'ofertador' | 'aliado'
+export type EstadoSugerencia = 'pendiente' | 'aprobada' | 'rechazada' | 'fusionada'
 export type TipoObjetoReporte = 'solicitud' | 'respuesta' | 'perfil'
 export type MotivoReporte =
   | 'datos_personales'
@@ -26,17 +29,25 @@ export type MotivoReporte =
   | 'menor_de_edad'
   | 'otro'
 
-// Forma del ítem dentro del jsonb p_items que recibe crear_solicitud
-export interface ItemSolicitudInput {
-  item_id: string
-  cantidad: number
-}
+// Forma del ítem dentro del jsonb p_items que recibe crear_solicitud. Es
+// uno de los dos, nunca los dos: el CHECK de solicitud_items lo impone.
+export type ItemSolicitudInput =
+  | { item_id: string; cantidad: number }
+  | { sugerencia: string; cantidad: number }
 
-// Ítem resumido tal como lo devuelve el jsonb `items` de solicitudes_publicas
+// Ítem resumido tal como lo devuelve el jsonb `items` de solicitudes_publicas.
+//
+// `unidad` sigue siendo `string` y no `string | null` porque la vista hace
+// `coalesce(c.unidad, sg.unidad_sugerida, 'unidad')`: un ítem sugerido no
+// tiene fila en el catálogo, pero nunca llega sin unidad. Es lo que evita
+// que `describirItem()` escriba "3 null de Crema dental" en el tablero.
 export interface ItemResumen {
   nombre: string
   cantidad: number
   unidad: string
+  // El ítem no está en el catálogo: alguien lo escribió y falta que un
+  // administrador lo apruebe.
+  por_confirmar: boolean
 }
 
 // Forma del jsonb que devuelve leer_solicitud
@@ -49,12 +60,7 @@ export interface SolicitudConRespuestas {
   nota: string | null
   estado: EstadoSolicitud
   expira_at: string
-  items: Array<{
-    nombre: string
-    cantidad: number
-    unidad: string
-    cubierto: boolean
-  }>
+  items: Array<ItemResumen & { cubierto: boolean }>
   respuestas: Array<{
     id: string
     mensaje: string
@@ -79,6 +85,8 @@ export interface Database {
           unidad: string
           activo: boolean
           orden: number
+          creado_por: string | null
+          origen: OrigenItem
         }
         Insert: {
           id: string
@@ -87,6 +95,8 @@ export interface Database {
           unidad?: string
           activo?: boolean
           orden?: number
+          creado_por?: string | null
+          origen?: OrigenItem
         }
         Update: Partial<Database['public']['Tables']['catalogo_items']['Insert']>
         Relationships: []
@@ -235,22 +245,58 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['solicitudes']['Insert']>
         Relationships: []
       }
+      // Exactamente uno de `item_id` y `sugerencia_id` está puesto: lo
+      // impone el CHECK `solicitud_items_uno_u_otro`.
       solicitud_items: {
         Row: {
           id: string
           solicitud_id: string
-          item_id: string
+          item_id: string | null
+          sugerencia_id: string | null
           cantidad: number
           cubierto: boolean
         }
         Insert: {
           id?: string
           solicitud_id: string
-          item_id: string
+          item_id?: string | null
+          sugerencia_id?: string | null
           cantidad: number
           cubierto?: boolean
         }
         Update: Partial<Database['public']['Tables']['solicitud_items']['Insert']>
+        Relationships: []
+      }
+      sugerencias_item: {
+        Row: {
+          id: string
+          nombre_propuesto: string
+          categoria_sugerida: Categoria | null
+          unidad_sugerida: string | null
+          propuesta_por: string | null
+          origen: OrigenSugerencia
+          estado: EstadoSugerencia
+          item_resultante_id: string | null
+          revisada_por: string | null
+          revisada_at: string | null
+          nota_revision: string | null
+          creada_at: string
+        }
+        Insert: {
+          id?: string
+          nombre_propuesto: string
+          categoria_sugerida?: Categoria | null
+          unidad_sugerida?: string | null
+          propuesta_por?: string | null
+          origen: OrigenSugerencia
+          estado?: EstadoSugerencia
+          item_resultante_id?: string | null
+          revisada_por?: string | null
+          revisada_at?: string | null
+          nota_revision?: string | null
+          creada_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['sugerencias_item']['Insert']>
         Relationships: []
       }
       respuestas: {
