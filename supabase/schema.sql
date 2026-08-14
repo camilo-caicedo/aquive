@@ -380,22 +380,65 @@ where s.estado = 'abierta' and s.expira_at > now();
 -- `servidores_publicos`, NO expone `contacto_publico`: el contacto ocurre
 -- cuando el ofertador responde una solicitud, no al revés. Así se expone
 -- menos dato y nadie queda sujeto a que lo llamen 200 personas a la vez.
+-- Directorio de quienes ofrecen insumos. A diferencia de
+-- `servidores_publicos`, NO expone `contacto_publico`: el contacto ocurre
+-- cuando el ofertador responde una solicitud, no al revés. Así se expone
+-- menos dato y nadie queda sujeto a que lo llamen 200 personas a la vez.
+--
+-- Sale quien tenga `tipo = ofertador` Y TAMBIÉN cualquiera que haya
+-- declarado insumos: desde que el inventario dejó de ser exclusivo de los
+-- ofertadores, alguien con matrícula que además tiene cobijas tiene que
+-- poder verse en las dos listas. Un ofertador sin inventario sigue
+-- saliendo: el inventario es opcional y no puede volverse un requisito
+-- por la puerta de atrás.
+--
+-- ⚠ `items` trae los NOMBRES, nunca las cantidades. Una lista pública de
+-- quién tiene cuántos litros de agua y dónde es un mapa de existencias, y
+-- además el texto de autorización que la persona acepta enumera lo que se
+-- publica: las cantidades no están ahí. Ver docs/legal/PLANTILLAS.md §3.
 create or replace view public.ofertadores_publicos as
-select p.id, p.nombre_visible, p.municipios, p.descripcion, p.creado_at
+select
+  p.id,
+  p.nombre_visible,
+  p.municipios,
+  p.descripcion,
+  p.creado_at,
+  (select coalesce(jsonb_agg(x order by x->>'nombre'), '[]'::jsonb)
+     from (
+       select jsonb_build_object(
+                'nombre',        coalesce(c.nombre, sg.nombre_propuesto),
+                'por_confirmar', o.sugerencia_id is not null
+              ) as x
+         from public.ofrecimientos o
+         left join public.catalogo_items c    on c.id = o.item_id
+         left join public.sugerencias_item sg on sg.id = o.sugerencia_id
+        where o.perfil_id = p.id and o.disponible
+        order by coalesce(c.orden, 9999)
+        limit 12
+     ) t) as items,
+  (select count(*) from public.ofrecimientos o
+    where o.perfil_id = p.id and o.disponible) as total_items
 from public.perfiles p
-where p.tipo = 'ofertador'
-  and p.suspendido = false
-  and p.acepto_publicacion = true;
+where p.suspendido = false
+  and p.acepto_publicacion = true
+  and (
+    p.tipo = 'ofertador'
+    or exists (select 1 from public.ofrecimientos o where o.perfil_id = p.id)
+  );
+
+grant select on public.ofertadores_publicos to anon, authenticated;
 
 create or replace view public.municipios_con_ofertadores as
 select distinct m.codigo_dane, m.nombre, m.departamento
 from public.municipios m
 join public.perfiles p on m.codigo_dane = any(p.municipios)
-where p.tipo = 'ofertador'
-  and p.suspendido = false
-  and p.acepto_publicacion = true;
+where p.suspendido = false
+  and p.acepto_publicacion = true
+  and (
+    p.tipo = 'ofertador'
+    or exists (select 1 from public.ofrecimientos o where o.perfil_id = p.id)
+  );
 
-grant select on public.ofertadores_publicos       to anon, authenticated;
 grant select on public.municipios_con_ofertadores to anon, authenticated;
 
 create or replace view public.municipios_con_servidores as

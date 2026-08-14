@@ -642,7 +642,8 @@ export function FormularioRegistro({
         <span className="text-base">
           Autorizo a {RESPONSABLE}, responsable de esta plataforma, a tratar
           los datos que estoy entregando —nombre visible, municipios, forma de
-          contacto, descripción y, si aplica, profesión y matrícula— con la
+          contacto, descripción, los insumos que diga tener y, si aplica,
+          profesión y matrícula— con la
           finalidad de publicarlos de forma <strong>pública</strong> en esta
           plataforma para que personas afectadas puedan contactarme. Entiendo
           que esta información será visible para cualquiera en internet, que

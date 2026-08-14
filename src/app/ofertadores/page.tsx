@@ -34,11 +34,12 @@ export default async function OfertadoresPage({
     (todosMunicipios ?? []).map((m) => [m.codigo_dane, m.nombre])
   )
 
-  // Quien escribió qué ofrece va primero: una tarjeta sin descripción no
-  // le sirve a nadie que esté buscando algo concreto.
-  const ordenados = [...(ofertadores ?? [])].sort(
-    (a, b) => Number(!!b.descripcion) - Number(!!a.descripcion)
-  )
+  // Quien dijo qué ofrece va primero, y la lista de ítems pesa más que la
+  // descripción: una tarjeta que enumera "cobijas, colchonetas" le sirve a
+  // quien busca algo concreto mucho más que un párrafo libre.
+  const utilidad = (o: { total_items: number; descripcion: string | null }) =>
+    (o.total_items > 0 ? 2 : 0) + (o.descripcion ? 1 : 0)
+  const ordenados = [...(ofertadores ?? [])].sort((a, b) => utilidad(b) - utilidad(a))
 
   const hayFiltro = !!params.municipio
   const mostrarFiltros = (municipios?.length ?? 0) > 0 || hayFiltro
@@ -138,13 +139,36 @@ export default async function OfertadoresPage({
                 </div>
               </div>
 
+              {o.items.length > 0 && (
+                <ul className="mt-3 flex flex-wrap gap-1.5">
+                  {o.items.map((it) => (
+                    <li
+                      key={it.nombre}
+                      className="rounded-md bg-muted px-2 py-1 text-sm text-foreground"
+                    >
+                      {it.nombre}
+                      {it.por_confirmar && (
+                        <span className="text-muted-foreground"> · por confirmar</span>
+                      )}
+                    </li>
+                  ))}
+                  {o.total_items > o.items.length && (
+                    <li className="px-2 py-1 text-sm text-muted-foreground">
+                      y {o.total_items - o.items.length} más
+                    </li>
+                  )}
+                </ul>
+              )}
+
               {o.descripcion ? (
                 <p className="mt-3 text-base">{o.descripcion}</p>
               ) : (
-                <p className="mt-3 text-base text-muted-foreground">
-                  No escribió qué puede ofrecer. Publica tu solicitud y verá si
-                  puede ayudarte.
-                </p>
+                o.items.length === 0 && (
+                  <p className="mt-3 text-base text-muted-foreground">
+                    No escribió qué puede ofrecer. Publica tu solicitud y verá
+                    si puede ayudarte.
+                  </p>
+                )
               )}
             </li>
           ))}

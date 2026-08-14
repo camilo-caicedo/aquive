@@ -51,6 +51,13 @@ export interface ItemResumen {
   por_confirmar: boolean
 }
 
+// Un ítem tal como se ve en el directorio público de quien ofrece. Sin
+// cantidad a propósito: ver §2 de la migración v2-a7.
+export interface ItemOfrecido {
+  nombre: string
+  por_confirmar: boolean
+}
+
 // Lo único del catálogo que necesitan las pantallas de publicar y de
 // registro. Existe para no hacer `select('*')`: la tabla es de lectura
 // pública y desde la Fase A tiene `creado_por`, que es el uuid de
@@ -523,6 +530,11 @@ export interface Database {
       }
       // Sin `contacto_publico` a propósito: el contacto ocurre cuando el
       // ofertador responde una solicitud, no al revés.
+      //
+      // `items` trae los NOMBRES de lo que tiene disponible, nunca las
+      // cantidades: una lista pública de quién tiene cuánto y dónde es un
+      // mapa de existencias. Vienen hasta 12; `total_items` dice cuántos
+      // hay en realidad.
       ofertadores_publicos: {
         Row: {
           id: string
@@ -530,6 +542,8 @@ export interface Database {
           municipios: string[]
           descripcion: string | null
           creado_at: string
+          items: ItemOfrecido[]
+          total_items: number
         }
         Relationships: []
       }
