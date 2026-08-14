@@ -2,10 +2,18 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
 import { ENTIDADES_MATRICULA } from '@/lib/config'
-import type { EntidadMatricula, MotivoReporte, TipoObjetoReporte } from '@/lib/types'
+import { categoria } from '@/lib/catalogo'
+import type {
+  EntidadMatricula,
+  MotivoReporte,
+  OrigenSugerencia,
+  SugerenciaPendiente,
+  TipoObjetoReporte,
+} from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AccionesReporte } from './acciones-reporte'
 import { AccionesServidor } from './acciones-servidor'
+import { AccionesSugerencia } from './acciones-sugerencia'
 
 const MOTIVOS: Record<MotivoReporte, string> = {
   datos_personales: 'Datos personales',
@@ -20,6 +28,12 @@ const TIPOS_OBJETO: Record<TipoObjetoReporte, string> = {
   solicitud: 'Solicitud',
   respuesta: 'Respuesta',
   perfil: 'Perfil',
+}
+
+const ORIGENES_SUGERENCIA: Record<OrigenSugerencia, string> = {
+  solicitante: 'Quien pidió ayuda',
+  ofertador: 'Quien ofreció ayuda',
+  aliado: 'Aliado',
 }
 
 function etiquetaEntidad(valor: EntidadMatricula) {
@@ -61,19 +75,26 @@ export default async function AdminPage() {
   // `perfiles` va en consulta aparte, no embebida: los tipos escritos a mano de
   // src/lib/types.ts declaran `Relationships: []`, así que PostgREST no puede
   // resolver `servidores -> perfiles` a nivel de tipos.
-  const [{ data: reportes }, { data: servidores }, { data: perfiles }] =
-    await Promise.all([
-      supabase
-        .from('reportes')
-        .select('*')
-        .eq('atendido', false)
-        .order('creado_at', { ascending: false }),
-      supabase.from('servidores').select('*').eq('verificado', false),
-      // Sin filtrar por tipo: el vínculo real es servidores.perfil_id, y si
-      // el tipo del perfil no coincidiera, la cola mostraría "Perfil sin
-      // nombre" y el administrador no sabría a quién está verificando.
-      supabase.from('perfiles').select('id, nombre_visible, municipios, suspendido'),
-    ])
+  const [
+    { data: reportes },
+    { data: servidores },
+    { data: perfiles },
+    { data: sugerenciasData },
+  ] = await Promise.all([
+    supabase
+      .from('reportes')
+      .select('*')
+      .eq('atendido', false)
+      .order('creado_at', { ascending: false }),
+    supabase.from('servidores').select('*').eq('verificado', false),
+    // Sin filtrar por tipo: el vínculo real es servidores.perfil_id, y si
+    // el tipo del perfil no coincidiera, la cola mostraría "Perfil sin
+    // nombre" y el administrador no sabría a quién está verificando.
+    supabase.from('perfiles').select('id, nombre_visible, municipios, suspendido'),
+    supabase.rpc('sugerencias_pendientes'),
+  ])
+
+  const sugerencias = (sugerenciasData as unknown as SugerenciaPendiente[]) ?? []
 
   const porPerfil = new Map((perfiles ?? []).map((p) => [p.id, p]))
 
@@ -159,6 +180,45 @@ export default async function AdminPage() {
                 </li>
               )
             })}
+          </ul>
+        )}
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-xl font-bold">Ítems sugeridos</h2>
+        <Alert className="mt-3">
+          <AlertDescription>
+            Aprobar crea un ítem nuevo en el catálogo. Fusionar reutiliza uno
+            que ya existe y hace que todo lo que ya usaba esta sugerencia
+            apunte a ese ítem. Rechazar no crea ni cambia nada.
+          </AlertDescription>
+        </Alert>
+        {sugerencias.length === 0 ? (
+          <p className="mt-3 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
+            No hay ítems sugeridos por revisar.
+          </p>
+        ) : (
+          <ul className="mt-3 space-y-3">
+            {sugerencias.map((s) => (
+              <li key={s.id} className="rounded-lg border border-border p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-lg font-bold">{s.nombre_propuesto}</span>
+                  <span className="text-base text-muted-foreground">
+                    {fecha(s.creada_at)}
+                  </span>
+                </div>
+                <p className="mt-1 text-base text-muted-foreground">
+                  {s.categoria_sugerida
+                    ? categoria(s.categoria_sugerida).etiqueta
+                    : 'Sin categoría sugerida'}{' '}
+                  · {ORIGENES_SUGERENCIA[s.origen]}
+                </p>
+                <p className="mt-1 text-base text-muted-foreground">
+                  En uso en {s.usos} {s.usos === 1 ? 'solicitud u oferta' : 'solicitudes u ofertas'}
+                </p>
+                <AccionesSugerencia sugerencia={s} />
+              </li>
+            ))}
           </ul>
         )}
       </section>
