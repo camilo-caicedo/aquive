@@ -21,6 +21,9 @@
 --
 -- Las cinco marcas y lo que arrastra cada una:
 --
+--   auth.users        uuid 00000000-0000-4000-8000-…  → perfiles y todo lo
+--                                              que cuelga de ellos. Las crea
+--                                              migracion/97-seed-perfiles.sql
 --   solicitudes       es_prueba              → solicitud_items, respuestas,
 --                                              push_suscripciones
 --   perfiles          nombre_visible PRUEBA  → ofrecimientos, servidores,
@@ -45,6 +48,9 @@ union all
 select 'solicitudes', count(*) from public.solicitudes where es_prueba
 union all
 select 'perfiles', count(*) from public.perfiles where nombre_visible ilike 'prueba%'
+union all
+select 'cuentas de prueba (auth.users)', count(*) from auth.users
+ where id::text like '00000000-0000-4000-8000-%'
 union all
 select 'sugerencias_item', count(*) from public.sugerencias_item where es_prueba
 union all
@@ -112,8 +118,19 @@ delete from public.metricas where es_prueba;
 -- CASCADE: solicitud_items, respuestas, push_suscripciones.
 delete from public.solicitudes where es_prueba;
 
--- CASCADE: ofrecimientos, servidores, push_ofertadores.
+-- CASCADE: ofrecimientos, servidores, push_ofertadores, y también
+-- `respuestas`, que no está en la lista de arriba pero cuelga de
+-- `respuestas.autor_id`.
 delete from public.perfiles where nombre_visible ilike 'prueba%';
+
+-- Las cuentas sin login que crea `migracion/97-seed-perfiles.sql`. Llevan
+-- uuid fijo con ese prefijo justamente para poder encontrarlas aquí: no
+-- tienen nada más que las distinga, y borrar solo el perfil dejaría la
+-- fila de `auth.users` colgando para siempre.
+--
+-- 🔴 El `like` es la única salvaguarda de este delete. Ninguna cuenta real
+-- de Google puede tener un uuid así, pero míralo antes de correrlo.
+delete from auth.users where id::text like '00000000-0000-4000-8000-%';
 
 -- Las sugerencias van después de sus dos referencias: `sugerencia_id` está
 -- en `on delete restrict` en `solicitud_items` y en `ofrecimientos`
@@ -140,6 +157,7 @@ begin
        + (select count(*) from public.perfiles         where nombre_visible ilike 'prueba%')
        + (select count(*) from public.sugerencias_item where es_prueba)
        + (select count(*) from public.catalogo_items   where es_prueba)
+       + (select count(*) from auth.users where id::text like '00000000-0000-4000-8000-%')
     into v_restantes;
 
   if v_restantes <> 0 then
