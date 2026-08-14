@@ -127,28 +127,15 @@ as $$
      and not exists (
        select 1 from jsonb_array_elements(p_enlaces) e
         where jsonb_typeof(e) <> 'object'
-           -- Exactamente dos llaves, y esas dos. Sin esto se cuelan campos
-           -- que ninguna pantalla mira y nadie valida.
            or (select count(*) from jsonb_object_keys(e) k
                 where k not in ('etiqueta','url')) > 0
            or e->>'etiqueta' is null
            or e->>'url'      is null
            or char_length(trim(e->>'etiqueta')) not between 2 and 40
            or char_length(e->>'url') not between 12 and 200
-           -- Toda la URL, no solo el dominio: sin el `$` final, un
-           -- `https://ok.org/<script>` pasaba entero.
-           or e->>'url' !~ '^https://[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)+(:[0-9]{1,5})?(/[!-~]*)?$'
-           -- Solo ASCII imprimible: cierra el homógrafo IDN. «аquive.co»
-           -- con «а» cirílica se ve idéntico a «aquive.co». Un dominio
-           -- internacional legítimo se pega en punycode y se ve el `xn--`.
+           or e->>'url' !~ '^https://[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)+(:([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5]))?(/[!-~]*)?$'
            or e->>'url' ~ '[^ -~]'
-           -- `https://fundacion-real.org@evil.com/`: el ojo lee lo de la
-           -- izquierda y el navegador va a lo de la derecha. Mostrar la URL
-           -- completa debajo del botón NO desmiente este caso: lo confirma.
-           -- Por eso se prohíbe la arroba entera.
            or e->>'url' like '%@%'
-           -- Espacios, comillas y ángulos: ninguna URL legítima los lleva
-           -- sin escapar, y son la materia prima para romper el atributo.
            or e->>'url' ~ '[[:space:]<>"'']'
      );
 $$;
@@ -156,7 +143,7 @@ $$;
 revoke execute on function public.enlaces_validos(jsonb) from public, anon, authenticated;
 
 comment on function public.enlaces_validos(jsonb) is
-  'Gemela de esEnlaceSeguro en src/lib/validacion.ts. Si cambia una, cambia la otra. Lista blanca de https:// — nunca la conviertas en lista negra. El EXECUTE revocado no estorba al CHECK porque la única ruta de escritura es una security definer de postgres.';
+  'Gemela de esEnlaceSeguro en src/lib/validacion.ts. Si cambia una, cambia la otra. Lista blanca de https:// — nunca la conviertas en lista negra. El EXECUTE revocado no estorba al CHECK porque todas las rutas de escritura corren como postgres: guardar_entidad y resolver_reporte son security definer suyas, y el editor SQL también. Si algún día se le concede INSERT sobre entidades a otro rol, ese insert fallará con «permission denied for function» en vez del mensaje pensado.';
 
 -- ---------------------------------------------------------------------
 -- 2. La tabla
@@ -213,10 +200,11 @@ alter table public.entidades add  constraint entidades_enlaces_validos
 comment on table public.entidades is
   'Directorio SIN AVAL. Aparecer aquí no es recomendación ni verificación. Antes de enlazar, mirar dos cosas: que el destino no sea una página de donación —el plan Hobby de Vercel las cuenta como uso comercial, ver PLAN-V2 §13.8— y que la regla 5 no se esté eludiendo por la vía de enlazar a un tercero. Mismo espíritu que el comentario de catalogo_servicios.';
 
+comment on column public.entidades.pie is
+  'Nota de cierre libre del administrador: horarios, cobertura, aclaraciones. Puede llevar el teléfono de la organización — eso no es dato personal de una persona. No lleva filtro de PII a propósito, a diferencia de la nota de una solicitud, porque quien escribe aquí es el responsable del proyecto y no un usuario.';
+
 comment on column public.entidades.enlaces is
   'Array [{etiqueta,url}] validado por el CHECK entidades_enlaces_validos. Solo https://, sin arroba, solo ASCII, máximo 6.';
-
-create index if not exists idx_entidades_activa on public.entidades(activa, orden);
 
 create index if not exists idx_entidades_activa on public.entidades(activa, orden);
 
@@ -850,6 +838,13 @@ revoke all on public.solicitud_items    from anon, authenticated;
 -- El público no toca la tabla, toca `entidades_publicas`. Una sola
 -- política, la del administrador, que necesita ver también las retiradas.
 revoke all on public.entidades          from anon, authenticated;
+-- ⚠ Una política FILTRA privilegios, no los concede: sin este grant,
+-- PostgREST —que conecta como `authenticated`— devolvía «permission denied»
+-- para todo el mundo, el administrador incluido, y el panel listaba siempre
+-- «No hay entidades». `solicitudes` lleva revoke y CERO políticas;
+-- `sugerencias_item` lleva política y ningún revoke. Esta es del segundo
+-- tipo. `anon` sigue sin nada: lo público sale de la vista.
+grant select on public.entidades to authenticated;
 create policy "admin lee entidades" on public.entidades
   for select to authenticated
   using (exists (select 1 from public.administradores a where a.user_id = (select auth.uid())));

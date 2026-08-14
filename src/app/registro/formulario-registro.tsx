@@ -253,7 +253,9 @@ export function FormularioRegistro({
       return
     }
 
-    router.push(tipo === 'servidor' ? '/servidores' : '/')
+    // Con el parámetro: /servidores abre la pestaña de entidades, y quien
+    // acaba de registrarse como servidor espera verse a sí mismo.
+    router.push(tipo === 'servidor' ? '/servidores?ver=profesionales' : '/')
     router.refresh()
   }
 

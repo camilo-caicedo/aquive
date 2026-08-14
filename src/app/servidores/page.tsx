@@ -10,9 +10,9 @@ import { BotonReportar } from '@/components/boton-reportar'
 import type { EntidadMatricula, AreaServicio } from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { SelectFiltro } from '@/components/select-filtro'
 
 export const metadata = { title: 'Quién ofrece servicios · AquíVe' }
-import { SelectFiltro } from '@/components/select-filtro'
 
 const AREAS: Record<AreaServicio, string> = {
   ingenieria: 'Ingeniería',
@@ -38,6 +38,18 @@ export default async function ServidoresPage({
   // revisó una por una, y quien busca ayuda las lee primero.
   const verProfesionales = params.ver === 'profesionales'
 
+  // El municipio entra en una cadena de filtros de PostgREST por
+  // interpolación, así que se valida ANTES: un código DANE son cinco
+  // dígitos y nada más. Sin esto, `?municipio=x},nombre.ilike.*a*,{y` mete
+  // términos arbitrarios en el OR — hoy no hay columna oculta que sondear,
+  // pero la habría el día que alguien agregue una a la vista, y ese día
+  // nadie va a volver a mirar esta línea.
+  const municipioCrudo = Array.isArray(params.municipio)
+    ? params.municipio[0]
+    : params.municipio
+  const municipio =
+    municipioCrudo && /^[0-9]{5}$/.test(municipioCrudo) ? municipioCrudo : null
+
   // Cada pestaña consulta lo suyo y nada más, igual que los dos modos de la
   // portada. Sin esto, entrar al directorio traía media base de datos.
   const [{ data: municipios }, { data: catalogoServicios }] = verProfesionales
@@ -60,10 +72,8 @@ export default async function ServidoresPage({
     verProfesionales
       ? [{ data: null }, { data: null }, null]
       : await Promise.all([
-          params.municipio
-            ? consultaEntidades.or(
-                `cobertura.eq.nacional,municipios.cs.{${params.municipio}}`
-              )
+          municipio
+            ? consultaEntidades.or(`cobertura.eq.nacional,municipios.cs.{${municipio}}`)
             : consultaEntidades,
           supabase.from('municipios_con_entidades').select('*').order('nombre'),
           listarMunicipios(supabase),
@@ -82,20 +92,20 @@ export default async function ServidoresPage({
     .order('verificado', { ascending: false })
     .order('nombre_visible')
 
-  if (params.municipio) query = query.contains('municipios', [params.municipio])
+  if (municipio) query = query.contains('municipios', [municipio])
   if (params.servicio) query = query.contains('servicios', [params.servicio])
 
-  const { data: servidores } = await query
+  const { data: servidores } = verProfesionales ? await query : { data: null }
   const listaMunicipios = verProfesionales ? municipios : municipiosEntidades
-  const hayFiltro = !!(params.municipio || (verProfesionales && params.servicio))
+  const hayFiltro = !!(municipio || (verProfesionales && params.servicio))
   const mostrarFiltros = (listaMunicipios?.length ?? 0) > 0 || hayFiltro
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       <h1 className="text-2xl font-bold">Quién ofrece servicios</h1>
       <p className="mt-1 text-base text-muted-foreground">
-        Organizaciones y profesionales con matrícula. El contacto ocurre por
-        fuera: la plataforma no participa.
+        Organizaciones que prestan servicios, y profesionales con matrícula.
+        El contacto ocurre por fuera: la plataforma no participa.
       </p>
 
       {/* Enlaces, no pestañas con estado: la pestaña vive en la URL, así
@@ -143,7 +153,7 @@ export default async function ServidoresPage({
           name="municipio"
           label="Filtrar por municipio"
           placeholder="Todos los municipios"
-          valorInicial={params.municipio ?? ''}
+          valorInicial={municipio ?? ''}
           conBusqueda
           opciones={(listaMunicipios ?? []).map((m) => ({
             valor: m.codigo_dane,
@@ -293,6 +303,8 @@ export default async function ServidoresPage({
         </ul>
       )}
 
+      {/* Habla del sello de matrícula, que solo existe en esta pestaña. */}
+      {verProfesionales && (
       <Alert className="mt-6">
         <AlertDescription>
           Un sello de matrícula verificada significa únicamente que ese número
@@ -300,6 +312,7 @@ export default async function ServidoresPage({
           antecedentes ni intenciones.
         </AlertDescription>
       </Alert>
+      )}
     </main>
   )
 }

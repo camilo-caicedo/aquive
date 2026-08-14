@@ -66,9 +66,14 @@ export function ListaEntidades({
                   // Última red antes de pintar. React no sanea `href`:
                   // renderiza `javascript:` sin quejarse. Si algo se coló
                   // antes del CHECK, aquí se muestra sin enlace.
-                  .filter((enlace) => esEnlaceSeguro(enlace.url))
+                  .filter(
+                    (enlace) =>
+                      typeof enlace?.url === 'string' &&
+                      typeof enlace?.etiqueta === 'string' &&
+                      esEnlaceSeguro(enlace.url)
+                  )
                   .map((enlace) => (
-                    <li key={enlace.url}>
+                    <li key={`${enlace.etiqueta}|${enlace.url}`}>
                       <Button
                         variant="outline"
                         className="w-full"

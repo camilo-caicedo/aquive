@@ -167,7 +167,7 @@ export default async function InicioPage({
             variant="outline"
             className="w-full sm:w-auto"
             nativeButton={false}
-            render={<Link href="/servidores" />}
+            render={<Link href="/servidores?ver=profesionales" />}
           >
             Ver profesionales
           </Button>

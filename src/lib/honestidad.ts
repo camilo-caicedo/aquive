@@ -112,10 +112,11 @@ export const SOBRE_LOS_PROFESIONALES =
   'revisado en absoluto.'
 
 export const SI_ALGO_SALE_MAL =
-  'Las solicitudes, las respuestas y los perfiles tienen un botón para ' +
-  'reportar. Lo revisa una persona y puede borrar el contenido o suspender ' +
-  'la cuenta. Si hay riesgo para alguien ahora mismo, eso no es un ' +
-  'reporte: es el 123.'
+  'Las solicitudes, las respuestas, los perfiles y las entidades del ' +
+  'directorio tienen un botón para reportar. Lo revisa una persona y puede ' +
+  'borrar el contenido, suspender la cuenta o bajar la entidad. Si un ' +
+  'enlace deja de llevar a donde decía, eso también se reporta. Si hay ' +
+  'riesgo para alguien ahora mismo, eso no es un reporte: es el 123.'
 
 /**
  * ⚠ Este texto decía «ni que entres a ningún otro sitio», y el directorio
