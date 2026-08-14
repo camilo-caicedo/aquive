@@ -125,7 +125,12 @@ create table if not exists public.solicitudes (
                     check (estado in ('abierta','cumplida')),
   creada_at       timestamptz not null default now(),
   confirmada_at   timestamptz not null default now(),
-  expira_at       timestamptz not null default now() + interval '72 hours'
+  expira_at       timestamptz not null default now() + interval '72 hours',
+  -- Temporal, mientras dure el periodo de pruebas. La deriva
+  -- `crear_solicitud` del prefijo del barrio y la propagan
+  -- `cerrar_solicitud` y `expirar_solicitudes` a `metricas`, que no tiene
+  -- FK por donde limpiar después. Se elimina al terminar las pruebas.
+  es_prueba       boolean not null default false
 );
 
 comment on table public.solicitudes is
@@ -211,7 +216,12 @@ create table if not exists public.metricas (
   horas_hasta_respuesta   numeric(6,2),
   horas_hasta_cierre      numeric(6,2),
   num_respuestas          integer not null default 0,
-  registrada_at           timestamptz not null default now()
+  registrada_at           timestamptz not null default now(),
+  -- Sin esta columna no habría forma de identificar después las filas que
+  -- dejan las solicitudes de prueba: esta tabla no tiene ninguna FK y para
+  -- cuando uno quiera limpiarla ya no existe la solicitud que la originó.
+  -- `/datos` publica siempre con `es_prueba = false`.
+  es_prueba               boolean not null default false
 );
 
 comment on table public.metricas is
@@ -475,9 +485,18 @@ begin
 
   v_codigo := public.generar_codigo();
 
-  insert into public.solicitudes (codigo, token_hash, municipio, barrio, categoria, nota)
+  -- La marca de prueba se deriva del prefijo del barrio en vez de recibirse
+  -- por parámetro: así no cambia la firma —agregarle un argumento a esta
+  -- función con `create or replace` crea una sobrecarga y PostgREST
+  -- devuelve PGRST203 en cada llamada—, no se puede olvidar, y una
+  -- solicitud de prueba publicada desde la interfaz real queda marcada
+  -- sola. El prefijo ya es obligatorio: `barrio` se ve en la tarjeta del
+  -- tablero público y quien la lea tiene que entender que es una prueba
+  -- antes de invertir un viaje.
+  insert into public.solicitudes (codigo, token_hash, municipio, barrio, categoria, nota, es_prueba)
   values (v_codigo, encode(extensions.digest(p_token, 'sha256'), 'hex'),
-          p_municipio, p_barrio, p_categoria, nullif(trim(p_nota), ''))
+          p_municipio, p_barrio, p_categoria, nullif(trim(p_nota), ''),
+          trim(p_barrio) ilike 'prueba%')
   returning id into v_id;
 
   for v_item in select * from jsonb_array_elements(p_items) loop
@@ -578,11 +597,11 @@ begin
 
   insert into public.metricas (
     municipio, categoria, cumplida, horas_hasta_respuesta,
-    horas_hasta_cierre, num_respuestas)
+    horas_hasta_cierre, num_respuestas, es_prueba)
   select v_sol.municipio, v_sol.categoria, p_cumplida,
          extract(epoch from (min(r.creada_at) - v_sol.creada_at)) / 3600,
          extract(epoch from (now() - v_sol.creada_at)) / 3600,
-         count(r.id)
+         count(r.id), v_sol.es_prueba
     from public.respuestas r where r.solicitud_id = v_sol.id;
 
   delete from public.solicitudes where id = v_sol.id;   -- CASCADE limpia todo
@@ -919,15 +938,15 @@ declare v_n integer;
 begin
   insert into public.metricas (
     municipio, categoria, cumplida, horas_hasta_respuesta,
-    horas_hasta_cierre, num_respuestas)
+    horas_hasta_cierre, num_respuestas, es_prueba)
   select s.municipio, s.categoria, false,
          extract(epoch from (min(r.creada_at) - s.creada_at)) / 3600,
          extract(epoch from (s.expira_at - s.creada_at)) / 3600,
-         count(r.id)
+         count(r.id), s.es_prueba
     from public.solicitudes s
     left join public.respuestas r on r.solicitud_id = s.id
    where s.expira_at <= now()
-   group by s.id, s.municipio, s.categoria, s.creada_at, s.expira_at;
+   group by s.id, s.municipio, s.categoria, s.creada_at, s.expira_at, s.es_prueba;
 
   delete from public.solicitudes where expira_at <= now();
   get diagnostics v_n = row_count;

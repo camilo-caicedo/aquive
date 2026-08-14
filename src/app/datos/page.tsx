@@ -11,9 +11,15 @@ export default async function DatosPage() {
 
   // `metricas` es el residuo anónimo que sobrevive al borrado: municipio,
   // categoría y tiempos. Sin texto, sin ubicación fina, sin identificadores.
+  //
+  // El filtro de `es_prueba` no es cosmético: esta tabla no tiene ninguna
+  // FK, así que las filas que dejan las solicitudes de prueba al cerrarse
+  // o vencer no se pueden identificar de ninguna otra forma. Sin él, cada
+  // prueba ensucia para siempre la página de datos abiertos.
   const { data: metricas } = await supabase
     .from('metricas')
     .select('municipio, categoria, cumplida, horas_hasta_respuesta')
+    .eq('es_prueba', false)
 
   const municipios = await listarMunicipios(supabase)
   const nombrePorCodigo = new Map((municipios ?? []).map((m) => [m.codigo_dane, m.nombre]))

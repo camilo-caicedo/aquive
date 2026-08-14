@@ -214,6 +214,9 @@ export interface Database {
           creada_at: string
           confirmada_at: string
           expira_at: string
+          // Temporal, mientras dure el periodo de pruebas. La deriva
+          // `crear_solicitud` del prefijo del barrio.
+          es_prueba: boolean
         }
         Insert: {
           id?: string
@@ -227,6 +230,7 @@ export interface Database {
           creada_at?: string
           confirmada_at?: string
           expira_at?: string
+          es_prueba?: boolean
         }
         Update: Partial<Database['public']['Tables']['solicitudes']['Insert']>
         Relationships: []
@@ -339,6 +343,9 @@ export interface Database {
           horas_hasta_cierre: number | null
           num_respuestas: number
           registrada_at: string
+          // Esta tabla no tiene FK: sin esta columna, las filas que dejan
+          // las solicitudes de prueba no se pueden identificar después.
+          es_prueba: boolean
         }
         Insert: {
           id?: number
@@ -349,6 +356,7 @@ export interface Database {
           horas_hasta_cierre?: number | null
           num_respuestas?: number
           registrada_at?: string
+          es_prueba?: boolean
         }
         Update: Partial<Database['public']['Tables']['metricas']['Insert']>
         Relationships: []
