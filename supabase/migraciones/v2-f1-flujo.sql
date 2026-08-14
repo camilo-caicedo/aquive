@@ -99,9 +99,6 @@ comment on column public.solicitudes.flujo is
 -- la coordinación viva dentro (§5.3-1).
 --
 -- `immutable` para que sirva dentro de un índice si algún día hace falta.
--- Queda con el EXECUTE revocado, como el resto de ayudantes: dentro de
--- las vistas corre con los privilegios de la dueña, y dentro de las RPC
--- `security definer` también.
 -- ---------------------------------------------------------------------
 
 create or replace function public.estado_activo(p_estado text)
@@ -113,7 +110,16 @@ as $$
   select p_estado in ('abierta','en_coordinacion','entregada_parcial');
 $$;
 
-revoke execute on function public.estado_activo(text) from public, anon, authenticated;
+-- ⚠ CON el EXECUTE concedido, y no revocado como el resto de ayudantes.
+-- PostgreSQL comprueba los permisos de TABLA con el dueño de la vista,
+-- pero los de FUNCION contra quien consulta. Con el revoke puesto,
+-- cualquier lectura de solicitudes_publicas moria con «permission denied
+-- for function estado_activo» — para todo el mundo, o sea el tablero
+-- publico entero. Es la misma trampa que el esquema ya documenta para
+-- es_admin() dentro de una politica RLS.
+--
+-- No filtra nada: recibe un texto y devuelve si esta en una lista de tres.
+grant execute on function public.estado_activo(text) to anon, authenticated;
 
 comment on function public.estado_activo(text) is
   'Los estados en los que una solicitud sigue viva y visible. Si algún día se agrega un estado, se agrega AQUÍ y no en cada consulta: los cuatro sitios que filtraban «estado = abierta» a mano son la trampa §5.3-1 del plan.';

@@ -885,11 +885,20 @@ returns boolean
 language sql
 immutable
 set search_path = ''
-as 2665
+as $$
   select p_estado in ('abierta','en_coordinacion','entregada_parcial');
-2665;
+$$;
 
-revoke execute on function public.estado_activo(text) from public, anon, authenticated;
+-- ⚠ CON el EXECUTE concedido, y no revocado como el resto de ayudantes.
+-- PostgreSQL comprueba los permisos de TABLA con el dueño de la vista,
+-- pero los de FUNCION contra quien consulta. Con el revoke puesto,
+-- cualquier lectura de solicitudes_publicas moria con «permission denied
+-- for function estado_activo» — para todo el mundo, o sea el tablero
+-- publico entero. Es la misma trampa que el esquema ya documenta para
+-- es_admin() dentro de una politica RLS.
+--
+-- No filtra nada: recibe un texto y devuelve si esta en una lista de tres.
+grant execute on function public.estado_activo(text) to anon, authenticated;
 
 create or replace view public.solicitudes_publicas as
 select
