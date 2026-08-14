@@ -7,6 +7,7 @@ import { COLUMNAS_ENTIDAD_ADMIN } from '@/lib/types'
 import type {
   EntidadMatricula,
   MotivoReporte,
+  OrganizacionAdmin,
   OrigenSugerencia,
   SugerenciaPendiente,
   TipoObjetoReporte,
@@ -16,6 +17,7 @@ import { AccionesReporte } from './acciones-reporte'
 import { AccionesServidor } from './acciones-servidor'
 import { AccionesSugerencia } from './acciones-sugerencia'
 import { PanelEntidades, type EntidadAdmin } from './panel-entidades'
+import { PanelOrganizaciones } from './panel-organizaciones'
 
 const MOTIVOS: Record<MotivoReporte, string> = {
   datos_personales: 'Datos personales',
@@ -84,6 +86,7 @@ export default async function AdminPage() {
     { data: perfiles },
     { data: sugerenciasData },
     { data: entidadesData },
+    { data: organizacionesData },
   ] = await Promise.all([
     supabase
       .from('reportes')
@@ -99,10 +102,14 @@ export default async function AdminPage() {
     // Columnas explícitas: `select('*')` arrastraría `creada_por`, el uuid
     // de `auth.users` de quien dio de alta la entidad.
     supabase.from('entidades').select(COLUMNAS_ENTIDAD_ADMIN).order('orden').order('nombre'),
+    // Por RPC y no por `select`: la tabla está revocada entera, y así
+    // `creada_por` —el uuid de una persona real— no sale al navegador.
+    supabase.rpc('organizaciones_admin'),
   ])
 
   const sugerencias = (sugerenciasData as unknown as SugerenciaPendiente[]) ?? []
   const entidades: EntidadAdmin[] = entidadesData ?? []
+  const organizaciones = (organizacionesData as unknown as OrganizacionAdmin[]) ?? []
 
   const porPerfil = new Map((perfiles ?? []).map((p) => [p.id, p]))
 
@@ -245,6 +252,24 @@ export default async function AdminPage() {
           </AlertDescription>
         </Alert>
         <PanelEntidades entidades={entidades} municipios={municipios} />
+      </section>
+
+      <section className="mt-8">
+        <h2 className="font-heading text-2xl">Organizaciones aliadas</h2>
+        <Alert className="mt-3">
+          <AlertDescription>
+            Una organización aliada coordina entregas dentro de AquíVe, así
+            que aquí no basta con que exista: mira el certificado del RUES y
+            el NIT antes de crearla. No hay cola de verificación porque la
+            verificación ocurre afuera, y eres tú.
+            <br />
+            Crearla no le da acceso a nadie. Genera después la invitación de
+            coordinador y pásale el enlace a la persona de contacto: quien lo
+            abra e inicie sesión queda como su primer coordinador, y de ahí
+            en adelante el equipo lo arma la organización.
+          </AlertDescription>
+        </Alert>
+        <PanelOrganizaciones organizaciones={organizaciones} municipios={municipios} />
       </section>
     </main>
   )
