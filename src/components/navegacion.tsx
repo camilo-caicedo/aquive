@@ -8,6 +8,7 @@ import {
   ListChecks,
   ShieldCheck,
   PackageOpen,
+  Building2,
 } from 'lucide-react'
 
 const ENLACES = [
@@ -20,6 +21,7 @@ const ENLACES = [
 ]
 
 const ENLACE_ADMIN = { href: '/admin', etiqueta: 'Moderación', Icono: ShieldCheck }
+const ENLACE_ALIADO = { href: '/aliado', etiqueta: 'Mi organización', Icono: Building2 }
 
 // Coincidencia exacta para la portada; por prefijo para el resto, para que
 // /responder/ABCD siga marcando "Solicitudes".
@@ -36,9 +38,13 @@ function estaActiva(ruta: string, href: string) {
  * JavaScript los enlaces siguen funcionando; lo único que se pierde es el
  * resaltado, que es decorativo.
  */
-export function Navegacion({ esAdmin }: { esAdmin: boolean }) {
+export function Navegacion({ esAdmin, esAliado }: { esAdmin: boolean; esAliado: boolean }) {
   const ruta = usePathname()
-  const enlaces = esAdmin ? [...ENLACES, ENLACE_ADMIN] : ENLACES
+  const enlaces = [
+    ...ENLACES,
+    ...(esAliado ? [ENLACE_ALIADO] : []),
+    ...(esAdmin ? [ENLACE_ADMIN] : []),
+  ]
 
   return (
     // Scroll horizontal: en pantallas de 320px no caben tres pestañas sin

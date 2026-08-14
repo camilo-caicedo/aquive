@@ -17,7 +17,7 @@ export async function Encabezado() {
   const [admin, perfil] = user
     ? await Promise.all([
         supabase.from('administradores').select('user_id').eq('user_id', user.id).maybeSingle(),
-        supabase.from('perfiles').select('id').eq('id', user.id).maybeSingle(),
+        supabase.from('perfiles').select('id, tipo').eq('id', user.id).maybeSingle(),
       ])
     : [null, null]
 
@@ -25,6 +25,12 @@ export async function Encabezado() {
   // El interruptor de avisos solo tiene sentido con perfil: los avisos
   // son de solicitudes en TUS municipios, y sin perfil no hay municipios.
   const tienePerfil = !!perfil?.data
+  // Del tipo del perfil y no de la pertenencia real: preguntar por la
+  // pertenencia costaría una consulta más en CADA carga de CADA página.
+  // Quien se unió a una organización teniendo ya perfil de ofertador no ve
+  // la pestaña; llega a /aliado por el enlace de la invitación, que es por
+  // donde llegó la primera vez.
+  const esAliado = perfil?.data?.tipo === 'aliado'
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
@@ -51,7 +57,7 @@ export async function Encabezado() {
         </div>
       </div>
 
-      <Navegacion esAdmin={esAdmin} />
+      <Navegacion esAdmin={esAdmin} esAliado={esAliado} />
     </header>
   )
 }

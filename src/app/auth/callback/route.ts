@@ -20,6 +20,15 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/login?error=1`)
   }
 
+  // Volver a /unirse es el único destino distinto que existe, y por eso el
+  // permitido es una expresión exacta y no «cualquier ruta relativa»: con
+  // lo segundo, `next=//evil.com` o `next=/\evil.com` se convierten en un
+  // redirect abierto desde una URL que la gente ya considera de confianza.
+  const siguiente = searchParams.get('next')
+  if (siguiente && /^\/unirse\/[a-z0-9-]{3,40}$/.test(siguiente)) {
+    return NextResponse.redirect(`${origin}${siguiente}`)
+  }
+
   // El perfil no puede crearse aquí: nombre visible, municipios y contacto
   // los escribe la persona en /registro. Aquí solo se decide a dónde va.
   const { data: perfil } = await supabase

@@ -94,7 +94,14 @@ export function FormularioRegistro({
   ofrecimientos: OfrecimientoResumen[]
 }) {
   const router = useRouter()
-  const [tipo, setTipo] = useState<TipoPerfil>(perfil?.tipo ?? 'ofertador')
+  // Un aliado llega aquí con `tipo = 'aliado'`, que no es una de las dos
+  // opciones de esta pantalla: nadie se declara aliado, eso pasa al unirse
+  // a una organización. Se arranca en 'ofertador' para que el formulario
+  // funcione, y el aviso de arriba explica qué significa guardarlo.
+  const eraAliado = perfil?.tipo === 'aliado'
+  const [tipo, setTipo] = useState<TipoPerfil>(
+    !perfil || eraAliado ? 'ofertador' : perfil.tipo
+  )
   const [nombre, setNombre] = useState(perfil?.nombre_visible ?? '')
   const [seleccionados, setSeleccionados] = useState<string[]>(perfil?.municipios ?? [])
   const [contacto, setContacto] = useState(perfil?.contacto_publico ?? '')
@@ -261,6 +268,18 @@ export function FormularioRegistro({
 
   return (
     <div className="mt-6 space-y-6">
+      {eraAliado && (
+        <Alert variant="warning">
+          <AlertDescription>
+            Tu perfil es el de alguien que trabaja en una organización aliada,
+            y como tal no se publica en ninguna parte. Si guardas esta
+            pantalla, tu perfil pasa a ser también el de quien ofrece ayuda a
+            título personal: tu nombre y tu contacto quedan públicos. Seguirás
+            en tu organización igual.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <fieldset>
         <legend className="mb-2 text-base font-medium">¿Qué vas a ofrecer?</legend>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
