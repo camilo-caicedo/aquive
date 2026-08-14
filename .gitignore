@@ -45,3 +45,10 @@ next-env.d.ts
 
 # El ejemplo sí se versiona: no tiene valores reales.
 !.env.local.example
+
+# Migración entre proyectos de Supabase.
+# 05-datos-cuentas.sql lleva correos, teléfonos, nombres y un número de
+# matrícula profesional de personas reales. NUNCA se versiona.
+# El runbook y el seed de servicios sí pueden ir: no tienen datos personales.
+/migracion/05-datos-cuentas.sql
+/migracion/*-datos-*.sql
