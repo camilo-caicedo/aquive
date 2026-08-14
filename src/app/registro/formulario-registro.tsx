@@ -4,8 +4,17 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { RESPONSABLE, ENTIDADES_MATRICULA } from '@/lib/config'
-import type { Database, TipoPerfil, ContactoTipo, EntidadMatricula } from '@/lib/types'
+import type {
+  Database,
+  TipoPerfil,
+  ContactoTipo,
+  EntidadMatricula,
+  Categoria,
+  OfrecimientoResumen,
+  OfrecimientoInput,
+} from '@/lib/types'
 import type { MunicipioBasico as Municipio } from '@/lib/municipios'
+import { categoria as categoriaInfo } from '@/lib/catalogo'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -32,6 +41,7 @@ import {
 type Perfil = Database['public']['Tables']['perfiles']['Row']
 type Servidor = Database['public']['Tables']['servidores']['Row']
 type Servicio = Database['public']['Tables']['catalogo_servicios']['Row']
+type ItemCatalogo = Database['public']['Tables']['catalogo_items']['Row']
 
 const AREAS: Record<Servicio['area'], string> = {
   ingenieria: 'Ingeniería',
@@ -41,16 +51,45 @@ const AREAS: Record<Servicio['area'], string> = {
   derecho: 'Derecho',
 }
 
+// Identidad estable de una fila del inventario: el item_id o el
+// sugerencia_id la identifican mientras existan en la base; una sugerencia
+// recién escrita todavía no tiene ninguno de los dos, así que usa el nombre.
+function claveOfrecimiento(o: OfrecimientoResumen): string {
+  return o.item_id ?? o.sugerencia_id ?? `nueva:${o.nombre}`
+}
+
+// Lo que espera guardar_ofrecimientos: exactamente una de las tres llaves
+// que identifican el ítem, según de dónde haya salido la fila.
+function aOfrecimientoInput(o: OfrecimientoResumen): OfrecimientoInput {
+  const base = { cantidad: o.cantidad, disponible: o.disponible }
+  if (o.item_id) return { ...base, item_id: o.item_id }
+  if (o.sugerencia_id) return { ...base, sugerencia_id: o.sugerencia_id }
+  return { ...base, sugerencia: o.nombre }
+}
+
+// Opción del combobox de insumos: solo lo mínimo para buscar y mostrar. Se
+// usa tanto para el catálogo (lo buscable) como para lo ya elegido —
+// incluidas las sugerencias, que nunca están en el catálogo.
+interface OpcionInsumo {
+  id: string
+  nombre: string
+  categoria: Categoria | null
+}
+
 export function FormularioRegistro({
   municipios,
   perfil,
   servidor,
   servicios,
+  itemsCatalogo,
+  ofrecimientos,
 }: {
   municipios: Municipio[]
   perfil: Perfil | null
   servidor: Servidor | null
   servicios: Servicio[]
+  itemsCatalogo: ItemCatalogo[]
+  ofrecimientos: OfrecimientoResumen[]
 }) {
   const router = useRouter()
   const [tipo, setTipo] = useState<TipoPerfil>(perfil?.tipo ?? 'ofertador')
@@ -67,12 +106,90 @@ export function FormularioRegistro({
   )
   const [matricula, setMatricula] = useState(servidor?.numero_matricula ?? '')
   const [serviciosIds, setServiciosIds] = useState<string[]>(servidor?.servicios ?? [])
+  const [inventario, setInventario] = useState<OfrecimientoResumen[]>(ofrecimientos)
+  const [busquedaInsumo, setBusquedaInsumo] = useState('')
+  const [errorInventario, setErrorInventario] = useState<string | null>(null)
   const [autorizo, setAutorizo] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const municipiosElegidos = municipios.filter((m) => seleccionados.includes(m.codigo_dane))
   const serviciosElegidos = servicios.filter((s) => serviciosIds.includes(s.id))
+
+  const poolInsumos: OpcionInsumo[] = itemsCatalogo.map((i) => ({
+    id: i.id,
+    nombre: i.nombre,
+    categoria: i.categoria,
+  }))
+  const elegidosInsumos: OpcionInsumo[] = inventario.map((o) => ({
+    id: claveOfrecimiento(o),
+    nombre: o.nombre,
+    categoria: o.categoria,
+  }))
+
+  function alCambiarInsumos(nuevos: OpcionInsumo[]) {
+    const idsNuevos = new Set(nuevos.map((n) => n.id))
+    setInventario((prev) => {
+      // Conserva cantidad y disponibilidad de lo que ya estaba.
+      const conservados = prev.filter((o) => idsNuevos.has(claveOfrecimiento(o)))
+      const clavesConservadas = new Set(conservados.map(claveOfrecimiento))
+      // Lo nuevo siempre sale del catálogo: las sugerencias se agregan
+      // aparte, desde el botón de "no encuentro lo que busco".
+      const agregados: OfrecimientoResumen[] = nuevos
+        .filter((n) => !clavesConservadas.has(n.id))
+        .map((n) => {
+          const item = itemsCatalogo.find((i) => i.id === n.id)
+          return {
+            item_id: n.id,
+            sugerencia_id: null,
+            nombre: n.nombre,
+            categoria: n.categoria,
+            unidad: item?.unidad ?? 'unidad',
+            cantidad: null,
+            disponible: true,
+            por_confirmar: false,
+          }
+        })
+      return [...conservados, ...agregados]
+    })
+  }
+
+  function cambiarCantidadInsumo(clave: string, cantidad: number | null) {
+    setInventario((prev) =>
+      prev.map((o) => (claveOfrecimiento(o) === clave ? { ...o, cantidad } : o))
+    )
+  }
+
+  // Máximo 3 sugerencias nuevas por guardado: mismo límite que impone
+  // guardar_ofrecimientos, repetido aquí para avisar antes de mandar el POST.
+  function agregarSugerencia() {
+    const texto = busquedaInsumo.trim()
+    if (texto.length < 2 || texto.length > 60) return
+    if (inventario.some((o) => o.nombre.toLowerCase() === texto.toLowerCase())) {
+      setErrorInventario('Ya agregaste eso.')
+      return
+    }
+    const sugerenciasNuevas = inventario.filter((o) => !o.item_id && !o.sugerencia_id).length
+    if (sugerenciasNuevas >= 3) {
+      setErrorInventario('Puedes sugerir máximo 3 cosas nuevas por guardado.')
+      return
+    }
+    setErrorInventario(null)
+    setInventario((prev) => [
+      ...prev,
+      {
+        item_id: null,
+        sugerencia_id: null,
+        nombre: texto,
+        categoria: null,
+        unidad: 'unidad',
+        cantidad: null,
+        disponible: true,
+        por_confirmar: true,
+      },
+    ])
+    setBusquedaInsumo('')
+  }
 
   const nombreValido = nombre.trim().length >= 3 && nombre.trim().length <= 60
   const contactoValido = contacto.trim().length >= 7 && contacto.trim().length <= 40
@@ -110,6 +227,20 @@ export function FormularioRegistro({
       setError(rpcError.message)
       setGuardando(false)
       return
+    }
+
+    // Va después de crear_perfil porque guardar_ofrecimientos exige que el
+    // perfil ya exista. Si esto falla, el perfil de todos modos quedó
+    // guardado: solo se pierde el inventario, no el perfil.
+    if (tipo === 'ofertador') {
+      const { error: inventarioError } = await supabase.rpc('guardar_ofrecimientos', {
+        p_items: inventario.map(aOfrecimientoInput),
+      })
+      if (inventarioError) {
+        setError(inventarioError.message)
+        setGuardando(false)
+        return
+      }
     }
 
     router.push(tipo === 'servidor' ? '/servidores' : '/')
@@ -248,6 +379,127 @@ export function FormularioRegistro({
           Este número será visible para cualquiera en internet.
         </p>
       </div>
+
+      {tipo === 'ofertador' && (
+        <div className="space-y-2 rounded-lg border border-border p-4">
+          <Label className="mb-1">Qué tengo para dar (opcional)</Label>
+          <p className="text-sm text-muted-foreground">
+            Si nos cuentas qué tienes, te avisamos cuando alguien cerca lo
+            necesite. Puedes llenarlo después. Sin esto no apareces en las
+            coincidencias ni recibes avisos, pero igual puedes navegar y
+            responder solicitudes.
+          </p>
+
+          <Combobox
+            multiple
+            items={poolInsumos}
+            value={elegidosInsumos}
+            onValueChange={alCambiarInsumos}
+            itemToStringLabel={(o: OpcionInsumo) => o.nombre}
+            isItemEqualToValue={(a: OpcionInsumo, b: OpcionInsumo) => a.id === b.id}
+            inputValue={busquedaInsumo}
+            onInputValueChange={setBusquedaInsumo}
+          >
+            <ComboboxChips className="min-h-12 py-2">
+              {inventario.map((o) => (
+                <ComboboxChip key={claveOfrecimiento(o)} className="h-8 px-2 text-sm">
+                  {o.nombre}
+                </ComboboxChip>
+              ))}
+              <ComboboxChipsInput
+                placeholder={inventario.length === 0 ? 'Escribe para buscar lo que tienes' : ''}
+                className="min-h-8 text-base"
+              />
+            </ComboboxChips>
+            <ComboboxContent>
+              <ComboboxEmpty>
+                <div className="flex flex-col items-center gap-2 py-1">
+                  <span>No encontramos eso en la lista.</span>
+                  {busquedaInsumo.trim().length >= 2 && (
+                    <Button type="button" variant="outline" onClick={agregarSugerencia}>
+                      Agregar &ldquo;{busquedaInsumo.trim()}&rdquo; como sugerencia
+                    </Button>
+                  )}
+                </div>
+              </ComboboxEmpty>
+              <ComboboxList>
+                {(o: OpcionInsumo) => (
+                  <ComboboxItem key={o.id} value={o}>
+                    <span className="flex min-w-0 flex-col">
+                      <span>{o.nombre}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {o.categoria ? categoriaInfo(o.categoria).etiqueta : ''}
+                      </span>
+                    </span>
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
+          {errorInventario && <p className="text-sm text-destructive">{errorInventario}</p>}
+
+          {inventario.length > 0 && (
+            <ul className="space-y-2 pt-1">
+              {inventario.map((o) => (
+                <li
+                  key={claveOfrecimiento(o)}
+                  className="flex items-center justify-between gap-2 rounded-lg border border-border p-2"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-base">
+                      {o.nombre}
+                      {o.por_confirmar && (
+                        <span className="ml-1 text-sm font-normal text-muted-foreground">
+                          · por confirmar
+                        </span>
+                      )}
+                    </p>
+                    {o.categoria && (
+                      <p className="text-sm text-muted-foreground">
+                        {categoriaInfo(o.categoria).etiqueta}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="size-12"
+                      aria-label={`Restar cantidad de ${o.nombre}`}
+                      onClick={() =>
+                        cambiarCantidadInsumo(
+                          claveOfrecimiento(o),
+                          o.cantidad === null || o.cantidad <= 1 ? null : o.cantidad - 1
+                        )
+                      }
+                    >
+                      −
+                    </Button>
+                    <span className="w-8 text-center text-base tabular-nums">
+                      {o.cantidad ?? '—'}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="size-12"
+                      aria-label={`Sumar cantidad de ${o.nombre}`}
+                      onClick={() => cambiarCantidadInsumo(claveOfrecimiento(o), (o.cantidad ?? 0) + 1)}
+                    >
+                      +
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="text-sm text-muted-foreground">
+            La cantidad es solo un cálculo aproximado, no hace falta que sea
+            exacta.
+          </p>
+        </div>
+      )}
 
       {tipo === 'servidor' && (
         <div className="space-y-4 rounded-lg border border-border p-4">
