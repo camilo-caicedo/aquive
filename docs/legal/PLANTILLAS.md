@@ -47,7 +47,7 @@ ese en todos los documentos.
 
 **Quién es responsable**
 Juan Camilo Caicedo Sepulveda, persona natural, Cali, Colombia.
-Correo de contacto: aquive@coffeaorigen.co.
+Correo de contacto: soporte@aquive.co.
 
 Este es un proyecto personal y sin ánimo de lucro, hecho por una sola
 persona para apoyar a los afectados por el sismo del 10 de agosto de
@@ -97,7 +97,7 @@ plataforma y nosotros no vemos nada de eso.
 
 **Tus derechos**
 Conforme a la Ley 1581 de 2012 puedes conocer, actualizar, rectificar y
-suprimir tus datos, y revocar la autorización. Escríbenos a aquive@coffeaorigen.co y
+suprimir tus datos, y revocar la autorización. Escríbenos a soporte@aquive.co y
 respondemos en los términos de ley.
 
 **Esta plataforma es temporal.** Fue creada para la emergencia del sismo
@@ -176,7 +176,7 @@ explicación previa, especialmente si hay riesgo para alguien.
 
 **10. Ley aplicable.** Leyes de la República de Colombia.
 
-**11. Contacto.** aquive@coffeaorigen.co
+**11. Contacto.** soporte@aquive.co
 ---
 
 ## 3. Texto de autorización (checkbox al registrarse)

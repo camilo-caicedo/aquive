@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { SelectFiltro } from '@/components/select-filtro'
 
-export const metadata = { title: 'Quién ofrece servicios · AquíVe' }
+export const metadata = { title: 'Quién ofrece servicios' }
 
 const AREAS: Record<AreaServicio, string> = {
   ingenieria: 'Ingeniería',

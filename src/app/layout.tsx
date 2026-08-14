@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Figtree, Caprasimo, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { CORREO_CONTACTO } from "@/lib/config";
 import { Encabezado } from "@/components/encabezado";
 import { PieDePagina } from "@/components/pie-de-pagina";
 
@@ -25,9 +26,33 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AquíVe · Ayuda directa en Colombia",
+  // El título de la portada es EXACTAMENTE el nombre, sin sufijo. La
+  // verificación de la marca de Google está automatizada y compara el
+  // nombre de la pantalla de consentimiento con «el nombre de tu portada»,
+  // que para una máquina es el <title>, no el encabezado: con
+  // «AquíVe · Ayuda directa en Colombia» no coincidía.
+  //
+  // El resto de páginas conserva el sufijo por la plantilla, así que en una
+  // pestaña se sigue sabiendo de qué sitio se trata.
+  title: {
+    default: "AquíVe",
+    template: "%s · AquíVe",
+  },
+  applicationName: "AquíVe",
+  openGraph: {
+    type: "website",
+    siteName: "AquíVe",
+    title: "AquíVe",
+    description:
+      "AquíVe conecta a quien necesita insumos tras el sismo del 10 de agosto de 2026 en Colombia con quien puede entregarlos.",
+    url: "https://aquive.co/",
+    locale: "es_CO",
+  },
+  // Empieza por el nombre y dice qué es, no solo qué se puede hacer. Es la
+  // misma frase de la portada: si quien lee esto es un revisor automático,
+  // encuentra lo mismo en los dos sitios.
   description:
-    "Solicita insumos o servicios profesionales tras el sismo del 10 de agosto de 2026, sin dar datos personales.",
+    "AquíVe conecta a quien necesita insumos tras el sismo del 10 de agosto de 2026 en Colombia con quien puede entregarlos. Pedir ayuda no exige dar datos personales.",
   manifest: "/manifest.json",
   // Verificación de propiedad del dominio ante Google. Hace falta para que
   // Google apruebe la marca de la pantalla de consentimiento OAuth: sin
@@ -54,6 +79,27 @@ export const viewport: Viewport = {
   themeColor: "#8c491a",
 };
 
+// Datos estructurados: el nombre y el propósito en el formato que lee una
+// máquina, que es quien está revisando la marca de Google. Dicen lo mismo
+// que el <title>, la descripción y el encabezado de la portada — si alguna
+// vez dejan de coincidir, el que manda es lo que se ve en pantalla.
+const DATOS_ESTRUCTURADOS = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "AquíVe",
+  url: "https://aquive.co/",
+  inLanguage: "es-CO",
+  description:
+    "AquíVe conecta a quien necesita insumos tras el sismo del 10 de agosto de 2026 en Colombia con quien puede entregarlos: alimentos, agua, aseo, abrigo y servicios de profesionales con matrícula.",
+  publisher: {
+    "@type": "Organization",
+    name: "AquíVe",
+    url: "https://aquive.co/",
+    email: CORREO_CONTACTO,
+    logo: "https://aquive.co/icono-512.png",
+  },
+};
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
@@ -61,6 +107,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${figtree.variable} ${caprasimo.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+        <script
+          type="application/ld+json"
+          // El objeto lo escribimos nosotros y no lleva nada de nadie: no
+          // hay entrada de usuario que pueda escaparse por aquí.
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(DATOS_ESTRUCTURADOS) }}
+        />
         {/* Primer tabulador para quien navega con teclado o lector de pantalla */}
         <a
           href="#contenido"

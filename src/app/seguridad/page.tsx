@@ -10,7 +10,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 
-export const metadata = { title: 'Cómo cuidarte · AquíVe' }
+export const metadata = { title: 'Cómo cuidarte' }
 
 export default function SeguridadPage() {
   return (

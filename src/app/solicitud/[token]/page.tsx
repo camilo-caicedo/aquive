@@ -1,4 +1,5 @@
 import { headers } from 'next/headers'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { MessageSquare, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
@@ -9,6 +10,14 @@ import { ActivarAvisos } from '@/components/activar-avisos'
 import { PantallaConfirmacion } from './pantalla-confirmacion'
 import { GestionSolicitud } from './gestion-solicitud'
 import { ListaRespuestas } from './lista-respuestas'
+
+// El token portador va en la URL, así que esta página no se indexa nunca.
+// `robots.ts` ya pide lo mismo, pero un `Disallow` es una petición que
+// solo respeta quien quiere: esto va en la respuesta y sirve también para
+// quien llegue por un enlace compartido en un chat que previsualiza.
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+}
 
 export default async function SolicitudPage({
   params,
