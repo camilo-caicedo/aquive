@@ -21,6 +21,7 @@ import { AccionesSugerencia } from './acciones-sugerencia'
 import { PanelEntidades, type EntidadAdmin } from './panel-entidades'
 import { PanelOrganizaciones } from './panel-organizaciones'
 import { PanelFlujoDos } from './panel-flujo2'
+import { Pestanas } from '@/components/pestanas'
 
 const MOTIVOS: Record<MotivoReporte, string> = {
   datos_personales: 'Datos personales',
@@ -57,7 +58,17 @@ function fecha(iso: string) {
   })
 }
 
-export default async function AdminPage() {
+type Vista = 'moderacion' | 'catalogo' | 'directorio' | 'aliados'
+
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ver?: string }>
+}) {
+  const { ver } = await searchParams
+  const vista: Vista =
+    ver === 'catalogo' || ver === 'directorio' || ver === 'aliados' ? ver : 'moderacion'
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -83,6 +94,12 @@ export default async function AdminPage() {
   // `perfiles` va en consulta aparte, no embebida: los tipos escritos a mano de
   // src/lib/types.ts declaran `Relationships: []`, así que PostgREST no puede
   // resolver `servidores -> perfiles` a nivel de tipos.
+  const [{ count: nReportes }, { count: nMatriculas }] = await Promise.all([
+    supabase.from('reportes').select('id', { count: 'exact', head: true }).eq('atendido', false),
+    supabase.from('servidores').select('perfil_id', { count: 'exact', head: true }).eq('verificado', false),
+  ])
+
+  const enModeracion = vista === 'moderacion'
   const [
     { data: reportes },
     { data: servidores },
@@ -92,24 +109,32 @@ export default async function AdminPage() {
     { data: organizacionesData },
     { data: flujo2Data },
   ] = await Promise.all([
-    supabase
-      .from('reportes')
-      .select('*')
-      .eq('atendido', false)
-      .order('creado_at', { ascending: false }),
-    supabase.from('servidores').select('*').eq('verificado', false),
+    enModeracion
+      ? supabase
+          .from('reportes')
+          .select('*')
+          .eq('atendido', false)
+          .order('creado_at', { ascending: false })
+      : Promise.resolve({ data: null }),
+    enModeracion
+      ? supabase.from('servidores').select('*').eq('verificado', false)
+      : Promise.resolve({ data: null }),
     // Sin filtrar por tipo: el vínculo real es servidores.perfil_id, y si
     // el tipo del perfil no coincidiera, la cola mostraría "Perfil sin
     // nombre" y el administrador no sabría a quién está verificando.
-    supabase.from('perfiles').select('id, nombre_visible, municipios, suspendido'),
-    supabase.rpc('sugerencias_pendientes'),
+    enModeracion
+      ? supabase.from('perfiles').select('id, nombre_visible, municipios, suspendido')
+      : Promise.resolve({ data: null }),
+    vista === 'catalogo' ? supabase.rpc('sugerencias_pendientes') : Promise.resolve({ data: null }),
     // Columnas explícitas: `select('*')` arrastraría `creada_por`, el uuid
     // de `auth.users` de quien dio de alta la entidad.
-    supabase.from('entidades').select(COLUMNAS_ENTIDAD_ADMIN).order('orden').order('nombre'),
+    vista === 'directorio'
+      ? supabase.from('entidades').select(COLUMNAS_ENTIDAD_ADMIN).order('orden').order('nombre')
+      : Promise.resolve({ data: null }),
     // Por RPC y no por `select`: la tabla está revocada entera, y así
     // `creada_por` —el uuid de una persona real— no sale al navegador.
-    supabase.rpc('organizaciones_admin'),
-    supabase.rpc('panel_admin_flujo2'),
+    vista === 'aliados' ? supabase.rpc('organizaciones_admin') : Promise.resolve({ data: null }),
+    vista === 'aliados' ? supabase.rpc('panel_admin_flujo2') : Promise.resolve({ data: null }),
   ])
 
   const sugerencias = (sugerenciasData as unknown as SugerenciaPendiente[]) ?? []
@@ -120,7 +145,10 @@ export default async function AdminPage() {
   const porPerfil = new Map((perfiles ?? []).map((p) => [p.id, p]))
 
   // El código DANE no le dice nada a quien está verificando una matrícula.
-  const municipios = await listarMunicipios(supabase)
+  const municipios =
+    vista === 'aliados' || vista === 'directorio' || enModeracion
+      ? await listarMunicipios(supabase)
+      : []
   const origen = await origenDelSitio()
   const nombreMunicipio = new Map(
     (municipios ?? []).map((m) => [m.codigo_dane, m.nombre])
@@ -130,6 +158,27 @@ export default async function AdminPage() {
     <main className="mx-auto max-w-2xl px-4 py-6">
       <h1 className="font-heading text-3xl">Administración</h1>
 
+      {/* Los números en la barra son el punto: se entra a ver si hay algo
+          que atender, y antes había que bajar hasta el final para saberlo. */}
+      <div className="mt-4">
+        <Pestanas
+          etiqueta="Secciones de administración"
+          pestanas={[
+            {
+              href: '/admin',
+              etiqueta: 'Moderación',
+              activa: vista === 'moderacion',
+              cuenta: (nReportes ?? 0) + (nMatriculas ?? 0),
+            },
+            { href: '/admin?ver=catalogo', etiqueta: 'Catálogo', activa: vista === 'catalogo' },
+            { href: '/admin?ver=directorio', etiqueta: 'Directorio', activa: vista === 'directorio' },
+            { href: '/admin?ver=aliados', etiqueta: 'Aliados', activa: vista === 'aliados' },
+          ]}
+        />
+      </div>
+
+      {enModeracion && (
+        <>
       <section className="mt-6">
         <h2 className="font-heading text-2xl">Reportes pendientes</h2>
         {!reportes || reportes.length === 0 ? (
@@ -205,8 +254,11 @@ export default async function AdminPage() {
           </ul>
         )}
       </section>
+        </>
+      )}
 
-      <section className="mt-8">
+      {vista === 'catalogo' && (
+      <section className="mt-6">
         <h2 className="font-heading text-2xl">Ítems sugeridos</h2>
         <Alert className="mt-3">
           <AlertDescription>
@@ -244,8 +296,10 @@ export default async function AdminPage() {
           </ul>
         )}
       </section>
+      )}
 
-      <section className="mt-8">
+      {vista === 'directorio' && (
+      <section className="mt-6">
         <h2 className="font-heading text-2xl">Entidades</h2>
         <Alert className="mt-3">
           <AlertDescription>
@@ -260,8 +314,10 @@ export default async function AdminPage() {
         </Alert>
         <PanelEntidades entidades={entidades} municipios={municipios} />
       </section>
+      )}
 
-      <section className="mt-8">
+      {vista === 'aliados' && (
+      <section className="mt-6">
         <h2 className="font-heading text-2xl">Organizaciones aliadas</h2>
         <Alert className="mt-3">
           <AlertDescription>
@@ -282,8 +338,9 @@ export default async function AdminPage() {
           origen={origen}
         />
       </section>
+      )}
 
-      {flujo2 && (
+      {vista === 'aliados' && flujo2 && (
         <section className="mt-8">
           <h2 className="font-heading text-2xl">Acompañamiento</h2>
           <Alert className="mt-3">
