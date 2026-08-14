@@ -29,6 +29,17 @@ export const metadata: Metadata = {
   description:
     "Solicita insumos o servicios profesionales tras el sismo del 10 de agosto de 2026, sin dar datos personales.",
   manifest: "/manifest.json",
+  // Verificación de propiedad del dominio ante Google. Hace falta para que
+  // Google apruebe la marca de la pantalla de consentimiento OAuth: sin
+  // ella, quien entra con Google ve el identificador del proyecto de
+  // Supabase en vez de "AquíVe", que parece phishing.
+  //
+  // NO LA QUITES una vez verificado. Google revalida cada tanto y si la
+  // etiqueta desaparece se pierde la verificación, y con ella la marca.
+  //
+  // El código sale de Search Console → propiedad `https://aquive.co` →
+  // método "Etiqueta HTML". Va sin el `<meta>`, solo el valor del content.
+  verification: { google: "PEGA-AQUI-EL-CODIGO-DE-SEARCH-CONSOLE" },
   appleWebApp: { capable: true, title: "AquíVe", statusBarStyle: "default" },
   icons: {
     icon: [
