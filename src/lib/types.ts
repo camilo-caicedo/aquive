@@ -51,6 +51,34 @@ export interface ItemResumen {
   por_confirmar: boolean
 }
 
+// Una fila de `solicitudes_que_calzan`. Es la del tablero más
+// `coincidencias`: en cuántas de las cosas marcadas calza esta solicitud.
+// No trae `item_ids` porque a esa altura ya no hace falta comparar nada.
+export interface SolicitudQueCalza {
+  id: string
+  codigo: string
+  municipio: string
+  municipio_nombre: string
+  barrio: string
+  categoria: Categoria
+  nota: string | null
+  creada_at: string
+  confirmada_at: string
+  expira_at: string
+  horas_sin_confirmar: number
+  num_respuestas: number
+  items: ItemResumen[]
+  coincidencias: number
+}
+
+// Un municipio con solicitudes que calzan, tal como lo devuelve
+// `municipios_que_calzan`.
+export interface MunicipioQueCalza {
+  codigo_dane: string
+  nombre: string
+  total: number
+}
+
 // Un ítem tal como se ve en el directorio público de quien ofrece. Sin
 // cantidad a propósito: ver §2 de la migración v2-a7.
 export interface ItemOfrecido {
@@ -510,6 +538,11 @@ export interface Database {
           horas_sin_confirmar: number
           num_respuestas: number
           items: ItemResumen[]
+          // Los identificadores, aparte del jsonb legible: el jsonb sirve
+          // para mostrar, estos para cruzar. Sin ellos el modo "¿quién
+          // necesita lo que tengo?" no se puede filtrar.
+          item_ids: string[]
+          sugerencia_ids: string[]
         }
         Relationships: []
       }
@@ -603,6 +636,23 @@ export interface Database {
       guardar_ofrecimientos: {
         Args: { p_items: Json }
         Returns: undefined
+      }
+      // El cruce inverso. Filtra y ordena en SQL porque PostgREST puede
+      // hacer el `&&` pero no ordenar por cuántos ítems coinciden, que es
+      // la mitad del valor: quien pide cinco cosas que tengo vale más que
+      // quien pide una.
+      solicitudes_que_calzan: {
+        Args: {
+          p_item_ids: string[]
+          p_municipio?: string | null
+          p_limite?: number
+          p_desde?: number
+        }
+        Returns: SolicitudQueCalza[]
+      }
+      municipios_que_calzan: {
+        Args: { p_item_ids: string[] }
+        Returns: Json
       }
       // Devuelve cada sugerencia pendiente con los ítems parecidos del
       // catálogo, para que fusionar cueste lo mismo que aprobar.
