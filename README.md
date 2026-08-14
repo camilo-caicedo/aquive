@@ -4,7 +4,7 @@ Plataforma web temporal para conectar a quien necesita insumos tras el
 sismo del 10 de agosto de 2026 con quien puede darlos, y con
 profesionales con matrícula que ofrecen sus servicios.
 
-**En vivo:** https://aquive.vercel.app
+**En vivo:** https://aquive.co
 
 ## La idea en tres líneas
 

@@ -184,6 +184,26 @@ muestra con advertencia visible.
   prisa. Sin animaciones pesadas y sin traer librerías nuevas por comodidad
   — pero la interfaz puede ser interactiva donde eso ayude a coordinar.
 
+## Identidad visual
+
+Desde el 14 de agosto de 2026 hay identidad de marca, y no es decorativa:
+es lo que hace que el sitio se reconozca en un volante de albergue y en la
+pantalla. La fuente es el proyecto de diseño «AquíVe identidad visual».
+
+- **La marca es un gato**, `src/components/marca.tsx`. Viene del Gato del
+  Río; la nariz es un corazón. No lo encierres en una caja con borde si ya
+  hay fondo de color, no lo pongas sobre fotos y no lo uses como mascota
+  que habla.
+- **Tipografía:** Caprasimo solo en `h1` y `h2` (clase `font-heading`, sin
+  `font-bold`), Figtree en todo lo que se lee, Geist Mono en los códigos de
+  solicitud.
+- **Color: solo tokens.** Nada de `bg-amber-50`, `text-green-900` ni ningún
+  color crudo de Tailwind — sobre el papel cálido del fondo se leen de otra
+  paleta. Lo verificado y lo cumplido van en salvia (`ok`, `ok-suave`); los
+  avisos, en terracota tenue (`accent`, `accent-foreground`).
+- **Botones y chips en píldora** (`rounded-full`). Los altos no cambian: el
+  mínimo táctil de 48 px de abajo manda sobre cualquier cosa estética.
+
 ## Accesibilidad
 
 Público objetivo: personas en albergues, muchas mayores, con estrés agudo,
