@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { RESPONSABLE, CORREO_CONTACTO, FECHA_LEGALES } from '@/lib/config'
 
 export default function TerminosPage() {
@@ -24,7 +25,13 @@ export default function TerminosPage() {
       <p className="mt-3 text-base">
         Con excepción de la matrícula profesional de quienes se registran como profesionales, no verificamos la
         identidad, los antecedentes ni las intenciones de nadie. Un sello de matrícula verificada significa
-        únicamente que ese número aparece en el registro correspondiente.
+        únicamente que ese número aparece en el registro correspondiente: no dice nada sobre la identidad de
+        quien lo usa, su experiencia ni sus intenciones. Un perfil sin ese sello no ha sido revisado en absoluto.
+      </p>
+      <p className="mt-3 text-base">
+        Tampoco calificamos ni recomendamos a nadie. No hay estrellas, ni reputación, ni sellos de
+        &quot;confiable&quot;, y no los va a haber: un sistema así, sin verificación de identidad detrás, solo
+        sirve para que quien quiera estafar acumule apariencia de confianza.
       </p>
 
       <h2 className="mt-6 text-xl font-bold">4. El contacto ocurre fuera de la plataforma y bajo tu responsabilidad.</h2>
@@ -35,8 +42,13 @@ export default function TerminosPage() {
 
       <h2 className="mt-6 text-xl font-bold">5. Recomendaciones de seguridad.</h2>
       <p className="mt-3 text-base">
-        No compartas tu dirección exacta en público. Encuéntrate en lugares con gente. Nunca envíes dinero por
-        adelantado. Si alguien te pide plata, repórtalo.
+        No compartas tu dirección exacta en público. Encuéntrate en lugares con gente y de día. Nunca envíes
+        dinero por adelantado. Cuéntale a alguien a dónde vas. Si alguien te pide plata, repórtalo. Están
+        explicadas una por una en{' '}
+        <Link href="/seguridad" className="underline">
+          Cómo cuidarte
+        </Link>
+        .
       </p>
 
       <h2 className="mt-6 text-xl font-bold">6. Prohibido.</h2>

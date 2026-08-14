@@ -1,6 +1,8 @@
+import Link from 'next/link'
 import { BadgeCheck, TriangleAlert, Inbox } from 'lucide-react'
 import type { SolicitudConRespuestas } from '@/lib/types'
 import { enlaceWhatsapp } from '@/lib/contacto'
+import { AVISO_CONTACTO, AVISO_CONTACTO_VERIFICADO } from '@/lib/honestidad'
 import { Button } from '@/components/ui/button'
 import { BotonReportar } from '@/components/boton-reportar'
 
@@ -41,6 +43,18 @@ export function ListaRespuestas({ respuestas }: { respuestas: Respuesta[] }) {
           {r.profesion && <p className="mt-1 text-base text-muted-foreground">{r.profesion}</p>}
 
           <p className="mt-2 text-base">{r.mensaje}</p>
+
+          {/* El tercero de los cuatro puntos, y el que más pesa: es el paso
+              donde de verdad se decide. Va pegado al botón, no arriba de la
+              lista, porque cada persona es una decisión distinta. */}
+          <p className="mt-3 text-sm text-muted-foreground">
+            {r.tipo === 'servidor' && r.verificado
+              ? AVISO_CONTACTO_VERIFICADO
+              : AVISO_CONTACTO}{' '}
+            <Link href="/seguridad" className="underline">
+              Cómo cuidarte
+            </Link>
+          </p>
 
           <Button
             className="mt-3 w-full"

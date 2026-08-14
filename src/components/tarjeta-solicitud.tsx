@@ -3,6 +3,7 @@ import { MapPin, MessageSquare, TimerOff, Check } from 'lucide-react'
 import type { Categoria, ItemResumen } from '@/lib/types'
 import { categoria, describirItem, horasParaVencer, HORAS_POR_VENCER } from '@/lib/catalogo'
 import { formatearHoras } from '@/lib/tiempo'
+import { AVISO_CORTO } from '@/lib/honestidad'
 import { BadgeFrescura } from '@/components/badge-frescura'
 import { Button } from '@/components/ui/button'
 
@@ -105,6 +106,15 @@ export function TarjetaSolicitud({
       >
         Puedo ayudar
       </Button>
+
+      {/* Discreto y pegado al botón: el aviso tiene que estar donde se
+          decide, no en una página que nadie abre. */}
+      <p className="mt-2 text-sm text-muted-foreground">
+        {AVISO_CORTO}{' '}
+        <Link href="/seguridad" className="underline">
+          Cómo cuidarte
+        </Link>
+      </p>
     </li>
   )
 }

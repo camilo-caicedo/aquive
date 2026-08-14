@@ -195,6 +195,36 @@ marca de tiempo es la prueba de la autorización.
 > Esta persona no ha verificado su matrícula profesional. Verifica su
 > identidad antes de recibir cualquier servicio.
 
+### Avisos de honestidad sobre el Flujo 1
+
+Estos cuatro viven en `src/lib/honestidad.ts` y aparecen en la tarjeta del
+tablero, la confirmación de publicación, el momento de abrir el contacto y
+los términos. **Si cambia uno, cambia el otro:** este archivo y ese módulo
+son las dos caras de lo mismo.
+
+**En la tarjeta de cada solicitud, junto a "Puedo ayudar":**
+> AquíVe no verifica a quien publica ni a quien responde. [Cómo cuidarte]
+
+**Al terminar de publicar:**
+> Cuando alguien responda vas a ver su nombre y su forma de contacto.
+> AquíVe no verifica quién publica ni quién responde: confirma lo que
+> puedas antes de acordar una entrega, y prefiere lugares públicos.
+
+**Justo antes de abrir el contacto:**
+> AquíVe no verificó la identidad de esta persona. Prefiere un lugar
+> público y de día, y no pagues nada por adelantado.
+
+**Y si esa persona tiene matrícula verificada**, porque decir "no
+verificamos a nadie" ahí sería falso y contradiría el sello:
+> Verificamos que su matrícula aparece en el registro, no su identidad ni
+> sus intenciones. Prefiere un lugar público y de día.
+
+🔴 **Lo que estos textos no pueden hacer, nunca:** sugerir que la
+plataforma respalda, avala o recomienda a alguien. Ni sellos de
+"confiable", ni estrellas, ni reputación. Un sistema de reputación sin
+verificación de identidad detrás es una invitación al fraude por
+acumulación, y arrastra responsabilidad hacia el responsable del proyecto.
+
 **Pie de página, siempre visible:**
 > Emergencias 123 · Cruz Roja 132 · Defensa Civil 144
 > Esta plataforma no reemplaza a las autoridades.
