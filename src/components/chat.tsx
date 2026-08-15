@@ -144,7 +144,10 @@ export function Chat({
   }
 
   return (
-    <div className="rounded-xl border border-border">
+    // `overflow-hidden` y no esquinas redondeadas en la cabecera: el bloque
+    // del acopio tiene fondo propio y, sin esto, lo pinta cuadrado encima
+    // del borde redondeado del contenedor.
+    <div className="overflow-hidden rounded-xl border border-border">
       {acopio && (
         <div className="border-b border-border bg-secondary p-3">
           <p className="text-base font-medium">{acopio.nombre}</p>
