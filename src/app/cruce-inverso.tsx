@@ -11,6 +11,7 @@ import { TOPE_SELECCION } from '@/lib/catalogo'
 import { AVISO_TABLERO } from '@/lib/honestidad'
 import { TarjetaSolicitud } from '@/components/tarjeta-solicitud'
 import { SelectFiltro } from '@/components/select-filtro'
+import { FormularioFiltros } from '@/components/formulario-filtros'
 import { Button } from '@/components/ui/button'
 import { SelectorInsumos } from './selector-insumos'
 
@@ -155,8 +156,8 @@ export async function CruceInverso({
           </h2>
 
           {municipiosCalzan.length > 0 && (
-            <form
-              method="get"
+            <FormularioFiltros
+              action="/"
               className="mt-3 flex flex-col gap-2 rounded-xl border border-border bg-card p-3 sm:flex-row"
             >
               <input type="hidden" name="modo" value="tengo" />
@@ -175,10 +176,7 @@ export async function CruceInverso({
                   detalle: `${m.total} ${m.total === 1 ? 'solicitud' : 'solicitudes'}`,
                 }))}
               />
-              <Button type="submit" className="w-full sm:w-auto">
-                Filtrar
-              </Button>
-            </form>
+            </FormularioFiltros>
           )}
 
           {resultados.length === 0 ? (

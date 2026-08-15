@@ -17,6 +17,7 @@ import type { Categoria } from '@/lib/types'
 import { CATEGORIAS, limitePorVencer } from '@/lib/catalogo'
 import { TarjetaSolicitud } from '@/components/tarjeta-solicitud'
 import { SelectFiltro } from '@/components/select-filtro'
+import { FormularioFiltros } from '@/components/formulario-filtros'
 import { Button } from '@/components/ui/button'
 import { AVISO_TABLERO } from '@/lib/honestidad'
 import { CruceInverso } from './cruce-inverso'
@@ -296,6 +297,7 @@ export default async function InicioPage({
           {hayFiltro && (
             <Link
               href="/"
+              scroll={false}
               className="inline-flex min-h-12 items-center gap-1.5 rounded-full border border-border bg-card px-4 text-base transition-colors hover:bg-muted"
             >
               Quitar filtros
@@ -303,10 +305,7 @@ export default async function InicioPage({
           )}
         </div>
 
-        <form
-          method="get"
-          className="mt-3 flex flex-col gap-2 rounded-xl border border-border bg-card p-3 sm:flex-row"
-        >
+        <FormularioFiltros className="mt-3 flex flex-col gap-2 rounded-xl border border-border bg-card p-3 sm:flex-row">
           {params.urgentes && <input type="hidden" name="urgentes" value="1" />}
           <SelectFiltro
             name="municipio"
@@ -327,10 +326,7 @@ export default async function InicioPage({
             valorInicial={params.categoria ?? ''}
             opciones={CATEGORIAS.map((c) => ({ valor: c.valor, etiqueta: c.etiqueta }))}
           />
-          <Button type="submit" className="w-full sm:w-auto">
-            Filtrar
-          </Button>
-        </form>
+        </FormularioFiltros>
 
         {/* Sin esto, quien no encuentra su municipio en la lista concluye
             que la plataforma no lo cubre. La lista está recortada a los
@@ -360,7 +356,7 @@ export default async function InicioPage({
                 variant="outline"
                 className="mt-4"
                 nativeButton={false}
-                render={<Link href="/" />}
+                render={<Link href="/" scroll={false} />}
               >
                 Ver todas
               </Button>
@@ -387,7 +383,7 @@ export default async function InicioPage({
             <Button
               variant="outline"
               nativeButton={false}
-              render={<Link href={construirHref(params, { antes: cursorSiguiente })} />}
+              render={<Link href={construirHref(params, { antes: cursorSiguiente })} scroll={false} />}
             >
               Ver más solicitudes
             </Button>
