@@ -101,7 +101,13 @@ export function PanelHilos({ hilos }: { hilos: HiloResumen[] }) {
             {h.municipio} — {h.barrio}
           </p>
           <p className="mt-1 text-base text-muted-foreground">
-            {h.soy_ofertador ? 'Ofreciste tú' : `Ofrece ${h.ofertador ?? 'alguien'}`}
+            {/* La rama directa va primero: en ese hilo no hay ofertador, y
+                decir «ofrece alguien» sería inventarse una persona. */}
+            {h.directa
+              ? 'Lo entrega la fundación'
+              : h.soy_ofertador
+                ? 'Ofreciste tú'
+                : `Ofrece ${h.ofertador ?? 'alguien'}`}
             {h.aliado ? ` · coordina ${h.aliado}` : ''} · {h.mensajes_total}{' '}
             {h.mensajes_total === 1 ? 'mensaje' : 'mensajes'}
           </p>

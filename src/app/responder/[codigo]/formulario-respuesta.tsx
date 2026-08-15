@@ -11,12 +11,19 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 export function FormularioRespuesta({
   codigo,
   yaRespondio,
+  puedeTrasladarse,
+  puedeRecoger,
 }: {
   codigo: string
   yaRespondio: boolean
+  /** Lo que ya dijo en su perfil. Precarga la casilla, no la fija. */
+  puedeTrasladarse: boolean
+  /** Si quien pidió puede ir a buscarlo. Evita preguntarlo por fuera. */
+  puedeRecoger: boolean
 }) {
   const router = useRouter()
   const [mensaje, setMensaje] = useState('')
+  const [puedeLlevar, setPuedeLlevar] = useState(puedeTrasladarse)
   const [enviando, setEnviando] = useState(false)
   const [enviado, setEnviado] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -47,7 +54,7 @@ export function FormularioRespuesta({
       const res = await fetch('/api/respuestas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codigo, mensaje: texto }),
+        body: JSON.stringify({ codigo, mensaje: texto, puedeLlevar }),
       })
       const data = (await res.json()) as { ok?: true; error?: string }
       if (!res.ok || data.error) {
@@ -84,6 +91,26 @@ export function FormularioRespuesta({
         />
         <p className="mt-1 text-sm text-muted-foreground">{mensaje.length}/200</p>
       </div>
+
+      {/* Viene marcada si ya lo dijo en su perfil, y se puede desmarcar: se
+          puede tener carro y no poder ese día. Así la logística deja de ser
+          la primera pregunta de cada conversación. */}
+      <label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-border p-3 has-checked:border-primary has-checked:bg-accent">
+        <input
+          type="checkbox"
+          checked={puedeLlevar}
+          onChange={(e) => setPuedeLlevar(e.target.checked)}
+          className="mt-0.5 size-6 shrink-0"
+        />
+        <span>
+          <span className="text-base font-medium">Puedo llevarlo al lugar</span>
+          <span className="block text-sm text-muted-foreground">
+            {puedeRecoger
+              ? 'Esta persona dijo que puede ir a recoger, así que quizá no haga falta.'
+              : 'Se lo decimos a quien pidió, junto a tu respuesta.'}
+          </span>
+        </span>
+      </label>
 
       {error && (
         <Alert variant="destructive">

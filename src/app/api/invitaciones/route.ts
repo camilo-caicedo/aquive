@@ -4,7 +4,8 @@ import { notificarConversacion } from '@/lib/push-coordinacion'
 
 interface CuerpoInvitacion {
   solicitudId: string
-  ofertadorId: string
+  /** Sin él, la fundación entrega de su propia bodega y no hay ofertador. */
+  ofertadorId?: string
   mensaje: string
 }
 
@@ -23,22 +24,31 @@ export async function POST(request: Request) {
   }
 
   const mensaje = body.mensaje?.trim() ?? ''
-  if (!body.solicitudId || !body.ofertadorId || mensaje.length < 10) {
-    return NextResponse.json({ error: 'Falta el mensaje o a quién invitar' }, { status: 400 })
+  if (!body.solicitudId || mensaje.length < 10) {
+    return NextResponse.json({ error: 'Falta el mensaje' }, { status: 400 })
   }
 
-  // La RPC comprueba que quien invita sea miembro activo de la
-  // organización que coordina esa solicitud. Aquí no se decide nada.
+  // Dos caminos, una sola ruta: con ofertador es una invitación a
+  // coordinar; sin él, la fundación entrega de su propia bodega. Las dos
+  // RPC comprueban que quien llama sea miembro activo de la organización
+  // que acompaña esa solicitud. Aquí no se decide nada.
   const supabase = await createClient()
-  const { data: conversacionId, error } = await supabase.rpc('invitar_a_conversacion', {
-    p_solicitud_id: body.solicitudId,
-    p_ofertador_id: body.ofertadorId,
-    p_mensaje: mensaje,
-  })
+  const directa = !body.ofertadorId
+
+  const { data: conversacionId, error } = directa
+    ? await supabase.rpc('abrir_entrega_directa', {
+        p_solicitud_id: body.solicitudId,
+        p_mensaje: mensaje,
+      })
+    : await supabase.rpc('invitar_a_conversacion', {
+        p_solicitud_id: body.solicitudId,
+        p_ofertador_id: body.ofertadorId!,
+        p_mensaje: mensaje,
+      })
 
   if (error || !conversacionId) {
     return NextResponse.json(
-      { error: error?.message ?? 'No se pudo invitar' },
+      { error: error?.message ?? 'No se pudo abrir la conversación' },
       { status: 400 }
     )
   }
@@ -50,7 +60,10 @@ export async function POST(request: Request) {
 
     await notificarConversacion(
       conversacionId,
-      (codigo) => `Te invitaron a coordinar la entrega de ${codigo}`,
+      (codigo) =>
+        directa
+          ? `La fundación va a coordinar la entrega de ${codigo}`
+          : `Te invitaron a coordinar la entrega de ${codigo}`,
       new URL(request.url).origin,
       { perfilId: user?.id }
     )

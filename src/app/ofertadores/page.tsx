@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Info, Inbox, MapPin, PlusCircle, PackageOpen } from 'lucide-react'
+import { Info, Inbox, MapPin, PlusCircle, PackageOpen, Truck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -159,6 +159,15 @@ export default async function OfertadoresPage({
                     </li>
                   )}
                 </ul>
+              )}
+
+              {/* Solo cuando es que sí. No marcarlo no afirma que no pueda
+                  moverse, y no hay etiqueta para eso. */}
+              {o.puede_trasladarse && (
+                <p className="mt-3 flex items-center gap-1.5 text-base text-ok">
+                  <Truck className="size-4 shrink-0" aria-hidden="true" />
+                  Puede trasladarse a entregar
+                </p>
               )}
 
               {o.descripcion ? (

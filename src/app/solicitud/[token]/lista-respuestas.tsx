@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { BadgeCheck, TriangleAlert, Inbox } from 'lucide-react'
+import { BadgeCheck, TriangleAlert, Inbox, Truck } from 'lucide-react'
 import type { SolicitudConRespuestas } from '@/lib/types'
 import { enlaceWhatsapp } from '@/lib/contacto'
 import { AVISO_CONTACTO, AVISO_CONTACTO_VERIFICADO } from '@/lib/honestidad'
@@ -43,6 +43,15 @@ export function ListaRespuestas({ respuestas }: { respuestas: Respuesta[] }) {
           {r.profesion && <p className="mt-1 text-base text-muted-foreground">{r.profesion}</p>}
 
           <p className="mt-2 text-base">{r.mensaje}</p>
+
+          {/* Lo dijo al responder, para que no haya que preguntarlo. Solo se
+              muestra cuando es que sí: no marcarlo no afirma que no pueda. */}
+          {r.puede_llevar && (
+            <p className="mt-2 flex items-center gap-1.5 text-base text-ok">
+              <Truck className="size-4 shrink-0" aria-hidden="true" />
+              Puede llevártelo
+            </p>
+          )}
 
           {/* Una respuesta sin contacto no debería existir: desde agosto de
               2026 `responder_solicitud` lo exige. Pero las que se

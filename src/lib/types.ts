@@ -264,6 +264,8 @@ export interface ConversacionDetalle {
   id: string
   estado: EstadoConversacion
   mi_rol: RolEnConversacion
+  /** La fundación entrega de su bodega: no hay ofertador en este hilo. */
+  directa: boolean
   codigo: string
   acopio: AcopioResumen | null
   pendientes: ItemPendiente[]
@@ -314,6 +316,8 @@ export interface Planilla {
 export interface ConversacionDelSolicitante {
   id: string
   estado: EstadoConversacion
+  /** La fundación entrega de su bodega: no hay ofertador en este hilo. */
+  directa: boolean
   ofertador: string | null
   aliado: string | null
   acopio: AcopioResumen | null
@@ -329,11 +333,30 @@ export interface HiloResumen {
   codigo: string
   municipio: string
   barrio: string
+  /** La fundación entrega de su bodega: no hay ofertador en este hilo. */
+  directa: boolean
   soy_ofertador: boolean
   ofertador: string | null
   aliado: string | null
   sin_asignar: boolean
   mensajes_total: number
+}
+
+// Una fila de `solicitudes_de_mi_organizacion()`: lo que la fundación
+// acompaña y todavía no ha atendido. No hay cruce de inventario porque no
+// hay inventario de organizaciones: mira los ítems y decide.
+export interface SolicitudPorAtender {
+  solicitud_id: string
+  codigo: string
+  municipio: string
+  barrio: string
+  categoria: Categoria
+  nota: string | null
+  creada_at: string
+  puede_recoger: boolean
+  /** Hilos vivos que ya tiene. Si alguien más lo está trayendo, cambia la decisión. */
+  hilos: number
+  pendientes: Array<{ nombre: string; cantidad: number; unidad: string }>
 }
 
 // Una fila de `mis_avisos()`. No hay tabla de notificaciones: los cinco
@@ -506,6 +529,8 @@ export interface SolicitudConRespuestas {
     tipo: TipoPerfil
     profesion: string | null
     verificado: boolean
+    /** Se ofreció a llevarlo. Lo dijo al responder, no hay que preguntarlo. */
+    puede_llevar: boolean
   }>
 }
 
@@ -587,6 +612,8 @@ export interface Database {
           acepto_politica_at: string
           suspendido: boolean
           creado_at: string
+          /** Puede desplazarse a entregar. En positivo: false no dice que no pueda. */
+          puede_trasladarse: boolean
         }
         Insert: {
           id: string
@@ -664,6 +691,8 @@ export interface Database {
           organizacion_id: string | null
           /** Cuándo entró la fundación. Null en el flujo directo. */
           acompanamiento_at: string | null
+          /** No va en `solicitudes_publicas`: ver el comentario del esquema. */
+          puede_recoger: boolean
           creada_at: string
           confirmada_at: string
           expira_at: string
@@ -1099,6 +1128,7 @@ export interface Database {
           creado_at: string
           items: ItemOfrecido[]
           total_items: number
+          puede_trasladarse: boolean
         }
         Relationships: []
       }
@@ -1128,6 +1158,7 @@ export interface Database {
           p_nota: string | null
           p_items: Json
           p_token: string
+          p_puede_recoger?: boolean
         }
         Returns: { solicitud_id: string; codigo: string }[]
       }
@@ -1476,10 +1507,10 @@ export interface Database {
         Args: { p_mensaje_id: string; p_oculto: boolean }
         Returns: undefined
       }
-      // Elección de flujo (Fase F). Devuelve {id, nombre} de UNA
-      // organización activa que cubra ese municipio, o null. Es lo único
-      // que se puede saber sin haber elegido nada todavía.
-      aliado_en_municipio: {
+      // Elección de flujo (Fase F). Devuelve AliadoDelMunicipio[]: todas
+      // las organizaciones activas del municipio, con su acopio, para poder
+      // escoger la que quede más fácil.
+      aliados_del_municipio: {
         Args: { p_municipio: string }
         Returns: Json
       }
@@ -1552,12 +1583,37 @@ export interface Database {
           p_entidad_matricula?: EntidadMatricula | null
           p_numero_matricula?: string | null
           p_servicios?: string[]
+          p_puede_trasladarse?: boolean
         }
         Returns: undefined
       }
       responder_solicitud: {
-        Args: { p_codigo: string; p_mensaje: string }
+        Args: { p_codigo: string; p_mensaje: string; p_puede_llevar?: boolean }
         Returns: string
+      }
+      // Si quien pidió puede ir a recoger. RPC aparte y no una columna en
+      // `solicitudes_publicas`: esa vista la lee `anon`, y ahí el dato
+      // sería público y filtrable. Aquí hace falta sesión.
+      movilidad_solicitud: {
+        Args: { p_codigo: string }
+        Returns: boolean
+      }
+      // Lo que ya declaró en su perfil, para precargar la casilla.
+      mi_movilidad: {
+        Args: Record<string, never>
+        Returns: boolean
+      }
+      // La fundación abre un hilo con quien pidió, sin ofertador de por
+      // medio, para entregar de su propia bodega. Devuelve el id del hilo.
+      abrir_entrega_directa: {
+        Args: { p_solicitud_id: string; p_mensaje: string }
+        Returns: string
+      }
+      // Devuelve SolicitudPorAtender[]: lo que su organización acompaña y
+      // todavía no ha atendido. Sin cruce de inventario — no lo hay.
+      solicitudes_de_mi_organizacion: {
+        Args: Record<string, never>
+        Returns: Json
       }
       crear_reporte: {
         Args: {

@@ -109,6 +109,9 @@ export function FormularioRegistro({
     perfil?.contacto_tipo ?? 'whatsapp'
   )
   const [descripcion, setDescripcion] = useState(perfil?.descripcion ?? '')
+  const [puedeTrasladarse, setPuedeTrasladarse] = useState(
+    perfil?.puede_trasladarse ?? false
+  )
   const [profesion, setProfesion] = useState(servidor?.profesion ?? '')
   const [entidad, setEntidad] = useState<EntidadMatricula>(
     servidor?.entidad_matricula ?? 'COPNIA'
@@ -236,6 +239,7 @@ export function FormularioRegistro({
       p_entidad_matricula: tipo === 'servidor' ? entidad : null,
       p_numero_matricula: tipo === 'servidor' ? matricula.trim() : null,
       p_servicios: tipo === 'servidor' ? serviciosIds : [],
+      p_puede_trasladarse: puedeTrasladarse,
     })
 
     if (rpcError) {
@@ -650,6 +654,26 @@ export function FormularioRegistro({
         />
         <p className="mt-1 text-sm text-muted-foreground">{descripcion.length}/300</p>
       </div>
+
+      {/* Se pregunta una vez aquí y después viene marcada al responder, que
+          es el punto: la logística era lo que más se repetía en el chat. Se
+          puede desmarcar en una respuesta concreta — se puede tener carro y
+          no poder ese día. */}
+      <label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-border p-3 has-checked:border-primary has-checked:bg-accent">
+        <input
+          type="checkbox"
+          checked={puedeTrasladarse}
+          onChange={(e) => setPuedeTrasladarse(e.target.checked)}
+          className="mt-0.5 size-6 shrink-0"
+        />
+        <span>
+          <span className="text-base font-medium">Puedo trasladarme a entregar</span>
+          <span className="block text-sm text-muted-foreground">
+            Puedes llevar las cosas hasta donde haga falta. Aparece en tu ficha
+            y viene marcado cuando respondas.
+          </span>
+        </span>
+      </label>
 
       {/* Texto exacto de docs/legal/PLANTILLAS.md sección 3. La marca de
           tiempo que lo acompaña es la prueba de la autorización. */}

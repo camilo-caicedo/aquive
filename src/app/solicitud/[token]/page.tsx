@@ -71,18 +71,20 @@ export default async function SolicitudPage({
 
   const base = `/solicitud/${token}`
 
-  // Cada pestaña pide lo suyo. La del aliado solo tiene sentido mientras la
-  // solicitud sea directa, y los hilos solo existen si está acompañada.
-  const [{ data: aliadoData }, { data: hilosData }] = await Promise.all([
+  // Cada pestaña pide lo suyo. Las fundaciones solo hacen falta en la de
+  // respuestas: el ofrecimiento principal vive en el paso 4 de publicar, y
+  // esto es la segunda oportunidad para quien dijo que no. Los hilos solo
+  // existen si está acompañada.
+  const [{ data: aliadosData }, { data: hilosData }] = await Promise.all([
     vista === 'respuestas' && !acompanada
-      ? supabase.rpc('aliado_en_municipio', { p_municipio: solicitud.municipio })
+      ? supabase.rpc('aliados_del_municipio', { p_municipio: solicitud.municipio })
       : Promise.resolve({ data: null }),
     vista === 'coordinacion' && acompanada
       ? supabase.rpc('mis_conversaciones_token', { p_token: token })
       : Promise.resolve({ data: null }),
   ])
 
-  const aliado = (aliadoData as unknown as AliadoDelMunicipio | null) ?? null
+  const aliados = (aliadosData as unknown as AliadoDelMunicipio[] | null) ?? []
   const hilos = (hilosData as unknown as ConversacionDelSolicitante[]) ?? []
   const horasRestantes = Math.max(0, Math.round(horasParaVencer(solicitud.expira_at)))
 
@@ -166,7 +168,7 @@ export default async function SolicitudPage({
               la falta de ellas—, no un trámite aparte. */}
           <Acompanamiento
             token={token}
-            aliado={aliado}
+            aliados={aliados}
             flujo={solicitud.flujo}
             organizacion={solicitud.organizacion}
           />
@@ -178,16 +180,25 @@ export default async function SolicitudPage({
           {hilos.length === 0 ? (
             <p className="rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
               Todavía no hay ninguna conversación. Aparecen cuando alguien
-              ofrece ayuda para esta solicitud.
+              ofrece ayuda o cuando la fundación se organiza para entregarte.
             </p>
           ) : (
             hilos.map((h) => (
               <div key={h.id}>
                 <p className="mb-2 text-base text-muted-foreground">
-                  {h.ofertador ?? 'Alguien'} ofreció ayuda
-                  {h.aliado
-                    ? ` · ${h.aliado} coordina`
-                    : ' · falta que la fundación se haga cargo'}
+                  {h.directa ? (
+                    <>
+                      {h.aliado ?? 'La fundación'} va a entregarte esto
+                      directamente
+                    </>
+                  ) : (
+                    <>
+                      {h.ofertador ?? 'Alguien'} ofreció ayuda
+                      {h.aliado
+                        ? ` · ${h.aliado} coordina`
+                        : ' · falta que la fundación se haga cargo'}
+                    </>
+                  )}
                 </p>
                 <Chat
                   conversacionId={h.id}

@@ -4,12 +4,18 @@ import { MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { origenDelSitio } from '@/lib/origen'
 import { listarMunicipios } from '@/lib/municipios'
-import type { AliadoResumen, Coincidencia, HiloResumen } from '@/lib/types'
+import type {
+  AliadoResumen,
+  Coincidencia,
+  HiloResumen,
+  SolicitudPorAtender,
+} from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Pestanas } from '@/components/pestanas'
 import { PanelEquipo } from './panel-equipo'
 import { PanelHilos } from './panel-hilos'
 import { PanelCoincidencias } from './panel-coincidencias'
+import { PanelSolicitudes } from './panel-solicitudes'
 
 export const metadata: Metadata = {
   title: 'Mi organización',
@@ -48,25 +54,34 @@ export default async function AliadoPage({
   const vista: Vista =
     ver === 'coincidencias' || ver === 'equipo' ? ver : 'conversaciones'
 
-  const [{ data: hilosData }, { data: cruceData }, { data: ofrecidasData }, { data: aliadoData }] =
-    await Promise.all([
-      vista === 'conversaciones'
-        ? supabase.rpc('mis_hilos')
-        : Promise.resolve({ data: null }),
-      vista === 'coincidencias' && esAliado
-        ? supabase.rpc('coincidencias_para_aliado')
-        : Promise.resolve({ data: null }),
-      vista === 'coincidencias' && esAliado
-        ? supabase.rpc('respuestas_por_coordinar')
-        : Promise.resolve({ data: null }),
-      vista === 'equipo' && esAliado
-        ? supabase.rpc('mi_aliado')
-        : Promise.resolve({ data: null }),
-    ])
+  const [
+    { data: hilosData },
+    { data: cruceData },
+    { data: ofrecidasData },
+    { data: propiasData },
+    { data: aliadoData },
+  ] = await Promise.all([
+    vista === 'conversaciones'
+      ? supabase.rpc('mis_hilos')
+      : Promise.resolve({ data: null }),
+    vista === 'coincidencias' && esAliado
+      ? supabase.rpc('coincidencias_para_aliado')
+      : Promise.resolve({ data: null }),
+    vista === 'coincidencias' && esAliado
+      ? supabase.rpc('respuestas_por_coordinar')
+      : Promise.resolve({ data: null }),
+    vista === 'coincidencias' && esAliado
+      ? supabase.rpc('solicitudes_de_mi_organizacion')
+      : Promise.resolve({ data: null }),
+    vista === 'equipo' && esAliado
+      ? supabase.rpc('mi_aliado')
+      : Promise.resolve({ data: null }),
+  ])
 
   const hilos = (hilosData as unknown as HiloResumen[]) ?? []
   const coincidencias = (cruceData as unknown as Coincidencia[]) ?? []
   const yaOfrecieron = (ofrecidasData as unknown as Coincidencia[]) ?? []
+  const propias = (propiasData as unknown as SolicitudPorAtender[]) ?? []
   const organizaciones = (aliadoData as unknown as AliadoResumen[]) ?? []
 
   return (
@@ -87,7 +102,7 @@ export default async function AliadoPage({
               },
               {
                 href: '/aliado?ver=coincidencias',
-                etiqueta: 'Quién tiene lo que piden',
+                etiqueta: 'Solicitudes por atender',
                 activa: vista === 'coincidencias',
               },
               {
@@ -115,13 +130,25 @@ export default async function AliadoPage({
 
       {vista === 'coincidencias' && (
         <>
+          {/* Lo primero, lo que la organización puede resolver sola: si está
+              en la bodega no hay a quién esperar. Las otras dos secciones
+              son para cuando lo tiene otra persona. */}
+          <section className="mt-6">
+            <h2 className="font-heading text-2xl">Puedes entregarlo tú</h2>
+            <p className="mt-1 text-base text-muted-foreground">
+              Solicitudes que acompaña tu organización. Si tienes esto en la
+              bodega, abre la conversación y coordínalo directamente.
+            </p>
+            <PanelSolicitudes solicitudes={propias} />
+          </section>
+
           {/* Primero quien YA se ofreció: es mejor señal que el cruce por
               inventario. Esa persona no solo tiene la cosa — ya dijo que
               quiere ayudar en esta solicitud concreta. Aparecen aquí
               porque respondieron antes de que se pidiera acompañamiento,
               así que su ofrecimiento se quedó fuera de la coordinación. */}
           {yaOfrecieron.length > 0 && (
-            <section className="mt-6">
+            <section className="mt-8">
               <h2 className="font-heading text-2xl">Ya ofrecieron ayuda</h2>
               <p className="mt-1 text-base text-muted-foreground">
                 Respondieron antes de que se pidiera acompañamiento, así que

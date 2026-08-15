@@ -66,12 +66,21 @@ export default async function ResponderPage({
     (h) => h.codigo === solicitud.codigo && h.soy_ofertador
   )
 
-  const { data: yaRespondio } = await supabase
-    .from('respuestas')
-    .select('id')
-    .eq('autor_id', user.id)
-    .eq('solicitud_id', solicitud.id)
-    .maybeSingle()
+  // La logística, resuelta antes de escribir: lo que esta persona ya dijo
+  // en su perfil precarga la casilla, y lo que dijo quien pidió evita que
+  // se lo pregunten por chat. `puede_recoger` va por RPC y no en la vista
+  // pública a propósito — ahí sería filtrable.
+  const [{ data: yaRespondio }, { data: puedeTrasladarse }, { data: puedeRecoger }] =
+    await Promise.all([
+      supabase
+        .from('respuestas')
+        .select('id')
+        .eq('autor_id', user.id)
+        .eq('solicitud_id', solicitud.id)
+        .maybeSingle(),
+      supabase.rpc('mi_movilidad'),
+      supabase.rpc('movilidad_solicitud', { p_codigo: solicitud.codigo }),
+    ])
 
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
@@ -170,7 +179,12 @@ export default async function ResponderPage({
       ) : solicitud.flujo === 'acompanado' ? (
         <IniciarHilo codigo={solicitud.codigo} />
       ) : (
-        <FormularioRespuesta codigo={solicitud.codigo} yaRespondio={!!yaRespondio} />
+        <FormularioRespuesta
+          codigo={solicitud.codigo}
+          yaRespondio={!!yaRespondio}
+          puedeTrasladarse={puedeTrasladarse === true}
+          puedeRecoger={puedeRecoger === true}
+        />
       )}
     </main>
   )

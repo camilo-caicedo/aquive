@@ -1,51 +1,51 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { HeartHandshake } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { FECHA_LEGALES } from '@/lib/config'
+import { type AliadoDelMunicipio } from '@/lib/acompanamiento'
 import {
-  AVISO_ACOMPANAMIENTO_DATOS,
-  AVISO_ACOMPANAMIENTO_SIN_VUELTA,
-  type AliadoDelMunicipio,
-} from '@/lib/acompanamiento'
-import { TIPOS_DOCUMENTO, validarDocumento, validarTelefono } from '@/lib/validacion'
-import type { TipoDocumento } from '@/lib/types'
+  CamposAcompanamiento,
+  DATOS_VACIOS,
+  datosCompletos,
+  type DatosAcompanamiento,
+} from '@/components/campos-acompanamiento'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 /**
- * El único sitio del proyecto donde se le piden datos personales a quien
- * pide ayuda, y por eso el único que puede equivocarse de verdad.
+ * La segunda oportunidad, no la primera.
  *
- * Empieza cerrado, detrás de un enlace y no de un botón: regla R, elegir
- * el Flujo 2 no puede ser el camino de menor resistencia. Quien no lo
- * abra se queda en Flujo 1, que es lo correcto por defecto.
+ * Desde agosto de 2026 el acompañamiento se ofrece en el paso 4 de
+ * publicar, que es donde de verdad se ve. Esto sigue existiendo para quien
+ * dijo que no y a los dos días, sin respuestas, cambia de opinión: por eso
+ * empieza cerrado y detrás de un enlace, no de un botón. Se ofrece una
+ * vez, no se pide dos (regla R).
  *
  * No hay camino de vuelta desde aquí (§7). Se dice antes de pedir nada.
  */
 export function Acompanamiento({
   token,
-  aliado,
+  aliados,
   flujo,
   organizacion,
 }: {
   token: string
-  aliado: AliadoDelMunicipio | null
+  aliados: AliadoDelMunicipio[]
   flujo: 'directo' | 'acompanado'
   organizacion: string | null
 }) {
   const router = useRouter()
   const [abierto, setAbierto] = useState(false)
-  const [nombre, setNombre] = useState('')
-  const [documentoTipo, setDocumentoTipo] = useState<TipoDocumento>('CC')
-  const [documento, setDocumento] = useState('')
-  const [telefono, setTelefono] = useState('')
-  const [autorizo, setAutorizo] = useState(false)
+  const [datos, setDatos] = useState<DatosAcompanamiento>({
+    ...DATOS_VACIOS,
+    // Con una sola no hay nada que escoger. Con varias no se preselecciona
+    // ninguna: elegir por la persona cuál fundación ve su documento no es
+    // una comodidad, es una decisión que no nos toca.
+    organizacionId: aliados.length === 1 ? aliados[0].id : '',
+  })
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -70,32 +70,24 @@ export function Acompanamiento({
 
   // Sin fundación en ese municipio no hay nada que ofrecer, y no se
   // menciona: contar lo que no existe solo hace sentir que falta algo.
-  if (!aliado) return null
+  if (aliados.length === 0) return null
 
-  const errorDocumento = documento ? validarDocumento(documentoTipo, documento) : null
-  const errorTelefono = telefono ? validarTelefono(telefono) : null
-  const puedeEnviar =
-    nombre.trim().length >= 3 &&
-    documento.trim().length > 0 &&
-    !errorDocumento &&
-    !errorTelefono &&
-    autorizo &&
-    !enviando
+  const puedeEnviar = datosCompletos(datos) && !enviando
 
   async function activar() {
-    if (!puedeEnviar || !aliado) return
+    if (!puedeEnviar) return
     setEnviando(true)
     setError(null)
 
     const supabase = createClient()
     const { error: rpcError } = await supabase.rpc('activar_acompanamiento', {
       p_token: token,
-      p_organizacion_id: aliado.id,
-      p_nombre: nombre.trim(),
-      p_documento_tipo: documentoTipo,
-      p_documento: documento.trim(),
+      p_organizacion_id: datos.organizacionId,
+      p_nombre: datos.nombre.trim(),
+      p_documento_tipo: datos.documentoTipo,
+      p_documento: datos.documento.trim(),
       p_autorizacion_version: FECHA_LEGALES,
-      p_telefono: telefono.trim() || null,
+      p_telefono: datos.telefono.trim() || null,
     })
 
     if (rpcError) {
@@ -130,102 +122,9 @@ export function Acompanamiento({
         </button>
       ) : (
         <div className="space-y-4 rounded-xl border border-border p-4">
-          <div>
-            <h2 className="font-heading text-2xl">Que {aliado.nombre} te acompañe</h2>
-            <p className="mt-2 text-base text-muted-foreground">
-              {AVISO_ACOMPANAMIENTO_DATOS}
-            </p>
-          </div>
+          <h2 className="font-heading text-2xl">Que una fundación te acompañe</h2>
 
-          <Alert variant="warning">
-            <AlertDescription>{AVISO_ACOMPANAMIENTO_SIN_VUELTA}</AlertDescription>
-          </Alert>
-
-          <div>
-            <Label htmlFor="acomp-nombre" className="mb-1">
-              Tu nombre completo
-            </Label>
-            <Input
-              id="acomp-nombre"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              maxLength={80}
-              autoComplete="name"
-            />
-          </div>
-
-          <fieldset>
-            <legend className="mb-2 text-base font-medium">Tipo de documento</legend>
-            {/* Sin TI ni RC, y no es un olvido: esta plataforma no recibe
-                documentos de menores de edad (regla O). Un CHECK de la base
-                los rechaza aunque alguien los mande a mano. */}
-            <div className="grid grid-cols-2 gap-2">
-              {TIPOS_DOCUMENTO.map((t) => (
-                <Button
-                  key={t.valor}
-                  type="button"
-                  variant={documentoTipo === t.valor ? 'default' : 'outline'}
-                  onClick={() => setDocumentoTipo(t.valor)}
-                >
-                  {t.valor}
-                </Button>
-              ))}
-            </div>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {TIPOS_DOCUMENTO.find((t) => t.valor === documentoTipo)?.etiqueta}
-            </p>
-          </fieldset>
-
-          <div>
-            <Label htmlFor="acomp-documento" className="mb-1">
-              Número de documento
-            </Label>
-            <Input
-              id="acomp-documento"
-              value={documento}
-              onChange={(e) => setDocumento(e.target.value)}
-              maxLength={20}
-              inputMode="numeric"
-            />
-            {errorDocumento && (
-              <p className="mt-1 text-sm text-destructive">{errorDocumento}</p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="acomp-telefono" className="mb-1">
-              Teléfono (opcional)
-            </Label>
-            <Input
-              id="acomp-telefono"
-              value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
-              maxLength={20}
-              inputMode="tel"
-              autoComplete="tel"
-            />
-            <p className="mt-1 text-sm text-muted-foreground">
-              Para que la fundación te avise de la entrega. Solo lo ve ella.
-            </p>
-            {errorTelefono && <p className="mt-1 text-sm text-destructive">{errorTelefono}</p>}
-          </div>
-
-          <label className="flex items-start gap-2 text-base">
-            <input
-              type="checkbox"
-              checked={autorizo}
-              onChange={(e) => setAutorizo(e.target.checked)}
-              className="mt-1 size-5 shrink-0"
-            />
-            <span>
-              Autorizo que {aliado.nombre} trate estos datos para coordinar la
-              entrega, según la{' '}
-              <Link href="/privacidad" className="underline">
-                política de privacidad
-              </Link>{' '}
-              del {FECHA_LEGALES}.
-            </span>
-          </label>
+          <CamposAcompanamiento aliados={aliados} datos={datos} onCambio={setDatos} />
 
           {error && (
             <Alert variant="destructive">
@@ -233,12 +132,17 @@ export function Acompanamiento({
             </Alert>
           )}
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Button disabled={!puedeEnviar} onClick={activar}>
-              {enviando ? 'Guardando…' : 'Sí, que me acompañen'}
-            </Button>
-            <Button variant="outline" disabled={enviando} onClick={() => setAbierto(false)}>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => setAbierto(false)}
+            >
               Ahora no
+            </Button>
+            <Button type="button" className="flex-1" disabled={!puedeEnviar} onClick={activar}>
+              {enviando ? 'Guardando…' : 'Sí, que me acompañen'}
             </Button>
           </div>
         </div>
