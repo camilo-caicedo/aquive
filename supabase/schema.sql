@@ -5144,7 +5144,7 @@ comment on function public.devolver_a_directo(uuid,text) is
 -- Tres pasos, y el orden es el que hace que funcione:
 --
 --   1. Auto-renovar las vencidas que tengan hilo vivo, con TECHO DURO de
---      14 días desde que se publicaron. El techo existe para que una
+--      5 días desde que se publicaron. El techo existe para que una
 --      coordinación estancada no mantenga una identidad cifrada viva para
 --      siempre: la promesa es que esto se borra, no que se borra pronto.
 --   2. Cerrar los hilos de las que ya no se renuevan. Al llegar al techo
@@ -5168,7 +5168,7 @@ begin
   update public.solicitudes s
      set expira_at = now() + interval '72 hours'
    where s.expira_at <= now()
-     and s.creada_at > now() - interval '14 days'
+     and s.creada_at > now() - interval '5 days'
      and exists (select 1 from public.conversaciones c
                   where c.solicitud_id = s.id and c.estado <> 'cerrada');
 
@@ -5529,8 +5529,8 @@ grant  execute on function public.panel_admin_flujo2() to authenticated;
 -- Comprobar, contra una solicitud de PRUEBA y NUNCA llamando a
 -- `expirar_solicitudes()` a mano:
 --
---   -- Auto-renovado: con hilo vivo y menos de 14 días, la fecha se mueve.
---   -- Con más de 14 días, no se mueve y el hilo queda cerrado.
+--   -- Auto-renovado: con hilo vivo y menos de 5 días, la fecha se mueve.
+--   -- Con más de 5 días, no se mueve y el hilo queda cerrado.
 --   -- La métrica de una `entregada_parcial` sale con cumplida = true.
 --   -- `suprimir_mis_datos` deja la solicitud en `directo`, sin identidad,
 --   -- con los hilos cerrados y los mensajes del titular reemplazados.

@@ -3,7 +3,14 @@
 // tiene efecto legal. Debe coincidir con lo que diga PLANTILLAS.md.
 export const RESPONSABLE = 'Juan Camilo Caicedo Sepulveda'
 export const CORREO_CONTACTO = 'soporte@aquive.co'
-export const FECHA_LEGALES = '14 de agosto de 2026'
+// Se mueve cada vez que cambia un texto legal, y no antes: es lo que se
+// guarda en `identidades.autorizacion_version` y por tanto la prueba de
+// QUÉ versión aceptó cada persona. Si el texto cambia y la fecha no, esa
+// prueba deja de servir.
+//
+// 15/08/2026: el techo de la auto-renovación bajó de 14 días a 5, y los
+// términos §7 lo dicen ahora.
+export const FECHA_LEGALES = '15 de agosto de 2026'
 
 export const ENTIDADES_MATRICULA = [
   { valor: 'COPNIA', etiqueta: 'COPNIA — Ingeniería' },

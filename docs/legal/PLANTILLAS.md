@@ -48,7 +48,7 @@ ese en todos los documentos.
 
 **Cómo tratamos la información en AquíVe**
 
-Última actualización: 14/08/2026
+Última actualización: 15/08/2026
 
 **Quién es responsable**
 Juan Camilo Caicedo Sepulveda, persona natural, Cali, Colombia.
@@ -154,7 +154,7 @@ Cuando eso ocurra, eliminaremos todas las bases de datos.
 
 **Términos de uso de AquíVe**
 
-Última actualización: 14/08/2026
+Última actualización: 15/08/2026
 
 **1. Qué es esto.** Un tablón de anuncios gratuito que permite a personas
 afectadas por el sismo publicar qué artículos necesitan, y a otras
@@ -229,7 +229,7 @@ recolectar datos.
 
 **7. Contenido efímero.** Las solicitudes se eliminan automáticamente a
 las 72 horas. Si hay una coordinación abierta con una fundación, ese plazo
-se prorroga solo mientras siga abierta, y nunca más allá de 14 días desde
+se prorroga solo mientras siga abierta, y nunca más allá de 5 días desde
 que se publicó: al llegar ahí se cierra y se borra igual. No garantizamos
 conservación ni recuperación de nada.
 
