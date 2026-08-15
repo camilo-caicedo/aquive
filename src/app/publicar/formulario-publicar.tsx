@@ -284,6 +284,17 @@ export function FormularioPublicar({
               </ComboboxTrigger>
               <ComboboxContent>
                 <ComboboxInput showTrigger={false} placeholder="Escribe el nombre" />
+                {/* La lista arranca recortada — son 1.122 municipios y
+                    pintarlos todos tumbaba la pestaña en iPhone. Quien no
+                    vea el suyo tiene que saber que sigue estando.
+                    Desaparece en cuanto hay algo escrito: ahí ya se está
+                    buscando por nombre, y repetirlo encima de «No
+                    encontramos ese municipio» solo confunde. Va por CSS y
+                    no por estado para no re-renderizar la lista en cada
+                    tecla. */}
+                <p className="px-3 pt-2 text-sm text-muted-foreground group-has-[input:not(:placeholder-shown)]/combobox-content:hidden">
+                  Si no ves la ciudad, búscala por nombre.
+                </p>
                 <ComboboxEmpty>No encontramos ese municipio.</ComboboxEmpty>
                 <ComboboxList>
                   {(m: Municipio) => (
