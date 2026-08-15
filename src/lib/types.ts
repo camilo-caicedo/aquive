@@ -1298,6 +1298,14 @@ export interface Database {
         Args: Record<string, never>
         Returns: Json
       }
+      // Devuelve 'organizacion', 'coordinacion' o null. Solo para el
+      // encabezado: si se dibuja la pestaña de /aliado y con qué nombre.
+      // Como `soy_aliado`, no autoriza nada — cada RPC vuelve a comprobar
+      // quién es quién.
+      mi_menu_coordinacion: {
+        Args: Record<string, never>
+        Returns: string | null
+      }
       soy_aliado: {
         Args: Record<string, never>
         Returns: boolean

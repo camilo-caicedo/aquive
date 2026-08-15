@@ -21,7 +21,15 @@ const ENLACES = [
 ]
 
 const ENLACE_ADMIN = { href: '/admin', etiqueta: 'Moderación', Icono: ShieldCheck }
-const ENLACE_ALIADO = { href: '/aliado', etiqueta: 'Mi organización', Icono: Building2 }
+
+// `/aliado` tiene dos públicos y por eso dos nombres. Para el equipo de una
+// fundación es su organización; para quien solo ofreció ayuda es el sitio
+// donde están sus conversaciones, y llamárselo «Mi organización» sería
+// mentirle. Quien no tenga ninguna de las dos cosas no ve la pestaña.
+const ETIQUETA_COORDINACION: Record<string, string> = {
+  organizacion: 'Mi organización',
+  coordinacion: 'Coordinación',
+}
 
 // Coincidencia exacta para la portada; por prefijo para el resto, para que
 // /responder/ABCD siga marcando "Solicitudes".
@@ -38,11 +46,24 @@ function estaActiva(ruta: string, href: string) {
  * JavaScript los enlaces siguen funcionando; lo único que se pierde es el
  * resaltado, que es decorativo.
  */
-export function Navegacion({ esAdmin, esAliado }: { esAdmin: boolean; esAliado: boolean }) {
+export function Navegacion({
+  esAdmin,
+  menuCoordinacion,
+}: {
+  esAdmin: boolean
+  /** `'organizacion'`, `'coordinacion'` o null. Lo decide el servidor. */
+  menuCoordinacion: string | null
+}) {
   const ruta = usePathname()
+  const etiquetaCoordinacion = menuCoordinacion
+    ? ETIQUETA_COORDINACION[menuCoordinacion]
+    : undefined
+
   const enlaces = [
     ...ENLACES,
-    ...(esAliado ? [ENLACE_ALIADO] : []),
+    ...(etiquetaCoordinacion
+      ? [{ href: '/aliado', etiqueta: etiquetaCoordinacion, Icono: Building2 }]
+      : []),
     ...(esAdmin ? [ENLACE_ADMIN] : []),
   ]
 
