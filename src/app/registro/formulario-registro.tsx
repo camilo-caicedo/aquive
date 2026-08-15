@@ -266,7 +266,12 @@ export function FormularioRegistro({
 
     // Con el parámetro: /servidores abre la pestaña de entidades, y quien
     // acaba de registrarse como servidor espera verse a sí mismo.
-    router.push(tipo === 'servidor' ? '/servidores?ver=profesionales' : '/')
+    // A los avisos, no al tablero. Es el segundo en que la persona acaba de
+    // decir que quiere ayudar, así que es cuando más sentido tiene pedirlos
+    // y menos se rechazan. Antes caía en el tablero y los avisos se quedaban
+    // en una pestaña que nadie abría: de cinco perfiles en producción, uno
+    // solo los tenía activos, y por eso las solicitudes se represaban.
+    router.push('/registro?ver=ajustes&nuevo=1')
     router.refresh()
   }
 

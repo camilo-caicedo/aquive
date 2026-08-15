@@ -1,82 +1,79 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { Bell, BellRing, Share } from 'lucide-react'
+import { activarAvisosDeSolicitud, enPantallaDeInicio, esIOS } from '@/lib/avisos'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
-// base64url → Uint8Array, formato que exige pushManager.subscribe
-function claveAplicacion(base64: string): Uint8Array<ArrayBuffer> {
-  const relleno = '='.repeat((4 - (base64.length % 4)) % 4)
-  const normal = (base64 + relleno).replace(/-/g, '+').replace(/_/g, '/')
-  const binario = atob(normal)
-  const salida = new Uint8Array(new ArrayBuffer(binario.length))
-  for (let i = 0; i < binario.length; i++) salida[i] = binario.charCodeAt(i)
-  return salida
-}
+const sinSuscripcion = () => () => {}
+const enCliente = () => true
+const enServidor = () => false
 
-function esIOS() {
-  return /iphone|ipad|ipod/i.test(navigator.userAgent)
-}
+type Estado = 'cargando' | 'inicial' | 'activando' | 'activo' | 'ios' | 'error'
 
-function enPantallaDeInicio() {
-  return (
-    window.matchMedia('(display-mode: standalone)').matches ||
-    (window.navigator as Navigator & { standalone?: boolean }).standalone === true
-  )
-}
+/**
+ * Los avisos de una solicitud, para quien la publicó.
+ *
+ * Hasta agosto de 2026 este archivo reimplementaba `claveAplicacion`,
+ * `esIOS` y `enPantallaDeInicio` por su cuenta: era un fork literal de
+ * `lib/avisos.ts`, así que cualquier arreglo en la librería no llegaba
+ * aquí. Ahora la lógica vive en un solo sitio.
+ *
+ * `destacado` lo pone la pantalla de confirmación, donde esto es lo
+ * primero que hay que hacer después de publicar. En «Ajustes» va discreto,
+ * porque ahí solo lo busca quien ya lo apagó o cambió de teléfono.
+ */
+export function ActivarAvisos({
+  token,
+  destacado = false,
+  yaTieneAvisos = false,
+}: {
+  token: string
+  destacado?: boolean
+  /**
+   * Si ESTA solicitud ya tiene una suscripción, según la base.
+   *
+   * ⚠ No vale preguntarle a `avisosActivosAqui()`: eso mira el navegador, y
+   * un teléfono tiene UNA sola suscripción push. Basta con que exista por
+   * el lado de quien ofrece para que parezca que esta solicitud está
+   * cubierta cuando no lo está — son dos tablas distintas. Con eso, el
+   * ofrecimiento no se dibujaba nunca.
+   */
+  yaTieneAvisos?: boolean
+}) {
+  // `navigator` no existe al renderizar en el servidor, así que hasta que
+  // no hay hidratación no se puede saber si esto es un iPhone. Mismo patrón
+  // que `select-filtro.tsx`, y no un efecto que llame a `setState`: eso
+  // dispara un render en cascada y el lint lo rechaza con razón.
+  const hidratado = useSyncExternalStore(sinSuscripcion, enCliente, enServidor)
+  const [tocado, setTocado] = useState<Estado | null>(null)
 
-type Estado = 'inicial' | 'activando' | 'activo' | 'ios' | 'error'
+  const estado: Estado = tocado
+    ? tocado
+    : !hidratado
+      ? 'cargando'
+      : yaTieneAvisos
+        ? 'activo'
+        : // En iPhone sin pantalla de inicio se dice ANTES, no después de
+          // que el intento falle: así no se gasta el único toque que hay.
+          esIOS() && !enPantallaDeInicio()
+          ? 'ios'
+          : 'inicial'
 
-export function ActivarAvisos({ token }: { token: string }) {
-  const [estado, setEstado] = useState<Estado>('inicial')
+  const setEstado = setTocado
 
   async function activar() {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      setEstado(esIOS() ? 'ios' : 'error')
-      return
-    }
-    // En iOS el push solo existe si el sitio está en la pantalla de inicio.
-    if (esIOS() && !enPantallaDeInicio()) {
-      setEstado('ios')
-      return
-    }
-
     setEstado('activando')
-    try {
-      const permiso = await Notification.requestPermission()
-      if (permiso !== 'granted') {
-        setEstado('error')
-        return
-      }
-
-      const registro = await navigator.serviceWorker.register('/sw.js')
-      await navigator.serviceWorker.ready
-
-      const suscripcion = await registro.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: claveAplicacion(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
-      })
-
-      const json = suscripcion.toJSON()
-      const res = await fetch('/api/push', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token,
-          endpoint: suscripcion.endpoint,
-          p256dh: json.keys?.p256dh,
-          auth: json.keys?.auth,
-        }),
-      })
-
-      setEstado(res.ok ? 'activo' : 'error')
-    } catch {
-      setEstado('error')
-    }
+    const r = await activarAvisosDeSolicitud(token)
+    setEstado(r === 'activado' ? 'activo' : r === 'ios' ? 'ios' : 'error')
   }
 
+  if (estado === 'cargando') return null
+
+  // Ya activos: en la confirmación desaparece, en ajustes se confirma.
   if (estado === 'activo') {
+    if (destacado) return null
     return (
       <Alert>
         <BellRing className="size-5" />
@@ -101,18 +98,40 @@ export function ActivarAvisos({ token }: { token: string }) {
     )
   }
 
+  const boton = (
+    <Button
+      variant={destacado ? 'default' : 'outline'}
+      className="w-full"
+      disabled={estado === 'activando'}
+      onClick={activar}
+    >
+      <Bell className="size-5" />
+      {estado === 'activando' ? 'Activando…' : 'Avisarme cuando respondan'}
+    </Button>
+  )
+
+  const error = estado === 'error' && (
+    <p className="text-sm text-muted-foreground">
+      No pudimos activar los avisos. No pasa nada: guarda tu enlace y vuelve
+      cuando quieras para ver las respuestas.
+    </p>
+  )
+
+  if (!destacado) return <div className="space-y-2">{boton}{error}</div>
+
   return (
-    <div className="space-y-2">
-      <Button variant="outline" className="w-full" disabled={estado === 'activando'} onClick={activar}>
-        <Bell className="size-5" />
-        {estado === 'activando' ? 'Activando…' : 'Avisarme cuando respondan'}
-      </Button>
-      {estado === 'error' && (
-        <p className="text-sm text-muted-foreground">
-          No pudimos activar los avisos. No pasa nada: guarda tu enlace y
-          vuelve cuando quieras para ver las respuestas.
-        </p>
-      )}
+    <div className="rounded-xl border border-primary/30 bg-accent p-4">
+      <p className="text-base font-medium text-accent-foreground">
+        ¿Te avisamos cuando alguien responda?
+      </p>
+      <p className="mt-1 text-base text-accent-foreground/80">
+        Sin esto tendrías que volver a entrar por tu enlace a mirar. Es un
+        toque y no pedimos tu teléfono.
+      </p>
+      <div className="mt-3 space-y-2">
+        {boton}
+        {error}
+      </div>
     </div>
   )
 }

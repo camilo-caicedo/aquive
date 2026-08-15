@@ -6,16 +6,21 @@ import qrcode from 'qrcode-generator'
 import { AVISO_PUBLICAR } from '@/lib/honestidad'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { ActivarAvisos } from '@/components/activar-avisos'
 
 export function PantallaConfirmacion({
   link,
   codigo,
   sinRespuestas,
+  token,
+  yaTieneAvisos,
 }: {
   link: string
   codigo: string
   /** El aviso habla en futuro, así que sobra cuando ya hay respuestas. */
   sinRespuestas: boolean
+  token: string
+  yaTieneAvisos: boolean
 }) {
   const [copiado, setCopiado] = useState(false)
 
@@ -40,6 +45,18 @@ export function PantallaConfirmacion({
     <div className="space-y-4 text-center">
       <p className="text-base text-muted-foreground">Tu solicitud quedó publicada</p>
       <p className="text-5xl font-bold tracking-wide">{codigo}</p>
+
+      {/* Antes que el enlace, y con el botón grande. Estuvo escondido en la
+          cuarta pestaña hasta agosto de 2026, y el resultado fue medible:
+          cero suscripciones en producción. Sin avisos, quien pide tiene que
+          acordarse de volver a mirar, y no vuelve.
+
+          Se ofrece con un botón porque el navegador exige un gesto: lanzarlo
+          solo no funciona, y donde funcionara saldría sin contexto y le
+          darían a «Bloquear», que no se puede deshacer. */}
+      <div className="text-left">
+        <ActivarAvisos token={token} destacado yaTieneAvisos={yaTieneAvisos} />
+      </div>
 
       <Alert variant="warning">
         <AlertDescription>

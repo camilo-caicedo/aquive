@@ -18,10 +18,11 @@ type Vista = 'perfil' | 'respuestas' | 'ajustes'
 export default async function RegistroPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ver?: string }>
+  searchParams: Promise<{ ver?: string; nuevo?: string }>
 }) {
-  const { ver } = await searchParams
+  const { ver, nuevo } = await searchParams
   const vista: Vista = ver === 'ajustes' || ver === 'respuestas' ? ver : 'perfil'
+  const recienCreado = nuevo === '1'
 
   const supabase = await createClient()
   const {
@@ -126,6 +127,22 @@ export default async function RegistroPage({
               perfil guardado no hay municipios y no hay nada que activar. */}
           {perfil && (
             <section>
+              {/* Recién guardado el perfil se dice para qué sirve esto antes
+                  de pedirlo. Es el momento en que la persona acaba de decir
+                  que quiere ayudar, y sin avisos no se entera de ninguna
+                  solicitud: tendría que entrar al tablero por su cuenta. */}
+              {recienCreado && (
+                <div className="mb-3 rounded-xl border border-primary/30 bg-accent p-4">
+                  <p className="text-base font-medium text-accent-foreground">
+                    Tu perfil quedó guardado
+                  </p>
+                  <p className="mt-1 text-base text-accent-foreground/80">
+                    Falta lo que hace que sirva: que te avisemos cuando alguien
+                    de tus municipios pida ayuda. Si no, tendrías que entrar a
+                    mirar el tablero cada rato.
+                  </p>
+                </div>
+              )}
               <h2 className="font-heading text-2xl">Avisos</h2>
               <AvisosOfertador municipios={perfil.municipios.length} />
             </section>
