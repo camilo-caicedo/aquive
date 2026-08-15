@@ -20,7 +20,7 @@ import {
   ComboboxList,
 } from '@/components/ui/combobox'
 import type { CoberturaEntidad, Database, EnlaceEntidad, Json } from '@/lib/types'
-import type { MunicipioBasico as Municipio } from '@/lib/municipios'
+import { LIMITE_MUNICIPIOS, type MunicipioBasico as Municipio } from '@/lib/municipios'
 
 // Exactamente los campos de `COLUMNAS_ENTIDAD_ADMIN` (src/lib/types.ts):
 // nunca `creada_por`, que es el uuid de una persona real.
@@ -205,6 +205,7 @@ function FormularioEntidad({
           <Combobox
             multiple
             items={municipios}
+            limit={LIMITE_MUNICIPIOS}
             value={municipiosElegidos}
             onValueChange={(ms: Municipio[]) => setMunicipiosSel(ms.map((m) => m.codigo_dane))}
             itemToStringLabel={(m: Municipio) => m.nombre}

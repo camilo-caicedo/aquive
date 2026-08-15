@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { HeartHandshake } from 'lucide-react'
 import type { Categoria, ItemCatalogoPublico, ItemSolicitudInput } from '@/lib/types'
-import type { MunicipioBasico as Municipio } from '@/lib/municipios'
+import { LIMITE_MUNICIPIOS, type MunicipioBasico as Municipio } from '@/lib/municipios'
 import { CATEGORIAS } from '@/lib/catalogo'
 import { FECHA_LEGALES } from '@/lib/config'
 import { validarBarrio, validarNota, validarSugerencia } from '@/lib/validacion'
@@ -61,6 +61,20 @@ function guardarEnLocalStorage(codigo: string, token: string) {
     // localStorage puede fallar (modo privado, cuota). No es crítico: el
     // enlace de todos modos se muestra en la pantalla de confirmación.
   }
+}
+
+/**
+ * La cantidad mientras se está escribiendo, donde `0` significa «campo
+ * vacío» y no «cero unidades».
+ *
+ * Antes el suelo era 1, y como un campo vacío llega aquí como `Number('')`,
+ * o sea `0`, borrar el 1 lo devolvía en la misma tecla. Para pedir 20 había
+ * que dejar el 1 y escribir alrededor. El suelo de 1 se aplica al salir del
+ * campo, que es cuando ya se sabe qué quiso poner la persona.
+ */
+function mientrasSeEscribe(cantidad: number) {
+  if (!Number.isFinite(cantidad)) return 0
+  return Math.min(9999, Math.max(0, Math.trunc(cantidad)))
 }
 
 export function FormularioPublicar({
@@ -140,7 +154,19 @@ export function FormularioPublicar({
     setSeleccionados((prev) =>
       prev.map((s) =>
         'item_id' in s && s.item_id === itemId
-          ? { ...s, cantidad: Math.min(9999, Math.max(1, cantidad)) }
+          ? { ...s, cantidad: mientrasSeEscribe(cantidad) }
+          : s
+      )
+    )
+  }
+
+  // Al salir del campo, un hueco vuelve a ser 1: nadie quiere pedir cero
+  // de algo, y así no se llega al servidor con una cantidad inválida.
+  function cerrarCantidad(itemId: string) {
+    setSeleccionados((prev) =>
+      prev.map((s) =>
+        'item_id' in s && s.item_id === itemId && s.cantidad === 0
+          ? { ...s, cantidad: 1 }
           : s
       )
     )
@@ -150,7 +176,13 @@ export function FormularioPublicar({
   // ubican por su posición en `seleccionados`, que no cambia de orden.
   function cambiarCantidadSugerencia(indice: number, cantidad: number) {
     setSeleccionados((prev) =>
-      prev.map((s, i) => (i === indice ? { ...s, cantidad: Math.min(9999, Math.max(1, cantidad)) } : s))
+      prev.map((s, i) => (i === indice ? { ...s, cantidad: mientrasSeEscribe(cantidad) } : s))
+    )
+  }
+
+  function cerrarCantidadSugerencia(indice: number) {
+    setSeleccionados((prev) =>
+      prev.map((s, i) => (i === indice && s.cantidad === 0 ? { ...s, cantidad: 1 } : s))
     )
   }
 
@@ -195,7 +227,9 @@ export function FormularioPublicar({
           barrio: barrio.trim(),
           categoria,
           nota: nota.trim() || null,
-          items: seleccionados,
+          // Último filtro por si algún campo de cantidad llegó vacío hasta
+          // aquí: `0` es «no escribí nada todavía», nunca una cantidad.
+          items: seleccionados.map((s) => (s.cantidad === 0 ? { ...s, cantidad: 1 } : s)),
           puedeRecoger,
           turnstileToken,
         }),
@@ -260,6 +294,12 @@ export function FormularioPublicar({
             </Label>
             <Combobox
               items={municipios}
+              // Sin esto se montan los 1.122 de golpe al abrir: 4.500 nodos y
+              // 700 KB de HTML en un solo popup. En iPhone —Safari y Chrome,
+              // que ahí son el mismo WebKit— la pestaña se queda sin memoria
+              // y se recarga sola. El filtro sigue recorriendo el país
+              // entero; esto solo recorta lo que se pinta.
+              limit={LIMITE_MUNICIPIOS}
               value={municipios.find((m) => m.codigo_dane === municipio) ?? null}
               onValueChange={elegirMunicipio}
               itemToStringLabel={(m: Municipio) => m.nombre}
@@ -278,6 +318,17 @@ export function FormularioPublicar({
               </ComboboxTrigger>
               <ComboboxContent>
                 <ComboboxInput showTrigger={false} placeholder="Escribe el nombre" />
+                {/* La lista arranca recortada — son 1.122 municipios y
+                    pintarlos todos tumbaba la pestaña en iPhone. Quien no
+                    vea el suyo tiene que saber que sigue estando.
+                    Desaparece en cuanto hay algo escrito: ahí ya se está
+                    buscando por nombre, y repetirlo encima de «No
+                    encontramos ese municipio» solo confunde. Va por CSS y
+                    no por estado para no re-renderizar la lista en cada
+                    tecla. */}
+                <p className="px-3 pt-2 text-sm text-muted-foreground group-has-[input:not(:placeholder-shown)]/combobox-content:hidden">
+                  Si no ves la ciudad, búscala por nombre.
+                </p>
                 <ComboboxEmpty>No encontramos ese municipio.</ComboboxEmpty>
                 <ComboboxList>
                   {(m: Municipio) => (
@@ -397,8 +448,9 @@ export function FormularioPublicar({
                           inputMode="numeric"
                           min={1}
                           max={9999}
-                          value={sel.cantidad}
+                          value={sel.cantidad === 0 ? '' : sel.cantidad}
                           onChange={(e) => cambiarCantidad(item.id, Number(e.target.value))}
+                          onBlur={() => cerrarCantidad(item.id)}
                           className="w-20"
                           aria-label={`Cantidad de ${item.nombre}`}
                         />
@@ -424,8 +476,9 @@ export function FormularioPublicar({
                         inputMode="numeric"
                         min={1}
                         max={9999}
-                        value={s.cantidad}
+                        value={s.cantidad === 0 ? '' : s.cantidad}
                         onChange={(e) => cambiarCantidadSugerencia(indice, Number(e.target.value))}
+                        onBlur={() => cerrarCantidadSugerencia(indice)}
                         className="w-20"
                         aria-label={`Cantidad de ${s.sugerencia}`}
                       />
@@ -505,7 +558,22 @@ export function FormularioPublicar({
             <Button type="button" variant="outline" className="flex-1" onClick={() => setPaso(1)}>
               Atrás
             </Button>
-            <Button type="button" className="flex-1" disabled={!puedeAvanzarPaso2} onClick={() => setPaso(3)}>
+            {/* Cierra los campos de cantidad que quedaran vacíos antes de
+                pasar de pantalla. No se hace deshabilitando «Continuar»:
+                un botón deshabilitado no recibe el toque, así que haría
+                falta tocar dos veces —una para cerrar el campo y otra para
+                avanzar— y eso se siente como que la app no responde. */}
+            <Button
+              type="button"
+              className="flex-1"
+              disabled={!puedeAvanzarPaso2}
+              onClick={() => {
+                setSeleccionados((prev) =>
+                  prev.map((s) => (s.cantidad === 0 ? { ...s, cantidad: 1 } : s))
+                )
+                setPaso(3)
+              }}
+            >
               Continuar
             </Button>
           </div>

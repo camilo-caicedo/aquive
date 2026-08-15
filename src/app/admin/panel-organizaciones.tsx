@@ -19,7 +19,7 @@ import {
   ComboboxList,
 } from '@/components/ui/combobox'
 import type { InvitacionResumen, OrganizacionAdmin, TipoOrganizacion } from '@/lib/types'
-import type { MunicipioBasico as Municipio } from '@/lib/municipios'
+import { LIMITE_MUNICIPIOS, type MunicipioBasico as Municipio } from '@/lib/municipios'
 
 const TIPOS: { valor: TipoOrganizacion; etiqueta: string }[] = [
   { valor: 'fundacion', etiqueta: 'Fundación' },
@@ -176,6 +176,7 @@ function FormularioOrganizacion({
         <Combobox
           multiple
           items={municipios}
+          limit={LIMITE_MUNICIPIOS}
           value={municipiosElegidos}
           onValueChange={(ms: Municipio[]) => setMunicipiosSel(ms.map((m) => m.codigo_dane))}
           itemToStringLabel={(m: Municipio) => m.nombre}
