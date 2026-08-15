@@ -32,13 +32,32 @@ export async function avisosActivosAqui(): Promise<boolean> {
 
 export type ResultadoAvisos = 'activado' | 'ios' | 'sin-permiso' | 'error'
 
-export async function activarAvisos(): Promise<ResultadoAvisos> {
-  if (!soportaAvisos()) return esIOS() ? 'ios' : 'error'
+/**
+ * Todo lo que hay que hacer en el navegador para poder recibir avisos:
+ * pedir el permiso, registrar el service worker y suscribirse.
+ *
+ * ⚠ `Notification.requestPermission()` EXIGE un gesto de la persona. Llamar
+ * a esto fuera de un manejador de clic no adelanta nada: el navegador lo
+ * ignora, y donde no lo ignore el aviso sale sin contexto y quien lo vea
+ * dirá que no. Un «Bloquear» es permanente para ese navegador — no se
+ * puede volver a preguntar nunca. Por eso los avisos se ofrecen con un
+ * botón grande y en el momento oportuno, no se disparan solos.
+ *
+ * Devuelve la suscripción para que cada lado la guarde donde le toca:
+ * quien ofrece en `push_ofertadores`, por su cuenta; quien pide en
+ * `push_suscripciones`, por el token de su solicitud.
+ */
+async function suscribirEsteDispositivo(): Promise<
+  { ok: true; suscripcion: PushSubscription } | { ok: false; motivo: ResultadoAvisos }
+> {
+  if (!soportaAvisos()) return { ok: false, motivo: esIOS() ? 'ios' : 'error' }
   // En iOS el push solo existe si el sitio está en la pantalla de inicio.
-  if (esIOS() && !enPantallaDeInicio()) return 'ios'
+  if (esIOS() && !enPantallaDeInicio()) return { ok: false, motivo: 'ios' }
 
   try {
-    if ((await Notification.requestPermission()) !== 'granted') return 'sin-permiso'
+    if ((await Notification.requestPermission()) !== 'granted') {
+      return { ok: false, motivo: 'sin-permiso' }
+    }
 
     const registro = await navigator.serviceWorker.register('/sw.js')
     await navigator.serviceWorker.ready
@@ -50,13 +69,50 @@ export async function activarAvisos(): Promise<ResultadoAvisos> {
         applicationServerKey: claveAplicacion(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!),
       }))
 
-    const json = suscripcion.toJSON()
-    const { error } = await createClient().rpc('guardar_push_ofertador', {
-      p_endpoint: suscripcion.endpoint,
-      p_p256dh: json.keys?.p256dh ?? '',
-      p_auth: json.keys?.auth ?? '',
+    return { ok: true, suscripcion }
+  } catch {
+    return { ok: false, motivo: 'error' }
+  }
+}
+
+/** Para quien OFRECE: la suscripción cuelga de su perfil. */
+export async function activarAvisos(): Promise<ResultadoAvisos> {
+  const r = await suscribirEsteDispositivo()
+  if (!r.ok) return r.motivo
+
+  const json = r.suscripcion.toJSON()
+  const { error } = await createClient().rpc('guardar_push_ofertador', {
+    p_endpoint: r.suscripcion.endpoint,
+    p_p256dh: json.keys?.p256dh ?? '',
+    p_auth: json.keys?.auth ?? '',
+  })
+  return error ? 'error' : 'activado'
+}
+
+/**
+ * Para quien PIDE: la suscripción cuelga de la solicitud y muere con ella.
+ *
+ * Va por `/api/push` y no por RPC porque quien pide no tiene cuenta: lo
+ * único que lo identifica es el token, y ese token viaja en el cuerpo,
+ * nunca en la URL (regla 6).
+ */
+export async function activarAvisosDeSolicitud(token: string): Promise<ResultadoAvisos> {
+  const r = await suscribirEsteDispositivo()
+  if (!r.ok) return r.motivo
+
+  const json = r.suscripcion.toJSON()
+  try {
+    const respuesta = await fetch('/api/push', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token,
+        endpoint: r.suscripcion.endpoint,
+        p256dh: json.keys?.p256dh ?? '',
+        auth: json.keys?.auth ?? '',
+      }),
     })
-    return error ? 'error' : 'activado'
+    return respuesta.ok ? 'activado' : 'error'
   } catch {
     return 'error'
   }

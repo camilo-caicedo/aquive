@@ -548,6 +548,12 @@ create table if not exists public.solicitudes (
   -- eso es lo que la regla 1 prohíbe guardar. Se lee con el token, con
   -- `movilidad_solicitud` si hay sesión, o en el panel de la fundación.
   puede_recoger   boolean not null default false,
+  -- Nota PUBLICA del administrador, del estilo "esto ya se entrego". Con
+  -- filtro de PII a diferencia de `entidades.pie`: aquel describe una
+  -- organizacion, este la entrega a una persona.
+  nota_admin      text check (char_length(nota_admin) <= 200),
+  nota_admin_at   timestamptz,
+  nota_admin_por  uuid references auth.users(id) on delete set null,
   creada_at       timestamptz not null default now(),
   confirmada_at   timestamptz not null default now(),
   expira_at       timestamptz not null default now() + interval '72 hours',
@@ -1106,7 +1112,9 @@ select
   -- ⚠ El flujo, y NADA más de la organización ni de la identidad. Esta
   -- vista la lee `anon`: aquí no entra ni el nombre de quien pidió, ni los
   -- cuatro últimos dígitos de su documento, ni el id de la fundación.
-  s.flujo
+  s.flujo,
+  -- Texto del proyecto, no de quien pidio. Escrito para leerse aqui.
+  s.nota_admin
 from public.solicitudes s
 join public.municipios m on m.codigo_dane = s.municipio
 where public.estado_activo(s.estado)
@@ -1959,6 +1967,11 @@ begin
     'barrio', v_sol.barrio, 'categoria', v_sol.categoria, 'nota', v_sol.nota,
     'estado', v_sol.estado, 'expira_at', v_sol.expira_at,
     'flujo', v_sol.flujo,
+    -- Si ESTA solicitud tiene avisos, que no es lo mismo que si este
+    -- navegador tiene una suscripción: un teléfono tiene una sola, y puede
+    -- existir por el lado de quien ofrece.
+    'tiene_avisos', exists (select 1 from public.push_suscripciones ps
+                             where ps.solicitud_id = v_sol.id),
     'puede_recoger', v_sol.puede_recoger,
     -- El NOMBRE de la organización, nunca su identificador ni nada de la
     -- identidad: los datos que entregó no se le vuelven a mostrar.
@@ -4129,6 +4142,105 @@ $$;
 
 revoke execute on function public.solicitudes_de_mi_organizacion() from public, anon;
 grant  execute on function public.solicitudes_de_mi_organizacion() to authenticated;
+
+create or replace function public.admin_anotar_solicitud(
+  p_codigo text,
+  p_nota   text,
+  p_cerrar boolean default false
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid  uuid := auth.uid();
+  v_nota text := nullif(trim(coalesce(p_nota, '')), '');
+  v_sol  public.solicitudes;
+begin
+  if not public.es_admin(v_uid) then
+    raise exception 'No autorizado';
+  end if;
+
+  if v_nota is not null then
+    if char_length(v_nota) > 200 then
+      raise exception 'La nota no puede pasar de 200 caracteres';
+    end if;
+    -- Mismo filtro que la nota de quien pide. Aquí escribe el responsable
+    -- del proyecto, sí, pero sobre la entrega a una persona concreta: es
+    -- justo donde uno escribiría «se lo llevaron a María, calle 5».
+    if public.contiene_pii(v_nota) then
+      raise exception 'La nota no puede llevar teléfonos, correos ni documentos. Di qué pasó, no de quién.';
+    end if;
+  end if;
+
+  if p_cerrar and v_nota is null then
+    raise exception 'Para cerrar una solicitud ajena hay que decir por qué';
+  end if;
+
+  select * into v_sol from public.solicitudes s
+   where s.codigo = upper(trim(p_codigo));
+
+  if v_sol.id is null then
+    raise exception 'Esa solicitud no existe o ya se borró';
+  end if;
+
+  update public.solicitudes
+     set nota_admin     = v_nota,
+         nota_admin_at  = case when v_nota is null then null else now() end,
+         nota_admin_por = case when v_nota is null then null else v_uid end,
+         -- `cumplida` y nunca un borrado: ver la cabecera.
+         estado         = case when p_cerrar then 'cumplida' else estado end
+   where id = v_sol.id;
+
+  return jsonb_build_object(
+    'codigo', v_sol.codigo,
+    'cerrada', p_cerrar
+  );
+end;
+$$;
+
+revoke execute on function public.admin_anotar_solicitud(text,text,boolean) from public, anon;
+grant  execute on function public.admin_anotar_solicitud(text,text,boolean) to authenticated;
+
+create or replace function public.solicitudes_admin()
+returns jsonb
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select case when not public.es_admin(auth.uid()) then '[]'::jsonb
+         else coalesce((
+           select jsonb_agg(jsonb_build_object(
+             'codigo',      s.codigo,
+             'municipio',   m.nombre,
+             'barrio',      s.barrio,
+             'categoria',   s.categoria,
+             'nota',        s.nota,
+             'nota_admin',  s.nota_admin,
+             'estado',      s.estado,
+             'creada_at',   s.creada_at,
+             'expira_at',   s.expira_at,
+             'respuestas',  (select count(*) from public.respuestas r where r.solicitud_id = s.id),
+             'items',       (select coalesce(jsonb_agg(jsonb_build_object(
+                                      'nombre',   coalesce(ci.nombre, sg.nombre_propuesto),
+                                      'cantidad', si.cantidad,
+                                      'unidad',   coalesce(ci.unidad, sg.unidad_sugerida, 'unidad'))
+                                    order by coalesce(ci.orden, 9999)), '[]'::jsonb)
+                               from public.solicitud_items si
+                               left join public.catalogo_items ci   on ci.id = si.item_id
+                               left join public.sugerencias_item sg on sg.id = si.sugerencia_id
+                              where si.solicitud_id = s.id)
+           ) order by s.creada_at desc)
+             from public.solicitudes s
+             join public.municipios m on m.codigo_dane = s.municipio
+         ), '[]'::jsonb)
+         end;
+$$;
+
+revoke execute on function public.solicitudes_admin() from public, anon;
+grant  execute on function public.solicitudes_admin() to authenticated;
 
 -- Moderar oculta, no borra: si un mensaje hay que atenderlo, la evidencia
 -- de que existió tiene que quedar hasta que muera el hilo.

@@ -152,6 +152,8 @@ export default async function SolicitudPage({
       {vista === 'enlace' && (
         <section className="mt-6">
           <PantallaConfirmacion
+            token={token}
+            yaTieneAvisos={solicitud.tiene_avisos}
             link={`${await origenDelSitio()}${base}`}
             codigo={solicitud.codigo}
             sinRespuestas={numRespuestas === 0}
@@ -225,7 +227,7 @@ export default async function SolicitudPage({
         <>
           <section className="mt-6 space-y-3">
             <h2 className="font-heading text-2xl">Avisos</h2>
-            <ActivarAvisos token={token} />
+            <ActivarAvisos token={token} yaTieneAvisos={solicitud.tiene_avisos} />
           </section>
 
           <section className="mt-8">

@@ -342,6 +342,24 @@ export interface HiloResumen {
   mensajes_total: number
 }
 
+// Una fila de `solicitudes_admin()`. Solo la ve un administrador, y lleva
+// el `estado` real —incluido `cumplida`, que no sale en el tablero— para
+// que cerrar una no signifique perderla de vista.
+export interface SolicitudAdmin {
+  codigo: string
+  municipio: string
+  barrio: string
+  categoria: Categoria
+  nota: string | null
+  /** La nota pública del administrador, si la escribió. */
+  nota_admin: string | null
+  estado: EstadoSolicitud
+  creada_at: string
+  expira_at: string
+  respuestas: number
+  items: Array<{ nombre: string; cantidad: number; unidad: string }>
+}
+
 // Una fila de `solicitudes_de_mi_organizacion()`: lo que la fundación
 // acompaña y todavía no ha atendido. No hay cruce de inventario porque no
 // hay inventario de organizaciones: mira los ítems y decide.
@@ -514,6 +532,8 @@ export interface SolicitudConRespuestas {
   flujo: FlujoSolicitud
   /** Nombre de la fundacion que acompaña, o null en Flujo 1. Nunca su id. */
   organizacion: string | null
+  /** Si ESTA solicitud tiene avisos. No es lo mismo que si este navegador los tiene. */
+  tiene_avisos: boolean
   items: Array<ItemResumen & { cubierto: boolean }>
   respuestas: Array<{
     id: string
@@ -1072,6 +1092,8 @@ export interface Database {
           // Solo si hay acompañamiento o no. De la organizacion y de la
           // identidad no sale NADA por esta vista, que la lee anon.
           flujo: FlujoSolicitud
+          /** Texto del proyecto, no de quien pidió. Escrito para leerse aquí. */
+          nota_admin: string | null
         }
         Relationships: []
       }
@@ -1613,6 +1635,17 @@ export interface Database {
       // todavía no ha atendido. Sin cruce de inventario — no lo hay.
       solicitudes_de_mi_organizacion: {
         Args: Record<string, never>
+        Returns: Json
+      }
+      // Devuelve SolicitudAdmin[]. Vacío para quien no es administrador.
+      solicitudes_admin: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      // Comenta una solicitud y, si `p_cerrar`, la marca `cumplida`. NO la
+      // borra: es de otra persona, que conserva su enlace y su plazo.
+      admin_anotar_solicitud: {
+        Args: { p_codigo: string; p_nota: string | null; p_cerrar?: boolean }
         Returns: Json
       }
       crear_reporte: {
