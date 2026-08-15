@@ -41,6 +41,7 @@ function haceCuanto(iso: string) {
  */
 export function BotonAvisos({ sinVer }: { sinVer: number }) {
   const panel = useRef<HTMLDivElement>(null)
+  const campana = useRef<HTMLButtonElement>(null)
   const router = useRouter()
   const [avisos, setAvisos] = useState<Aviso[] | null>(null)
   // Congelado a propósito en el valor de la primera pintada: al abrir se
@@ -56,6 +57,24 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
 
     async function alAbrir(e: Event) {
       if ((e as ToggleEvent).newState !== 'open') return
+
+      // El popover vive en la capa superior del documento, así que no
+      // hereda la posición de nada: si no se le dice dónde, el navegador
+      // lo centra en la pantalla. Y no sirve pegarlo al borde derecho de
+      // la ventana, porque el encabezado está centrado en `max-w-3xl` y
+      // en pantalla ancha la campana queda muy adentro.
+      //
+      // Se calcula al abrir y no con `anchor-name` de CSS porque el
+      // anclaje nativo todavía no existe en Safari, y aquí la mitad de
+      // quien mira está en un iPhone.
+      const boton = campana.current?.getBoundingClientRect()
+      if (boton && elemento) {
+        elemento.style.top = `${boton.bottom + 8}px`
+        // `clientWidth` y no `window.innerWidth`: el segundo cuenta la
+        // barra de desplazamiento y el panel quedaba corrido esos píxeles.
+        elemento.style.right = `${document.documentElement.clientWidth - boton.right}px`
+      }
+
       const supabase = createClient()
       const [lista] = await Promise.all([
         supabase.rpc('mis_avisos'),
@@ -106,6 +125,7 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
   return (
     <>
       <button
+        ref={campana}
         type="button"
         popoverTarget="panel-avisos"
         aria-label={sinVer > 0 ? `Avisos, ${sinVer} sin ver` : 'Avisos'}
@@ -125,13 +145,18 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
       </button>
 
       {/* `popover` nativo: capa superior del documento, así que no lo
-          recorta el encabezado. Se ancla a mano porque el navegador lo
-          centraría en la pantalla. */}
+          recorta el encabezado. `top` y `right` los pone `alAbrir`, contra
+          la campana; aquí solo va el ancho, que en pantalla angosta se
+          queda con el de la ventana menos un margen.
+
+          `inset-auto` no es adorno: el estilo del navegador para
+          `[popover]` trae `inset: 0`, y ese `left: 0` le gana al `right`
+          de arriba. Sin esto el panel se va a la esquina izquierda. */}
       <div
         ref={panel}
         id="panel-avisos"
         popover="auto"
-        className="fixed inset-x-2 top-16 m-0 max-h-[70vh] w-auto overflow-y-auto rounded-xl border border-border bg-popover p-0 text-foreground shadow-lg sm:left-auto sm:right-4 sm:w-80"
+        className="fixed inset-auto m-0 max-h-[70vh] w-80 max-w-[calc(100vw-1rem)] overflow-y-auto rounded-xl border border-border bg-popover p-0 text-foreground shadow-lg"
       >
         <p className="border-b border-border px-4 py-3 font-semibold">Avisos</p>
 
