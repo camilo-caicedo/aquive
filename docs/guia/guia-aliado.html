@@ -1,0 +1,426 @@
+<title>Coordinar entregas en AquíVe</title>
+
+<style>
+  /* Paleta tomada de los tokens del proyecto (src/app/globals.css), no
+     reinventada: papel, tinta, terracota, arena, salvia. La tipografía sí
+     se aproxima — Caprasimo y Figtree son de Google Fonts y aquí no se
+     puede enlazar un CDN, así que el eje de contraste lo dan una serif y
+     una sans del sistema. */
+  :root {
+    --papel: #f5ead8;
+    --hoja: #f9f4ed;
+    --tinta: #201e1d;
+    --tinta-suave: #645c50;
+    --terracota: #8c491a;
+    --terracota-claro: #c67139;
+    --arena: #ebddc5;
+    --borde: #dcd3c4;
+    --salvia: #56633f;
+    --salvia-suave: #e1eecc;
+    --alerta: #ffe1d0;
+    --alerta-tinta: #643312;
+
+    --serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+    --sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --papel: #1c1a17;
+      --hoja: #262320;
+      --tinta: #ece4d6;
+      --tinta-suave: #a49a89;
+      --terracota: #d98b4a;
+      --terracota-claro: #e8a86c;
+      --arena: #332e28;
+      --borde: #453e35;
+      --salvia: #a8c07d;
+      --salvia-suave: #2c3423;
+      --alerta: #3d2a1c;
+      --alerta-tinta: #f0c9a8;
+    }
+  }
+
+  :root[data-theme='dark'] {
+    --papel: #1c1a17;
+    --hoja: #262320;
+    --tinta: #ece4d6;
+    --tinta-suave: #a49a89;
+    --terracota: #d98b4a;
+    --terracota-claro: #e8a86c;
+    --arena: #332e28;
+    --borde: #453e35;
+    --salvia: #a8c07d;
+    --salvia-suave: #2c3423;
+    --alerta: #3d2a1c;
+    --alerta-tinta: #f0c9a8;
+  }
+
+  body {
+    background: var(--papel);
+    color: var(--tinta);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.6;
+    margin: 0;
+    padding: 2.5rem 1.25rem 5rem;
+  }
+
+  .hoja {
+    max-width: 44rem;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2.75rem;
+  }
+
+  h1, h2, h3 {
+    font-family: var(--serif);
+    text-wrap: balance;
+    margin: 0;
+    line-height: 1.15;
+  }
+  h1 { font-size: clamp(2rem, 5vw, 2.9rem); letter-spacing: -0.02em; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.1rem; font-family: var(--sans); font-weight: 700; }
+  p, li { text-wrap: pretty; }
+  p { margin: 0; }
+
+  header { border-bottom: 2px solid var(--terracota); padding-bottom: 1.5rem; }
+  .quien {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--terracota);
+    margin-bottom: 0.75rem;
+  }
+  .entrada { color: var(--tinta-suave); margin-top: 1rem; max-width: 60ch; }
+
+  section { display: flex; flex-direction: column; gap: 1rem; }
+
+  /* Los pasos van numerados porque son una secuencia real: el orden es la
+     información. Las secciones que no son secuencia no llevan número. */
+  ol.pasos {
+    list-style: none;
+    counter-reset: paso;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+  ol.pasos > li {
+    counter-increment: paso;
+    display: grid;
+    grid-template-columns: 2rem 1fr;
+    gap: 0.9rem;
+    align-items: start;
+  }
+  ol.pasos > li::before {
+    content: counter(paso);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--terracota);
+    background: var(--arena);
+    border-radius: 999px;
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+  }
+  ol.pasos strong { display: block; }
+  ol.pasos p { color: var(--tinta-suave); margin-top: 0.15rem; }
+
+  ul.simple { margin: 0; padding-left: 1.15rem; display: flex; flex-direction: column; gap: 0.6rem; }
+
+  .caja {
+    background: var(--hoja);
+    border: 1px solid var(--borde);
+    border-radius: 1rem;
+    padding: 1.25rem;
+  }
+  .aviso {
+    background: var(--alerta);
+    color: var(--alerta-tinta);
+    border-radius: 1rem;
+    padding: 1.25rem;
+  }
+  .aviso h3 { color: var(--alerta-tinta); }
+  .bien {
+    background: var(--salvia-suave);
+    color: var(--salvia);
+    border-radius: 1rem;
+    padding: 1.25rem;
+  }
+  .bien h3 { color: var(--salvia); }
+
+  .rejilla { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); }
+
+  .tabla-envoltura { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+  th, td { text-align: left; padding: 0.7rem 0.9rem; border-bottom: 1px solid var(--borde); vertical-align: top; }
+  th { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tinta-suave); font-weight: 700; }
+  td.si { color: var(--salvia); font-weight: 600; }
+  td.no { color: var(--tinta-suave); }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--arena);
+    padding: 0.1em 0.4em;
+    border-radius: 0.35rem;
+  }
+
+  .prohibido { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+  .prohibido li { padding-left: 1.6rem; position: relative; }
+  .prohibido li::before {
+    content: '×';
+    position: absolute;
+    left: 0;
+    top: -0.1em;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--terracota);
+  }
+
+  footer {
+    border-top: 1px solid var(--borde);
+    padding-top: 1.5rem;
+    color: var(--tinta-suave);
+    font-size: 0.92rem;
+  }
+
+  a { color: var(--terracota); text-underline-offset: 0.2em; }
+  a:focus-visible, summary:focus-visible { outline: 2px solid var(--terracota-claro); outline-offset: 3px; }
+</style>
+
+<div class="hoja">
+
+  <header>
+    <p class="quien">Guía del equipo · Fundación aliada</p>
+    <h1>Coordinar entregas en AquíVe</h1>
+    <p class="entrada">
+      Lo que hace tu organización aquí es ponerse en medio de dos personas que
+      no se conocen, para que ninguna tenga que ir a la casa de la otra.
+      Esta guía es para el equipo que va a operar eso.
+    </p>
+  </header>
+
+  <section>
+    <h2>Lo primero, porque cambia todo lo demás</h2>
+    <div class="rejilla">
+      <div class="caja">
+        <h3>AquíVe no entrega nada</h3>
+        <p>Es un tablón de anuncios. Quien necesita algo lo publica sin dar
+        ningún dato; quien lo tiene responde. La plataforma conecta y se
+        aparta.</p>
+      </div>
+      <div class="caja">
+        <h3>Ustedes son responsables de los datos</h3>
+        <p>Cuando alguien acepta que su fundación lo acompañe, entrega su
+        nombre y su documento <em>a ustedes</em>. AquíVe solo los guarda
+        cifrados mientras dura la coordinación.</p>
+      </div>
+      <div class="caja">
+        <h3>Todo se borra</h3>
+        <p>Una solicitud vive 72 horas. Si hay una coordinación abierta se
+        prorroga sola, pero nunca más de 14 días desde que se publicó. Al
+        llegar ahí se cierra y se borra igual.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Entrar y armar el equipo</h2>
+    <ol class="pasos">
+      <li>
+        <div>
+          <strong>Un administrador da de alta la organización</strong>
+          <p>Después de mirar el certificado del RUES y el NIT. Las
+          organizaciones no se registran solas, y por eso no hay una cola de
+          verificación dentro de la aplicación.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>El coordinador entra por su enlace</strong>
+          <p>Un enlace de la forma <code>/unirse/nombre-corto/codigo</code>.
+          El nombre corto dice a qué organización, el código autoriza. Se
+          entra con Google y se elige cómo aparecerás ante el equipo.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Reparte invitaciones desde «Mi equipo»</strong>
+          <p>Cada invitación es un enlace con QR, con vencimiento y número de
+          usos. Hay dos por defecto: una de un solo uso que dura 24 horas,
+          para invitar a una persona concreta, y una de 25 usos que dura 30
+          días, para una jornada.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Aprueba a quien llegó sin código</strong>
+          <p>Quien entra con código queda activo de una vez. Quien entra sin
+          él queda pendiente y no ve absolutamente nada hasta que un
+          coordinador lo apruebe.</p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="tabla-envoltura">
+      <table>
+        <caption class="quien" style="text-align:left; margin-bottom:0.5rem;">Qué puede hacer cada quien</caption>
+        <thead>
+          <tr><th>Acción</th><th>Miembro</th><th>Coordinador</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Leer y escribir en las conversaciones</td><td class="si">Sí</td><td class="si">Sí</td></tr>
+          <tr><td>Hacerse cargo de un hilo</td><td class="si">Sí</td><td class="si">Sí</td></tr>
+          <tr><td>Registrar una entrega</td><td class="si">Sí</td><td class="si">Sí</td></tr>
+          <tr><td>Ver el nombre y el documento de alguien</td><td class="no">Solo con permiso</td><td class="no">Solo con permiso</td></tr>
+          <tr><td>Otorgar ese permiso a otra persona</td><td class="no">No</td><td class="si">Sí</td></tr>
+          <tr><td>Invitar, aprobar, sacar del equipo</td><td class="no">No</td><td class="si">Sí</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="aviso">
+      <h3>El permiso de ver identidades no se otorga solo</h3>
+      <p>No lo da entrar por el enlace, ni ser aprobado, ni ser coordinador.
+      Siempre es un acto explícito de un coordinador sobre una persona
+      concreta. Dáselo a quien esté en el mostrador del acopio, no a todo el
+      equipo por comodidad.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>El día a día</h2>
+    <p>La pantalla de tu organización tiene tres pestañas y cada una responde
+    a una pregunta distinta.</p>
+
+    <div class="rejilla">
+      <div class="caja">
+        <h3>Conversaciones</h3>
+        <p>Los hilos vivos. Cada uno necesita que <em>alguien</em> se haga
+        cargo: hasta que eso pase, nadie puede escribir en él, ni ustedes ni
+        las otras dos personas.</p>
+      </div>
+      <div class="caja">
+        <h3>Solicitudes por atender</h3>
+        <p>Lo que su organización acompaña y todavía no ha atendido, y quién
+        de la zona declaró tener justo lo que se pide.</p>
+      </div>
+      <div class="caja">
+        <h3>Mi equipo</h3>
+        <p>Quién está dentro, quién espera aprobación, quién puede ver
+        identidades, y las invitaciones activas.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Coordinar una entrega</h2>
+    <ol class="pasos">
+      <li>
+        <div>
+          <strong>Hazte cargo del hilo</strong>
+          <p>En «Conversaciones», el botón «Hacerme cargo». Desde ese momento
+          la conversación se abre para los tres: quien pidió, quien ofrece y
+          tú.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Acuerden ahí mismo qué llega y cuándo</strong>
+          <p>La dirección del acopio y el horario ya salen en la
+          conversación. No hace falta repetirlos ni pasar teléfonos.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>En el acopio, identifica a la persona</strong>
+          <p>Quien tenga el permiso busca por los últimos dígitos del
+          documento. Cada consulta pide un motivo y queda registrada.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Registra qué entregaste</strong>
+          <p>Marca los ítems y las cantidades reales, no las pedidas. Eso
+          tacha lo cubierto y le avisa a quien pidió que confirme.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Descarga la planilla en ese momento</strong>
+          <p>Es el único momento en que existe. Desde que la descargas, ese
+          archivo es de la fundación: consérvenlo donde guardan el resto de
+          sus registros.</p>
+        </div>
+      </li>
+    </ol>
+
+    <div class="bien">
+      <h3>Si ya lo tienen en la bodega, no esperen a nadie</h3>
+      <p>En «Solicitudes por atender», el botón «Lo entregamos nosotros» abre
+      una conversación directa con quien pidió, sin ofertador de por medio.
+      El resto es igual: registrar la entrega y descargar la planilla.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Las reglas de los datos</h2>
+    <p>No son recomendaciones. Están puestas en la base de datos y en el
+    contrato firmado, y algunas no se pueden saltar aunque se quiera.</p>
+
+    <ul class="simple">
+      <li><strong>Solo se reciben CC, CE, PEP y PPT.</strong> Tarjeta de
+      identidad y registro civil no aparecen ni en un desplegable ni en la
+      base: esta plataforma no trata datos de menores de edad.</li>
+      <li><strong>En el chat no pasan teléfonos ni correos.</strong> El
+      filtro rechaza el mensaje, incluso los números escritos con letras y
+      los enlaces de mensajería. La coordinación ocurre aquí para que quede
+      constancia de lo que se acordó.</li>
+      <li><strong>Cada lectura de una identidad deja rastro</strong> con
+      quién fue, cuándo y con qué motivo. Ese registro sobrevive al borrado
+      del dato, y la persona puede verlo entera desde el enlace de su
+      solicitud.</li>
+      <li><strong>La persona puede borrar sus datos sin pedirle permiso a
+      nadie</strong>, en cualquier momento. Su solicitud sigue publicada,
+      anónima, y la conversación se cierra.</li>
+      <li><strong>La plataforma no es el archivo de la fundación.</strong> Lo
+      que no exporten antes de que la solicitud venza se pierde, y no hay
+      forma de recuperarlo. Es a propósito.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Lo que no se hace por aquí</h2>
+    <p>Aunque alguien lo pida, y aunque parezca razonable en el momento.</p>
+    <ul class="prohibido">
+      <li>Pedir o mover dinero, ni para la fundación ni para nadie.</li>
+      <li>Coordinar alojamiento de personas o casas de paso.</li>
+      <li>Coordinar transporte de personas.</li>
+      <li>Cuidado de menores o custodia de mascotas.</li>
+      <li>Medicamentos de control.</li>
+      <li>Usar los datos para censos, listas de beneficiarios, campañas o
+      captación de donantes. La finalidad es una sola: verificar esta
+      entrega.</li>
+    </ul>
+  </section>
+
+  <footer>
+    <p>Si algo no está claro, o si creen que un dato salió por donde no
+    debía, escriban a <a href="mailto:soporte@aquive.co">soporte@aquive.co</a>
+    antes de seguir. Un incidente contado a tiempo se arregla; uno que se
+    calla, no.</p>
+    <p style="margin-top:0.75rem;">AquíVe es un proyecto personal y temporal,
+    hecho para la emergencia del sismo del 10 de agosto de 2026. No reemplaza
+    a las autoridades. Para emergencias, 123.</p>
+  </footer>
+
+</div>
