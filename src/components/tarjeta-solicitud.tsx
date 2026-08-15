@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { MapPin, MessageSquare, TimerOff, Check, HeartHandshake } from 'lucide-react'
+import { MapPin, MessageSquare, TimerOff, Check, HeartHandshake, Info } from 'lucide-react'
 import type { Categoria, FlujoSolicitud, ItemResumen } from '@/lib/types'
 import { categoria, describirItem, horasParaVencer, HORAS_POR_VENCER } from '@/lib/catalogo'
 import { formatearHoras } from '@/lib/tiempo'
@@ -21,6 +21,8 @@ interface Solicitud {
   items: ItemResumen[]
   // Opcional: el cruce inverso devuelve las mismas columnas menos esta.
   flujo?: FlujoSolicitud
+  /** Nota del proyecto, no de quien pidio. Opcional por lo mismo. */
+  nota_admin?: string | null
 }
 
 export function TarjetaSolicitud({
@@ -88,6 +90,17 @@ export function TarjetaSolicitud({
 
       {solicitud.nota && (
         <p className="mt-3 text-base text-muted-foreground">{solicitud.nota}</p>
+      )}
+
+      {/* Esto lo escribe AquíVe, no quien pidió, así que se distingue del
+          resto de la tarjeta — mismo criterio que el sello de «una fundación
+          acompaña esta entrega». Sirve para decir «esto ya está resuelto» y
+          que no se movilicen tres personas por lo mismo. */}
+      {solicitud.nota_admin && (
+        <p className="mt-3 flex items-start gap-2 rounded-lg bg-secondary px-2.5 py-2 text-base text-secondary-foreground">
+          <Info className="size-4 shrink-0 translate-y-1" aria-hidden="true" />
+          <span>{solicitud.nota_admin}</span>
+        </p>
       )}
 
       {porVencer && (

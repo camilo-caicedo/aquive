@@ -13,6 +13,7 @@ import type {
   OrigenSugerencia,
   SugerenciaPendiente,
   TipoObjetoReporte,
+  SolicitudAdmin,
 } from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { AccionesReporte } from './acciones-reporte'
@@ -22,6 +23,7 @@ import { PanelEntidades, type EntidadAdmin } from './panel-entidades'
 import { PanelOrganizaciones } from './panel-organizaciones'
 import { PanelFlujoDos } from './panel-flujo2'
 import { Pestanas } from '@/components/pestanas'
+import { PanelSolicitudesAdmin } from './panel-solicitudes-admin'
 
 const MOTIVOS: Record<MotivoReporte, string> = {
   datos_personales: 'Datos personales',
@@ -58,7 +60,7 @@ function fecha(iso: string) {
   })
 }
 
-type Vista = 'moderacion' | 'catalogo' | 'directorio' | 'aliados'
+type Vista = 'moderacion' | 'catalogo' | 'directorio' | 'aliados' | 'solicitudes'
 
 export default async function AdminPage({
   searchParams,
@@ -67,7 +69,9 @@ export default async function AdminPage({
 }) {
   const { ver } = await searchParams
   const vista: Vista =
-    ver === 'catalogo' || ver === 'directorio' || ver === 'aliados' ? ver : 'moderacion'
+    ver === 'catalogo' || ver === 'directorio' || ver === 'aliados' || ver === 'solicitudes'
+      ? ver
+      : 'moderacion'
 
   const supabase = await createClient()
   const {
@@ -108,6 +112,7 @@ export default async function AdminPage({
     { data: entidadesData },
     { data: organizacionesData },
     { data: flujo2Data },
+    { data: solicitudesData },
   ] = await Promise.all([
     enModeracion
       ? supabase
@@ -135,7 +140,12 @@ export default async function AdminPage({
     // `creada_por` —el uuid de una persona real— no sale al navegador.
     vista === 'aliados' ? supabase.rpc('organizaciones_admin') : Promise.resolve({ data: null }),
     vista === 'aliados' ? supabase.rpc('panel_admin_flujo2') : Promise.resolve({ data: null }),
+    // Por RPC y no por la vista publica: el panel tiene que seguir viendo
+    // las que acaba de cerrar, y esas ya no salen en el tablero.
+    vista === 'solicitudes' ? supabase.rpc('solicitudes_admin') : Promise.resolve({ data: null }),
   ])
+
+  const solicitudes = (solicitudesData as unknown as SolicitudAdmin[]) ?? []
 
   const sugerencias = (sugerenciasData as unknown as SugerenciaPendiente[]) ?? []
   const entidades: EntidadAdmin[] = entidadesData ?? []
@@ -172,6 +182,11 @@ export default async function AdminPage({
             },
             { href: '/admin?ver=catalogo', etiqueta: 'Catálogo', activa: vista === 'catalogo' },
             { href: '/admin?ver=directorio', etiqueta: 'Directorio', activa: vista === 'directorio' },
+            {
+              href: '/admin?ver=solicitudes',
+              etiqueta: 'Solicitudes',
+              activa: vista === 'solicitudes',
+            },
             { href: '/admin?ver=aliados', etiqueta: 'Aliados', activa: vista === 'aliados' },
           ]}
         />
@@ -313,6 +328,22 @@ export default async function AdminPage({
           </AlertDescription>
         </Alert>
         <PanelEntidades entidades={entidades} municipios={municipios} />
+      </section>
+      )}
+
+      {vista === 'solicitudes' && (
+      <section className="mt-6">
+        <h2 className="font-heading text-2xl">Solicitudes vivas</h2>
+        <Alert className="mt-3">
+          <AlertDescription>
+            Si sabes por fuera que algo ya se entregó, dilo aquí: sale en el
+            tablero y evita que otras tres personas se movilicen por lo mismo.
+            Marcarla entregada la saca del tablero pero <strong>no la
+            borra</strong> — quien pidió conserva su enlace y sus respuestas, y
+            se borra sola a las 72 horas como todas.
+          </AlertDescription>
+        </Alert>
+        <PanelSolicitudesAdmin solicitudes={solicitudes} />
       </section>
       )}
 
