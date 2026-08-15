@@ -20,6 +20,11 @@ por encima de cierto umbral de activos. Una persona natural queda por
 fuera de ese universo. **Confírmalo** en el consultorio jurídico, pero
 lo más probable es que no tengas nada que registrar.
 
+Eso no se extiende al flujo acompañado. Ahí la base de datos de nombres y
+documentos tiene por responsable a la fundación, y es **ella** quien la
+inscribe en el RNBD. Que tú no tengas que registrar nada no significa que
+esa base no se registre: significa que no la registras tú.
+
 **2. Sigues teniendo que publicar aviso de privacidad, política de
 tratamiento y recoger autorización.** Esas obligaciones no dependen de
 ser empresa.
@@ -51,7 +56,11 @@ Correo de contacto: soporte@aquive.co.
 
 Este es un proyecto personal y sin ánimo de lucro, hecho por una sola
 persona para apoyar a los afectados por el sismo del 10 de agosto de
-2026. No hay ninguna empresa, fundación ni entidad detrás.
+2026. No hay ninguna empresa ni entidad detrás de la plataforma.
+
+Hay fundaciones que trabajan **con** la plataforma —aparecen por su
+nombre y solo si tú las escoges— pero ninguna la opera ni responde por
+ella. Ver «Si pides que una fundación te acompañe», más abajo.
 
 **Si publicas una solicitud de ayuda: no guardamos ningún dato tuyo.**
 
@@ -89,16 +98,51 @@ matrícula profesional.
 
 Puedes borrar tu perfil completo desde tu cuenta, en cualquier momento.
 
+**Si pides que una fundación te acompañe: ahí sí guardamos datos tuyos, cifrados.**
+
+Publicar una solicitud no exige esto y nunca lo va a exigir. Es una
+opción aparte, que se ofrece solo si hay una organización aliada
+trabajando en tu municipio, y que solo existe si tú la aceptas.
+
+Si la aceptas, guardamos tu nombre, tu tipo y número de documento y, si
+nos lo das, un teléfono. Van cifrados, en una tabla aparte, y no
+aparecen en ninguna página pública ni se le entregan a quien ofrece
+ayuda. La finalidad es una sola: que la fundación pueda verificar la
+entrega en su punto de acopio.
+
+No recibimos documentos de menores de edad. Solo cédula de ciudadanía,
+cédula de extranjería, PEP o PPT.
+
+Cada vez que alguien de la fundación consulta esos datos queda
+registrado quién fue, cuándo y con qué motivo. Puedes ver ese registro
+completo desde el enlace de tu solicitud, en «ver qué datos tuyos
+guardamos», y desde ahí pedir que los borremos.
+
+En este caso la fundación es responsable del tratamiento y nosotros
+actuamos como encargados: ellos deciden para qué usan esos datos y los
+custodian en sus propios sistemas; nosotros solo los guardamos mientras
+dure la coordinación. Se borran con tu solicitud, y la solicitud se
+borra sola.
+
+La conversación con la fundación y con quien ofrece ocurre dentro de la
+plataforma, y también se borra con la solicitud. No es un archivo: no la
+uses para guardar nada que necesites después.
+
 **Lo que nunca hacemos**
 No vendemos ni compartimos información con terceros. No hacemos
-publicidad. No procesamos dinero. No alojamos las conversaciones entre
-las personas: cuando contactas a alguien, lo haces por fuera de esta
-plataforma y nosotros no vemos nada de eso.
+publicidad. No procesamos dinero. En el flujo directo no alojamos las
+conversaciones entre las personas: cuando contactas a alguien, lo haces
+por fuera de esta plataforma y nosotros no vemos nada de eso.
 
 **Tus derechos**
 Conforme a la Ley 1581 de 2012 puedes conocer, actualizar, rectificar y
-suprimir tus datos, y revocar la autorización. Escríbenos a soporte@aquive.co y
-respondemos en los términos de ley.
+suprimir tus datos, y revocar la autorización. Escríbenos a
+soporte@aquive.co: una consulta la respondemos en 10 días hábiles y un
+reclamo en 15, que son los plazos de los artículos 14 y 15.
+
+Si tu solicitud tiene acompañamiento, no hace falta que escribas: desde
+el enlace de tu solicitud puedes ver todo lo que guardamos, quién lo ha
+consultado y borrarlo ahí mismo, sin pedirle permiso a nadie.
 
 **Esta plataforma es temporal.** Fue creada para la emergencia del sismo
 del 10 de agosto de 2026 y dejará de operar cuando deje de ser útil.
@@ -150,6 +194,27 @@ botón de la ficha.
 No intermediamos, no acompañamos y no respondemos por lo que suceda entre
 las partes, incluyendo incumplimientos, pérdidas, daños o delitos.
 
+**4b. Si eliges que una fundación te acompañe.** Publicar es siempre lo
+primero y no exige esto. El acompañamiento es una opción que aparece solo
+donde hay una organización aliada, y solo existe si la aceptas.
+
+Cuando la aceptas cambian tres cosas. La entrega ocurre en el punto de
+acopio de la fundación, no en la casa de nadie. La coordinación ocurre
+dentro de la plataforma, en una conversación donde están los tres —tú,
+quien ofrece y la fundación— y donde no se pueden intercambiar teléfonos
+ni correos. Y guardamos tu nombre, tu documento y un teléfono, cifrados,
+para que la fundación verifique la entrega.
+
+En ese caso la fundación es responsable del tratamiento de esos datos y
+AquíVe actúa como encargado. La fundación responde por cómo los usa y por
+lo que ocurra en su punto de acopio. Nosotros seguimos sin verificar a
+nadie: que una organización esté aquí significa que revisamos su
+certificado de existencia y su NIT, no que respondamos por su operación.
+
+Puedes ver en cualquier momento qué guardamos y quién lo ha consultado, y
+pedir que lo borremos. Al borrarlo tu solicitud sigue publicada, anónima,
+como cualquier otra.
+
 **5. Recomendaciones de seguridad.** No compartas tu dirección exacta en
 público. Encuéntrate en lugares con gente y de día. Nunca envíes dinero por
 adelantado. Cuéntale a alguien a dónde vas. Si alguien te pide plata,
@@ -163,7 +228,10 @@ suplantar a alguien; usar la plataforma con fines comerciales o para
 recolectar datos.
 
 **7. Contenido efímero.** Las solicitudes se eliminan automáticamente a
-las 72 horas. No garantizamos conservación ni recuperación de nada.
+las 72 horas. Si hay una coordinación abierta con una fundación, ese plazo
+se prorroga solo mientras siga abierta, y nunca más allá de 14 días desde
+que se publicó: al llegar ahí se cierra y se borra igual. No garantizamos
+conservación ni recuperación de nada.
 
 **8. Servicio "tal como está".** Gratuito, sin garantía de
 disponibilidad, mantenido por una sola persona en su tiempo libre, y
@@ -220,6 +288,9 @@ tratamiento y esta plataforma es **encargada**. Eso exige el contrato de
 transmisión de datos del artículo 25 del Decreto 1377 de 2013, firmado
 **antes** de dar de alta a la primera organización real, y el registro de
 la base en el RNBD a nombre de la fundación.
+
+El borrador del contrato está en `CONTRATO-TRANSMISION.md`, en esta misma
+carpeta, con su lista de qué mirar antes de firmarlo.
 
 **Sin datos de menores.** Solo CC, CE, PEP y PPT. TI y RC están prohibidos
 por un CHECK en la base, no por una validación de pantalla.
@@ -337,6 +408,8 @@ acumulación, y arrastra responsabilidad hacia el responsable del proyecto.
 
 ## 5. Lista de verificación antes de publicar
 
+### Lo que valía desde el primer día
+
 - [x] Aviso de privacidad y términos publicados y enlazados en el pie
 - [x] Correo de contacto real y monitoreado
 - [x] Tu nombre completo correcto en ambos documentos
@@ -349,3 +422,38 @@ acumulación, y arrastra responsabilidad hacia el responsable del proyecto.
 - [ ] Sin analytics que capturen URLs completas (el token va en la URL)
 - [ ] Confirmado que como persona natural no debes inscribir en el RNBD
 - [ ] Cita agendada en un consultorio jurídico para revisión
+
+### Antes de dar de alta la PRIMERA organización real
+
+Nada del flujo acompañado puede llegar a producción sin esto. La lista es
+la de `PLAN-V2.md` §12; aquí está el estado real de cada punto.
+
+- [ ] **Contrato de transmisión firmado** por las dos partes. Borrador en
+      `CONTRATO-TRANSMISION.md`. Va **antes** de crear la fila en
+      `organizaciones`, no después.
+- [ ] **Base inscrita en el RNBD** ante la SIC, a nombre de la fundación.
+      Es trámite de ella, no tuyo.
+- [ ] **Papeles de la fundación revisados**: certificado de existencia del
+      RUES, NIT y persona de contacto. Es lo que el administrador mira
+      antes de crear la organización; por eso no hay cola de verificación
+      dentro del producto.
+- [ ] **Correo de habeas data de la fundación**, real y leído por alguien.
+- [x] **Canal de habeas data del lado de la plataforma**: `/privacidad`
+      publica los plazos de 10 y 15 días hábiles, y `/mis-datos/[token]`
+      deja ver lo guardado, quién lo consultó y borrarlo sin intermediación.
+- [x] **Textos de este documento al día** con lo que dice la app: aviso de
+      privacidad §1, términos §4b y autorización §3b.
+- [x] **`RESPONSABLE` revisado.** Sigue siendo correcto: en el Flujo 2 el
+      texto de autorización nombra a la fundación, no a la persona natural.
+- [ ] **Consulta a soporte de Vercel** sobre si una fundación coordinando
+      entregas rompe la prohibición de uso comercial del plan Hobby. Ver
+      `PLAN-V2.md` §13.8.
+- [ ] **Revisión de abogado** de este documento y del contrato, juntos.
+
+### Al mover cualquier texto legal
+
+- [ ] Mover `FECHA_LEGALES` en `src/lib/config.ts`. Alimenta
+      `autorizacion_version`, que es la prueba de qué versión aceptó cada
+      persona: si el texto cambia y la fecha no, la prueba deja de servir.
+- [ ] Revisar que este archivo y `src/lib/honestidad.ts` sigan diciendo lo
+      mismo. Son las dos caras de lo mismo.
