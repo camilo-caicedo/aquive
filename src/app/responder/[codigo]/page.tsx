@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { MessageSquare } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { formatearHoras } from '@/lib/tiempo'
 import { describirItem } from '@/lib/catalogo'
@@ -8,6 +9,7 @@ import { BadgeFrescura } from '@/components/badge-frescura'
 import { BotonReportar } from '@/components/boton-reportar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import type { HiloResumen } from '@/lib/types'
 import { FormularioRespuesta } from './formulario-respuesta'
 import { IniciarHilo } from './iniciar-hilo'
 
@@ -52,6 +54,17 @@ export default async function ResponderPage({
     .maybeSingle()
 
   if (!perfil) redirect('/registro')
+
+  // Si ya hay conversacion abierta sobre esta solicitud, esta pantalla no
+  // tiene que pedir otra vez lo mismo: tiene que llevar al hilo. Se busca
+  // por código entre los hilos propios — `mis_hilos` ya los trae.
+  const { data: hilosData } =
+    solicitud.flujo === 'acompanado'
+      ? await supabase.rpc('mis_hilos')
+      : { data: null }
+  const miHilo = ((hilosData as unknown as HiloResumen[]) ?? []).find(
+    (h) => h.codigo === solicitud.codigo && h.soy_ofertador
+  )
 
   const { data: yaRespondio } = await supabase
     .from('respuestas')
@@ -134,6 +147,26 @@ export default async function ResponderPage({
             Tu perfil está suspendido y no puede responder solicitudes.
           </AlertDescription>
         </Alert>
+      ) : miHilo ? (
+        /* Ya hay hilo: pedirle otra vez que cuente en qué puede ayudar
+           sería hacerle repetir lo que ya escribió. Lo que hace falta es
+           llevarlo a la conversación, que vive en su panel. */
+        <div className="mt-4 rounded-xl border border-ok/30 bg-ok-suave p-4">
+          <p className="text-base text-ok">
+            Ya estás en la conversación de esta solicitud
+            {miHilo.aliado
+              ? `, con ${miHilo.aliado} de la fundación.`
+              : '. Falta que alguien de la fundación se haga cargo.'}
+          </p>
+          <Button
+            className="mt-3 w-full"
+            nativeButton={false}
+            render={<Link href="/aliado" />}
+          >
+            <MessageSquare className="size-5" aria-hidden="true" />
+            Ir a la conversación
+          </Button>
+        </div>
       ) : solicitud.flujo === 'acompanado' ? (
         <IniciarHilo codigo={solicitud.codigo} />
       ) : (

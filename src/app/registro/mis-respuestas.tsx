@@ -77,16 +77,26 @@ export function MisRespuestas({ respuestas }: { respuestas: MiRespuesta[] }) {
             {/* No hay enlace a la pantalla de quien pidió —solo ella tiene
                 el token— pero sí a la solicitud, que es donde se puede
                 volver a mirar, y donde se abre la conversación. */}
-            <Button
-              variant={r.flujo === 'acompanado' && !r.tiene_hilo ? 'default' : 'outline'}
-              className="mt-3 w-full"
-              nativeButton={false}
-              render={<Link href={`/responder/${r.codigo}`} />}
-            >
-              {r.flujo === 'acompanado' && !r.tiene_hilo
-                ? 'Abrir la conversación'
-                : 'Ver la solicitud'}
-            </Button>
+            {r.tiene_hilo ? (
+              <Button
+                variant="outline"
+                className="mt-3 w-full"
+                nativeButton={false}
+                render={<Link href="/aliado" />}
+              >
+                <MessageSquare className="size-5" aria-hidden="true" />
+                Ver la conversación
+              </Button>
+            ) : (
+              <Button
+                variant={r.flujo === 'acompanado' ? 'default' : 'outline'}
+                className="mt-3 w-full"
+                nativeButton={false}
+                render={<Link href={`/responder/${r.codigo}`} />}
+              >
+                {r.flujo === 'acompanado' ? 'Abrir la conversación' : 'Ver la solicitud'}
+              </Button>
+            )}
           </li>
         )
       })}
