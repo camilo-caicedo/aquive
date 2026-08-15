@@ -229,6 +229,9 @@ create table if not exists public.perfiles (
   acepto_politica_at  timestamptz not null default now(),
   suspendido          boolean not null default false,
   creado_at           timestamptz not null default now(),
+  -- Hasta cuándo miró sus avisos. Sustituye a una tabla de notificaciones
+  -- con estado leído/no leído: con esta marca, lo nuevo es lo posterior.
+  avisos_vistos_at    timestamptz,
   constraint perfiles_contacto_publico_check check (
     case
       when tipo = 'aliado'
@@ -534,6 +537,9 @@ create table if not exists public.solicitudes (
   -- va con ella. Quien pidió ayuda no pierde su solicitud porque la
   -- fundación dejó de operar.
   organizacion_id uuid references public.organizaciones(id) on delete set null,
+  -- Cuándo entró la fundación. Sin fecha no se puede avisar a quien ya
+  -- había ofrecido ayuda de que ahora hay quien coordine.
+  acompanamiento_at timestamptz,
   creada_at       timestamptz not null default now(),
   confirmada_at   timestamptz not null default now(),
   expira_at       timestamptz not null default now() + interval '72 hours',
@@ -3494,7 +3500,9 @@ begin
     p_autorizacion_version, p_telefono, v_sol.id, null);
 
   update public.solicitudes
-     set flujo = 'acompanado', organizacion_id = v_org.id
+     set flujo = 'acompanado',
+         organizacion_id = v_org.id,
+         acompanamiento_at = now()
    where id = v_sol.id;
 
   return jsonb_build_object(
@@ -5370,22 +5378,180 @@ group by s.id, s.codigo, s.municipio, s.flujo, s.organizacion_id, o.id;
 revoke all on public.v_cruces from anon, authenticated;
 
 
-create or replace function public.mi_menu_coordinacion()
-returns text
+-- ---------------------------------------------------------------------
+-- Avisos. Ver migración v2-i9.
+--
+-- Cinco cosas le pueden pasar a una cuenta, y las cinco se derivan de
+-- datos que ya existen. NO hay tabla de notificaciones: con
+-- `perfiles.avisos_vistos_at` basta, y lo nuevo es todo lo posterior.
+--
+-- En el chat no hay menciones que avisar: la regla M bloquea arrobas y
+-- teléfonos, así que no hay a quién mencionar.
+-- ---------------------------------------------------------------------
+
+create or replace function public.mis_avisos()
+returns jsonb
 language sql
 security definer
 stable
 set search_path = ''
 as $$
-  select case
-    when public.soy_aliado() then 'organizacion'
-    when exists (select 1 from public.conversaciones c
-                  where c.ofertador_id = auth.uid()) then 'coordinacion'
-  end;
+  select coalesce(jsonb_agg(x order by (x->>'fecha') desc), '[]'::jsonb)
+    from (
+      select x from (
+        -- 1 · El último mensaje de cada hilo mío, si lo escribió otra
+        --     persona. Uno por hilo, no uno por mensaje: veinte mensajes
+        --     de la misma conversación son una novedad, no veinte.
+        select jsonb_build_object(
+                 'tipo',   'mensaje',
+                 'texto',  case u.autor_rol
+                             when 'solicitante' then 'Quien pidió ayuda escribió en '
+                             when 'aliado'      then 'La fundación escribió en '
+                             when 'admin'       then 'Moderación escribió en '
+                             else 'Quien ofrece escribió en '
+                           end || u.codigo,
+                 'fecha',  u.creado_at,
+                 'href',   '/aliado'
+               ) as x, u.creado_at as fecha
+          from (
+            select distinct on (c.id)
+                   m.autor_rol, m.autor_perfil_id, m.creado_at, s.codigo
+              from public.mensajes m
+              join public.conversaciones c on c.id = m.conversacion_id
+              join public.solicitudes s    on s.id = c.solicitud_id
+             where m.oculto = false
+               and (c.ofertador_id = auth.uid()
+                    or public.es_miembro_activo(c.organizacion_id, auth.uid()))
+               -- El primer mensaje de un aliado en MI hilo es la
+               -- invitación, y esa ya sale abajo con su propio nombre.
+               and not (c.ofertador_id = auth.uid()
+                        and m.autor_rol = 'aliado'
+                        and m.creado_at = (select min(m2.creado_at)
+                                             from public.mensajes m2
+                                            where m2.conversacion_id = c.id))
+             order by c.id, m.creado_at desc
+          ) u
+         -- Fuera del DISTINCT ON, no dentro: si el último mensaje lo
+         -- escribí yo no hay novedad, y tampoco la hay en el penúltimo,
+         -- que ya había leído cuando contesté.
+         -- (`is distinct from` y no `<>`: el solicitante no tiene cuenta y
+         -- su `autor_perfil_id` es nulo.)
+         where u.autor_perfil_id is distinct from auth.uid()
+
+        union all
+
+        -- 2 · Me invitaron a coordinar: el hilo lo abrió un aliado.
+        select jsonb_build_object(
+                 'tipo',  'invitacion',
+                 'texto', 'Te invitaron a coordinar la entrega de ' || s.codigo,
+                 'fecha', c.creada_at,
+                 'href',  '/aliado'
+               ), c.creada_at
+          from public.conversaciones c
+          join public.solicitudes s on s.id = c.solicitud_id
+         where c.ofertador_id = auth.uid()
+           and (select m.autor_rol from public.mensajes m
+                 where m.conversacion_id = c.id
+                 order by m.creado_at limit 1) = 'aliado'
+
+        union all
+
+        -- 3 · Hilos de mi organización que nadie ha atendido.
+        select jsonb_build_object(
+                 'tipo',  'sin_atender',
+                 'texto', 'Nadie se ha hecho cargo de la conversación de ' || s.codigo,
+                 'fecha', c.creada_at,
+                 'href',  '/aliado'
+               ), c.creada_at
+          from public.conversaciones c
+          join public.solicitudes s on s.id = c.solicitud_id
+         where c.aliado_id is null
+           and c.estado in ('esperando_aliado','asignada')
+           and public.es_miembro_activo(c.organizacion_id, auth.uid())
+
+        union all
+
+        -- 4 · Una solicitud que respondí pasó a tener acompañamiento, y
+        --     todavía no hay conversación conmigo.
+        select jsonb_build_object(
+                 'tipo',  'acompanamiento',
+                 'texto', 'Ahora una fundación acompaña ' || s.codigo || ', donde ofreciste ayuda',
+                 'fecha', s.acompanamiento_at,
+                 'href',  '/responder/' || s.codigo
+               ), s.acompanamiento_at
+          from public.respuestas r
+          join public.solicitudes s on s.id = r.solicitud_id
+         where r.autor_id = auth.uid()
+           and s.flujo = 'acompanado'
+           and s.acompanamiento_at is not null
+           and not exists (select 1 from public.conversaciones c
+                            where c.solicitud_id = s.id
+                              and c.ofertador_id = auth.uid())
+
+        union all
+
+        -- 5 · Reportes sin atender. Solo para el administrador.
+        select jsonb_build_object(
+                 'tipo',  'reporte',
+                 'texto', 'Hay un reporte sin atender',
+                 'fecha', rp.creado_at,
+                 'href',  '/admin'
+               ), rp.creado_at
+          from public.reportes rp
+         where rp.atendido = false
+           and public.es_admin(auth.uid())
+      ) t
+      order by fecha desc
+      -- Quien tenga más de treinta avisos sin mirar no necesita el treinta
+      -- y uno: necesita abrir la aplicación.
+      limit 30
+    ) u;
 $$;
 
-revoke execute on function public.mi_menu_coordinacion() from public, anon;
-grant  execute on function public.mi_menu_coordinacion() to authenticated;
+revoke execute on function public.mis_avisos() from public, anon;
+grant  execute on function public.mis_avisos() to authenticated;
 
-comment on function public.mi_menu_coordinacion() is
-  'Solo para el encabezado: si se dibuja la pestaña de /aliado y con qué nombre. No autoriza nada — cada RPC vuelve a comprobar quién es quién.';
+create or replace function public.marcar_avisos_vistos()
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  update public.perfiles set avisos_vistos_at = now() where id = auth.uid();
+$$;
+
+revoke execute on function public.marcar_avisos_vistos() from public, anon;
+grant  execute on function public.marcar_avisos_vistos() to authenticated;
+
+-- Todo lo que el encabezado necesita, en una consulta: corre en CADA carga
+-- de CADA página, así que el contador viaja en la que ya existía en vez de
+-- abrir una cuarta.
+create or replace function public.estado_encabezado()
+returns jsonb
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select jsonb_build_object(
+    'coordinacion', case
+      when public.soy_aliado() then 'organizacion'
+      when exists (select 1 from public.conversaciones c
+                    where c.ofertador_id = auth.uid()) then 'coordinacion'
+    end,
+    'avisos_sin_ver', (
+      select count(*)
+        from jsonb_array_elements(public.mis_avisos()) a
+       where (a->>'fecha')::timestamptz >
+             coalesce((select p.avisos_vistos_at from public.perfiles p
+                        where p.id = auth.uid()),
+                      '-infinity'::timestamptz)
+    )
+  );
+$$;
+
+revoke execute on function public.estado_encabezado() from public, anon;
+grant  execute on function public.estado_encabezado() to authenticated;
+
+comment on function public.estado_encabezado() is
+  'Todo lo que el encabezado necesita saber de quien mira, en una consulta: si se dibuja la pestaña de /aliado y con qué nombre, y cuántos avisos hay sin ver. No autoriza nada.';

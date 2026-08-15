@@ -1,111 +1,192 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Bell, BellOff, BellRing } from 'lucide-react'
-import {
-  activarAvisos,
-  avisosActivosAqui,
-  desactivarAvisos,
-} from '@/lib/avisos'
+import { createClient } from '@/lib/supabase/client'
+import { activarAvisos, avisosActivosAqui, desactivarAvisos } from '@/lib/avisos'
+import type { Aviso } from '@/lib/types'
 
-type Estado = 'cargando' | 'activo' | 'inactivo' | 'trabajando'
+type EstadoPush = 'cargando' | 'activo' | 'inactivo' | 'trabajando'
+
+// Cuánto tiempo hace, en palabras cortas. Una fecha absoluta no dice nada
+// a quien mira una lista de avisos: lo que importa es si fue hace un rato
+// o anteayer.
+function haceCuanto(iso: string) {
+  const minutos = Math.round((Date.now() - new Date(iso).getTime()) / 60000)
+  if (minutos < 1) return 'ahora'
+  if (minutos < 60) return `hace ${minutos} min`
+  const horas = Math.round(minutos / 60)
+  if (horas < 24) return `hace ${horas} h`
+  const dias = Math.round(horas / 24)
+  return dias === 1 ? 'ayer' : `hace ${dias} días`
+}
 
 /**
- * Interruptor rápido de avisos en el encabezado.
+ * La campana del encabezado: qué pasó donde yo estoy metido.
  *
- * El estado es por dispositivo, no por cuenta: se lee del propio
- * navegador, así que refleja lo que pasa en ESTE teléfono. Apagarlo aquí
- * no apaga los avisos en el otro.
+ * Se abre con el `popover` nativo y no con estado de React. Trae gratis el
+ * cierre al tocar fuera, el `Escape` y el manejo del foco, y sobre todo no
+ * se recorta: un desplegable `absolute` dentro del encabezado, que tiene
+ * `overflow` y `backdrop-blur`, queda cortado por el borde.
+ *
+ * La lista se pide al abrir, no en cada carga de página. Del servidor solo
+ * baja el número.
+ *
+ * Abajo, tras una línea, el interruptor de avisos de ESTE dispositivo: se
+ * toca una vez cada varios meses y no merecía un botón permanente. El
+ * estado es por navegador, así que apagarlo aquí no lo apaga en el otro
+ * teléfono.
  */
-export function BotonAvisos() {
-  const [estado, setEstado] = useState<Estado>('cargando')
+export function BotonAvisos({ sinVer }: { sinVer: number }) {
+  const panel = useRef<HTMLDivElement>(null)
+  const router = useRouter()
+  const [avisos, setAvisos] = useState<Aviso[] | null>(null)
+  // Congelado a propósito en el valor de la primera pintada: al abrir se
+  // marcan como vistos y el servidor pasa a decir 0, pero los que estaban
+  // sin ver tienen que seguir resaltados mientras el panel está abierto.
+  const [nuevos] = useState(sinVer)
+  const [push, setPush] = useState<EstadoPush>('cargando')
   const [mensaje, setMensaje] = useState<string | null>(null)
 
   useEffect(() => {
-    let cancelado = false
-    async function leer() {
-      const activo = await avisosActivosAqui()
-      if (!cancelado) setEstado(activo ? 'activo' : 'inactivo')
-    }
-    leer()
-    return () => {
-      cancelado = true
-    }
-  }, [])
+    const elemento = panel.current
+    if (!elemento) return
 
-  async function alternar() {
-    if (estado === 'cargando' || estado === 'trabajando') return
-    const encendiendo = estado === 'inactivo'
-    setEstado('trabajando')
+    async function alAbrir(e: Event) {
+      if ((e as ToggleEvent).newState !== 'open') return
+      const supabase = createClient()
+      const [lista] = await Promise.all([
+        supabase.rpc('mis_avisos'),
+        // Marcar visto al abrir, no al cerrar: si la persona toca un aviso
+        // y se va, el panel no llega a cerrarse y el número se quedaría.
+        supabase.rpc('marcar_avisos_vistos'),
+      ])
+      setAvisos((lista.data as Aviso[] | null) ?? [])
+      setPush((await avisosActivosAqui()) ? 'activo' : 'inactivo')
+      // Que el encabezado del servidor se entere de que ya está visto.
+      router.refresh()
+    }
+
+    elemento.addEventListener('toggle', alAbrir)
+    return () => elemento.removeEventListener('toggle', alAbrir)
+  }, [router])
+
+  async function alternarPush() {
+    if (push === 'cargando' || push === 'trabajando') return
+    const encendiendo = push === 'inactivo'
+    setPush('trabajando')
     setMensaje(null)
 
-    if (encendiendo) {
-      const r = await activarAvisos()
-      if (r === 'activado') {
-        setEstado('activo')
-      } else {
-        setEstado('inactivo')
-        setMensaje(
-          r === 'ios'
-            ? 'En iPhone, agrega AquíVe a tu pantalla de inicio para recibir avisos.'
-            : r === 'sin-permiso'
-              ? 'Tu navegador bloqueó los avisos. Actívalos en los permisos del sitio.'
-              : 'No pudimos activar los avisos.'
-        )
-      }
-    } else {
+    if (!encendiendo) {
       await desactivarAvisos()
-      setEstado('inactivo')
+      setPush('inactivo')
+      return
     }
+
+    const r = await activarAvisos()
+    if (r === 'activado') {
+      setPush('activo')
+      return
+    }
+    setPush('inactivo')
+    setMensaje(
+      r === 'ios'
+        ? 'En iPhone, agrega AquíVe a tu pantalla de inicio para recibir avisos.'
+        : r === 'sin-permiso'
+          ? 'Tu navegador bloqueó los avisos. Actívalos en los permisos del sitio.'
+          : 'No pudimos activar los avisos.'
+    )
   }
 
-  if (estado === 'cargando') {
-    // Sin marcador de posición: aparecer y cambiar de icono de una vez se
-    // ve peor que aparecer ya con el estado correcto.
-    return null
-  }
-
-  const activo = estado === 'activo'
-  const Icono = estado === 'trabajando' ? Bell : activo ? BellRing : BellOff
+  const activo = push === 'activo'
+  const IconoPush = push === 'trabajando' ? Bell : activo ? BellRing : BellOff
 
   return (
-    <div className="relative">
+    <>
       <button
         type="button"
-        onClick={alternar}
-        disabled={estado === 'trabajando'}
-        aria-pressed={activo}
-        title={activo ? 'Avisos activados en este dispositivo' : 'Avisos desactivados'}
-        aria-label={
-          activo
-            ? 'Avisos activados en este dispositivo. Tocar para desactivar'
-            : 'Avisos desactivados. Tocar para activar'
-        }
-        className={`flex size-11 items-center justify-center rounded-lg border transition-colors disabled:opacity-50 ${
-          activo
-            ? 'border-primary bg-accent text-accent-foreground'
-            : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
-        }`}
+        popoverTarget="panel-avisos"
+        aria-label={sinVer > 0 ? `Avisos, ${sinVer} sin ver` : 'Avisos'}
+        className="relative flex size-11 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       >
-        <Icono className="size-5" aria-hidden="true" />
-        {/* Punto además del icono: distingue el estado sin depender de
-            notar cuál de las dos campanas es. */}
-        <span
-          aria-hidden="true"
-          className={`absolute top-1 right-1 size-2 rounded-full ${
-            activo ? 'bg-primary' : 'bg-transparent'
-          }`}
-        />
+        <Bell className="size-5" aria-hidden="true" />
+        {sinVer > 0 && (
+          // Número y no solo punto: «hay algo» y «hay siete cosas» no piden
+          // la misma prisa.
+          <span
+            aria-hidden="true"
+            className="absolute -top-1 -right-1 flex min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-semibold text-primary-foreground"
+          >
+            {sinVer > 9 ? '9+' : sinVer}
+          </span>
+        )}
       </button>
 
-      {mensaje && (
-        <p
-          role="status"
-          className="absolute top-12 right-0 z-50 w-64 rounded-lg border border-border bg-popover p-3 text-sm shadow-md"
-        >
-          {mensaje}
-        </p>
-      )}
-    </div>
+      {/* `popover` nativo: capa superior del documento, así que no lo
+          recorta el encabezado. Se ancla a mano porque el navegador lo
+          centraría en la pantalla. */}
+      <div
+        ref={panel}
+        id="panel-avisos"
+        popover="auto"
+        className="fixed inset-x-2 top-16 m-0 max-h-[70vh] w-auto overflow-y-auto rounded-xl border border-border bg-popover p-0 text-foreground shadow-lg sm:left-auto sm:right-4 sm:w-80"
+      >
+        <p className="border-b border-border px-4 py-3 font-semibold">Avisos</p>
+
+        {avisos === null ? (
+          <p className="px-4 py-6 text-center text-sm text-muted-foreground">Cargando…</p>
+        ) : avisos.length === 0 ? (
+          <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+            Nada nuevo por ahora. Aquí aparecen los mensajes y las entregas de
+            las solicitudes donde participas.
+          </p>
+        ) : (
+          <ul>
+            {avisos.map((aviso, i) => (
+              <li key={`${aviso.tipo}-${aviso.fecha}-${i}`}>
+                <Link
+                  href={aviso.href}
+                  onClick={() => panel.current?.hidePopover()}
+                  className="flex min-h-12 flex-col justify-center gap-0.5 border-b border-border px-4 py-3 hover:bg-muted"
+                >
+                  {/* Los `nuevos` primeros son los que no había visto: la
+                      lista viene ordenada de más reciente a más viejo. */}
+                  <span className={i < nuevos ? 'font-semibold' : undefined}>
+                    {aviso.texto}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    {haceCuanto(aviso.fecha)}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="p-3">
+          <button
+            type="button"
+            onClick={alternarPush}
+            disabled={push === 'cargando' || push === 'trabajando'}
+            aria-pressed={activo}
+            className="flex min-h-12 w-full items-center gap-3 rounded-lg px-2 text-left hover:bg-muted disabled:opacity-50"
+          >
+            <IconoPush className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <span className="flex-1 text-sm">
+              {activo
+                ? 'Avisos activados en este dispositivo'
+                : 'Activar avisos en este dispositivo'}
+            </span>
+          </button>
+          {mensaje && (
+            <p role="status" className="px-2 pt-2 text-sm text-muted-foreground">
+              {mensaje}
+            </p>
+          )}
+        </div>
+      </div>
+    </>
   )
 }

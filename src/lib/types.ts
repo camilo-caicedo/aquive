@@ -336,6 +336,23 @@ export interface HiloResumen {
   mensajes_total: number
 }
 
+// Una fila de `mis_avisos()`. No hay tabla de notificaciones: los cinco
+// tipos se derivan de datos que ya existen, y lo «nuevo» es todo lo
+// posterior a `perfiles.avisos_vistos_at`.
+export interface Aviso {
+  tipo: 'mensaje' | 'invitacion' | 'sin_atender' | 'acompanamiento' | 'reporte'
+  texto: string
+  fecha: string
+  /** A dónde lleva. Cada aviso es un enlace, no un resumen que toca buscar. */
+  href: string
+}
+
+export interface EstadoEncabezado {
+  /** `'organizacion'`, `'coordinacion'` o null. Ver `Navegacion`. */
+  coordinacion: 'organizacion' | 'coordinacion' | null
+  avisos_sin_ver: number
+}
+
 // Lo que devuelve `mis_datos`: los artículos 14 y 15 de la Ley 1581
 // hechos pantalla. NO trae el documento descifrado, solo el tipo y los
 // cuatro últimos: ver su propia cédula completa no le dice a nadie nada
@@ -1298,13 +1315,23 @@ export interface Database {
         Args: Record<string, never>
         Returns: Json
       }
-      // Devuelve 'organizacion', 'coordinacion' o null. Solo para el
-      // encabezado: si se dibuja la pestaña de /aliado y con qué nombre.
-      // Como `soy_aliado`, no autoriza nada — cada RPC vuelve a comprobar
-      // quién es quién.
-      mi_menu_coordinacion: {
+      // Devuelve EstadoEncabezado. Todo lo que el encabezado necesita
+      // saber en una sola consulta: si se dibuja la pestaña de /aliado y
+      // con qué nombre, y cuántos avisos hay sin ver. Como `soy_aliado`,
+      // no autoriza nada — cada RPC vuelve a comprobar quién es quién.
+      estado_encabezado: {
         Args: Record<string, never>
-        Returns: string | null
+        Returns: Json
+      }
+      // Devuelve Aviso[]. Se pide al abrir el panel, no en cada carga: en
+      // el encabezado solo viaja el número.
+      mis_avisos: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      marcar_avisos_vistos: {
+        Args: Record<string, never>
+        Returns: undefined
       }
       soy_aliado: {
         Args: Record<string, never>
