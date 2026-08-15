@@ -106,7 +106,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       className={`${figtree.variable} ${caprasimo.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">
+      {/* El hueco de abajo es para `BarraInferior`, que va fija en el
+          teléfono: sin él tapa el final de cada página y el pie entero. */}
+      <body className="flex min-h-full flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0">
         <script
           type="application/ld+json"
           // El objeto lo escribimos nosotros y no lleva nada de nadie: no

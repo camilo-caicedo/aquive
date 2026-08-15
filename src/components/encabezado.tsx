@@ -1,8 +1,9 @@
 import Link from 'next/link'
+import { ShieldCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Marca } from '@/components/marca'
 import { Button } from '@/components/ui/button'
-import { Navegacion } from '@/components/navegacion'
+import { BarraInferior, Navegacion } from '@/components/navegacion'
 import { BotonAvisos } from '@/components/boton-avisos'
 import type { EstadoEncabezado } from '@/lib/types'
 
@@ -36,7 +37,14 @@ export async function Encabezado() {
   const tienePerfil = !!perfil?.data
   const encabezado = (estado?.data as EstadoEncabezado | null) ?? null
 
+  const coordinacion = encabezado?.coordinacion ?? null
+
   return (
+    // Fragmento y no un solo `<header>`: la barra del teléfono es hermana
+    // del encabezado, no hija. Dentro heredaría su `backdrop-blur`, que
+    // convierte al encabezado en bloque contenedor de los descendientes
+    // `fixed` y dejaría la barra pegada debajo del logo.
+    <>
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2">
         {/* El gato va suelto, sin caja: la identidad dice que no se encierra
@@ -49,6 +57,21 @@ export async function Encabezado() {
         </Link>
 
         <div className="flex shrink-0 items-center gap-2">
+          {/* Moderación vive aquí y no entre las secciones: es una
+              herramienta de administrador, no un destino del producto, y
+              la tenía una sola persona ocupando un sitio de navegación que
+              en un teléfono cuesta caro. Arriba están las cosas de la
+              cuenta —avisos, moderación, perfil—; abajo, a dónde se va. */}
+          {esAdmin && (
+            <Link
+              href="/admin"
+              aria-label="Moderación"
+              title="Moderación"
+              className="flex size-11 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <ShieldCheck className="size-5" aria-hidden="true" />
+            </Link>
+          )}
           {tienePerfil && <BotonAvisos sinVer={encabezado?.avisos_sin_ver ?? 0} />}
           <Button
             size="sm"
@@ -61,7 +84,10 @@ export async function Encabezado() {
         </div>
       </div>
 
-      <Navegacion esAdmin={esAdmin} menuCoordinacion={encabezado?.coordinacion ?? null} />
+      <Navegacion menuCoordinacion={coordinacion} />
     </header>
+
+    <BarraInferior menuCoordinacion={coordinacion} />
+    </>
   )
 }
