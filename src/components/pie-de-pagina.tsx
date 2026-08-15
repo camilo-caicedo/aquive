@@ -39,6 +39,11 @@ export function PieDePagina() {
         <nav aria-label="Documentos legales" className="mt-4">
           <ul className="flex flex-wrap gap-x-4">
             <li>
+              <Link href="/como-funciona" className="inline-flex min-h-12 items-center text-base underline">
+                Cómo funciona
+              </Link>
+            </li>
+            <li>
               <Link href="/privacidad" className="inline-flex min-h-12 items-center text-base underline">
                 Aviso de privacidad
               </Link>

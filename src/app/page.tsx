@@ -221,6 +221,15 @@ export default async function InicioPage({
             </li>
           ))}
         </ol>
+        {/* Los tres pasos de arriba son el resumen y valen para quien pide.
+            Quien viene a ofrecer, o de una fundación, tiene otro camino y
+            aquí no cabe: ese es el instructivo por rol. */}
+        <Link
+          href="/como-funciona"
+          className="mt-3 inline-flex min-h-12 items-center text-base underline"
+        >
+          Ver los pasos según lo que vengas a hacer
+        </Link>
       </section>
 
       <section className="mt-8">
