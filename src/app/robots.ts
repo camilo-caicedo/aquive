@@ -9,6 +9,22 @@ import type { MetadataRoute } from 'next'
 // `robots: { index: false }` en su propio `metadata`. Esto es el cinturón;
 // aquello, los tirantes.
 export default function robots(): MetadataRoute.Robots {
+  // Fuera de producción, nada se indexa.
+  //
+  // Vercel pone `X-Robots-Tag: noindex` en la URL que genera para cada
+  // despliegue, pero NO en un alias propio: para Vercel, ponerle alias es
+  // decir «esta dirección la controlo yo», y deja de tratarla como
+  // efímera. Comprobado — `aquive-xxxx.vercel.app` la manda y
+  // `aquive-test.vercel.app` no.
+  //
+  // Sin esto, abrir el acceso al preview deja indexable una copia entera
+  // del sitio contra la base de pruebas, y quien buscara «AquíVe» podría
+  // acabar publicando una solicitud de verdad en un entorno que se borra
+  // cuando a uno le parece.
+  if (process.env.VERCEL_ENV !== 'production') {
+    return { rules: [{ userAgent: '*', disallow: '/' }] }
+  }
+
   return {
     rules: [
       {

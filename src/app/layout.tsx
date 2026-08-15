@@ -65,6 +65,15 @@ export const metadata: Metadata = {
   // El código sale de Search Console → propiedad `https://aquive.co` →
   // método "Etiqueta HTML". Va sin el `<meta>`, solo el valor del content.
   verification: { google: "T8UgXRMUCyiQScl5ukVyVg5oLL6tkv38cYDv7GKdIEQ" },
+  // Los tirantes de `robots.ts`. Aquel es una petición que un rastreador
+  // puede ignorar; esto es una etiqueta en cada página, y se respeta más.
+  //
+  // Solo fuera de producción, y con spread condicional para que en
+  // producción la clave no exista: un `index: true` explícito no aporta
+  // nada y es una cosa más que puede quedarse mal puesta.
+  ...(process.env.VERCEL_ENV !== "production"
+    ? { robots: { index: false, follow: false } }
+    : {}),
   appleWebApp: { capable: true, title: "AquíVe", statusBarStyle: "default" },
   icons: {
     icon: [
