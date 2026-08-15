@@ -1,6 +1,18 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/types'
 
+/**
+ * Cuántos municipios pinta un combobox a la vez.
+ *
+ * No es una preferencia de diseño: sin tope, abrir el selector monta los
+ * 1.122 de golpe —4.500 nodos y unos 700 KB de HTML dentro de un popup—, y
+ * en iPhone eso agota la memoria de la pestaña, que se recarga sola. Pasa
+ * igual en Safari y en Chrome porque en iOS los dos son WebKit. El filtro
+ * sigue recorriendo la lista completa: esto recorta lo que se pinta, no
+ * dónde se busca.
+ */
+export const LIMITE_MUNICIPIOS = 50
+
 export interface MunicipioBasico {
   codigo_dane: string
   nombre: string

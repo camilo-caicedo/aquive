@@ -14,7 +14,7 @@ import type {
   OfrecimientoResumen,
   OfrecimientoInput,
 } from '@/lib/types'
-import type { MunicipioBasico as Municipio } from '@/lib/municipios'
+import { LIMITE_MUNICIPIOS, type MunicipioBasico as Municipio } from '@/lib/municipios'
 import { categoria as categoriaInfo } from '@/lib/catalogo'
 import { validarSugerencia } from '@/lib/validacion'
 import { Button } from '@/components/ui/button'
@@ -337,6 +337,7 @@ export function FormularioRegistro({
         <Combobox
           multiple
           items={municipios}
+          limit={LIMITE_MUNICIPIOS}
           value={municipiosElegidos}
           onValueChange={(ms: Municipio[]) =>
             setSeleccionados(ms.map((m) => m.codigo_dane))

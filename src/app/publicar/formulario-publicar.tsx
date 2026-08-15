@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { HeartHandshake } from 'lucide-react'
 import type { Categoria, ItemCatalogoPublico, ItemSolicitudInput } from '@/lib/types'
-import type { MunicipioBasico as Municipio } from '@/lib/municipios'
+import { LIMITE_MUNICIPIOS, type MunicipioBasico as Municipio } from '@/lib/municipios'
 import { CATEGORIAS } from '@/lib/catalogo'
 import { FECHA_LEGALES } from '@/lib/config'
 import { validarBarrio, validarNota, validarSugerencia } from '@/lib/validacion'
@@ -260,6 +260,12 @@ export function FormularioPublicar({
             </Label>
             <Combobox
               items={municipios}
+              // Sin esto se montan los 1.122 de golpe al abrir: 4.500 nodos y
+              // 700 KB de HTML en un solo popup. En iPhone —Safari y Chrome,
+              // que ahí son el mismo WebKit— la pestaña se queda sin memoria
+              // y se recarga sola. El filtro sigue recorriendo el país
+              // entero; esto solo recorta lo que se pinta.
+              limit={LIMITE_MUNICIPIOS}
               value={municipios.find((m) => m.codigo_dane === municipio) ?? null}
               onValueChange={elegirMunicipio}
               itemToStringLabel={(m: Municipio) => m.nombre}
