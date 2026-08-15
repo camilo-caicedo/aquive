@@ -660,6 +660,10 @@ export interface Database {
           categoria: Categoria
           nota: string | null
           estado: EstadoSolicitud
+          flujo: FlujoSolicitud
+          organizacion_id: string | null
+          /** Cuándo entró la fundación. Null en el flujo directo. */
+          acompanamiento_at: string | null
           creada_at: string
           confirmada_at: string
           expira_at: string
@@ -1184,6 +1188,33 @@ export interface Database {
           p256dh: string
           auth_key: string
           calza: boolean
+        }>
+      }
+      // Los otros dos de un hilo. `de_solicitante` dice en qué tabla vive
+      // la suscripción: la de quien pide cuelga de la solicitud, las de
+      // quien ofrece y quien coordina cuelgan del perfil.
+      destinatarios_conversacion: {
+        Args: {
+          p_conversacion_id: string
+          p_excluir_perfil?: string
+          p_excluir_solicitante?: boolean
+        }
+        Returns: Array<{
+          suscripcion_id: string
+          de_solicitante: boolean
+          endpoint: string
+          p256dh: string
+          auth_key: string
+          codigo: string
+        }>
+      }
+      destinatarios_respondieron: {
+        Args: { p_solicitud_id: string }
+        Returns: Array<{
+          suscripcion_id: string
+          endpoint: string
+          p256dh: string
+          auth_key: string
         }>
       }
       // Devuelve cada sugerencia pendiente con los ítems parecidos del

@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { validarMensaje } from '@/lib/validacion'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -34,15 +33,22 @@ export function PanelCoincidencias({ coincidencias }: { coincidencias: Coinciden
 
     setEnviando(true)
     setError(null)
-    const supabase = createClient()
-    const { error: rpcError } = await supabase.rpc('invitar_a_conversacion', {
-      p_solicitud_id: c.solicitud_id,
-      p_ofertador_id: c.ofertador_id,
-      p_mensaje: mensaje.trim(),
+
+    // Por la ruta y no por la RPC directa: a quien invitan hay que
+    // avisarle por push, y no tiene por qué estar mirando la pantalla.
+    const respuesta = await fetch('/api/invitaciones', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        solicitudId: c.solicitud_id,
+        ofertadorId: c.ofertador_id,
+        mensaje: mensaje.trim(),
+      }),
     })
 
-    if (rpcError) {
-      setError(rpcError.message)
+    if (!respuesta.ok) {
+      const { error: mensajeError } = await respuesta.json().catch(() => ({ error: null }))
+      setError(mensajeError ?? 'No pudimos enviar la invitación.')
       setEnviando(false)
       return
     }

@@ -107,21 +107,20 @@ export function Chat({
 
     setEnviando(true)
     setError(null)
-    const supabase = createClient()
 
-    const { error: rpcError } = token
-      ? await supabase.rpc('enviar_mensaje_token', {
-          p_token: token,
-          p_conversacion_id: conversacionId,
-          p_cuerpo: cuerpo.trim(),
-        })
-      : await supabase.rpc('enviar_mensaje', {
-          p_conversacion_id: conversacionId,
-          p_cuerpo: cuerpo.trim(),
-        })
+    // Por la ruta y no por la RPC directa: al otro lado hay que avisar a
+    // los otros dos por push, y las suscripciones no son legibles para el
+    // navegador. La autorización no se mueve — la sigue resolviendo la
+    // misma RPC, solo que llamada desde el servidor.
+    const respuesta = await fetch('/api/mensajes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ conversacionId, cuerpo: cuerpo.trim(), token }),
+    })
 
-    if (rpcError) {
-      setError(rpcError.message)
+    if (!respuesta.ok) {
+      const { error: mensajeError } = await respuesta.json().catch(() => ({ error: null }))
+      setError(mensajeError ?? 'No pudimos enviar el mensaje.')
       setEnviando(false)
       return
     }

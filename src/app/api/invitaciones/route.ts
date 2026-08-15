@@ -1,0 +1,62 @@
+import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { notificarConversacion } from '@/lib/push-coordinacion'
+
+interface CuerpoInvitacion {
+  solicitudId: string
+  ofertadorId: string
+  mensaje: string
+}
+
+// Un aliado invita a coordinar a quien ofrece. Pasa por aquí y no por la
+// RPC directa por lo mismo que /api/mensajes: hay que avisar después, y
+// las suscripciones push no son legibles para el cliente.
+//
+// Este es el aviso que más falta hacía: a quien invitan no tiene por qué
+// estar mirando la pantalla, y hasta ahora se enteraba solo si volvía.
+export async function POST(request: Request) {
+  let body: CuerpoInvitacion
+  try {
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Cuerpo inválido' }, { status: 400 })
+  }
+
+  const mensaje = body.mensaje?.trim() ?? ''
+  if (!body.solicitudId || !body.ofertadorId || mensaje.length < 10) {
+    return NextResponse.json({ error: 'Falta el mensaje o a quién invitar' }, { status: 400 })
+  }
+
+  // La RPC comprueba que quien invita sea miembro activo de la
+  // organización que coordina esa solicitud. Aquí no se decide nada.
+  const supabase = await createClient()
+  const { data: conversacionId, error } = await supabase.rpc('invitar_a_conversacion', {
+    p_solicitud_id: body.solicitudId,
+    p_ofertador_id: body.ofertadorId,
+    p_mensaje: mensaje,
+  })
+
+  if (error || !conversacionId) {
+    return NextResponse.json(
+      { error: error?.message ?? 'No se pudo invitar' },
+      { status: 400 }
+    )
+  }
+
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    await notificarConversacion(
+      conversacionId,
+      (codigo) => `Te invitaron a coordinar la entrega de ${codigo}`,
+      new URL(request.url).origin,
+      { perfilId: user?.id }
+    )
+  } catch {
+    // Silencioso a propósito (regla 6).
+  }
+
+  return NextResponse.json({ ok: true })
+}
