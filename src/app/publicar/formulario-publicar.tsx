@@ -2,16 +2,26 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { HeartHandshake } from 'lucide-react'
 import type { Categoria, ItemCatalogoPublico, ItemSolicitudInput } from '@/lib/types'
 import type { MunicipioBasico as Municipio } from '@/lib/municipios'
 import { CATEGORIAS } from '@/lib/catalogo'
+import { FECHA_LEGALES } from '@/lib/config'
 import { validarBarrio, validarNota, validarSugerencia } from '@/lib/validacion'
+import { createClient } from '@/lib/supabase/client'
+import { AVISO_ALIADO_MUNICIPIO, type AliadoDelMunicipio } from '@/lib/acompanamiento'
+import {
+  CamposAcompanamiento,
+  DATOS_VACIOS,
+  datosCompletos,
+  type DatosAcompanamiento,
+} from '@/components/campos-acompanamiento'
 import { TurnstileWidget } from '@/components/turnstile-widget'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import {
   Combobox,
   ComboboxContent,
@@ -63,7 +73,7 @@ export function FormularioPublicar({
   turnstileSiteKey: string
 }) {
   const router = useRouter()
-  const [paso, setPaso] = useState<1 | 2 | 3>(1)
+  const [paso, setPaso] = useState<1 | 2 | 3 | 4>(1)
   const [municipio, setMunicipio] = useState('')
   const [barrio, setBarrio] = useState('')
   const [categoria, setCategoria] = useState<Categoria | ''>('')
@@ -74,6 +84,39 @@ export function FormularioPublicar({
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [puedeRecoger, setPuedeRecoger] = useState(false)
+  const [aliados, setAliados] = useState<AliadoDelMunicipio[]>([])
+  const [nombreMunicipio, setNombreMunicipio] = useState('')
+  // El acompañamiento: se recoge aquí y se activa DESPUÉS de publicar,
+  // porque `activar_acompanamiento` necesita el token y el token no existe
+  // hasta que la solicitud está creada.
+  const [datosAliado, setDatosAliado] = useState<DatosAcompanamiento>(DATOS_VACIOS)
+  const [conAliado, setConAliado] = useState(false)
+
+  // Se pregunta al elegir municipio y no en un efecto: es una consecuencia
+  // de lo que la persona acaba de tocar, no una sincronización. Si la
+  // consulta falla, no pasa nada — la tarjeta no aparece y publicar directo
+  // sigue funcionando igual, que es el camino por defecto.
+  async function elegirMunicipio(m: Municipio | null) {
+    setMunicipio(m?.codigo_dane ?? '')
+    setNombreMunicipio(m?.nombre ?? '')
+    setAliados([])
+    setDatosAliado(DATOS_VACIOS)
+    if (!m) return
+
+    const supabase = createClient()
+    const { data } = await supabase.rpc('aliados_del_municipio', {
+      p_municipio: m.codigo_dane,
+    })
+    const lista = (data as unknown as AliadoDelMunicipio[] | null) ?? []
+    setAliados(lista)
+    // Con una sola no hay nada que escoger. Con varias no se preselecciona
+    // ninguna: elegir por la persona cuál fundación ve su documento no es
+    // una comodidad, es una decisión que no nos toca.
+    if (lista.length === 1) {
+      setDatosAliado({ ...DATOS_VACIOS, organizacionId: lista[0].id })
+    }
+  }
 
   const errorBarrio = barrio ? validarBarrio(barrio) : null
   const errorNota = nota ? validarNota(nota) : null
@@ -134,6 +177,11 @@ export function FormularioPublicar({
   const puedeEnviar =
     puedeAvanzarPaso1 && puedeAvanzarPaso2 && !errorNota && turnstileToken !== null && !enviando
 
+  // El cuarto paso solo existe donde hay una fundación que ofrecer. Donde
+  // no la hay, el formulario sigue teniendo tres, como siempre.
+  const hayCuartoPaso = aliados.length > 0
+  const pasos = hayCuartoPaso ? [1, 2, 3, 4] : [1, 2, 3]
+
   async function enviar() {
     if (!puedeEnviar) return
     setEnviando(true)
@@ -148,6 +196,7 @@ export function FormularioPublicar({
           categoria,
           nota: nota.trim() || null,
           items: seleccionados,
+          puedeRecoger,
           turnstileToken,
         }),
       })
@@ -158,6 +207,25 @@ export function FormularioPublicar({
         return
       }
       guardarEnLocalStorage(data.codigo, data.token)
+
+      // El acompañamiento va DESPUÉS de publicar y con el token en la mano,
+      // en dos pasos y no en uno: si esto falla, la solicitud ya quedó
+      // publicada —anónima, que es el modo seguro de fallar— y desde su
+      // pantalla se puede volver a intentar. Al revés, un solo llamado que
+      // fallara dejaría a la persona sin solicitud y con los datos escritos.
+      if (conAliado && datosCompletos(datosAliado)) {
+        const supabase = createClient()
+        await supabase.rpc('activar_acompanamiento', {
+          p_token: data.token,
+          p_organizacion_id: datosAliado.organizacionId,
+          p_nombre: datosAliado.nombre.trim(),
+          p_documento_tipo: datosAliado.documentoTipo,
+          p_documento: datosAliado.documento.trim(),
+          p_autorizacion_version: FECHA_LEGALES,
+          p_telefono: datosAliado.telefono.trim() || null,
+        })
+      }
+
       router.push(`/solicitud/${data.token}`)
     } catch {
       setError('No hay conexión. Intenta de nuevo.')
@@ -168,7 +236,7 @@ export function FormularioPublicar({
   return (
     <div className="mt-6">
       <ol className="mb-6 flex gap-2 text-sm" aria-label="Progreso">
-        {[1, 2, 3].map((n) => (
+        {pasos.map((n) => (
           <li
             key={n}
             className={`flex-1 rounded-full py-1 text-center ${
@@ -193,7 +261,7 @@ export function FormularioPublicar({
             <Combobox
               items={municipios}
               value={municipios.find((m) => m.codigo_dane === municipio) ?? null}
-              onValueChange={(m: Municipio | null) => setMunicipio(m?.codigo_dane ?? '')}
+              onValueChange={elegirMunicipio}
               itemToStringLabel={(m: Municipio) => m.nombre}
               isItemEqualToValue={(a: Municipio, b: Municipio) => a.codigo_dane === b.codigo_dane}
             >
@@ -238,6 +306,24 @@ export function FormularioPublicar({
             />
             {errorBarrio && <p className="mt-1 text-sm text-destructive">{errorBarrio}</p>}
           </div>
+          {/* Regla R: esto ANUNCIA, no ofrece un camino alternativo. No hay
+              botón, no hay casilla y no hay nada preseleccionado — el único
+              botón de esta pantalla sigue siendo «Continuar», que publica
+              directo. Los datos se piden después, en la pantalla de la
+              solicitud, y solo si la persona vuelve a decir que sí. */}
+          {aliados.length > 0 && (
+            <Alert>
+              <AlertTitle>
+                {aliados.length === 1
+                  ? `En ${nombreMunicipio} hay una fundación que puede acompañarte`
+                  : `En ${nombreMunicipio} hay ${aliados.length} fundaciones que pueden acompañarte`}
+              </AlertTitle>
+              <AlertDescription>
+                {aliados.map((a) => a.nombre).join(' · ')}. {AVISO_ALIADO_MUNICIPIO}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Button className="w-full" disabled={!puedeAvanzarPaso1} onClick={() => setPaso(2)}>
             Continuar
           </Button>
@@ -444,6 +530,27 @@ export function FormularioPublicar({
             {errorNota && <p className="text-sm text-destructive">{errorNota}</p>}
           </div>
 
+          {/* Siempre en positivo, y opcional. No hay «no puedo recoger»: eso
+              sería declarar en público que a alguien le cuesta moverse, y no
+              se guarda ni se pregunta. Tampoco sale en el tablero: solo lo
+              ven quien va a responder y la fundación, que es para quienes
+              sirve. */}
+          <label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-border p-3 has-checked:border-primary has-checked:bg-accent">
+            <input
+              type="checkbox"
+              checked={puedeRecoger}
+              onChange={(e) => setPuedeRecoger(e.target.checked)}
+              className="mt-0.5 size-6 shrink-0"
+            />
+            <span>
+              <span className="text-base font-medium">Puedo recoger</span>
+              <span className="block text-sm text-muted-foreground">
+                Puedes desplazarte a buscar lo que pediste. Así nadie tiene que
+                preguntártelo después.
+              </span>
+            </span>
+          </label>
+
           {turnstileSiteKey && <TurnstileWidget siteKey={turnstileSiteKey} onToken={setTurnstileToken} />}
 
           {error && (
@@ -456,8 +563,102 @@ export function FormularioPublicar({
             <Button type="button" variant="outline" className="flex-1" onClick={() => setPaso(2)}>
               Atrás
             </Button>
-            <Button type="button" className="flex-1" disabled={!puedeEnviar} onClick={enviar}>
-              {enviando ? 'Publicando…' : 'Publicar solicitud'}
+            {hayCuartoPaso ? (
+              <Button
+                type="button"
+                className="flex-1"
+                disabled={!puedeEnviar}
+                onClick={() => setPaso(4)}
+              >
+                Continuar
+              </Button>
+            ) : (
+              <Button type="button" className="flex-1" disabled={!puedeEnviar} onClick={enviar}>
+                {enviando ? 'Publicando…' : 'Publicar solicitud'}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Paso 4: el acompañamiento, donde sí se ve.
+          Estuvo un rato solo en la pantalla de la solicitud, después de
+          publicar, y ahí casi nadie llegaba a tocarlo.
+
+          La regla R se sostiene por la forma, no por el sitio: el botón
+          grande y el que está a la derecha es «Publicar sin esto», el
+          formulario empieza cerrado, no hay nada preseleccionado y la
+          opción anónima no se pinta como la mala. Lo que cambia es que
+          ahora se ve. */}
+      {paso === 4 && (
+        <div className="space-y-4">
+          <div>
+            <h2 className="font-heading text-2xl">
+              {aliados.length === 1
+                ? `${aliados[0].nombre} puede acompañarte`
+                : `En ${nombreMunicipio} hay fundaciones que pueden acompañarte`}
+            </h2>
+            <p className="mt-2 text-base text-muted-foreground">
+              Coordinan la entrega y la recibes en su punto de acopio, sin
+              tener que encontrarte con nadie que no conozcas. Es opcional: si
+              no quieres, tu solicitud se publica igual y sin ningún dato tuyo.
+            </p>
+          </div>
+
+          {!conAliado ? (
+            <button
+              type="button"
+              onClick={() => setConAliado(true)}
+              className="flex min-h-12 items-center gap-1.5 text-left text-base text-primary underline"
+            >
+              <HeartHandshake className="size-4 shrink-0" aria-hidden="true" />
+              Quiero que una fundación coordine la entrega
+            </button>
+          ) : (
+            <div className="rounded-xl border border-border p-4">
+              <CamposAcompanamiento
+                aliados={aliados}
+                datos={datosAliado}
+                onCambio={setDatosAliado}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setConAliado(false)
+                  setDatosAliado(
+                    aliados.length === 1
+                      ? { ...DATOS_VACIOS, organizacionId: aliados[0].id }
+                      : DATOS_VACIOS
+                  )
+                }}
+                className="mt-4 flex min-h-12 items-center text-base text-muted-foreground underline"
+              >
+                Mejor no, publicar sin esto
+              </button>
+            </div>
+          )}
+
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={() => setPaso(3)}>
+              Atrás
+            </Button>
+            <Button
+              type="button"
+              className="flex-1"
+              disabled={!puedeEnviar || (conAliado && !datosCompletos(datosAliado))}
+              onClick={enviar}
+            >
+              {enviando
+                ? 'Publicando…'
+                : conAliado
+                  ? 'Publicar con acompañamiento'
+                  : 'Publicar sin esto'}
             </Button>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { notificarRespuesta } from '@/lib/push'
 interface CuerpoRespuesta {
   codigo: string
   mensaje: string
+  puedeLlevar?: boolean
 }
 
 // La respuesta pasa por aquí y no por la RPC directa desde el navegador
@@ -32,6 +33,7 @@ export async function POST(request: Request) {
   const { data: solicitudId, error } = await supabase.rpc('responder_solicitud', {
     p_codigo: body.codigo,
     p_mensaje: mensaje,
+    p_puede_llevar: body.puedeLlevar === true,
   })
 
   if (error || !solicitudId) {

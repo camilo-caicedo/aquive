@@ -11,6 +11,7 @@ import type { EntidadMatricula, AreaServicio } from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { SelectFiltro } from '@/components/select-filtro'
+import { FormularioFiltros } from '@/components/formulario-filtros'
 
 export const metadata = { title: 'Quién ofrece servicios' }
 
@@ -142,8 +143,8 @@ export default async function ServidoresPage({
           los desplegables solo estorban. */}
       {mostrarFiltros && (
       <>
-      <form
-        method="get"
+      <FormularioFiltros
+        action="/servidores"
         className="mt-4 flex flex-col gap-2 rounded-lg border border-border bg-muted/40 p-3 sm:flex-row"
       >
         {/* Un GET reemplaza el query string entero: sin esto, filtrar te
@@ -175,10 +176,7 @@ export default async function ServidoresPage({
           }))}
         />
         )}
-        <Button type="submit" className="w-full sm:w-auto">
-          Filtrar
-        </Button>
-      </form>
+      </FormularioFiltros>
 
       {/* La lista de municipios está recortada a los que tienen a alguien
           registrado; si no se dice, parece que faltan municipios. */}

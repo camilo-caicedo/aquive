@@ -3,6 +3,7 @@ import { Figtree, Caprasimo, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CORREO_CONTACTO } from "@/lib/config";
 import { Encabezado } from "@/components/encabezado";
+import { AvisoPruebas } from "@/components/aviso-pruebas";
 import { PieDePagina } from "@/components/pie-de-pagina";
 
 // Cuerpo. Reemplaza a Geist: misma legibilidad en Android viejo, curvas
@@ -65,6 +66,15 @@ export const metadata: Metadata = {
   // El código sale de Search Console → propiedad `https://aquive.co` →
   // método "Etiqueta HTML". Va sin el `<meta>`, solo el valor del content.
   verification: { google: "T8UgXRMUCyiQScl5ukVyVg5oLL6tkv38cYDv7GKdIEQ" },
+  // Los tirantes de `robots.ts`. Aquel es una petición que un rastreador
+  // puede ignorar; esto es una etiqueta en cada página, y se respeta más.
+  //
+  // Solo fuera de producción, y con spread condicional para que en
+  // producción la clave no exista: un `index: true` explícito no aporta
+  // nada y es una cosa más que puede quedarse mal puesta.
+  ...(process.env.VERCEL_ENV !== "production"
+    ? { robots: { index: false, follow: false } }
+    : {}),
   appleWebApp: { capable: true, title: "AquíVe", statusBarStyle: "default" },
   icons: {
     icon: [
@@ -106,7 +116,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       className={`${figtree.variable} ${caprasimo.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">
+      {/* El hueco de abajo es para `BarraInferior`, que va fija en el
+          teléfono: sin él tapa el final de cada página y el pie entero. */}
+      <body className="flex min-h-full flex-col pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0">
         <script
           type="application/ld+json"
           // El objeto lo escribimos nosotros y no lleva nada de nadie: no
@@ -120,6 +132,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Saltar al contenido
         </a>
+        <AvisoPruebas />
         <Encabezado />
         <div id="contenido" className="flex-1">
           {children}

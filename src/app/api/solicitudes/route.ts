@@ -21,6 +21,7 @@ interface CuerpoSolicitud {
   categoria: Categoria
   nota: string | null
   items: unknown[]
+  puedeRecoger?: boolean
   turnstileToken: string
 }
 
@@ -118,6 +119,7 @@ export async function POST(request: Request) {
     p_nota: nota,
     p_items: itemsValidados as unknown as Json,
     p_token: token,
+    p_puede_recoger: body.puedeRecoger === true,
   })
 
   if (error || !data || data.length === 0) {

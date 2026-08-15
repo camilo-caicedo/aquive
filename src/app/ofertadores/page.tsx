@@ -1,10 +1,11 @@
 import Link from 'next/link'
-import { Info, Inbox, MapPin, PlusCircle, PackageOpen } from 'lucide-react'
+import { Info, Inbox, MapPin, PlusCircle, PackageOpen, Truck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { SelectFiltro } from '@/components/select-filtro'
+import { FormularioFiltros } from '@/components/formulario-filtros'
 import { BotonReportar } from '@/components/boton-reportar'
 
 export const metadata = { title: 'Quién está ofreciendo' }
@@ -64,8 +65,8 @@ export default async function OfertadoresPage({
 
       {mostrarFiltros && (
         <>
-          <form
-            method="get"
+          <FormularioFiltros
+            action="/ofertadores"
             className="mt-4 flex flex-col gap-2 rounded-lg border border-border bg-muted/40 p-3 sm:flex-row"
           >
             <SelectFiltro
@@ -80,10 +81,7 @@ export default async function OfertadoresPage({
                 detalle: m.departamento,
               }))}
             />
-            <Button type="submit" className="w-full sm:w-auto">
-              Filtrar
-            </Button>
-          </form>
+          </FormularioFiltros>
 
           <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
             <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
@@ -159,6 +157,15 @@ export default async function OfertadoresPage({
                     </li>
                   )}
                 </ul>
+              )}
+
+              {/* Solo cuando es que sí. No marcarlo no afirma que no pueda
+                  moverse, y no hay etiqueta para eso. */}
+              {o.puede_trasladarse && (
+                <p className="mt-3 flex items-center gap-1.5 text-base text-ok">
+                  <Truck className="size-4 shrink-0" aria-hidden="true" />
+                  Puede trasladarse a entregar
+                </p>
               )}
 
               {o.descripcion ? (

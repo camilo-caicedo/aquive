@@ -1,9 +1,11 @@
 import Link from 'next/link'
+import { ShieldCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Marca } from '@/components/marca'
 import { Button } from '@/components/ui/button'
-import { Navegacion } from '@/components/navegacion'
+import { BarraInferior, Navegacion } from '@/components/navegacion'
 import { BotonAvisos } from '@/components/boton-avisos'
+import type { EstadoEncabezado } from '@/lib/types'
 
 export async function Encabezado() {
   const supabase = await createClient()
@@ -14,19 +16,35 @@ export async function Encabezado() {
   // Solo se consulta si hay sesión: para un visitante anónimo no tiene
   // sentido pagar las consultas en cada carga. La RLS de `administradores`
   // solo deja ver la propia fila, así que esto no revela quién más lo es.
-  const [admin, perfil] = user
+  const [admin, perfil, estado] = user
     ? await Promise.all([
         supabase.from('administradores').select('user_id').eq('user_id', user.id).maybeSingle(),
         supabase.from('perfiles').select('id').eq('id', user.id).maybeSingle(),
+        // Una sola consulta decide si se dibuja la pestaña de /aliado, cómo
+        // se llama, y cuántos avisos hay sin ver. Empezó preguntando por
+        // `tipo = 'aliado'` para ahorrarla, y la primera coordinadora de
+        // verdad no encontró su panel; después salía solo para el equipo de
+        // una fundación, y quien solo ofrece se quedó sin puerta a sus
+        // conversaciones. Una consulta más por carga es más barata que una
+        // persona que no encuentra dónde trabajar.
+        supabase.rpc('estado_encabezado'),
       ])
-    : [null, null]
+    : [null, null, null]
 
   const esAdmin = !!admin?.data
-  // El interruptor de avisos solo tiene sentido con perfil: los avisos
-  // son de solicitudes en TUS municipios, y sin perfil no hay municipios.
+  // La campana solo tiene sentido con perfil: los avisos son de hilos y
+  // solicitudes donde participa una cuenta, y sin perfil no hay cuenta.
   const tienePerfil = !!perfil?.data
+  const encabezado = (estado?.data as EstadoEncabezado | null) ?? null
+
+  const coordinacion = encabezado?.coordinacion ?? null
 
   return (
+    // Fragmento y no un solo `<header>`: la barra del teléfono es hermana
+    // del encabezado, no hija. Dentro heredaría su `backdrop-blur`, que
+    // convierte al encabezado en bloque contenedor de los descendientes
+    // `fixed` y dejaría la barra pegada debajo del logo.
+    <>
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2">
         {/* El gato va suelto, sin caja: la identidad dice que no se encierra
@@ -39,7 +57,22 @@ export async function Encabezado() {
         </Link>
 
         <div className="flex shrink-0 items-center gap-2">
-          {tienePerfil && <BotonAvisos />}
+          {/* Moderación vive aquí y no entre las secciones: es una
+              herramienta de administrador, no un destino del producto, y
+              la tenía una sola persona ocupando un sitio de navegación que
+              en un teléfono cuesta caro. Arriba están las cosas de la
+              cuenta —avisos, moderación, perfil—; abajo, a dónde se va. */}
+          {esAdmin && (
+            <Link
+              href="/admin"
+              aria-label="Moderación"
+              title="Moderación"
+              className="flex size-11 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <ShieldCheck className="size-5" aria-hidden="true" />
+            </Link>
+          )}
+          {tienePerfil && <BotonAvisos sinVer={encabezado?.avisos_sin_ver ?? 0} />}
           <Button
             size="sm"
             className="h-11 px-3"
@@ -51,7 +84,10 @@ export async function Encabezado() {
         </div>
       </div>
 
-      <Navegacion esAdmin={esAdmin} />
+      <Navegacion menuCoordinacion={coordinacion} />
     </header>
+
+    <BarraInferior menuCoordinacion={coordinacion} />
+    </>
   )
 }

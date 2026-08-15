@@ -38,6 +38,19 @@
 --   entidades         es_prueba              (`creada_por` es el admin real;
 --                                              los enlaces viven en su jsonb,
 --                                              así que no arrastra nada)
+--   organizaciones    es_prueba              → invitaciones_organizacion y
+--                                              miembros_organizacion, las dos
+--                                              en CASCADE
+--   entregas          es_prueba              (SOBREVIVE a la solicitud a
+--                                              propósito: no tiene FK hacia
+--                                              ella, solo el código en texto)
+--   accesos_identidad es_prueba              (sin llave foránea viva: la
+--                                              bitácora SOBREVIVE a la
+--                                              identidad a propósito, así que
+--                                              hay que borrarla a mano. Las
+--                                              `identidades` en cambio se van
+--                                              solas con su solicitud o su
+--                                              perfil)
 --
 -- Actualizar en CADA fase que agregue una tabla.
 -- =====================================================================
@@ -60,6 +73,14 @@ union all
 select 'catalogo_items', count(*) from public.catalogo_items where es_prueba
 union all
 select 'entidades', count(*) from public.entidades where es_prueba
+union all
+select 'organizaciones', count(*) from public.organizaciones where es_prueba
+union all
+select 'accesos_identidad', count(*) from public.accesos_identidad where es_prueba
+union all
+select 'identidades', count(*) from public.identidades where es_prueba
+union all
+select 'entregas', count(*) from public.entregas where es_prueba
 order by 1;
 
 -- Lo que arrastra el CASCADE, para que el número no sorprenda:
@@ -93,6 +114,14 @@ union all
 select 'respuestas de perfiles de prueba', count(*)
   from public.respuestas r
   join public.perfiles p on p.id = r.autor_id where p.nombre_visible ilike 'prueba%'
+union all
+select 'miembros_organizacion', count(*)
+  from public.miembros_organizacion m
+  join public.organizaciones o on o.id = m.organizacion_id where o.es_prueba
+union all
+select 'invitaciones_organizacion', count(*)
+  from public.invitaciones_organizacion i
+  join public.organizaciones o on o.id = i.organizacion_id where o.es_prueba
 order by 1;
 
 -- Y lo que NO debería salir nunca: filas de prueba enganchadas a algo real.
@@ -120,8 +149,30 @@ begin;
 -- originó.
 delete from public.metricas where es_prueba;
 
+-- La bitácora de lecturas de identidad sobrevive a la identidad por diseño
+-- (regla N), así que ningún CASCADE se la lleva y hay que borrarla aquí.
+-- Va ANTES que las solicitudes solo por claridad: con `identidad_id` en ON
+-- DELETE SET NULL, el orden da igual, pero leerlo junto a `metricas`
+-- —lo otro que no cuelga de nada— es lo que evita que se olvide.
+delete from public.accesos_identidad where es_prueba;
+
+-- Lo mismo con las entregas: no cuelgan de la solicitud a propósito —el
+-- código va copiado en texto— así que ningún CASCADE se las lleva.
+delete from public.entregas where es_prueba;
+
 -- CASCADE: solicitud_items, respuestas, push_suscripciones.
 delete from public.solicitudes where es_prueba;
+
+-- ⚠ ANTES que `perfiles`, y el orden no es cosmético. `miembros_organizacion`
+-- cuelga de las dos por CASCADE, y hay un trigger que impide dejar una
+-- organización con miembros y sin ningún coordinador activo. Si se borraran
+-- primero los perfiles, un coordinador de prueba desaparecería dejando viva
+-- su organización de prueba, el trigger reventaría al hacer commit y se
+-- revertiría la limpieza entera. Borrando la organización primero, el
+-- CASCADE se lleva miembros e invitaciones y no queda nada que proteger.
+--
+-- CASCADE: invitaciones_organizacion, miembros_organizacion.
+delete from public.organizaciones where es_prueba;
 
 -- CASCADE: ofrecimientos, servidores, push_ofertadores, y también
 -- `respuestas`, que no está en la lista de arriba pero cuelga de
@@ -168,6 +219,10 @@ begin
        + (select count(*) from public.sugerencias_item where es_prueba)
        + (select count(*) from public.catalogo_items   where es_prueba)
        + (select count(*) from public.entidades        where es_prueba)
+       + (select count(*) from public.organizaciones   where es_prueba)
+       + (select count(*) from public.accesos_identidad where es_prueba)
+       + (select count(*) from public.entregas        where es_prueba)
+       + (select count(*) from public.identidades      where es_prueba)
        + (select count(*) from auth.users where id::text like '00000000-0000-4000-8000-%')
     into v_restantes;
 

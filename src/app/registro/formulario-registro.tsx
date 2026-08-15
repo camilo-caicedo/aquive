@@ -94,7 +94,14 @@ export function FormularioRegistro({
   ofrecimientos: OfrecimientoResumen[]
 }) {
   const router = useRouter()
-  const [tipo, setTipo] = useState<TipoPerfil>(perfil?.tipo ?? 'ofertador')
+  // Un aliado llega aquí con `tipo = 'aliado'`, que no es una de las dos
+  // opciones de esta pantalla: nadie se declara aliado, eso pasa al unirse
+  // a una organización. Se arranca en 'ofertador' para que el formulario
+  // funcione, y el aviso de arriba explica qué significa guardarlo.
+  const eraAliado = perfil?.tipo === 'aliado'
+  const [tipo, setTipo] = useState<TipoPerfil>(
+    !perfil || eraAliado ? 'ofertador' : perfil.tipo
+  )
   const [nombre, setNombre] = useState(perfil?.nombre_visible ?? '')
   const [seleccionados, setSeleccionados] = useState<string[]>(perfil?.municipios ?? [])
   const [contacto, setContacto] = useState(perfil?.contacto_publico ?? '')
@@ -102,6 +109,9 @@ export function FormularioRegistro({
     perfil?.contacto_tipo ?? 'whatsapp'
   )
   const [descripcion, setDescripcion] = useState(perfil?.descripcion ?? '')
+  const [puedeTrasladarse, setPuedeTrasladarse] = useState(
+    perfil?.puede_trasladarse ?? false
+  )
   const [profesion, setProfesion] = useState(servidor?.profesion ?? '')
   const [entidad, setEntidad] = useState<EntidadMatricula>(
     servidor?.entidad_matricula ?? 'COPNIA'
@@ -229,6 +239,7 @@ export function FormularioRegistro({
       p_entidad_matricula: tipo === 'servidor' ? entidad : null,
       p_numero_matricula: tipo === 'servidor' ? matricula.trim() : null,
       p_servicios: tipo === 'servidor' ? serviciosIds : [],
+      p_puede_trasladarse: puedeTrasladarse,
     })
 
     if (rpcError) {
@@ -261,6 +272,18 @@ export function FormularioRegistro({
 
   return (
     <div className="mt-6 space-y-6">
+      {eraAliado && (
+        <Alert variant="warning">
+          <AlertDescription>
+            Tu perfil es el de alguien que trabaja en una organización aliada,
+            y como tal no se publica en ninguna parte. Si guardas esta
+            pantalla, tu perfil pasa a ser también el de quien ofrece ayuda a
+            título personal: tu nombre y tu contacto quedan públicos. Seguirás
+            en tu organización igual.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <fieldset>
         <legend className="mb-2 text-base font-medium">¿Qué vas a ofrecer?</legend>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -631,6 +654,26 @@ export function FormularioRegistro({
         />
         <p className="mt-1 text-sm text-muted-foreground">{descripcion.length}/300</p>
       </div>
+
+      {/* Se pregunta una vez aquí y después viene marcada al responder, que
+          es el punto: la logística era lo que más se repetía en el chat. Se
+          puede desmarcar en una respuesta concreta — se puede tener carro y
+          no poder ese día. */}
+      <label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-border p-3 has-checked:border-primary has-checked:bg-accent">
+        <input
+          type="checkbox"
+          checked={puedeTrasladarse}
+          onChange={(e) => setPuedeTrasladarse(e.target.checked)}
+          className="mt-0.5 size-6 shrink-0"
+        />
+        <span>
+          <span className="text-base font-medium">Puedo trasladarme a entregar</span>
+          <span className="block text-sm text-muted-foreground">
+            Puedes llevar las cosas hasta donde haga falta. Aparece en tu ficha
+            y viene marcado cuando respondas.
+          </span>
+        </span>
+      </label>
 
       {/* Texto exacto de docs/legal/PLANTILLAS.md sección 3. La marca de
           tiempo que lo acompaña es la prueba de la autorización. */}

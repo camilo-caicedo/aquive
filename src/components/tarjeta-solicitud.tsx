@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { MapPin, MessageSquare, TimerOff, Check } from 'lucide-react'
-import type { Categoria, ItemResumen } from '@/lib/types'
+import { MapPin, MessageSquare, TimerOff, Check, HeartHandshake } from 'lucide-react'
+import type { Categoria, FlujoSolicitud, ItemResumen } from '@/lib/types'
 import { categoria, describirItem, horasParaVencer, HORAS_POR_VENCER } from '@/lib/catalogo'
 import { formatearHoras } from '@/lib/tiempo'
 import { BadgeFrescura } from '@/components/badge-frescura'
@@ -19,6 +19,8 @@ interface Solicitud {
   horas_sin_confirmar: number
   num_respuestas: number
   items: ItemResumen[]
+  // Opcional: el cruce inverso devuelve las mismas columnas menos esta.
+  flujo?: FlujoSolicitud
 }
 
 export function TarjetaSolicitud({
@@ -51,6 +53,16 @@ export function TarjetaSolicitud({
         <MapPin className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
         {solicitud.municipio_nombre} — {solicitud.barrio}
       </p>
+
+      {/* Sello discreto, no un distintivo de categoría: dice que hay una
+          fundación coordinando, y nada más. Ni cuál, ni de quién es la
+          solicitud. Va en salvia con icono y texto, nunca solo color. */}
+      {solicitud.flujo === 'acompanado' && (
+        <p className="mt-2 flex items-center gap-1.5 text-sm text-ok">
+          <HeartHandshake className="size-4 shrink-0" aria-hidden="true" />
+          Una fundación acompaña esta entrega
+        </p>
+      )}
 
       {coincidencias !== undefined && coincidencias > 0 && (
         <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-accent px-2.5 py-1.5 text-sm font-medium text-accent-foreground">

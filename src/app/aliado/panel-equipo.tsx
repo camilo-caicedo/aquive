@@ -1,0 +1,388 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import qrcode from 'qrcode-generator'
+import { createClient } from '@/lib/supabase/client'
+import { enlaceInvitacion } from '@/lib/organizaciones'
+import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import type { AccionMiembro, InvitacionResumen, MiembroEquipo } from '@/lib/types'
+
+function fecha(iso: string) {
+  return new Date(iso).toLocaleString('es-CO', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+function Invitacion({
+  invitacion,
+  slug,
+  origen,
+  onCambio,
+}: {
+  invitacion: InvitacionResumen
+  slug: string
+  origen: string
+  onCambio: () => void
+}) {
+  const [copiado, setCopiado] = useState(false)
+  const [enviando, setEnviando] = useState(false)
+  const enlace = enlaceInvitacion(origen, slug, invitacion.codigo)
+
+  // Mismo QR que la pantalla de confirmación de una solicitud: se genera
+  // en el navegador, no viaja a ningún servicio de terceros.
+  const qrDataUrl = useMemo(() => {
+    const qr = qrcode(0, 'M')
+    qr.addData(enlace)
+    qr.make()
+    return qr.createDataURL(6, 12)
+  }, [enlace])
+
+  async function copiar() {
+    try {
+      await navigator.clipboard.writeText(enlace)
+      setCopiado(true)
+      setTimeout(() => setCopiado(false), 2000)
+    } catch {
+      // Sin permiso de portapapeles: el enlace está a la vista para copiarlo a mano.
+    }
+  }
+
+  async function anular() {
+    setEnviando(true)
+    const supabase = createClient()
+    await supabase.rpc('desactivar_invitacion', { p_id: invitacion.id })
+    onCambio()
+  }
+
+  return (
+    <li className="rounded-lg border border-border p-4">
+      <p className="text-base font-medium">
+        {invitacion.rol_otorgado === 'coordinador' ? 'Coordinador' : 'Miembro'} ·{' '}
+        {invitacion.usos}/{invitacion.usos_max} usos · vence el{' '}
+        {fecha(invitacion.expira_at)}
+      </p>
+
+      <div className="mt-2 rounded-lg border border-border p-3 text-sm break-all">
+        {enlace}
+      </div>
+
+      {/* eslint-disable-next-line @next/next/no-img-element -- data URI generada en cliente, no aplica optimización de next/image */}
+      <img
+        src={qrDataUrl}
+        alt={`Código QR para unirse como ${invitacion.rol_otorgado}`}
+        className="mx-auto mt-3 h-40 w-40"
+        width={160}
+        height={160}
+      />
+
+      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <Button variant="outline" onClick={copiar}>
+          {copiado ? 'Copiado' : 'Copiar enlace'}
+        </Button>
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={<a href={qrDataUrl} download={`aquive-${slug}.gif`} />}
+        >
+          Descargar QR
+        </Button>
+        <Button variant="destructive" disabled={enviando} onClick={anular}>
+          {enviando ? 'Anulando…' : 'Anular'}
+        </Button>
+      </div>
+    </li>
+  )
+}
+
+function Miembro({
+  organizacionId,
+  miembro,
+  esYo,
+  onCambio,
+}: {
+  organizacionId: string
+  miembro: MiembroEquipo
+  /** Nadie se aplica acciones a sí mismo: la RPC lo rechaza, y aquí ni
+      siquiera se dibujan los botones. Es lo que evita que el único
+      coordinador se degrade solo y deje la organización muda. */
+  esYo: boolean
+  onCambio: () => void
+}) {
+  const [enviando, setEnviando] = useState(false)
+  const [confirmando, setConfirmando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function accion(p_accion: AccionMiembro) {
+    setEnviando(true)
+    setError(null)
+    const supabase = createClient()
+    const { error: rpcError } = await supabase.rpc('gestionar_miembro', {
+      p_organizacion_id: organizacionId,
+      p_perfil_id: miembro.perfil_id,
+      p_accion,
+    })
+    if (rpcError) {
+      setError(rpcError.message)
+      setEnviando(false)
+      return
+    }
+    setConfirmando(false)
+    onCambio()
+  }
+
+  async function permiso(p_permiso: 'puede_ver_identidad' | 'puede_moderar', p_valor: boolean) {
+    setEnviando(true)
+    setError(null)
+    const supabase = createClient()
+    const { error: rpcError } = await supabase.rpc('otorgar_permiso_miembro', {
+      p_organizacion_id: organizacionId,
+      p_perfil_id: miembro.perfil_id,
+      p_permiso,
+      p_valor,
+    })
+    if (rpcError) {
+      setError(rpcError.message)
+      setEnviando(false)
+      return
+    }
+    onCambio()
+  }
+
+  const etiquetaEstado =
+    miembro.estado === 'activo'
+      ? miembro.rol === 'coordinador'
+        ? 'Coordinador'
+        : 'En el equipo'
+      : miembro.estado === 'pendiente'
+        ? 'Por aprobar'
+        : 'Fuera del equipo'
+
+  return (
+    <li className="rounded-lg border border-border p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-lg font-bold">{miembro.nombre_visible}</span>
+        <span
+          className={
+            miembro.estado === 'activo'
+              ? 'inline-flex shrink-0 items-center rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-base font-medium text-ok'
+              : 'inline-flex shrink-0 items-center rounded-full border border-primary/25 bg-accent px-2.5 py-0.5 text-base font-medium text-accent-foreground'
+          }
+        >
+          {etiquetaEstado}
+        </span>
+      </div>
+
+      <p className="mt-1 text-base text-muted-foreground">
+        Entró el {fecha(miembro.creado_at)}
+        {esYo && ' · eres tú'}
+      </p>
+
+      {esYo ? null : miembro.estado === 'pendiente' ? (
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <Button disabled={enviando} onClick={() => accion('aprobar')}>
+            Aprobar
+          </Button>
+          <Button variant="destructive" disabled={enviando} onClick={() => accion('rechazar')}>
+            Rechazar
+          </Button>
+        </div>
+      ) : (
+        <>
+          {miembro.estado === 'activo' && (
+            <div className="mt-3 space-y-2">
+              {/* El permiso de ver identidades va aparte y con su propia
+                  advertencia: es lo que deja ver cédulas. Nunca se concede
+                  al entrar ni al aprobar — siempre aquí, a mano. */}
+              <Button
+                variant={miembro.puede_ver_identidad ? 'default' : 'outline'}
+                className="w-full"
+                disabled={enviando}
+                onClick={() => permiso('puede_ver_identidad', !miembro.puede_ver_identidad)}
+              >
+                {miembro.puede_ver_identidad
+                  ? 'Quitar: ver identidades'
+                  : 'Dar permiso de ver identidades'}
+              </Button>
+              <Button
+                variant={miembro.puede_moderar ? 'default' : 'outline'}
+                className="w-full"
+                disabled={enviando}
+                onClick={() => permiso('puede_moderar', !miembro.puede_moderar)}
+              >
+                {miembro.puede_moderar ? 'Quitar: moderar' : 'Dar permiso de moderar'}
+              </Button>
+            </div>
+          )}
+
+          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {miembro.estado === 'activo' ? (
+              <>
+                <Button
+                  variant="outline"
+                  disabled={enviando}
+                  onClick={() => accion(miembro.rol === 'coordinador' ? 'degradar' : 'ascender')}
+                >
+                  {miembro.rol === 'coordinador' ? 'Quitar coordinación' : 'Hacer coordinador'}
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={enviando}
+                  onClick={() => accion('desactivar')}
+                >
+                  Sacar del equipo
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" disabled={enviando} onClick={() => accion('activar')}>
+                  Volver a incluir
+                </Button>
+                {confirmando ? (
+                  <Button variant="destructive" disabled={enviando} onClick={() => accion('sacar')}>
+                    {enviando ? 'Borrando…' : 'Sí, borrar'}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="destructive"
+                    disabled={enviando}
+                    onClick={() => setConfirmando(true)}
+                  >
+                    Borrar de la lista
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+        </>
+      )}
+
+      {error && (
+        <Alert variant="destructive" className="mt-2">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+    </li>
+  )
+}
+
+export function PanelEquipo({
+  organizacionId,
+  slug,
+  origen,
+  miId,
+  equipo,
+  invitaciones,
+}: {
+  organizacionId: string
+  slug: string
+  /** Calculado en el servidor: un cliente no puede sin romper la hidratación. */
+  origen: string
+  miId: string
+  equipo: MiembroEquipo[]
+  invitaciones: InvitacionResumen[]
+}) {
+  const router = useRouter()
+  const [enviando, setEnviando] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const pendientes = equipo.filter((m) => m.estado === 'pendiente')
+  const resto = equipo.filter((m) => m.estado !== 'pendiente')
+
+  async function invitar(usos: number, horas: number) {
+    setEnviando(true)
+    setError(null)
+    const supabase = createClient()
+    const { error: rpcError } = await supabase.rpc('crear_invitacion', {
+      p_organizacion_id: organizacionId,
+      p_rol: 'miembro',
+      p_horas: horas,
+      p_usos_max: usos,
+    })
+    if (rpcError) {
+      setError(rpcError.message)
+      setEnviando(false)
+      return
+    }
+    setEnviando(false)
+    router.refresh()
+  }
+
+  return (
+    <div className="mt-6 space-y-6">
+      <div>
+        <h3 className="text-lg font-bold">Invitar a alguien</h3>
+        <p className="mt-1 text-base text-muted-foreground">
+          Quien abra el enlace o escanee el código entra al equipo de una vez,
+          sin que nadie lo apruebe. Un QR para pegar en la pared sirve para
+          varias personas: piensa quién más pasa por ahí antes de dejarlo un
+          mes colgado.
+        </p>
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <Button variant="outline" disabled={enviando} onClick={() => invitar(1, 24)}>
+            Enlace para una persona
+          </Button>
+          <Button variant="outline" disabled={enviando} onClick={() => invitar(25, 720)}>
+            QR de pared (25 usos, 30 días)
+          </Button>
+        </div>
+
+        {error && (
+          <Alert variant="destructive" className="mt-2">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {invitaciones.length > 0 && (
+          <ul className="mt-3 space-y-3">
+            {invitaciones.map((i) => (
+              <Invitacion
+                key={i.id}
+                invitacion={i}
+                slug={slug}
+                origen={origen}
+                onCambio={() => router.refresh()}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {pendientes.length > 0 && (
+        <div>
+          <h3 className="text-lg font-bold">Por aprobar</h3>
+          <ul className="mt-3 space-y-3">
+            {pendientes.map((m) => (
+              <Miembro
+                key={m.perfil_id}
+                organizacionId={organizacionId}
+                miembro={m}
+                esYo={m.perfil_id === miId}
+                onCambio={() => router.refresh()}
+              />
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div>
+        <h3 className="text-lg font-bold">Equipo</h3>
+        <ul className="mt-3 space-y-3">
+          {resto.map((m) => (
+            <Miembro
+              key={m.perfil_id}
+              organizacionId={organizacionId}
+              miembro={m}
+              esYo={m.perfil_id === miId}
+              onCambio={() => router.refresh()}
+            />
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
