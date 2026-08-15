@@ -158,7 +158,7 @@ a) Cuando el titular lo solicite, de inmediato y sin intermediación.
 b) Cuando venza la solicitud a la que están asociados. El término ordinario
    es de **72 horas** desde su publicación, prorrogable por el titular.
 c) Mientras haya una coordinación abierta, la vigencia se prorroga
-   automáticamente, con un **límite máximo de 14 días** contados desde la
+   automáticamente, con un **límite máximo de 5 días** contados desde la
    publicación. Alcanzado ese límite se cierran las conversaciones y se
    suprime todo.
 

@@ -130,7 +130,7 @@ tres en pantalla.
 
 **El acompañamiento no alarga el TTL, solo lo aplaza mientras haya algo
 vivo.** Una solicitud con conversación abierta se auto-renueva, con **techo
-duro de 14 días** desde que se publicó. Al llegar al techo se cierran los
+duro de 5 días** desde que se publicó. Al llegar al techo se cierran los
 hilos y se borra igual. La promesa es que esto se borra, no que se borra
 pronto — pero se borra.
 

@@ -92,8 +92,9 @@ export default function TerminosPage() {
 
       <h2 className="font-heading mt-6 text-2xl">7. Contenido efímero.</h2>
       <p className="mt-3 text-base">
-        Las solicitudes se eliminan automáticamente a las 72 horas. No garantizamos conservación ni recuperación
-        de nada.
+        Las solicitudes se eliminan automáticamente a las 72 horas. Si hay una coordinación abierta con una
+        fundación, ese plazo se prorroga solo mientras siga abierta, y nunca más allá de 5 días desde que se
+        publicó: al llegar ahí se cierra y se borra igual. No garantizamos conservación ni recuperación de nada.
       </p>
 
       <h2 className="font-heading mt-6 text-2xl">8. Servicio &quot;tal como está&quot;.</h2>
