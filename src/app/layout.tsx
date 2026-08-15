@@ -3,6 +3,7 @@ import { Figtree, Caprasimo, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CORREO_CONTACTO } from "@/lib/config";
 import { Encabezado } from "@/components/encabezado";
+import { AvisoPruebas } from "@/components/aviso-pruebas";
 import { PieDePagina } from "@/components/pie-de-pagina";
 
 // Cuerpo. Reemplaza a Geist: misma legibilidad en Android viejo, curvas
@@ -131,6 +132,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Saltar al contenido
         </a>
+        <AvisoPruebas />
         <Encabezado />
         <div id="contenido" className="flex-1">
           {children}
