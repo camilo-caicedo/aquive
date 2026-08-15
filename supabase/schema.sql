@@ -232,6 +232,9 @@ create table if not exists public.perfiles (
   -- Hasta cuándo miró sus avisos. Sustituye a una tabla de notificaciones
   -- con estado leído/no leído: con esta marca, lo nuevo es lo posterior.
   avisos_vistos_at    timestamptz,
+  -- Siempre en positivo: marcado afirma que puede desplazarse, sin marcar
+  -- no afirma nada. Nunca «no puedo» — ver la nota de `puede_recoger`.
+  puede_trasladarse   boolean not null default false,
   constraint perfiles_contacto_publico_check check (
     case
       when tipo = 'aliado'
@@ -540,6 +543,11 @@ create table if not exists public.solicitudes (
   -- Cuándo entró la fundación. Sin fecha no se puede avisar a quien ya
   -- había ofrecido ayuda de que ahora hay quien coordine.
   acompanamiento_at timestamptz,
+  -- ⚠ NO va en `solicitudes_publicas`, que la lee `anon`. Un tablero
+  -- filtrable por esto sería un directorio de a quién le cuesta moverse, y
+  -- eso es lo que la regla 1 prohíbe guardar. Se lee con el token, con
+  -- `movilidad_solicitud` si hay sesión, o en el panel de la fundación.
+  puede_recoger   boolean not null default false,
   creada_at       timestamptz not null default now(),
   confirmada_at   timestamptz not null default now(),
   expira_at       timestamptz not null default now() + interval '72 hours',
@@ -591,6 +599,9 @@ create table if not exists public.respuestas (
   solicitud_id    uuid not null references public.solicitudes(id) on delete cascade,
   autor_id        uuid not null references public.perfiles(id) on delete cascade,
   mensaje         text not null check (char_length(mensaje) between 5 and 200),
+  -- Para ESTA entrega. Se precarga de `perfiles.puede_trasladarse` y se
+  -- puede desmarcar: se puede tener carro y no poder ese día.
+  puede_llevar    boolean not null default false,
   creada_at       timestamptz not null default now(),
   unique (solicitud_id, autor_id)
 );
@@ -912,10 +923,25 @@ create table if not exists public.conversaciones (
   estado          text not null default 'esperando_aliado'
                     check (estado in ('esperando_aliado','asignada','abierta',
                                       'acordada','entregada','cerrada')),
+  -- La fundación entrega de su bodega: no hay ofertador.
+  --
+  -- ⚠ NO se deduce de `ofertador_id is null`. Esa columna va en SET NULL, y
+  -- también queda nula cuando el ofertador borra su cuenta —que es otra
+  -- cosa—. Un índice único parcial sobre la nulidad haría FALLAR ese
+  -- borrado si la solicitud ya tenía un hilo directo.
+  directa         boolean not null default false,
   creada_at       timestamptz not null default now(),
   cerrada_at      timestamptz,
-  unique (solicitud_id, ofertador_id)
+  unique (solicitud_id, ofertador_id),
+  -- Seguro: SET NULL solo puede llevar `ofertador_id` a null, que es lo que
+  -- este CHECK exige. Lo que NO puede ir aquí es `aliado_id is not null`:
+  -- esa columna también es SET NULL y rompería el borrado del aliado.
+  constraint conversaciones_directa_sin_ofertador
+    check (not directa or ofertador_id is null)
 );
+
+create unique index if not exists conversaciones_directa_uniq
+  on public.conversaciones (solicitud_id) where directa;
 
 comment on table public.conversaciones is
   'Chat tripartito del Flujo 2. Muere con la solicitud (CASCADE). Sin tabla de participantes: los tres roles son columnas, y los dos que son cuentas van en SET NULL para no romper el borrado de cuenta.';
@@ -1155,7 +1181,11 @@ select
         limit 12
      ) t) as items,
   (select count(*) from public.ofrecimientos o
-    where o.perfil_id = p.id and o.disponible) as total_items
+    where o.perfil_id = p.id and o.disponible) as total_items,
+  -- Al final y no junto a `descripcion`, que es donde encajaría: `create or
+  -- replace view` no deja meter una columna en medio, solo añadirla al
+  -- final, y reordenarla exigiría un DROP.
+  p.puede_trasladarse
 from public.perfiles p
 where p.suspendido = false
   and p.acepto_publicacion = true
@@ -1801,7 +1831,8 @@ create or replace function public.crear_solicitud(
   p_categoria   text,
   p_nota        text,
   p_items       jsonb,
-  p_token       text
+  p_token       text,
+  p_puede_recoger boolean default false
 )
 returns table (solicitud_id uuid, codigo text)
 language plpgsql
@@ -1833,9 +1864,11 @@ begin
 
   v_codigo := public.generar_codigo();
 
-  insert into public.solicitudes (codigo, token_hash, municipio, barrio, categoria, nota, es_prueba)
+  insert into public.solicitudes (codigo, token_hash, municipio, barrio, categoria,
+                                  nota, es_prueba, puede_recoger)
   values (v_codigo, encode(extensions.digest(p_token, 'sha256'), 'hex'),
-          p_municipio, p_barrio, p_categoria, nullif(trim(p_nota), ''), v_es_prueba)
+          p_municipio, p_barrio, p_categoria, nullif(trim(p_nota), ''), v_es_prueba,
+          coalesce(p_puede_recoger, false))
   returning id into v_id;
 
   for v_item in select * from jsonb_array_elements(p_items) loop
@@ -1871,7 +1904,8 @@ begin
 end;
 $$;
 
-grant execute on function public.crear_solicitud(text,text,text,text,jsonb,text) to anon, authenticated;
+grant execute on function public.crear_solicitud(text,text,text,text,jsonb,text,boolean)
+  to anon, authenticated;
 
 -- Lee una solicitud con su token: incluye las respuestas
 create or replace function public.leer_solicitud(p_token text)
@@ -1896,7 +1930,8 @@ begin
            'id', r.id, 'mensaje', r.mensaje, 'creada_at', r.creada_at,
            'nombre', p.nombre_visible, 'contacto', p.contacto_publico,
            'contacto_tipo', p.contacto_tipo, 'tipo', p.tipo,
-           'profesion', sv.profesion, 'verificado', coalesce(sv.verificado, false)
+           'profesion', sv.profesion, 'verificado', coalesce(sv.verificado, false),
+           'puede_llevar', r.puede_llevar
          ) order by r.creada_at desc), '[]'::jsonb)
     into v_resp
     from public.respuestas r
@@ -1924,6 +1959,7 @@ begin
     'barrio', v_sol.barrio, 'categoria', v_sol.categoria, 'nota', v_sol.nota,
     'estado', v_sol.estado, 'expira_at', v_sol.expira_at,
     'flujo', v_sol.flujo,
+    'puede_recoger', v_sol.puede_recoger,
     -- El NOMBRE de la organización, nunca su identificador ni nada de la
     -- identidad: los datos que entregó no se le vuelven a mostrar.
     'organizacion', (select o.nombre from public.organizaciones o
@@ -1934,6 +1970,45 @@ end;
 $$;
 
 grant execute on function public.leer_solicitud(text) to anon, authenticated;
+
+-- Quien va a responder necesita saber si el otro puede recoger, justo
+-- antes de escribir. RPC aparte y no una columna más en
+-- `solicitudes_publicas` porque esa vista la lee `anon`: ahí el dato sería
+-- público y filtrable, que es justo lo que no queremos. Aquí hace falta
+-- sesión y perfil vivo.
+create or replace function public.movilidad_solicitud(p_codigo text)
+returns boolean
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select s.puede_recoger
+    from public.solicitudes s
+   where s.codigo = upper(trim(p_codigo))
+     and public.estado_activo(s.estado)
+     and s.expira_at > now()
+     and exists (select 1 from public.perfiles p
+                  where p.id = auth.uid() and p.suspendido = false);
+$$;
+
+revoke execute on function public.movilidad_solicitud(text) from public, anon;
+grant  execute on function public.movilidad_solicitud(text) to authenticated;
+
+-- Lo que ya declaró en su perfil, para precargar la casilla al responder.
+create or replace function public.mi_movilidad()
+returns boolean
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select coalesce((select p.puede_trasladarse from public.perfiles p
+                    where p.id = auth.uid()), false);
+$$;
+
+revoke execute on function public.mi_movilidad() from public, anon;
+grant  execute on function public.mi_movilidad() to authenticated;
 
 -- Renovar 72 horas
 create or replace function public.renovar_solicitud(p_token text)
@@ -2046,7 +2121,8 @@ create or replace function public.crear_perfil(
   p_profesion         text default null,
   p_entidad_matricula text default null,
   p_numero_matricula  text default null,
-  p_servicios         text[] default '{}'
+  p_servicios         text[] default '{}',
+  p_puede_trasladarse boolean default false
 )
 returns void
 language plpgsql
@@ -2075,13 +2151,15 @@ begin
   -- rechace.
   insert into public.perfiles (
     id, nombre_visible, tipo, municipios, contacto_publico,
-    contacto_tipo, descripcion, acepto_publicacion, acepto_politica_at)
+    contacto_tipo, descripcion, acepto_publicacion, acepto_politica_at,
+    puede_trasladarse)
   values (
     v_uid, p_nombre_visible, p_tipo, p_municipios,
     case when p_tipo = 'aliado' then null else p_contacto_publico end,
     case when p_tipo = 'aliado' then 'whatsapp' else p_contacto_tipo end,
     nullif(trim(p_descripcion), ''),
-    p_tipo <> 'aliado', now())
+    p_tipo <> 'aliado', now(),
+    coalesce(p_puede_trasladarse, false))
   on conflict (id) do update set
     nombre_visible     = excluded.nombre_visible,
     tipo               = excluded.tipo,
@@ -2090,7 +2168,8 @@ begin
     contacto_tipo      = excluded.contacto_tipo,
     descripcion        = excluded.descripcion,
     acepto_publicacion = excluded.acepto_publicacion,
-    acepto_politica_at = now();
+    acepto_politica_at = now(),
+    puede_trasladarse  = excluded.puede_trasladarse;
 
   if p_tipo = 'servidor' then
     if coalesce(trim(p_profesion), '') = ''
@@ -2124,8 +2203,10 @@ begin
 end;
 $$;
 
-revoke execute on function public.crear_perfil(text,text,text[],text,text,text,text,text,text,text[]) from public, anon;
-grant  execute on function public.crear_perfil(text,text,text[],text,text,text,text,text,text,text[]) to authenticated;
+revoke execute on function public.crear_perfil(text,text,text[],text,text,text,text,text,text,text[],boolean)
+  from public, anon;
+grant  execute on function public.crear_perfil(text,text,text[],text,text,text,text,text,text,text[],boolean)
+  to authenticated;
 
 -- Reemplaza el inventario completo del perfil que llama. Cada ítem viene
 -- en una de tres formas, y exactamente una:
@@ -2272,7 +2353,11 @@ grant  execute on function public.mis_ofrecimientos() to authenticated;
 
 -- Responder una solicitud. Se identifica por código público, nunca por token:
 -- quien ofrece jamás necesita ni recibe el token del solicitante.
-create or replace function public.responder_solicitud(p_codigo text, p_mensaje text)
+create or replace function public.responder_solicitud(
+  p_codigo       text,
+  p_mensaje      text,
+  p_puede_llevar boolean default false
+)
 returns uuid
 language plpgsql
 security definer
@@ -2315,15 +2400,15 @@ begin
     raise exception 'Ya respondiste esta solicitud';
   end if;
 
-  insert into public.respuestas (solicitud_id, autor_id, mensaje)
-  values (v_solicitud_id, v_uid, trim(p_mensaje));
+  insert into public.respuestas (solicitud_id, autor_id, mensaje, puede_llevar)
+  values (v_solicitud_id, v_uid, trim(p_mensaje), coalesce(p_puede_llevar, false));
 
   return v_solicitud_id;
 end;
 $$;
 
-revoke execute on function public.responder_solicitud(text,text) from public, anon;
-grant  execute on function public.responder_solicitud(text,text) to authenticated;
+revoke execute on function public.responder_solicitud(text,text,boolean) from public, anon;
+grant  execute on function public.responder_solicitud(text,text,boolean) to authenticated;
 
 -- Reportar contenido. Abierto a cualquiera, con o sin cuenta.
 create or replace function public.crear_reporte(
@@ -3493,30 +3578,37 @@ grant  execute on function public.buscar_identidad_presencial(text,text) to auth
 -- ---------------------------------------------------------------------
 -- Elección de flujo (Fase F). Ver migración v2-f1.
 --
--- `aliado_en_municipio` devuelve UNA organización activa que cubra ese
--- municipio, con su nombre y su id, y nada más: ni cuántas hay, ni dónde
--- queda su acopio, ni cuánta gente tiene dentro. Devuelve una sola a
--- propósito — un desplegable de fundaciones convertiría una oferta en una
--- decisión de compras, y quien publica a las tres de la mañana no está
--- para elegir proveedor.
+-- `aliados_del_municipio` devuelve TODAS las organizaciones activas que
+-- cubren ese municipio, con su dirección de acopio y su horario.
+--
+-- Antes devolvía una sola y sin dirección, con el argumento de que un
+-- desplegable de fundaciones convertía una oferta en una decisión de
+-- compras. El argumento no sobrevivió al uso: sin saber dónde queda cada
+-- acopio no se puede escoger la que quede más fácil, y esa es justo la
+-- decisión que importa cuando hay que ir a recoger algo a pie.
+--
+-- Publicar la dirección de acopio a `anon` es deliberado: es la dirección
+-- de una ORGANIZACIÓN, no de una persona.
 -- ---------------------------------------------------------------------
 
-create or replace function public.aliado_en_municipio(p_municipio text)
+create or replace function public.aliados_del_municipio(p_municipio text)
 returns jsonb
 language sql
 security definer
 stable
 set search_path = ''
 as $$
-  select jsonb_build_object('id', o.id, 'nombre', o.nombre)
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'id',               o.id,
+           'nombre',           o.nombre,
+           'direccion_acopio', o.direccion_acopio,
+           'horario_acopio',   o.horario_acopio
+         ) order by o.nombre), '[]'::jsonb)
     from public.organizaciones o
-   where o.activa
-     and p_municipio = any(o.municipios)
-   order by o.creada_at
-   limit 1;
+   where o.activa and p_municipio = any(o.municipios);
 $$;
 
-grant execute on function public.aliado_en_municipio(text) to anon, authenticated;
+grant execute on function public.aliados_del_municipio(text) to anon, authenticated;
 
 -- Una sola transacción: crea la identidad cifrada y marca la solicitud. Si
 -- el cifrado falla —por ejemplo porque falta el secreto del Vault—, no
@@ -3836,6 +3928,7 @@ as $$
   select coalesce(jsonb_agg(jsonb_build_object(
            'id',       c.id,
            'estado',   c.estado,
+           'directa',  c.directa,
            'ofertador', (select p.nombre_visible from public.perfiles p
                           where p.id = c.ofertador_id),
            'aliado',    (select p.nombre_visible from public.perfiles p
@@ -3871,7 +3964,11 @@ as $$
         'codigo',        s.codigo,
         'municipio',     m.nombre,
         'barrio',        s.barrio,
-        'soy_ofertador', c.ofertador_id = auth.uid(),
+        'directa',       c.directa,
+        -- `coalesce` y no la comparación pelada: en un hilo directo
+        -- `ofertador_id` es nulo, y `null = uuid` da NULL, no false. Sin
+        -- esto el campo llega como null al navegador.
+        'soy_ofertador', coalesce(c.ofertador_id = auth.uid(), false),
         'ofertador',     (select p.nombre_visible from public.perfiles p where p.id = c.ofertador_id),
         'aliado',        (select p.nombre_visible from public.perfiles p where p.id = c.aliado_id),
         'sin_asignar',   c.aliado_id is null,
@@ -3887,6 +3984,151 @@ $$;
 
 revoke execute on function public.mis_hilos() from public, anon;
 grant  execute on function public.mis_hilos() to authenticated;
+
+-- ---------------------------------------------------------------------
+-- La fundación entrega de su propia bodega. Ver migración v2-j2.
+--
+-- Faltaba un caso entero: una fundación que YA TIENE lo que alguien pidió
+-- tenía que esperar a un ofertador, porque toda entrega colgaba de una
+-- conversación con uno.
+--
+-- Sobre la regla L: este hilo NO la viola. La regla dice que un hilo sin
+-- aliado a cargo no acepta mensajes, y este nace con `aliado_id` puesto en
+-- el mismo INSERT. Y de fondo: lo que la regla impide es el aparte entre
+-- dos desconocidos sin un tercero responsable; aquí las dos partes son
+-- quien pidió y la organización que él mismo eligió. Hay una persona menos
+-- viendo el hilo, no una más.
+--
+-- `exigir_hilo_con_aliado` NO se toca.
+-- ---------------------------------------------------------------------
+
+create or replace function public.abrir_entrega_directa(
+  p_solicitud_id uuid,
+  p_mensaje      text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid  uuid := auth.uid();
+  v_sol  public.solicitudes;
+  v_conv uuid;
+begin
+  select * into v_sol from public.solicitudes s
+   where s.id = p_solicitud_id
+     and public.estado_activo(s.estado)
+     and s.expira_at > now();
+
+  if v_sol.id is null then
+    raise exception 'Esa solicitud ya no está disponible';
+  end if;
+
+  -- Innegociable, y por la misma razón que en `coincidencias_para_aliado`:
+  -- sin esto la fundación podría abrirle un hilo a alguien del Flujo 1, que
+  -- nunca aceptó nada. Sería la regla R rota por la puerta de atrás.
+  if v_sol.flujo <> 'acompanado' then
+    raise exception 'Esa solicitud no tiene acompañamiento';
+  end if;
+
+  if not public.es_miembro_activo(v_sol.organizacion_id, v_uid) then
+    raise exception 'No autorizado';
+  end if;
+
+  if char_length(trim(p_mensaje)) < 10 or char_length(p_mensaje) > 1000 then
+    raise exception 'El mensaje debe tener entre 10 y 1000 caracteres';
+  end if;
+
+  -- Regla M, igual que en cualquier otro hilo. No se relaja porque quien
+  -- escribe sea la fundación.
+  if public.contiene_contacto(p_mensaje) then
+    raise exception 'No escribas teléfonos, correos ni enlaces de mensajería';
+  end if;
+
+  insert into public.conversaciones
+    (solicitud_id, ofertador_id, aliado_id, organizacion_id, estado, directa)
+  values
+    (v_sol.id, null, v_uid, v_sol.organizacion_id, 'abierta', true)
+  on conflict (solicitud_id) where directa do nothing
+  returning id into v_conv;
+
+  if v_conv is null then
+    raise exception 'Ya abriste una conversación de entrega para esta solicitud';
+  end if;
+
+  -- Sin `aquive.mensaje_inicial`: el hilo ya nace `abierta` y el trigger lo
+  -- deja pasar. Esa excepción solo hace falta cuando nace `asignada`.
+  insert into public.mensajes (conversacion_id, autor_rol, autor_perfil_id, cuerpo)
+  values (v_conv, 'aliado', v_uid, trim(p_mensaje));
+
+  update public.solicitudes set estado = 'en_coordinacion'
+   where id = v_sol.id and estado = 'abierta';
+
+  return v_conv;
+end;
+$$;
+
+revoke execute on function public.abrir_entrega_directa(uuid,text) from public, anon;
+grant  execute on function public.abrir_entrega_directa(uuid,text) to authenticated;
+
+-- Qué puede atender la fundación por su cuenta.
+--
+-- Sin `v_cruces` y sin `ofrecimientos`: no hay inventario de
+-- organizaciones y no se va a inventar uno —uno que alguien tiene que
+-- mantener al día es un cruce que miente en cuanto se descuida—. Esto es
+-- lo que su organización acompaña y todavía no ha atendido; la fundación
+-- mira los ítems y decide.
+--
+-- Cero PII: el nombre de quien pidió sigue saliendo solo por
+-- `exportar_planilla`, con motivo y rastro en `accesos_identidad`.
+create or replace function public.solicitudes_de_mi_organizacion()
+returns jsonb
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select coalesce(jsonb_agg(x order by x->>'creada_at'), '[]'::jsonb)
+    from (
+      select jsonb_build_object(
+        'solicitud_id',  s.id,
+        'codigo',        s.codigo,
+        'municipio',     m.nombre,
+        'barrio',        s.barrio,
+        'categoria',     s.categoria,
+        'nota',          s.nota,
+        'creada_at',     s.creada_at,
+        'puede_recoger', s.puede_recoger,
+        -- Cuántos hilos vivos tiene ya: si alguien más está trayendo esto,
+        -- la fundación decide distinto.
+        'hilos',         (select count(*) from public.conversaciones c
+                           where c.solicitud_id = s.id and c.estado <> 'cerrada'),
+        'pendientes',    (select coalesce(jsonb_agg(jsonb_build_object(
+                                  'nombre',   coalesce(ci.nombre, sg.nombre_propuesto),
+                                  'cantidad', si.cantidad,
+                                  'unidad',   coalesce(ci.unidad, sg.unidad_sugerida, 'unidad')
+                                ) order by coalesce(ci.orden, 9999)), '[]'::jsonb)
+                            from public.solicitud_items si
+                            left join public.catalogo_items ci   on ci.id = si.item_id
+                            left join public.sugerencias_item sg on sg.id = si.sugerencia_id
+                           where si.solicitud_id = s.id and si.cubierto = false)
+      ) as x
+      from public.solicitudes s
+      join public.municipios m on m.codigo_dane = s.municipio
+     where s.flujo = 'acompanado'
+       and public.estado_activo(s.estado)
+       and s.expira_at > now()
+       and public.es_miembro_activo(s.organizacion_id, auth.uid())
+       and exists (select 1 from public.solicitud_items si
+                    where si.solicitud_id = s.id and si.cubierto = false)
+       and not exists (select 1 from public.conversaciones c
+                        where c.solicitud_id = s.id and c.directa)
+    ) t;
+$$;
+
+revoke execute on function public.solicitudes_de_mi_organizacion() from public, anon;
+grant  execute on function public.solicitudes_de_mi_organizacion() to authenticated;
 
 -- Moderar oculta, no borra: si un mensaje hay que atenderlo, la evidencia
 -- de que existió tiene que quedar hasta que muera el hilo.
@@ -4725,6 +4967,7 @@ begin
     'id',       v_conv.id,
     'estado',   v_conv.estado,
     'mi_rol',   v_rol,
+    'directa',  v_conv.directa,
     'codigo',   (select s.codigo from public.solicitudes s where s.id = v_conv.solicitud_id),
     'acopio',   (select jsonb_build_object('nombre', o.nombre,
                           'direccion', o.direccion_acopio,
