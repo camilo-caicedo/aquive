@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/service'
+import { createServiceClient, nombreMunicipio } from '@/lib/backend/servicio'
 import { generarToken } from '@/lib/tokens'
 import { validarBarrio, validarNota, validarSugerencia } from '@/lib/validacion'
 import { verificarTurnstile } from '@/lib/turnstile'
@@ -129,14 +129,9 @@ export async function POST(request: Request) {
   // Avisar a quienes ofrecen en ese municipio. Best-effort: si falla, la
   // solicitud ya quedó publicada y se ve en el tablero igual.
   try {
-    const servicio = createServiceClient()
-    const { data: municipio } = await servicio
-      .from('municipios')
-      .select('nombre')
-      .eq('codigo_dane', body.municipio)
-      .maybeSingle()
+    const nombre = await nombreMunicipio(body.municipio)
 
-    if (municipio) {
+    if (nombre) {
       const etiqueta = ETIQUETA.get(body.categoria) ?? 'insumos'
       // Los ítems del catálogo, para que quien tenga inventario reciba el
       // aviso solo si la solicitud pide algo suyo. Los sugeridos no
@@ -144,7 +139,7 @@ export async function POST(request: Request) {
       const idsPedidos = itemsValidados
         .filter((i): i is { item_id: string; cantidad: number } => 'item_id' in i)
         .map((i) => i.item_id)
-      await notificarOfertadores(body.municipio, municipio.nombre, etiqueta, idsPedidos)
+      await notificarOfertadores(body.municipio, nombre, etiqueta, idsPedidos)
     }
   } catch {
     // Silencioso: no se loggea nada del cuerpo (CLAUDE.md regla 6).

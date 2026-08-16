@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/service'
+import { createServiceClient } from '@/lib/backend/servicio'
 import { notificarAcompanamiento } from '@/lib/push-coordinacion'
 
 interface CuerpoAcompanamiento {

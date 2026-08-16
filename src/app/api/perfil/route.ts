@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createServiceClient } from '@/lib/supabase/service'
+import { createServiceClient } from '@/lib/backend/servicio'
 
 /**
  * Borrado permanente de la cuenta (Ley 1581 de 2012, art. 8: supresión).

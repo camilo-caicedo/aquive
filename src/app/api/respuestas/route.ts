@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createServiceClient } from '@/lib/supabase/service'
+import { createServiceClient } from '@/lib/backend/servicio'
 import { notificarRespuesta } from '@/lib/push'
 
 interface CuerpoRespuesta {
