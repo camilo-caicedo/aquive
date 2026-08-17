@@ -9,7 +9,7 @@ import { BadgeFrescura } from '@/components/badge-frescura'
 import { BotonReportar } from '@/components/boton-reportar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import type { HiloResumen } from '@/lib/types'
+import type { ContactoSolicitante, HiloResumen } from '@/lib/types'
 import { FormularioRespuesta } from './formulario-respuesta'
 import { IniciarHilo } from './iniciar-hilo'
 
@@ -70,7 +70,7 @@ export default async function ResponderPage({
   // en su perfil precarga la casilla, y lo que dijo quien pidió evita que
   // se lo pregunten por chat. `puede_recoger` va por RPC y no en la vista
   // pública a propósito — ahí sería filtrable.
-  const [{ data: yaRespondio }, { data: puedeTrasladarse }, { data: puedeRecoger }] =
+  const [{ data: yaRespondio }, { data: puedeTrasladarse }, { data: puedeRecoger }, { data: contactoData }] =
     await Promise.all([
       supabase
         .from('respuestas')
@@ -80,7 +80,14 @@ export default async function ResponderPage({
         .maybeSingle(),
       supabase.rpc('mi_movilidad'),
       supabase.rpc('movilidad_solicitud', { p_codigo: solicitud.codigo }),
+      // Solo en el flujo directo: en el acompañado la fundación coordina
+      // por chat a propósito, y este contacto no le compete a esa regla.
+      solicitud.flujo === 'acompanado'
+        ? Promise.resolve({ data: null })
+        : supabase.rpc('contacto_solicitante', { p_codigo: solicitud.codigo }),
     ])
+  const contacto = contactoData as unknown as ContactoSolicitante | null
+  const hayContacto = !!(contacto?.nombre || contacto?.telefono || contacto?.correo)
 
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
@@ -123,6 +130,23 @@ export default async function ResponderPage({
           <BotonReportar tipoObjeto="solicitud" objetoId={solicitud.id} />
         </div>
       </div>
+
+      {/* Contacto opcional que dejó quien pidió — excepción explícita a la
+          regla 1 de CLAUDE.md, ver supabase/migraciones/v2-k4-contacto-solicitante.sql.
+          Solo se muestra si esta persona lo dejó, y solo aquí: no sale en
+          el tablero ni en ninguna otra pantalla. */}
+      {hayContacto && (
+        <div className="mt-4 rounded-xl border border-primary/30 bg-accent p-4">
+          <p className="text-base font-medium text-accent-foreground">
+            Quien pidió esto dejó un contacto directo
+          </p>
+          <ul className="mt-1 space-y-0.5 text-base text-accent-foreground">
+            {contacto?.nombre && <li>{contacto.nombre}</li>}
+            {contacto?.telefono && <li>{contacto.telefono}</li>}
+            {contacto?.correo && <li>{contacto.correo}</li>}
+          </ul>
+        </div>
+      )}
 
       {/* Las dos mitades del proyecto, y aquí se ve la diferencia entera.
           En el Flujo 1 la plataforma se aparta y el contacto ocurre por

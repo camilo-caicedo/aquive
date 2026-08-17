@@ -2,12 +2,13 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { HeartHandshake } from 'lucide-react'
 import type { Categoria, ItemCatalogoPublico, ItemSolicitudInput } from '@/lib/types'
 import { LIMITE_MUNICIPIOS, nombreConDepartamento, type MunicipioBasico as Municipio } from '@/lib/municipios'
 import { CATEGORIAS } from '@/lib/catalogo'
 import { FECHA_LEGALES } from '@/lib/config'
-import { validarBarrio, validarNota, validarSugerencia } from '@/lib/validacion'
+import { validarBarrio, validarCorreo, validarNota, validarSugerencia, validarTelefono } from '@/lib/validacion'
 import { createClient } from '@/lib/supabase/client'
 import { AVISO_ALIADO_MUNICIPIO, type AliadoDelMunicipio } from '@/lib/acompanamiento'
 import {
@@ -87,7 +88,7 @@ export function FormularioPublicar({
   turnstileSiteKey: string
 }) {
   const router = useRouter()
-  const [paso, setPaso] = useState<1 | 2 | 3 | 4>(1)
+  const [paso, setPaso] = useState<1 | 2 | 3 | 4 | 5>(1)
   const [municipio, setMunicipio] = useState('')
   const [barrio, setBarrio] = useState('')
   const [categoria, setCategoria] = useState<Categoria | ''>('')
@@ -95,6 +96,14 @@ export function FormularioPublicar({
   const [mostrarSugerencia, setMostrarSugerencia] = useState(false)
   const [textoSugerencia, setTextoSugerencia] = useState('')
   const [nota, setNota] = useState('')
+  // Contacto opcional (paso 3): excepción explícita a la regla 1 de
+  // CLAUDE.md, pedida el 17 de agosto de 2026 — ver
+  // supabase/migraciones/v2-k4-contacto-solicitante.sql. Los tres campos
+  // son opcionales de verdad: nada aquí bloquea publicar sin ellos.
+  const [contactoNombre, setContactoNombre] = useState('')
+  const [contactoTelefono, setContactoTelefono] = useState('')
+  const [contactoCorreo, setContactoCorreo] = useState('')
+  const [contactoAcepto, setContactoAcepto] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -206,13 +215,24 @@ export function FormularioPublicar({
 
   const puedeAvanzarPaso1 = municipio !== '' && barrio.trim().length >= 2 && !errorBarrio
   const puedeAvanzarPaso2 = categoria !== '' && seleccionados.length >= 1 && seleccionados.length <= 12
+  const errorContactoTelefono = contactoTelefono ? validarTelefono(contactoTelefono) : null
+  const errorContactoCorreo = contactoCorreo ? validarCorreo(contactoCorreo) : null
+  const contactoTieneDatos =
+    contactoNombre.trim() !== '' || contactoTelefono.trim() !== '' || contactoCorreo.trim() !== ''
+  const puedeAvanzarContacto =
+    !errorContactoTelefono && !errorContactoCorreo && (!contactoTieneDatos || contactoAcepto)
   const puedeEnviar =
-    puedeAvanzarPaso1 && puedeAvanzarPaso2 && !errorNota && turnstileToken !== null && !enviando
+    puedeAvanzarPaso1 &&
+    puedeAvanzarPaso2 &&
+    puedeAvanzarContacto &&
+    !errorNota &&
+    turnstileToken !== null &&
+    !enviando
 
-  // El cuarto paso solo existe donde hay una fundación que ofrecer. Donde
-  // no la hay, el formulario sigue teniendo tres, como siempre.
-  const hayCuartoPaso = aliados.length > 0
-  const pasos = hayCuartoPaso ? [1, 2, 3, 4] : [1, 2, 3]
+  // El quinto paso solo existe donde hay una fundación que ofrecer. Donde
+  // no la hay, el formulario sigue teniendo cuatro.
+  const hayPasoAcompanamiento = aliados.length > 0
+  const pasos = hayPasoAcompanamiento ? [1, 2, 3, 4, 5] : [1, 2, 3, 4]
 
   async function enviar() {
     if (!puedeEnviar) return
@@ -241,6 +261,20 @@ export function FormularioPublicar({
         return
       }
       guardarEnLocalStorage(data.codigo, data.token)
+
+      // El contacto también va DESPUÉS de publicar y con el token en la
+      // mano, mismo motivo que el acompañamiento: si esto falla, la
+      // solicitud ya quedó publicada.
+      if (contactoTieneDatos) {
+        const supabase = createClient()
+        await supabase.rpc('agregar_contacto_solicitante', {
+          p_token: data.token,
+          p_nombre: contactoNombre.trim() || null,
+          p_telefono: contactoTelefono.trim() || null,
+          p_correo: contactoCorreo.trim() || null,
+          p_version: FECHA_LEGALES,
+        })
+      }
 
       // El acompañamiento va DESPUÉS de publicar y con el token en la mano,
       // en dos pasos y no en uno: si esto falla, la solicitud ya quedó
@@ -583,6 +617,99 @@ export function FormularioPublicar({
       {paso === 3 && (
         <div className="space-y-4">
           <div>
+            <h2 className="font-heading text-2xl">Contacto (opcional)</h2>
+            <p className="mt-1 text-base text-muted-foreground">
+              Nada de esto es obligatorio. Si dejas algo, quien responda tu
+              solicitud y el administrador de AquíVe van a poder escribirte
+              directamente.
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="contacto-nombre" className="mb-1">
+              Nombre (opcional)
+            </Label>
+            <Input
+              id="contacto-nombre"
+              value={contactoNombre}
+              onChange={(e) => setContactoNombre(e.target.value)}
+              maxLength={80}
+              autoComplete="name"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="contacto-telefono" className="mb-1">
+              Teléfono (opcional)
+            </Label>
+            <Input
+              id="contacto-telefono"
+              value={contactoTelefono}
+              onChange={(e) => setContactoTelefono(e.target.value)}
+              maxLength={20}
+              inputMode="tel"
+              autoComplete="tel"
+            />
+            {errorContactoTelefono && (
+              <p className="mt-1 text-sm text-destructive">{errorContactoTelefono}</p>
+            )}
+          </div>
+
+          <div>
+            <Label htmlFor="contacto-correo" className="mb-1">
+              Correo (opcional)
+            </Label>
+            <Input
+              id="contacto-correo"
+              type="email"
+              value={contactoCorreo}
+              onChange={(e) => setContactoCorreo(e.target.value)}
+              maxLength={120}
+              autoComplete="email"
+            />
+            {errorContactoCorreo && (
+              <p className="mt-1 text-sm text-destructive">{errorContactoCorreo}</p>
+            )}
+          </div>
+
+          {contactoTieneDatos && (
+            <label className="flex items-start gap-2 text-base">
+              <input
+                type="checkbox"
+                checked={contactoAcepto}
+                onChange={(e) => setContactoAcepto(e.target.checked)}
+                className="mt-1 size-5 shrink-0"
+              />
+              <span>
+                Acepto que este contacto se muestre a quien responda esta
+                solicitud y al administrador de AquíVe, según el{' '}
+                <Link href="/privacidad" className="underline">
+                  aviso de privacidad
+                </Link>{' '}
+                del {FECHA_LEGALES}.
+              </span>
+            </label>
+          )}
+
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={() => setPaso(2)}>
+              Atrás
+            </Button>
+            <Button
+              type="button"
+              className="flex-1"
+              disabled={!puedeAvanzarContacto}
+              onClick={() => setPaso(4)}
+            >
+              Continuar
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {paso === 4 && (
+        <div className="space-y-4">
+          <div>
             <Label htmlFor="nota" className="mb-1">
               Nota opcional (máx. 140 caracteres)
             </Label>
@@ -628,15 +755,15 @@ export function FormularioPublicar({
           )}
 
           <div className="flex gap-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={() => setPaso(2)}>
+            <Button type="button" variant="outline" className="flex-1" onClick={() => setPaso(3)}>
               Atrás
             </Button>
-            {hayCuartoPaso ? (
+            {hayPasoAcompanamiento ? (
               <Button
                 type="button"
                 className="flex-1"
                 disabled={!puedeEnviar}
-                onClick={() => setPaso(4)}
+                onClick={() => setPaso(5)}
               >
                 Continuar
               </Button>
@@ -649,7 +776,7 @@ export function FormularioPublicar({
         </div>
       )}
 
-      {/* Paso 4: el acompañamiento, donde sí se ve.
+      {/* Paso 5: el acompañamiento, donde sí se ve.
           Estuvo un rato solo en la pantalla de la solicitud, después de
           publicar, y ahí casi nadie llegaba a tocarlo.
 
@@ -658,7 +785,7 @@ export function FormularioPublicar({
           formulario empieza cerrado, no hay nada preseleccionado y la
           opción anónima no se pinta como la mala. Lo que cambia es que
           ahora se ve. */}
-      {paso === 4 && (
+      {paso === 5 && (
         <div className="space-y-4">
           <div>
             <h2 className="font-heading text-2xl">
@@ -713,7 +840,7 @@ export function FormularioPublicar({
           )}
 
           <div className="flex gap-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={() => setPaso(3)}>
+            <Button type="button" variant="outline" className="flex-1" onClick={() => setPaso(4)}>
               Atrás
             </Button>
             <Button

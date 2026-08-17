@@ -342,6 +342,17 @@ export interface HiloResumen {
   mensajes_total: number
 }
 
+/**
+ * El contacto opcional que deja quien pide ayuda. Excepción explícita a la
+ * regla 1 de CLAUDE.md — ver supabase/migraciones/v2-k4-contacto-solicitante.sql.
+ * Todos los campos son opcionales, así que puede venir null en cualquiera.
+ */
+export interface ContactoSolicitante {
+  nombre: string | null
+  telefono: string | null
+  correo: string | null
+}
+
 // Una fila de `solicitudes_admin()`. Solo la ve un administrador, y lleva
 // el `estado` real —incluido `cumplida`, que no sale en el tablero— para
 // que cerrar una no signifique perderla de vista.
@@ -358,6 +369,7 @@ export interface SolicitudAdmin {
   expira_at: string
   respuestas: number
   items: Array<{ nombre: string; cantidad: number; unidad: string }>
+  contacto: ContactoSolicitante | null
 }
 
 // Una fila de `solicitudes_de_mi_organizacion()`: lo que la fundación
@@ -1624,6 +1636,26 @@ export interface Database {
       mi_movilidad: {
         Args: Record<string, never>
         Returns: boolean
+      }
+      // Excepción explícita a la regla 1 de CLAUDE.md — ver
+      // supabase/migraciones/v2-k4-contacto-solicitante.sql. Se escribe
+      // con el token, igual que `activar_acompanamiento`.
+      agregar_contacto_solicitante: {
+        Args: {
+          p_token: string
+          p_nombre?: string | null
+          p_telefono?: string | null
+          p_correo?: string | null
+          p_version?: string | null
+        }
+        Returns: undefined
+      }
+      // Devuelve ContactoSolicitante | null. Mismo patrón de guardia que
+      // `movilidad_solicitud`: RPC aparte, nunca en la vista pública, y
+      // solo con sesión de perfil activo.
+      contacto_solicitante: {
+        Args: { p_codigo: string }
+        Returns: Json
       }
       // La fundación abre un hilo con quien pidió, sin ofertador de por
       // medio, para entregar de su propia bodega. Devuelve el id del hilo.
