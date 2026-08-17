@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { HeartHandshake } from 'lucide-react'
 import type { Categoria, ItemCatalogoPublico, ItemSolicitudInput } from '@/lib/types'
-import { LIMITE_MUNICIPIOS, type MunicipioBasico as Municipio } from '@/lib/municipios'
+import { LIMITE_MUNICIPIOS, nombreConDepartamento, type MunicipioBasico as Municipio } from '@/lib/municipios'
 import { CATEGORIAS } from '@/lib/catalogo'
 import { FECHA_LEGALES } from '@/lib/config'
 import { validarBarrio, validarNota, validarSugerencia } from '@/lib/validacion'
@@ -302,7 +302,7 @@ export function FormularioPublicar({
               limit={LIMITE_MUNICIPIOS}
               value={municipios.find((m) => m.codigo_dane === municipio) ?? null}
               onValueChange={elegirMunicipio}
-              itemToStringLabel={(m: Municipio) => m.nombre}
+              itemToStringLabel={nombreConDepartamento}
               isItemEqualToValue={(a: Municipio, b: Municipio) => a.codigo_dane === b.codigo_dane}
             >
               <ComboboxTrigger

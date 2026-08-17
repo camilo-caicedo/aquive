@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { ENTIDADES_MATRICULA } from '@/lib/config'
 import { enlaceWhatsapp } from '@/lib/contacto'
 import { AVISO_CONTACTO, AVISO_CONTACTO_VERIFICADO, AVISO_ENTIDADES } from '@/lib/honestidad'
-import { listarMunicipios } from '@/lib/municipios'
+import { listarMunicipios, mapaDeNombres } from '@/lib/municipios'
 import { ListaEntidades } from './lista-entidades'
 import { BotonReportar } from '@/components/boton-reportar'
 import type { EntidadMatricula, AreaServicio } from '@/lib/types'
@@ -80,9 +80,7 @@ export default async function ServidoresPage({
           listarMunicipios(supabase),
         ])
 
-  const nombreMunicipio = new Map(
-    (todosLosMunicipios ?? []).map((m) => [m.codigo_dane, m.nombre])
-  )
+  const nombreMunicipio = mapaDeNombres(todosLosMunicipios ?? [])
 
   const nombreServicio = new Map((catalogoServicios ?? []).map((s) => [s.id, s.nombre]))
 

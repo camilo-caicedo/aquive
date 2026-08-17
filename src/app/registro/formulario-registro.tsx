@@ -14,7 +14,7 @@ import type {
   OfrecimientoResumen,
   OfrecimientoInput,
 } from '@/lib/types'
-import { LIMITE_MUNICIPIOS, type MunicipioBasico as Municipio } from '@/lib/municipios'
+import { LIMITE_MUNICIPIOS, nombreConDepartamento, type MunicipioBasico as Municipio } from '@/lib/municipios'
 import { categoria as categoriaInfo } from '@/lib/catalogo'
 import { validarSugerencia } from '@/lib/validacion'
 import { Button } from '@/components/ui/button'
@@ -342,13 +342,13 @@ export function FormularioRegistro({
           onValueChange={(ms: Municipio[]) =>
             setSeleccionados(ms.map((m) => m.codigo_dane))
           }
-          itemToStringLabel={(m: Municipio) => m.nombre}
+          itemToStringLabel={nombreConDepartamento}
           isItemEqualToValue={(a: Municipio, b: Municipio) => a.codigo_dane === b.codigo_dane}
         >
           <ComboboxChips className="min-h-12 py-2">
             {municipiosElegidos.map((m) => (
               <ComboboxChip key={m.codigo_dane} className="h-8 px-2 text-sm">
-                {m.nombre}
+                {nombreConDepartamento(m)}
               </ComboboxChip>
             ))}
             <ComboboxChipsInput

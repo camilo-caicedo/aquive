@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { origenDelSitio } from '@/lib/origen'
-import { listarMunicipios } from '@/lib/municipios'
+import { listarMunicipios, mapaDeNombres } from '@/lib/municipios'
 import type {
   AliadoResumen,
   Coincidencia,
@@ -187,7 +187,7 @@ async function Equipo({
     listarMunicipios(supabase),
     origenDelSitio(),
   ])
-  const nombreMunicipio = new Map(municipios.map((m) => [m.codigo_dane, m.nombre]))
+  const nombreMunicipio = mapaDeNombres(municipios)
 
   return (
     <>

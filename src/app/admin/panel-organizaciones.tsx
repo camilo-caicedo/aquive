@@ -19,7 +19,7 @@ import {
   ComboboxList,
 } from '@/components/ui/combobox'
 import type { InvitacionResumen, OrganizacionAdmin, TipoOrganizacion } from '@/lib/types'
-import { LIMITE_MUNICIPIOS, type MunicipioBasico as Municipio } from '@/lib/municipios'
+import { LIMITE_MUNICIPIOS, mapaDeNombres, nombreConDepartamento, type MunicipioBasico as Municipio } from '@/lib/municipios'
 
 const TIPOS: { valor: TipoOrganizacion; etiqueta: string }[] = [
   { valor: 'fundacion', etiqueta: 'Fundación' },
@@ -179,13 +179,13 @@ function FormularioOrganizacion({
           limit={LIMITE_MUNICIPIOS}
           value={municipiosElegidos}
           onValueChange={(ms: Municipio[]) => setMunicipiosSel(ms.map((m) => m.codigo_dane))}
-          itemToStringLabel={(m: Municipio) => m.nombre}
+          itemToStringLabel={nombreConDepartamento}
           isItemEqualToValue={(a: Municipio, b: Municipio) => a.codigo_dane === b.codigo_dane}
         >
           <ComboboxChips className="min-h-12 py-2">
             {municipiosElegidos.map((m) => (
               <ComboboxChip key={m.codigo_dane} className="h-8 px-2 text-sm">
-                {m.nombre}
+                {nombreConDepartamento(m)}
               </ComboboxChip>
             ))}
             <ComboboxChipsInput
@@ -451,7 +451,7 @@ export function PanelOrganizaciones({
   const [creando, setCreando] = useState(false)
   const [editandoId, setEditandoId] = useState<string | null>(null)
 
-  const nombrePorCodigo = new Map(municipios.map((m) => [m.codigo_dane, m.nombre]))
+  const nombrePorCodigo = mapaDeNombres(municipios)
   const nombreMunicipio = (codigo: string) => nombrePorCodigo.get(codigo) ?? codigo
 
   return (
