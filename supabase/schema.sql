@@ -596,6 +596,32 @@ create table if not exists public.solicitud_items (
 create index if not exists idx_items_solicitud  on public.solicitud_items(solicitud_id);
 create index if not exists idx_items_sugerencia on public.solicitud_items(sugerencia_id);
 
+-- Contacto opcional que deja quien pide ayuda. Excepción explícita a la
+-- regla 1 de CLAUDE.md, pedida el 17 de agosto de 2026 por el responsable
+-- del proyecto — ver el comentario completo en
+-- supabase/migraciones/v2-k4-contacto-solicitante.sql. Cuelga de la
+-- solicitud y muere con ella; solo la lee el administrador y quien
+-- responde esa solicitud puntual, nunca `solicitudes_publicas`.
+create table if not exists public.solicitudes_contacto (
+  solicitud_id uuid primary key references public.solicitudes(id) on delete cascade,
+  nombre       text check (nombre is null or char_length(nombre) between 1 and 80),
+  telefono     text check (telefono is null or telefono ~ '^[0-9+()\- ]{6,20}$'),
+  correo       text check (correo is null or correo ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
+  consentimiento_version text,
+  creada_at    timestamptz not null default now(),
+  constraint solicitudes_contacto_tiene_algo check (
+    nombre is not null or telefono is not null or correo is not null
+  ),
+  constraint solicitudes_contacto_con_consentimiento check (
+    consentimiento_version is not null
+  )
+);
+
+create index if not exists idx_solicitudes_contacto_solicitud
+  on public.solicitudes_contacto(solicitud_id);
+
+revoke all on public.solicitudes_contacto from public, anon, authenticated;
+
 -- ---------------------------------------------------------------------
 -- 4. Respuestas
 -- ---------------------------------------------------------------------
@@ -1914,6 +1940,80 @@ $$;
 
 grant execute on function public.crear_solicitud(text,text,text,text,jsonb,text,boolean)
   to anon, authenticated;
+
+-- Se escribe con el token, igual que `activar_acompanamiento`: solo quien
+-- tiene el enlace de SU solicitud puede dejar un contacto en ella. No pide
+-- sesión porque quien pide ayuda no tiene cuenta.
+create or replace function public.agregar_contacto_solicitante(
+  p_token    text,
+  p_nombre   text default null,
+  p_telefono text default null,
+  p_correo   text default null,
+  p_version  text default null
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_id       uuid;
+  v_nombre   text := nullif(trim(p_nombre), '');
+  v_telefono text := nullif(trim(p_telefono), '');
+  v_correo   text := nullif(trim(p_correo), '');
+begin
+  if v_nombre is null and v_telefono is null and v_correo is null then
+    return;
+  end if;
+
+  if p_version is null then
+    raise exception 'Falta aceptar el aviso de privacidad';
+  end if;
+
+  select id into v_id from public.solicitudes
+   where token_hash = encode(extensions.digest(p_token, 'sha256'), 'hex');
+
+  if not found then
+    raise exception 'Solicitud no encontrada o vencida';
+  end if;
+
+  insert into public.solicitudes_contacto (solicitud_id, nombre, telefono, correo, consentimiento_version)
+  values (v_id, v_nombre, v_telefono, v_correo, p_version)
+  on conflict (solicitud_id) do update
+    set nombre = excluded.nombre,
+        telefono = excluded.telefono,
+        correo = excluded.correo,
+        consentimiento_version = excluded.consentimiento_version;
+end;
+$$;
+
+grant execute on function public.agregar_contacto_solicitante(text,text,text,text,text)
+  to anon, authenticated;
+
+-- Lo lee quien va a responder ESA solicitud puntual — mismo patrón de
+-- guardia que `movilidad_solicitud`: sesión con perfil activo, y solo
+-- mientras la solicitud siga viva. Nunca `anon`.
+create or replace function public.contacto_solicitante(p_codigo text)
+returns jsonb
+language sql
+security definer
+stable
+set search_path = ''
+as $$
+  select jsonb_build_object(
+           'nombre', sc.nombre, 'telefono', sc.telefono, 'correo', sc.correo
+         )
+    from public.solicitudes s
+    join public.solicitudes_contacto sc on sc.solicitud_id = s.id
+   where s.codigo = upper(trim(p_codigo))
+     and public.estado_activo(s.estado)
+     and s.expira_at > now()
+     and exists (select 1 from public.perfiles p
+                  where p.id = auth.uid() and p.suspendido = false);
+$$;
+
+revoke execute on function public.contacto_solicitante(text) from public, anon;
+grant  execute on function public.contacto_solicitante(text) to authenticated;
 
 -- Lee una solicitud con su token: incluye las respuestas
 create or replace function public.leer_solicitud(p_token text)
@@ -4231,7 +4331,11 @@ as $$
                                from public.solicitud_items si
                                left join public.catalogo_items ci   on ci.id = si.item_id
                                left join public.sugerencias_item sg on sg.id = si.sugerencia_id
-                              where si.solicitud_id = s.id)
+                              where si.solicitud_id = s.id),
+             'contacto',    (select jsonb_build_object(
+                                      'nombre', sc.nombre, 'telefono', sc.telefono, 'correo', sc.correo)
+                               from public.solicitudes_contacto sc
+                              where sc.solicitud_id = s.id)
            ) order by s.creada_at desc)
              from public.solicitudes s
              join public.municipios m on m.codigo_dane = s.municipio

@@ -189,6 +189,13 @@ export function validarTelefono(telefono: string): string | null {
   return null
 }
 
+export function validarCorreo(correo: string): string | null {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo.trim())) {
+    return 'El correo no es válido'
+  }
+  return null
+}
+
 // El nombre de una cosa que alguien propone agregar al catálogo. Se aplica
 // en los dos sitios donde existe ese campo —publicar y registro— y también
 // del lado del servidor.

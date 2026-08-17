@@ -95,6 +95,18 @@ export function PanelSolicitudesAdmin({ solicitudes }: { solicitudes: SolicitudA
 
             {s.nota && <p className="mt-2 text-base text-muted-foreground">«{s.nota}»</p>}
 
+            {/* Excepción explícita a la regla 1 de CLAUDE.md — ver
+                supabase/migraciones/v2-k4-contacto-solicitante.sql. Solo
+                lo ve el administrador, nunca sale en el tablero. */}
+            {(s.contacto?.nombre || s.contacto?.telefono || s.contacto?.correo) && (
+              <div className="mt-2 rounded-lg border border-primary/30 bg-accent p-2 text-base text-accent-foreground">
+                <p className="font-medium">Contacto que dejó quien pidió</p>
+                {s.contacto.nombre && <p>{s.contacto.nombre}</p>}
+                {s.contacto.telefono && <p>{s.contacto.telefono}</p>}
+                {s.contacto.correo && <p>{s.contacto.correo}</p>}
+              </div>
+            )}
+
             {cerrada && (
               <p className="mt-2 flex items-center gap-1.5 text-base text-ok">
                 <CheckCircle2 className="size-4 shrink-0" aria-hidden="true" />

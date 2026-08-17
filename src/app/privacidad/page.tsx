@@ -19,11 +19,18 @@ export default function PrivacidadPage() {
         ni entidad detrás.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">Si publicas una solicitud de ayuda: no guardamos ningún dato tuyo.</h2>
+      <h2 className="font-heading mt-6 text-2xl">Si publicas una solicitud de ayuda: no guardamos ningún dato tuyo, salvo que tú decidas dejarlo.</h2>
       <p className="mt-3 text-base">
-        No pedimos ni almacenamos tu nombre, cédula, teléfono, correo, dirección exacta, edad ni la de tu
-        familia. Una solicitud contiene únicamente el municipio, el barrio, los artículos que necesitas y una
-        nota opcional.
+        No pedimos ni almacenamos tu cédula, dirección exacta, edad ni la de tu familia. Una solicitud contiene
+        únicamente el municipio, el barrio, los artículos que necesitas y una nota opcional.
+      </p>
+      <p className="mt-3 text-base">
+        Al publicar puedes dejar, si quieres, un nombre, un teléfono o un correo — los tres son opcionales, y
+        puedes dejar solo uno o ninguno. Si dejas alguno, te pedimos que lo confirmes explícitamente antes de
+        publicar. Ese contacto queda aparte de tu solicitud, en una tabla separada, y solo lo ven dos personas:
+        quien responda esa solicitud puntual y el administrador de AquíVe. No aparece en el tablero público, ni
+        en ninguna otra pantalla, ni se lo damos a nadie más. Se borra con tu solicitud, a las 72 horas, como
+        todo lo demás.
       </p>
       <p className="mt-3 text-base">
         Al publicar recibes un enlace secreto. Es la única forma de volver a tu solicitud. No podemos
