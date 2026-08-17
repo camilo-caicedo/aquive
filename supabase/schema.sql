@@ -1078,7 +1078,7 @@ select
   s.id,
   s.codigo,
   s.municipio,
-  m.nombre as municipio_nombre,
+  m.nombre || ', ' || m.departamento as municipio_nombre,
   s.barrio,
   s.categoria,
   s.nota,
@@ -3975,7 +3975,7 @@ as $$
         'estado',        c.estado,
         'creada_at',     c.creada_at,
         'codigo',        s.codigo,
-        'municipio',     m.nombre,
+        'municipio',     m.nombre || ', ' || m.departamento,
         'barrio',        s.barrio,
         'directa',       c.directa,
         -- `coalesce` y no la comparación pelada: en un hilo directo
@@ -4107,7 +4107,7 @@ as $$
       select jsonb_build_object(
         'solicitud_id',  s.id,
         'codigo',        s.codigo,
-        'municipio',     m.nombre,
+        'municipio',     m.nombre || ', ' || m.departamento,
         'barrio',        s.barrio,
         'categoria',     s.categoria,
         'nota',          s.nota,
@@ -4214,7 +4214,7 @@ as $$
          else coalesce((
            select jsonb_agg(jsonb_build_object(
              'codigo',      s.codigo,
-             'municipio',   m.nombre,
+             'municipio',   m.nombre || ', ' || m.departamento,
              'barrio',      s.barrio,
              'categoria',   s.categoria,
              'nota',        s.nota,
@@ -4742,7 +4742,7 @@ as $$
       select jsonb_build_object(
         'solicitud_id',       v.solicitud_id,
         'codigo',             v.codigo,
-        'municipio',          m.nombre,
+        'municipio',          m.nombre || ', ' || m.departamento,
         'ofertador_id',       v.ofertador_id,
         'ofertador',          p.nombre_visible,
         'items_coincidentes', v.items_coincidentes,
@@ -5508,7 +5508,7 @@ begin
   return jsonb_build_object(
     'codigo',      v_sol.codigo,
     'flujo',       v_sol.flujo,
-    'municipio',   (select m.nombre from public.municipios m
+    'municipio',   (select m.nombre || ', ' || m.departamento from public.municipios m
                      where m.codigo_dane = v_sol.municipio),
     'barrio',      v_sol.barrio,
     'nota',        v_sol.nota,
@@ -5613,7 +5613,7 @@ as $$
       select coalesce(jsonb_agg(jsonb_build_object(
                'id',        c.id,
                'codigo',    s.codigo,
-               'municipio', m.nombre,
+               'municipio', m.nombre || ', ' || m.departamento,
                'creada_at', c.creada_at
              ) order by c.creada_at), '[]'::jsonb)
         from public.conversaciones c

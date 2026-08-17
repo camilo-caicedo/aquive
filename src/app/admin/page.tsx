@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { origenDelSitio } from '@/lib/origen'
-import { listarMunicipios } from '@/lib/municipios'
+import { listarMunicipios, mapaDeNombres } from '@/lib/municipios'
 import { ENTIDADES_MATRICULA } from '@/lib/config'
 import { categoria } from '@/lib/catalogo'
 import { COLUMNAS_ENTIDAD_ADMIN } from '@/lib/types'
@@ -160,9 +160,7 @@ export default async function AdminPage({
       ? await listarMunicipios(supabase)
       : []
   const origen = await origenDelSitio()
-  const nombreMunicipio = new Map(
-    (municipios ?? []).map((m) => [m.codigo_dane, m.nombre])
-  )
+  const nombreMunicipio = mapaDeNombres(municipios ?? [])
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">

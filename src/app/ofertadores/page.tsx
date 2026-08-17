@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Info, Inbox, MapPin, PlusCircle, PackageOpen, Truck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { listarMunicipios } from '@/lib/municipios'
+import { listarMunicipios, mapaDeNombres } from '@/lib/municipios'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { SelectFiltro } from '@/components/select-filtro'
@@ -32,9 +32,7 @@ export default async function OfertadoresPage({
 
   const { data: ofertadores } = await query
 
-  const nombreMunicipio = new Map(
-    (todosMunicipios ?? []).map((m) => [m.codigo_dane, m.nombre])
-  )
+  const nombreMunicipio = mapaDeNombres(todosMunicipios ?? [])
 
   // Quien dijo qué ofrece va primero, y la lista de ítems pesa más que la
   // descripción: una tarjeta que enumera "cobijas, colchonetas" le sirve a

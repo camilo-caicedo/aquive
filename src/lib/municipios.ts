@@ -20,6 +20,27 @@ export interface MunicipioBasico {
 }
 
 /**
+ * Cómo se escribe un municipio cuando hay que mostrarlo: «Santiago de Cali,
+ * Valle del Cauca».
+ *
+ * El departamento no es adorno. Hay 66 nombres repetidos en el país:
+ * Buenavista existe en Boyacá, Córdoba, Quindío y Sucre; La Unión, en
+ * Antioquia, Nariño, Sucre y Valle del Cauca. Sin el departamento, «La
+ * Unión» no dice a dónde hay que llevar nada.
+ *
+ * Para comparar y para filtrar se sigue usando `codigo_dane`: esto es
+ * texto para leer, nunca una llave.
+ */
+export function nombreConDepartamento(m: MunicipioBasico) {
+  return `${m.nombre}, ${m.departamento}`
+}
+
+/** Código DANE → nombre completo, para pintar listas de municipios. */
+export function mapaDeNombres(municipios: MunicipioBasico[]) {
+  return new Map(municipios.map((m) => [m.codigo_dane, nombreConDepartamento(m)]))
+}
+
+/**
  * Trae los 1.122 municipios del país.
  *
  * Va por RPC y no por `.from('municipios')` porque PostgREST corta en
