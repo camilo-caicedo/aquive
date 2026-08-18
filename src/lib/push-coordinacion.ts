@@ -1,4 +1,4 @@
-import { createServiceClient } from '@/lib/supabase/service'
+import { createServiceClient } from '@/lib/backend/servicio'
 import { configurarWebPush, enviarPush } from '@/lib/push-vapid'
 
 /**

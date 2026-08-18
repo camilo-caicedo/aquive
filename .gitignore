@@ -24,6 +24,10 @@
 .DS_Store
 *.pem
 
+# Personal working layer, no versionado (idioma de trabajo en inglés).
+CLAUDE.local.md
+/.claude/work/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

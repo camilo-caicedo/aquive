@@ -97,15 +97,9 @@ export function Acompanamiento({
     }
 
     // La activación va directo a Supabase —lleva nombre, documento y
-    // teléfono, y no tienen por qué pasar por Vercel—. Lo que sí pasa por
-    // una ruta es el aviso a quienes ya habían ofrecido ayuda, porque las
-    // suscripciones push no son legibles para el navegador.
-    await fetch('/api/acompanamiento', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token }),
-    }).catch(() => {})
-
+    // teléfono, y no tienen por qué pasar por Vercel—. El aviso a quienes ya
+    // habían ofrecido ayuda lo encola `activar_acompanamiento` y lo despacha
+    // el cron (v2-l1): el navegador ya no llama a ninguna ruta para eso.
     router.refresh()
   }
 

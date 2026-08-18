@@ -1880,6 +1880,7 @@ declare
   v_sugerencia  text;
   v_sug_id      uuid;
   v_n_sugeridos integer := 0;
+  v_item_ids    text[] := '{}';
   v_es_prueba   boolean := trim(p_barrio) ilike 'prueba%';
 begin
   if public.contiene_pii(p_nota) then
@@ -1911,6 +1912,9 @@ begin
     if v_sugerencia is null then
       insert into public.solicitud_items (solicitud_id, item_id, cantidad)
       values (v_id, v_item->>'item_id', (v_item->>'cantidad')::numeric);
+      -- Solo los ítems del catálogo cruzan con inventarios; las sugerencias
+      -- todavía no son un ítem con el que se pueda cruzar (igual que antes).
+      v_item_ids := array_append(v_item_ids, v_item->>'item_id');
     else
       v_n_sugeridos := v_n_sugeridos + 1;
       if v_n_sugeridos > 3 then
@@ -1933,6 +1937,14 @@ begin
       values (v_id, v_sug_id, (v_item->>'cantidad')::numeric);
     end if;
   end loop;
+
+  -- Aviso a quienes ofrecen en ese municipio. Va a la cola y lo despacha el
+  -- cron; antes lo mandaba la ruta después de responder. Sin PII: municipio
+  -- y categoría ya están en el tablero público, los ítems son del catálogo.
+  perform public.encolar_aviso('ofertadores', jsonb_build_object(
+    'municipio_codigo', p_municipio,
+    'categoria',        p_categoria,
+    'item_ids',         to_jsonb(v_item_ids)));
 
   return query select v_id, v_codigo;
 end;
@@ -2479,6 +2491,7 @@ as $$
 declare
   v_uid uuid := auth.uid();
   v_solicitud_id uuid;
+  v_codigo text;
 begin
   if v_uid is null then
     raise exception 'Debes iniciar sesión';
@@ -2498,7 +2511,9 @@ begin
     raise exception 'Para responder necesitas una forma de contacto en tu perfil: si no, quien pidio ayuda no tiene a donde escribirte';
   end if;
 
-  select s.id into v_solicitud_id
+  -- Se captura también el código guardado, no el `p_codigo` crudo del
+  -- cliente: es el que viaja en el aviso.
+  select s.id, s.codigo into v_solicitud_id, v_codigo
     from public.solicitudes s
    where s.codigo = upper(trim(p_codigo))
      and public.estado_activo(s.estado)
@@ -2515,6 +2530,11 @@ begin
 
   insert into public.respuestas (solicitud_id, autor_id, mensaje, puede_llevar)
   values (v_solicitud_id, v_uid, trim(p_mensaje), coalesce(p_puede_llevar, false));
+
+  -- Aviso al solicitante. A la cola; lo despacha el cron. Solo id y código.
+  perform public.encolar_aviso('respuesta', jsonb_build_object(
+    'solicitud_id', v_solicitud_id,
+    'codigo',       v_codigo));
 
   return v_solicitud_id;
 end;
@@ -3787,6 +3807,12 @@ begin
          acompanamiento_at = now()
    where id = v_sol.id;
 
+  -- Aviso a quienes ya habían ofrecido: ahora hay fundación coordinando. A
+  -- la cola; lo despacha el cron. Antes lo mandaba /api/acompanamiento.
+  perform public.encolar_aviso('acompanamiento', jsonb_build_object(
+    'solicitud_id', v_sol.id,
+    'codigo',       v_sol.codigo));
+
   return jsonb_build_object(
     'codigo',       v_sol.codigo,
     'organizacion', v_org.nombre
@@ -3953,6 +3979,14 @@ begin
   values (p_conversacion_id, v_rol, auth.uid(), trim(p_cuerpo))
   returning id into v_id;
 
+  -- Aviso a los otros dos del hilo. A la cola; lo despacha el cron. Se
+  -- excluye a quien escribe (tiene cuenta): no se avisa a sí mismo.
+  perform public.encolar_aviso('conversacion', jsonb_build_object(
+    'conversacion_id',     p_conversacion_id,
+    'plantilla',           'mensaje_nuevo',
+    'excluir_perfil',      auth.uid(),
+    'excluir_solicitante', false));
+
   return v_id;
 end;
 $$;
@@ -3996,6 +4030,14 @@ begin
   insert into public.mensajes (conversacion_id, autor_rol, autor_perfil_id, cuerpo)
   values (p_conversacion_id, 'solicitante', null, trim(p_cuerpo))
   returning id into v_id;
+
+  -- Aviso a los otros dos del hilo. Quien escribe es el solicitante (sin
+  -- cuenta): se excluye por esa vía, no por perfil.
+  perform public.encolar_aviso('conversacion', jsonb_build_object(
+    'conversacion_id',     p_conversacion_id,
+    'plantilla',           'mensaje_nuevo',
+    'excluir_perfil',      null,
+    'excluir_solicitante', true));
 
   return v_id;
 end;
@@ -4177,6 +4219,14 @@ begin
 
   update public.solicitudes set estado = 'en_coordinacion'
    where id = v_sol.id and estado = 'abierta';
+
+  -- Aviso al ofertador de que la fundación va a coordinar. A la cola; lo
+  -- despacha el cron. Se excluye al aliado que abre el hilo.
+  perform public.encolar_aviso('conversacion', jsonb_build_object(
+    'conversacion_id',     v_conv,
+    'plantilla',           'entrega_directa',
+    'excluir_perfil',      v_uid,
+    'excluir_solicitante', false));
 
   return v_conv;
 end;
@@ -5871,6 +5921,14 @@ begin
   update public.solicitudes set estado = 'en_coordinacion'
    where id = v_sol.id and estado = 'abierta';
 
+  -- Aviso de la invitación a quien ofrece. A la cola; lo despacha el cron.
+  -- Se excluye al aliado que invita.
+  perform public.encolar_aviso('conversacion', jsonb_build_object(
+    'conversacion_id',     v_conv,
+    'plantilla',           'invitacion',
+    'excluir_perfil',      v_uid,
+    'excluir_solicitante', false));
+
   return v_conv;
 end;
 $$;
@@ -6091,3 +6149,117 @@ grant  execute on function public.estado_encabezado() to authenticated;
 
 comment on function public.estado_encabezado() is
   'Todo lo que el encabezado necesita saber de quien mira, en una consulta: si se dibuja la pestaña de /aliado y con qué nombre, y cuántos avisos hay sin ver. No autoriza nada.';
+
+-- =====================================================================
+-- Límite de tasa (Fase L1). Ver migración v2-l1-avisos-pendientes.
+--
+-- Ventana fija, clave hasheada con pepper, autopurga. La clave (nombre de
+-- ruta + IP del cliente) nunca se guarda en claro: se hashea con el pepper
+-- del Vault (regla 6). La tabla es efímera y no cuelga de nada: es
+-- telemetría de seguridad, no un dato de solicitud.
+-- =====================================================================
+
+create table if not exists public.limites_tasa (
+  clave          text primary key,
+  ventana_inicio timestamptz not null default now(),
+  conteo         int not null default 0
+);
+alter table public.limites_tasa enable row level security;  -- sin políticas: cerrada
+
+-- La llama `limitar()` desde el backend con el rol de servicio. Revocada de
+-- todo lo demás: anon y authenticated no la ven, solo service_role la
+-- ejecuta (por los privilegios por defecto de Supabase, que sobreviven al
+-- revoke de public).
+create or replace function public.consumir_limite(p_clave text, p_max int, p_ventana_seg int)
+  returns boolean
+  language plpgsql security definer set search_path = ''
+  as $$
+  declare v_hash text; v_conteo int;
+  begin
+    v_hash := public.hash_con_pepper(p_clave);  -- nunca se guarda la IP en claro
+    insert into public.limites_tasa (clave, ventana_inicio, conteo)
+      values (v_hash, now(), 1)
+    on conflict (clave) do update set
+      ventana_inicio = case when public.limites_tasa.ventana_inicio
+                             < now() - make_interval(secs => p_ventana_seg)
+                            then now() else public.limites_tasa.ventana_inicio end,
+      conteo = case when public.limites_tasa.ventana_inicio
+                         < now() - make_interval(secs => p_ventana_seg)
+                        then 1 else public.limites_tasa.conteo + 1 end
+    returning conteo into v_conteo;
+    return v_conteo <= p_max;
+  end $$;
+revoke execute on function public.consumir_limite(text,int,int) from public, anon, authenticated;
+
+comment on function public.consumir_limite(text,int,int) is
+  'Ventana fija de límite de tasa. Devuelve true si el cliente puede continuar. La clave se hashea con pepper del Vault: la IP nunca se guarda en claro (regla 6). La llama limitar() con el rol de servicio.';
+
+-- Purga horaria: una ventana de más de una hora ya no le sirve a nadie.
+-- cron.schedule upserta por nombre, así que re-correr el esquema es seguro.
+select cron.schedule('purgar-limites', '0 * * * *',
+  $$delete from public.limites_tasa where ventana_inicio < now() - interval '1 hour'$$);
+
+-- =====================================================================
+-- Cola de avisos (Fase L1). Ver migración v2-l1-avisos-pendientes.
+--
+-- El envío de push sale del camino de la petición: las RPC encolan aquí en
+-- su misma transacción, y un cron drena la cola llamando a un endpoint de
+-- Vercel vía pg_net. Sin PII: ids, código público y claves de plantilla.
+-- =====================================================================
+
+create extension if not exists pg_net;
+
+create table if not exists public.avisos_pendientes (
+  id           uuid primary key default extensions.gen_random_uuid(),
+  tipo         text not null check (tipo in
+                 ('respuesta','ofertadores','conversacion','acompanamiento')),
+  payload      jsonb not null,
+  creado_at    timestamptz not null default now(),
+  intentos     int not null default 0,
+  reclamado_at timestamptz
+);
+alter table public.avisos_pendientes enable row level security;  -- sin políticas: cerrada
+
+-- Interna: la llaman las RPC en su propia transacción.
+create or replace function public.encolar_aviso(p_tipo text, p_payload jsonb) returns void
+  language sql security definer set search_path = ''
+  as $$ insert into public.avisos_pendientes (tipo, payload) values (p_tipo, p_payload) $$;
+revoke execute on function public.encolar_aviso(text,jsonb) from public, anon, authenticated;
+
+-- Reclama un lote y lo marca; SKIP LOCKED evita que dos tics choquen. Un
+-- aviso con 5 intentos ya no se devuelve: se abandona a propósito (un aviso
+-- perdido nunca bloquea la escritura).
+create or replace function public.reclamar_avisos(p_limite int)
+  returns setof public.avisos_pendientes
+  language plpgsql security definer set search_path = ''
+  as $$
+  begin
+    return query
+    update public.avisos_pendientes a set reclamado_at = now(), intentos = intentos + 1
+     where a.id in (
+       select id from public.avisos_pendientes
+        where intentos < 5
+          and (reclamado_at is null or reclamado_at < now() - interval '5 minutes')
+        order by creado_at
+        for update skip locked
+        limit p_limite)
+    returning a.*;
+  end $$;
+revoke execute on function public.reclamar_avisos(int) from public, anon, authenticated;
+
+create or replace function public.marcar_aviso_procesado(p_id uuid) returns void
+  language sql security definer set search_path = ''
+  as $$ delete from public.avisos_pendientes where id = p_id $$;  -- borrado duro (regla 4)
+revoke execute on function public.marcar_aviso_procesado(uuid) from public, anon, authenticated;
+
+-- Drenado: pg_cron dispara pg_net contra el endpoint de Vercel cada minuto.
+-- La URL y el secreto salen del Vault, nunca del repositorio. El endpoint
+-- reclama el lote, despacha a las libs push y borra lo que salió.
+select cron.schedule('drenar-avisos', '* * * * *', $drenar$
+  select net.http_post(
+    url     := public.secreto_vault('aquive_tarea_url'),
+    headers := jsonb_build_object(
+                 'Content-Type', 'application/json',
+                 'x-tarea-secret', public.secreto_vault('aquive_tarea_secret')),
+    body    := '{}'::jsonb)
+$drenar$);

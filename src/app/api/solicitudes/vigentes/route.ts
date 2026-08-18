@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/service'
+import { solicitudesVigentesPorHash } from '@/lib/backend/servicio'
+import { limitar } from '@/lib/backend/limite'
 import { hashToken } from '@/lib/tokens'
 
 /**
@@ -20,6 +21,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Cuerpo inválido' }, { status: 400 })
   }
 
+  const excedido = await limitar(request, { nombre: 'vigentes', max: 30, ventanaSegundos: 60 })
+  if (excedido) return excedido
+
   const tokens = Array.isArray(body.tokens)
     ? body.tokens.filter((t): t is string => typeof t === 'string').slice(0, 50)
     : []
@@ -28,19 +32,15 @@ export async function POST(request: Request) {
 
   const porHash = new Map(tokens.map((t) => [hashToken(t), t]))
 
-  const supabase = createServiceClient()
-  const { data, error } = await supabase
-    .from('solicitudes')
-    .select('token_hash')
-    .in('token_hash', [...porHash.keys()])
+  const vivos = await solicitudesVigentesPorHash([...porHash.keys()])
 
-  if (error) {
+  if (vivos === null) {
     // Ante la duda no se borra nada: perder un enlace es irreversible.
     return NextResponse.json({ vigentes: tokens })
   }
 
-  const vigentes = (data ?? [])
-    .map((fila) => porHash.get(fila.token_hash))
+  const vigentes = vivos
+    .map((hash) => porHash.get(hash))
     .filter((t): t is string => !!t)
 
   return NextResponse.json({ vigentes })

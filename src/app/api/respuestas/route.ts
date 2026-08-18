@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createServiceClient } from '@/lib/supabase/service'
-import { notificarRespuesta } from '@/lib/push'
+import { limitar } from '@/lib/backend/limite'
 
 interface CuerpoRespuesta {
   codigo: string
@@ -9,9 +8,10 @@ interface CuerpoRespuesta {
   puedeLlevar?: boolean
 }
 
-// La respuesta pasa por aquí y no por la RPC directa desde el navegador
-// porque después de insertarla hay que avisar al solicitante, y las
-// suscripciones push no son legibles para el cliente.
+// La respuesta pasa por aquí para limitar la tasa y usar la sesión de quien
+// responde (la RPC resuelve el autor con auth.uid()). El aviso al
+// solicitante ya no se manda aquí: lo encola `responder_solicitud` y lo
+// despacha el cron (ver v2-l1).
 export async function POST(request: Request) {
   let body: CuerpoRespuesta
   try {
@@ -19,6 +19,9 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: 'Cuerpo inválido' }, { status: 400 })
   }
+
+  const excedido = await limitar(request, { nombre: 'responder', max: 10, ventanaSegundos: 60 })
+  if (excedido) return excedido
 
   const mensaje = body.mensaje?.trim() ?? ''
   if (mensaje.length < 5 || mensaje.length > 200) {
@@ -38,26 +41,6 @@ export async function POST(request: Request) {
 
   if (error || !solicitudId) {
     return NextResponse.json({ error: error?.message ?? 'No se pudo responder' }, { status: 400 })
-  }
-
-  // El aviso es best-effort: si falla, la respuesta ya quedó guardada y el
-  // solicitante la ve al volver por su enlace.
-  try {
-    const servicio = createServiceClient()
-    const { data: solicitud } = await servicio
-      .from('solicitudes')
-      .select('codigo')
-      .eq('id', solicitudId)
-      .maybeSingle()
-
-    if (solicitud) {
-      // No podemos enlazar a /solicitud/[token]: el servidor solo guarda el
-      // hash del token. La notificación lleva a la lista local del navegador.
-      const origen = new URL(request.url).origin
-      await notificarRespuesta(solicitudId, solicitud.codigo, `${origen}/mis-solicitudes`)
-    }
-  } catch {
-    // Silencioso a propósito: no se loggea nada del cuerpo (CLAUDE.md regla 6).
   }
 
   return NextResponse.json({ ok: true })

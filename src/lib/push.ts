@@ -1,5 +1,5 @@
 import webpush from 'web-push'
-import { createServiceClient } from '@/lib/supabase/service'
+import { createServiceClient } from '@/lib/backend/servicio'
 
 let configurado = false
 

@@ -4,7 +4,7 @@ import type { Database } from '@/lib/types'
 
 // Usar dentro de Server Components, Route Handlers y Server Actions.
 // En un Server Component puro, cookies.set() falla silenciosamente (esperado):
-// la sesión se refresca vía middleware, no aquí.
+// la sesión se refresca vía el proxy (proxy.ts), no aquí.
 export async function createClient() {
   const cookieStore = await cookies()
 
@@ -22,7 +22,7 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             }
           } catch {
-            // Llamado desde un Server Component: ignorar, el middleware refresca la sesión.
+            // Llamado desde un Server Component: ignorar, el proxy (proxy.ts) refresca la sesión.
           }
         },
       },

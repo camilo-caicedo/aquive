@@ -88,6 +88,22 @@ miente).
 Para que `/admin` sea accesible hay que insertar a mano la primera fila
 en `administradores` con el id del usuario que va a moderar.
 
+La cola de avisos (migración `v2-l1`) necesita dos secretos en el **Vault**
+de Supabase y uno en Vercel, que deben coincidir:
+
+- Vault `aquive_tarea_url` = `https://TU-DESPLIEGUE/api/tareas/drenar-avisos`
+- Vault `aquive_tarea_secret` = un secreto cualquiera
+- Vercel `TAREA_SECRET` = **el mismo** valor que `aquive_tarea_secret`
+
+`v2-l1` programa el cron `drenar-avisos` (cada minuto, vía `pg_net`) y
+`purgar-limites` (cada hora). Además hace falta `NEXT_PUBLIC_SITE_URL` con el
+origen del despliegue: el worker de avisos arma con eso las URLs de las
+notificaciones, porque corre sin petición de la que sacar el host.
+
+Las pruebas de TypeScript corren con `npm test`. Las de SQL viven en
+`supabase/pruebas/` y se corren a mano contra la base (`psql -f`): la de
+paridad del filtro de PII y la de abandono de avisos.
+
 ## Mapa del repositorio
 
 | Ruta | Para qué |
@@ -99,6 +115,8 @@ en `administradores` con el id del usuario que va a moderar.
 | `supabase/schema.sql` | Esquema completo. Fuente de verdad de la base. |
 | `supabase/seed-*.sql` | Municipios, insumos y servicios. Re-ejecutables. |
 | `supabase/migraciones/` | Cambios sobre una base que ya existe, en orden de nombre. |
+| `supabase/pruebas/` | Pruebas SQL manuales (`psql -f`): paridad de PII y abandono de avisos. |
+| `src/lib/backend/` | Código de servidor: llave de servicio, límite de tasa y drenado de avisos. |
 | `supabase/limpiar-pruebas.sql` | Borra lo marcado como prueba. Cuenta primero, borra después. |
 | `migracion/` | Levantar la base en un proyecto nuevo: runbook, configuración y verificación. |
 | `src/lib/config.ts` | Responsable, correo y fecha de los legales. Tiene efecto legal. |
@@ -123,6 +141,51 @@ en `administradores` con el id del usuario que va a moderar.
   el requisito de funcionar sin JavaScript se quitó en agosto de 2026.
 - **Las animaciones son solo CSS.** No por presupuesto de JS, sino porque
   una animación que se traba se lee como una aplicación rota.
+
+## Límite de tasa y cola de avisos
+
+Dos responsabilidades salen del camino de la petición y bajan a Postgres +
+Vercel, sin ningún proveedor nuevo:
+
+- **Límite de tasa.** Cada ruta que escribe pasa por `limitar()`
+  (`src/lib/backend/limite.ts`) antes de trabajar. Cuenta por ventana fija en
+  `limites_tasa`, con la IP hasheada con pepper del Vault —nunca en claro
+  (regla 6)— y la tabla se purga cada hora. **Falla abierto**: si la base
+  parpadea, la petición continúa; un límite no debe tumbar la escritura.
+- **Cola de avisos.** El fan-out de push ya no ocurre dentro de la petición.
+  Las RPC encolan en `avisos_pendientes` en su misma transacción, y el cron
+  `drenar-avisos` llama cada minuto (vía `pg_net`) a
+  `/api/tareas/drenar-avisos`, que reclama el lote y despacha a las libs push.
+  La cola no guarda PII: ids, código público y claves de plantilla.
+
+```mermaid
+sequenceDiagram
+  participant C as Cliente
+  participant R as Route handler (Vercel)
+  participant P as Postgres (RPC)
+  participant O as avisos_pendientes
+  participant Cron as pg_cron + pg_net
+  participant D as /api/tareas/drenar-avisos
+  participant W as web-push libs
+
+  C->>R: POST (mutación)
+  R->>R: limitar() → 429 si excede
+  R->>P: rpc(...)  %% la autz sigue aquí
+  P->>P: escribe fila + encolar_aviso() (misma tx)
+  P-->>R: ok
+  R-->>C: 200 (sin fan-out en la respuesta)
+
+  Cron->>D: net.http_post (x-tarea-secret, cada minuto)
+  D->>P: reclamar_avisos(50)
+  P-->>D: lote
+  loop cada aviso
+    D->>W: sendNotification
+    D->>P: marcar_aviso_procesado(id)
+  end
+```
+
+La autorización no se mueve: la siguen resolviendo las RPC `security
+definer`. El backend solo orquesta y encola.
 
 ## Lo que decide si esto sirve
 

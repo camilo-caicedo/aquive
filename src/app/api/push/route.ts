@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/service'
+import { createServiceClient } from '@/lib/backend/servicio'
+import { limitar } from '@/lib/backend/limite'
 
 interface CuerpoPush {
   token: string
@@ -20,6 +21,9 @@ export async function POST(request: Request) {
   if (!body.token || !body.endpoint || !body.p256dh || !body.auth) {
     return NextResponse.json({ error: 'Datos incompletos' }, { status: 400 })
   }
+
+  const excedido = await limitar(request, { nombre: 'push', max: 20, ventanaSegundos: 60 })
+  if (excedido) return excedido
 
   const supabase = createServiceClient()
   const { error } = await supabase.rpc('guardar_push', {

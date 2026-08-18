@@ -9,22 +9,27 @@ import {
   PawPrint,
 } from 'lucide-react'
 import type { Categoria } from '@/lib/types'
+import { CATEGORIAS_ETIQUETA } from '@/lib/categorias'
+
+// El icono de cada categoría. Los valores y etiquetas viven en
+// `categorias.ts` (sin UI); aquí solo se les adjunta el icono, para que un
+// worker de servidor pueda leer la etiqueta sin cargar lucide-react.
+const ICONO: Record<Categoria, typeof Utensils> = {
+  alimentacion: Utensils,
+  aseo: Droplets,
+  salud: HeartPulse,
+  abrigo: Shirt,
+  cocina: CookingPot,
+  mascotas: PawPrint,
+  servicios: Stethoscope,
+  otros: Package,
+}
 
 export const CATEGORIAS: {
   valor: Categoria
   etiqueta: string
   Icono: typeof Utensils
-}[] = [
-  { valor: 'alimentacion', etiqueta: 'Alimentación', Icono: Utensils },
-  { valor: 'aseo', etiqueta: 'Aseo', Icono: Droplets },
-  { valor: 'salud', etiqueta: 'Salud', Icono: HeartPulse },
-  { valor: 'abrigo', etiqueta: 'Abrigo', Icono: Shirt },
-  { valor: 'cocina', etiqueta: 'Cocina', Icono: CookingPot },
-  { valor: 'mascotas', etiqueta: 'Mascotas', Icono: PawPrint },
-  { valor: 'servicios', etiqueta: 'Servicios profesionales', Icono: Stethoscope },
-  // 'otros' va de último a propósito: `categoria()` lo usa como respaldo.
-  { valor: 'otros', etiqueta: 'Otros', Icono: Package },
-]
+}[] = CATEGORIAS_ETIQUETA.map((c) => ({ ...c, Icono: ICONO[c.valor] }))
 
 export function categoria(valor: Categoria) {
   return CATEGORIAS.find((c) => c.valor === valor) ?? CATEGORIAS[CATEGORIAS.length - 1]

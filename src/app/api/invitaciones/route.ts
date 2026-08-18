@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { notificarConversacion } from '@/lib/push-coordinacion'
+import { limitar } from '@/lib/backend/limite'
 
 interface CuerpoInvitacion {
   solicitudId: string
@@ -22,6 +22,9 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: 'Cuerpo inválido' }, { status: 400 })
   }
+
+  const excedido = await limitar(request, { nombre: 'invitacion', max: 20, ventanaSegundos: 60 })
+  if (excedido) return excedido
 
   const mensaje = body.mensaje?.trim() ?? ''
   if (!body.solicitudId || mensaje.length < 10) {
@@ -53,23 +56,8 @@ export async function POST(request: Request) {
     )
   }
 
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    await notificarConversacion(
-      conversacionId,
-      (codigo) =>
-        directa
-          ? `La fundación va a coordinar la entrega de ${codigo}`
-          : `Te invitaron a coordinar la entrega de ${codigo}`,
-      new URL(request.url).origin,
-      { perfilId: user?.id }
-    )
-  } catch {
-    // Silencioso a propósito (regla 6).
-  }
-
+  // El aviso a quien ofrece ya no se manda aquí: lo encolan
+  // `invitar_a_conversacion` / `abrir_entrega_directa` y lo despacha el cron
+  // (v2-l1), con la plantilla correcta según haya ofertador o entrega directa.
   return NextResponse.json({ ok: true })
 }
