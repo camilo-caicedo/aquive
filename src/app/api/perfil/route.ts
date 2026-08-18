@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/backend/servicio'
+import { limitar } from '@/lib/backend/limite'
 
 /**
  * Borrado permanente de la cuenta (Ley 1581 de 2012, art. 8: supresión).
@@ -10,7 +11,10 @@ import { createServiceClient } from '@/lib/backend/servicio'
  * dejarlo vivo no sería supresión de verdad. El resto cae por cascada:
  * perfiles → servidores → respuestas.
  */
-export async function DELETE() {
+export async function DELETE(request: Request) {
+  const excedido = await limitar(request, { nombre: 'perfil-borrar', max: 5, ventanaSegundos: 60 })
+  if (excedido) return excedido
+
   const supabase = await createClient()
   const {
     data: { user },

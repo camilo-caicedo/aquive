@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { solicitudesVigentesPorHash } from '@/lib/backend/servicio'
+import { limitar } from '@/lib/backend/limite'
 import { hashToken } from '@/lib/tokens'
 
 /**
@@ -19,6 +20,9 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: 'Cuerpo inválido' }, { status: 400 })
   }
+
+  const excedido = await limitar(request, { nombre: 'vigentes', max: 30, ventanaSegundos: 60 })
+  if (excedido) return excedido
 
   const tokens = Array.isArray(body.tokens)
     ? body.tokens.filter((t): t is string => typeof t === 'string').slice(0, 50)

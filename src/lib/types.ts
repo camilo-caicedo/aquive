@@ -1212,6 +1212,12 @@ export interface Database {
         Args: { p_items: Json }
         Returns: undefined
       }
+      // Interna: la llama limitar() con la llave de servicio. Revocada de
+      // anon y authenticated (ver v2-l1). Ventana fija de límite de tasa.
+      consumir_limite: {
+        Args: { p_clave: string; p_max: number; p_ventana_seg: number }
+        Returns: boolean
+      }
       // El cruce inverso. Filtra y ordena en SQL porque PostgREST puede
       // hacer el `&&` pero no ordenar por cuántos ítems coinciden, que es
       // la mitad del valor: quien pide cinco cosas que tengo vale más que

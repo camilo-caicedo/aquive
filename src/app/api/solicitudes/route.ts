@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient, nombreMunicipio } from '@/lib/backend/servicio'
+import { limitar } from '@/lib/backend/limite'
 import { generarToken } from '@/lib/tokens'
 import { validarBarrio, validarNota, validarSugerencia } from '@/lib/validacion'
 import { verificarTurnstile } from '@/lib/turnstile'
@@ -54,6 +55,9 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: 'Cuerpo inválido' }, { status: 400 })
   }
+
+  const excedido = await limitar(request, { nombre: 'crear', max: 5, ventanaSegundos: 60 })
+  if (excedido) return excedido
 
   if (!body.turnstileToken || !(await verificarTurnstile(body.turnstileToken))) {
     return NextResponse.json({ error: 'Verificación anti-spam fallida' }, { status: 400 })

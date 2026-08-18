@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/backend/servicio'
+import { limitar } from '@/lib/backend/limite'
 
 interface CuerpoGestion {
   token: string
@@ -20,6 +21,9 @@ export async function POST(request: Request) {
   if (!body.token) {
     return NextResponse.json({ error: 'Falta el enlace de la solicitud' }, { status: 400 })
   }
+
+  const excedido = await limitar(request, { nombre: 'gestion', max: 20, ventanaSegundos: 60 })
+  if (excedido) return excedido
 
   const supabase = createServiceClient()
 

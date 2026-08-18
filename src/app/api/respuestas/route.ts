@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/backend/servicio'
+import { limitar } from '@/lib/backend/limite'
 import { notificarRespuesta } from '@/lib/push'
 
 interface CuerpoRespuesta {
@@ -19,6 +20,9 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json({ error: 'Cuerpo inválido' }, { status: 400 })
   }
+
+  const excedido = await limitar(request, { nombre: 'responder', max: 10, ventanaSegundos: 60 })
+  if (excedido) return excedido
 
   const mensaje = body.mensaje?.trim() ?? ''
   if (mensaje.length < 5 || mensaje.length > 200) {
