@@ -1218,6 +1218,28 @@ export interface Database {
         Args: { p_clave: string; p_max: number; p_ventana_seg: number }
         Returns: boolean
       }
+      // Cola de avisos (v2-l1). Las tres revocadas de anon/authenticated:
+      // `encolar_aviso` la llaman las RPC en su transacción; `reclamar_avisos`
+      // y `marcar_aviso_procesado` las llama el worker con la llave de servicio.
+      encolar_aviso: {
+        Args: { p_tipo: string; p_payload: Json }
+        Returns: undefined
+      }
+      reclamar_avisos: {
+        Args: { p_limite: number }
+        Returns: Array<{
+          id: string
+          tipo: string
+          payload: Json
+          creado_at: string
+          intentos: number
+          reclamado_at: string | null
+        }>
+      }
+      marcar_aviso_procesado: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
       // El cruce inverso. Filtra y ordena en SQL porque PostgREST puede
       // hacer el `&&` pero no ordenar por cuántos ítems coinciden, que es
       // la mitad del valor: quien pide cinco cosas que tengo vale más que

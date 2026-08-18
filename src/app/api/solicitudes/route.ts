@@ -1,18 +1,15 @@
 import { NextResponse } from 'next/server'
-import { createServiceClient, nombreMunicipio } from '@/lib/backend/servicio'
+import { createServiceClient } from '@/lib/backend/servicio'
 import { limitar } from '@/lib/backend/limite'
 import { generarToken } from '@/lib/tokens'
 import { validarBarrio, validarNota, validarSugerencia } from '@/lib/validacion'
 import { verificarTurnstile } from '@/lib/turnstile'
-import { notificarOfertadores } from '@/lib/push-ofertadores'
 import { CATEGORIAS } from '@/lib/catalogo'
 import type { Categoria, ItemSolicitudInput, Json } from '@/lib/types'
 
-// Ambas se derivan de CATEGORIAS: antes la lista de categorías válidas
-// estaba escrita otra vez aquí, y agregar una nueva obligaba a acordarse
-// de tocar los dos sitios.
+// La lista de categorías válidas se deriva de CATEGORIAS: antes estaba
+// escrita otra vez aquí, y agregar una nueva obligaba a tocar los dos sitios.
 const VALIDAS: readonly Categoria[] = CATEGORIAS.map((c) => c.valor)
-const ETIQUETA = new Map(CATEGORIAS.map((c) => [c.valor, c.etiqueta]))
 
 const MAX_SUGERENCIAS = 3
 
@@ -130,24 +127,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No se pudo crear la solicitud' }, { status: 500 })
   }
 
-  // Avisar a quienes ofrecen en ese municipio. Best-effort: si falla, la
-  // solicitud ya quedó publicada y se ve en el tablero igual.
-  try {
-    const nombre = await nombreMunicipio(body.municipio)
-
-    if (nombre) {
-      const etiqueta = ETIQUETA.get(body.categoria) ?? 'insumos'
-      // Los ítems del catálogo, para que quien tenga inventario reciba el
-      // aviso solo si la solicitud pide algo suyo. Los sugeridos no
-      // cuentan: todavía no son un ítem con el que se pueda cruzar.
-      const idsPedidos = itemsValidados
-        .filter((i): i is { item_id: string; cantidad: number } => 'item_id' in i)
-        .map((i) => i.item_id)
-      await notificarOfertadores(body.municipio, nombre, etiqueta, idsPedidos)
-    }
-  } catch {
-    // Silencioso: no se loggea nada del cuerpo (CLAUDE.md regla 6).
-  }
-
+  // El aviso a quienes ofrecen en ese municipio ya no se manda aquí: la RPC
+  // `crear_solicitud` lo encola y el cron lo despacha (ver v2-l1). La
+  // respuesta vuelve sin esperar al fan-out.
   return NextResponse.json({ codigo: data[0].codigo, token })
 }

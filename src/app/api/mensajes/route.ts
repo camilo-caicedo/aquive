@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { limitar } from '@/lib/backend/limite'
-import { notificarConversacion } from '@/lib/push-coordinacion'
 
 interface CuerpoMensaje {
   conversacionId: string
@@ -52,21 +51,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    const origen = new URL(request.url).origin
-
-    await notificarConversacion(
-      body.conversacionId,
-      (codigo) => `Hay un mensaje nuevo en la coordinación de ${codigo}`,
-      origen,
-      body.token ? { solicitante: true } : { perfilId: user?.id }
-    )
-  } catch {
-    // Silencioso a propósito: no se loggea nada del cuerpo (regla 6).
-  }
-
+  // El aviso a los otros dos del hilo ya no se manda aquí: lo encolan
+  // `enviar_mensaje` / `enviar_mensaje_token` y lo despacha el cron (v2-l1).
   return NextResponse.json({ ok: true })
 }
