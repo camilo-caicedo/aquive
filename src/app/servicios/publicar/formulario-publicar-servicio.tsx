@@ -70,6 +70,13 @@ export function FormularioPublicarServicio({
       ? 'La zona no puede llevar teléfonos ni correos.'
       : null
 
+  // Al menos una: sin ubicación dentro del municipio, nadie sabe si le
+  // queda cerca y la solicitud no le sirve a nadie.
+  const hayUbicacion = zonaId !== '' || zonaTexto.trim().length >= 2
+
+  // Lo único que cambia entre Cali y el resto es cómo se llama el campo.
+  const etiquetaZona = zonasDelMunicipio.length > 0 ? 'Barrio' : 'Barrio o vereda'
+
   async function enviar() {
     setEnviando(true)
     setError(null)
@@ -80,8 +87,8 @@ export function FormularioPublicarServicio({
       body: JSON.stringify({
         oficio_id: oficioId,
         municipio,
-        zona_id: zonasDelMunicipio.length > 0 ? zonaId || null : null,
-        zona_texto: zonasDelMunicipio.length > 0 ? null : zonaTexto.trim() || null,
+        zona_id: zonaId || null,
+        zona_texto: zonaTexto.trim() || null,
         urgencia,
         capacidad_pago: pago,
         nota: nota.trim() || null,
@@ -266,31 +273,35 @@ export function FormularioPublicarServicio({
             </Combobox>
           </div>
 
-          {municipio !== '' &&
-            (zonasDelMunicipio.length > 0 ? (
-              <div>
-                <Label>Comuna o corregimiento</Label>
-                <Select value={zonaId} onValueChange={(v) => setZonaId(v ?? '')}>
-                  <SelectTrigger aria-label="Comuna" className="mt-1 bg-background">
-                    <SelectValue placeholder="Prefiero no decir">
-                      {(v: string) =>
-                        zonasDelMunicipio.find((z) => z.id === v)?.nombre ?? 'Prefiero no decir'
-                      }
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Prefiero no decir</SelectItem>
-                    {zonasDelMunicipio.map((z) => (
-                      <SelectItem key={z.id} value={z.id}>
-                        {z.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : (
-              <div>
-                <Label htmlFor="s-zona">Barrio o zona</Label>
+          {municipio !== '' && (
+            <fieldset>
+              <legend className="text-base font-medium">¿En qué parte?</legend>
+
+              {zonasDelMunicipio.length > 0 && (
+                <div className="mt-2">
+                  <Label>Comuna o corregimiento</Label>
+                  <Select value={zonaId} onValueChange={(v) => setZonaId(v ?? '')}>
+                    <SelectTrigger aria-label="Comuna" className="mt-1 bg-background">
+                      <SelectValue placeholder="Sin especificar">
+                        {(v: string) =>
+                          zonasDelMunicipio.find((z) => z.id === v)?.nombre ?? 'Sin especificar'
+                        }
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Sin especificar</SelectItem>
+                      {zonasDelMunicipio.map((z) => (
+                        <SelectItem key={z.id} value={z.id}>
+                          {z.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="mt-3">
+                <Label htmlFor="s-zona">{etiquetaZona}</Label>
                 <Input
                   id="s-zona"
                   value={zonaTexto}
@@ -299,9 +310,20 @@ export function FormularioPublicarServicio({
                   placeholder="El barrio, no la dirección"
                   className="mt-1"
                 />
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Con el barrio basta para que alguien sepa si le queda cerca.
+                  La dirección se la das después, si decides contratarlo.
+                </p>
                 {errorZona && <p className="mt-1 text-sm text-destructive">{errorZona}</p>}
               </div>
-            ))}
+
+              {!hayUbicacion && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Hace falta al menos una de las dos.
+                </p>
+              )}
+            </fieldset>
+          )}
 
           <fieldset>
             <legend className="mb-2 text-base font-medium">¿Para cuándo?</legend>
@@ -357,7 +379,7 @@ export function FormularioPublicarServicio({
             </Button>
             <Button
               className="flex-1"
-              disabled={municipio === '' || !!errorZona}
+              disabled={municipio === '' || !hayUbicacion || !!errorZona}
               onClick={() => setPaso(3)}
             >
               Continuar

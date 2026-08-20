@@ -268,10 +268,31 @@ explícito. El molde es `crear_perfil` (`supabase/schema.sql:2227`).
 ### 5.1 Geografía y taxonomía
 
 `zonas` — comuna, corregimiento o barrio, con llave a `municipios`.
-Semilla: las 22 comunas y los 15 corregimientos de Cali (76001). Los
-demás municipios no traen filas y la zona se escribe a mano en
-`zona_texto`, con el mismo filtro que `solicitudes.barrio`. Un admin
-puede sembrar zonas de otro municipio desde el panel.
+Semilla: las 22 comunas y los 15 corregimientos de Cali (76001).
+
+**`zona_id` y `zona_texto` conviven, y hace falta al menos una** (S8). En
+Cali lo natural es decir la comuna y el barrio; en un municipio sin
+comunas sembradas, solo el texto. Sin ninguna de las dos, una ficha de
+servicio a domicilio no dice dónde atiende y no sirve, así que el CHECK
+lo impide. La columna se llama `zona_texto` y no `barrio` a propósito:
+hay municipios donde lo que la gente dice es la vereda, el corregimiento
+o el sector. Lo que cambia según el municipio es la **etiqueta** en
+pantalla —«Barrio» donde hay comunas, «Barrio o vereda» donde no—, no el
+dato.
+
+**El desplegable lo construye quien lo usa.** Sembrar 1.121 municipios a
+mano no lo va a hacer nadie, así que el texto escrito se **propone** como
+zona: entra en `zonas` con `estado = 'propuesta'`, no sale en ningún
+desplegable, y un administrador o el equipo de la fundación lo aprueba
+—corrigiendo el nombre y el tipo, que es lo que casi siempre hace falta—.
+Desde entonces aparece en la lista de ese municipio.
+
+La propuesta ocurre **dentro** de `guardar_proveedor`,
+`crear_proveedor_asistido` y `crear_solicitud_servicio`, como efecto de
+guardar. No hay RPC pública para proponer: sería una puerta más que
+defender del spam, y esas tres ya exigen sesión, token o Turnstile. Un
+nombre `rechazada` no vuelve a la cola aunque alguien lo escriba otra
+vez, porque el `unique` sobre (municipio, nombre) lo bloquea.
 
 `catalogo_oficios` — `id`, `grupo`, `nombre`, `riesgo`, `activo`,
 `orden`. Grupos: comida, belleza, confección, transporte, aseo, cuidado,
@@ -465,6 +486,7 @@ programando.
 | **S5** | Solicitud de servicio, respuestas, gestión por token, `expirar_servicios()` | Sí |
 | **S6** | Códigos de servicio, reseñas, réplica, `/servicios/confirmar` | Sí |
 | **S7** | Reportes ampliados, moderación, `metricas_servicio`, `/datos` | Sí |
+| **S8** | Comuna y zona a la vez, zonas propuestas por quien las escribe, pestañas en control segmentado | Sí |
 
 ---
 
@@ -522,6 +544,11 @@ Lo que sostiene, por fase:
 - **S7** · Que resolver un reporte, ver el panel y tocar los catálogos
   exija ser administrador, y que una fila `es_prueba` no se cuele en los
   datos abiertos.
+- **S8** · Que comuna y barrio se guarden juntos, que sin ninguna de las
+  dos no se guarde nada, que lo escrito en un municipio sin comunas caiga
+  en la cola como `propuesta`, que una propuesta no se pueda elegir
+  todavía ni la vea `anon`, que escribirla dos veces no la duplique, y
+  que un nombre rechazado no vuelva a la cola.
 
 **Manual.** `migracion/99-verificar.sql` trae los puntos 13 a 17 del
 módulo: catálogos sembrados, que los cuatro oficios de riesgo sigan en

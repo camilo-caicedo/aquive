@@ -148,10 +148,20 @@ export function FormularioProveedor({
   const nombreValido = nombre.trim().length >= 3 && nombre.trim().length <= 60
   const telefonoValido = /^[0-9+()\- ]{7,20}$/.test(telefono.trim())
 
+  // Al menos una de las dos. Con las dos, mejor; con ninguna, la ficha no
+  // dice dónde atiende y para un servicio a domicilio eso no sirve.
+  const hayUbicacion = zonaId !== '' || zonaTexto.trim().length >= 2
+
+  // Lo único que cambia entre Cali y el resto es cómo se llama el campo:
+  // donde hay comunas, esto es el barrio; donde no, es la única división
+  // que la persona va a saber decir, y puede ser una vereda o un sector.
+  const etiquetaZona = zonasDelMunicipio.length > 0 ? 'Barrio' : 'Barrio o vereda'
+
   const puedeGuardar =
     nombreValido &&
     telefonoValido &&
     municipio !== '' &&
+    hayUbicacion &&
     modalidad.length > 0 &&
     elegidos.length > 0 &&
     !errorDescripcion &&
@@ -187,10 +197,10 @@ export function FormularioProveedor({
       p_tipo: tipo,
       p_telefono: telefono.trim(),
       p_municipio: municipio,
-      // Una de las dos, nunca las dos: si el municipio tiene zonas
-      // sembradas se usa la lista y se descarta lo escrito.
-      p_zona_id: zonasDelMunicipio.length > 0 ? zonaId || null : null,
-      p_zona_texto: zonasDelMunicipio.length > 0 ? null : zonaTexto.trim() || null,
+      // Las dos si las hay. La comuna solo existe donde está sembrada; el
+      // texto siempre, y al guardarse se propone como zona del municipio.
+      p_zona_id: zonaId || null,
+      p_zona_texto: zonaTexto.trim() || null,
       p_modalidad: modalidad,
       p_dias: dias,
       p_franjas: franjas,
@@ -344,46 +354,62 @@ export function FormularioProveedor({
         </Combobox>
       </div>
 
-      {municipio !== '' &&
-        (zonasDelMunicipio.length > 0 ? (
-          <div>
-            <Label>Comuna o corregimiento</Label>
-            <Select value={zonaId} onValueChange={(v) => setZonaId(v ?? '')}>
-              <SelectTrigger aria-label="Comuna o corregimiento" className="mt-1 bg-background">
-                <SelectValue placeholder="Toda la ciudad">
-                  {(v: string) =>
-                    zonasDelMunicipio.find((z) => z.id === v)?.nombre ?? 'Toda la ciudad'
-                  }
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Toda la ciudad</SelectItem>
-                {zonasDelMunicipio.map((z) => (
-                  <SelectItem key={z.id} value={z.id}>
-                    {z.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ) : (
-          <div>
-            <Label htmlFor="zona">Barrio o zona</Label>
+      {municipio !== '' && (
+        <fieldset>
+          <legend className="text-base font-medium">¿En qué parte?</legend>
+
+          {/* Las dos, no una u otra: en Cali lo natural es decir la
+              comuna Y el barrio. Con una basta, pero con ninguna no. */}
+          {zonasDelMunicipio.length > 0 && (
+            <div className="mt-2">
+              <Label>Comuna o corregimiento</Label>
+              <Select value={zonaId} onValueChange={(v) => setZonaId(v ?? '')}>
+                <SelectTrigger aria-label="Comuna o corregimiento" className="mt-1 bg-background">
+                  <SelectValue placeholder="Sin especificar">
+                    {(v: string) =>
+                      zonasDelMunicipio.find((z) => z.id === v)?.nombre ?? 'Sin especificar'
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Sin especificar</SelectItem>
+                  {zonasDelMunicipio.map((z) => (
+                    <SelectItem key={z.id} value={z.id}>
+                      {z.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="mt-3">
+            <Label htmlFor="zona">{etiquetaZona}</Label>
             <Input
               id="zona"
               value={zonaTexto}
               onChange={(e) => setZonaTexto(e.target.value)}
               maxLength={60}
-              placeholder="El Poblado, centro…"
+              placeholder={
+                zonasDelMunicipio.length > 0 ? 'San Fernando, El Poblado…' : 'Tu barrio o vereda'
+              }
               className="mt-1"
             />
             <p className="mt-1 text-sm text-muted-foreground">
-              El barrio, no la dirección. Nadie necesita saber tu casa para
-              llamarte.
+              {zonasDelMunicipio.length > 0
+                ? 'El barrio, no la dirección. Nadie necesita saber tu casa para llamarte.'
+                : 'El barrio o la vereda, no la dirección. Lo que escribas lo revisa la fundación y después queda en la lista para los demás de tu municipio.'}
             </p>
             {errorZona && <p className="mt-1 text-sm text-destructive">{errorZona}</p>}
           </div>
-        ))}
+
+          {!hayUbicacion && (
+            <p className="mt-2 text-sm text-muted-foreground">
+              Hace falta al menos una de las dos.
+            </p>
+          )}
+        </fieldset>
+      )}
 
       <fieldset>
         <legend className="mb-2 text-base font-medium">¿Dónde atiendes?</legend>

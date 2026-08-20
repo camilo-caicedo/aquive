@@ -18,6 +18,7 @@ import { PanelCoincidencias } from './panel-coincidencias'
 import { PanelSolicitudes } from './panel-solicitudes'
 import { PanelProveedores, type ProveedorDeOrganizacion } from './panel-proveedores'
 import { PanelReferencias, type ReferenciaPorRevisar } from './panel-referencias'
+import { PanelZonas, type ZonaPropuesta } from '@/components/panel-zonas'
 
 export const metadata: Metadata = {
   title: 'Mi organización',
@@ -194,7 +195,15 @@ export default async function AliadoPage({
  */
 async function Proveedores() {
   const supabase = await createClient()
-  const [{ data: lista }, { data: oficios }, { data: zonas }, municipios, origen, { data: refs }] =
+  const [
+    { data: lista },
+    { data: oficios },
+    { data: zonas },
+    municipios,
+    origen,
+    { data: refs },
+    { data: zonasProp },
+  ] =
     await Promise.all([
       supabase.rpc('proveedores_de_mi_organizacion'),
       supabase.from('catalogo_oficios').select('*').eq('activo', true).order('orden'),
@@ -202,6 +211,7 @@ async function Proveedores() {
       listarMunicipios(supabase),
       origenDelSitio(),
       supabase.rpc('referencias_por_revisar'),
+      supabase.rpc('zonas_propuestas'),
     ])
 
   const { data: organizacionId } = await supabase.rpc('mi_organizacion_activa')
@@ -241,6 +251,14 @@ async function Proveedores() {
       <PanelReferencias
         referencias={(refs as unknown as ReferenciaPorRevisar[]) ?? []}
       />
+
+      <h3 className="font-heading mt-10 text-2xl">Zonas por revisar</h3>
+      <p className="mt-1 text-base text-muted-foreground">
+        Barrios y veredas que escribió alguien al registrarse, en municipios
+        que todavía no tienen comunas cargadas. Al aprobarlos quedan en el
+        desplegable para los siguientes: el mapa lo construye quien vive ahí.
+      </p>
+      <PanelZonas zonas={(zonasProp as unknown as ZonaPropuesta[]) ?? []} />
     </section>
   )
 }

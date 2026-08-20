@@ -29,6 +29,7 @@ import {
   type PanelServiciosDatos,
   type AccesoAReferencia,
 } from './panel-servicios'
+import type { ZonaPropuesta } from '@/components/panel-zonas'
 
 const MOTIVOS: Record<MotivoReporte, string> = {
   datos_personales: 'Datos personales',
@@ -134,6 +135,7 @@ export default async function AdminPage({
     { data: solicitudesData },
     { data: serviciosData },
     { data: accesosRefData },
+    { data: zonasPropData },
   ] = await Promise.all([
     enModeracion
       ? supabase
@@ -173,6 +175,9 @@ export default async function AdminPage({
     vista === 'servicios'
       ? supabase.rpc('accesos_a_referencias')
       : Promise.resolve({ data: null }),
+    vista === 'servicios'
+      ? supabase.rpc('zonas_propuestas')
+      : Promise.resolve({ data: null }),
   ])
 
   const solicitudes = (solicitudesData as unknown as SolicitudAdmin[]) ?? []
@@ -183,6 +188,7 @@ export default async function AdminPage({
   const flujo2 = flujo2Data as unknown as PanelFlujo2 | null
   const servicios = serviciosData as unknown as PanelServiciosDatos | null
   const accesosRef = (accesosRefData as unknown as AccesoAReferencia[]) ?? []
+  const zonasProp = (zonasPropData as unknown as ZonaPropuesta[]) ?? []
 
   const porPerfil = new Map((perfiles ?? []).map((p) => [p.id, p]))
 
@@ -418,7 +424,7 @@ export default async function AdminPage({
       )}
 
       {vista === 'servicios' && servicios && (
-        <PanelServicios datos={servicios} accesos={accesosRef} />
+        <PanelServicios datos={servicios} accesos={accesosRef} zonas={zonasProp} />
       )}
     </main>
   )

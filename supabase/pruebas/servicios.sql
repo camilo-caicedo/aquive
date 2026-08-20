@@ -36,18 +36,18 @@ begin
   -- ------------------------------------------------------------------
   insert into public.proveedores
     (nombre_visible, tipo, telefono, municipio, acepto_publicacion,
-     autorizacion_version, token_hash, es_prueba)
+     autorizacion_version, token_hash, zona_texto, es_prueba)
   values
     ('PRUEBA riesgo alto', 'persona', '3000000001', '76001', true,
-     'prueba', 'hash-prueba-alto', true)
+     'prueba', 'hash-prueba-alto', 'Zona de prueba', true)
   returning id into v_prov_alto;
 
   insert into public.proveedores
     (nombre_visible, tipo, telefono, municipio, acepto_publicacion,
-     autorizacion_version, token_hash, es_prueba)
+     autorizacion_version, token_hash, zona_texto, es_prueba)
   values
     ('PRUEBA riesgo bajo', 'persona', '3000000002', '76001', true,
-     'prueba', 'hash-prueba-bajo', true)
+     'prueba', 'hash-prueba-bajo', 'Zona de prueba', true)
   returning id into v_prov_bajo;
 
   insert into public.proveedor_oficios (proveedor_id, oficio_id, modo)
@@ -119,10 +119,12 @@ begin
   v_fallo := false;
   begin
     insert into public.proveedores
+      -- Con zona a propósito: si faltara, la fila caería por el CHECK de
+      -- ubicación y esta prueba pasaría por el motivo equivocado.
       (nombre_visible, tipo, telefono, municipio, autorizacion_version,
-       perfil_id, token_hash, es_prueba)
+       perfil_id, token_hash, zona_texto, es_prueba)
     values ('PRUEBA dos dueños', 'persona', '3000000003', '76001', 'prueba',
-            gen_random_uuid(), 'hash-prueba-dos', true);
+            gen_random_uuid(), 'hash-prueba-dos', 'Zona de prueba', true);
   exception when others then v_fallo := true;
   end;
   assert v_fallo, 'Un proveedor pudo nacer con cuenta Y token: se rompe el habeas data del alta asistida';
@@ -132,8 +134,10 @@ begin
   v_fallo := false;
   begin
     insert into public.proveedores
-      (nombre_visible, tipo, telefono, municipio, autorizacion_version, es_prueba)
-    values ('PRUEBA sin dueño', 'persona', '3000000004', '76001', 'prueba', true);
+      (nombre_visible, tipo, telefono, municipio, autorizacion_version,
+       zona_texto, es_prueba)
+    values ('PRUEBA sin dueño', 'persona', '3000000004', '76001', 'prueba',
+            'Zona de prueba', true);
   exception when others then v_fallo := true;
   end;
   assert v_fallo, 'Un proveedor pudo nacer sin dueño: nadie podría borrar esa ficha';
@@ -228,10 +232,10 @@ begin
   -- 6. Borrado — regla 4. Lo vencido se va y deja métrica anónima.
   -- ------------------------------------------------------------------
   insert into public.solicitudes_servicio
-    (codigo, token_hash, oficio_id, municipio, urgencia, capacidad_pago,
-     expira_at, es_prueba)
-  values ('PRB1', 'hash-token-prueba', 'arreglos_ropa', '76001', 'hoy',
-          'no_puedo_pagar', now() - interval '1 hour', true)
+    (codigo, token_hash, oficio_id, municipio, zona_texto, urgencia,
+     capacidad_pago, expira_at, es_prueba)
+  values ('PRB1', 'hash-token-prueba', 'arreglos_ropa', '76001', 'Zona de prueba',
+          'hoy', 'no_puedo_pagar', now() - interval '1 hour', true)
   returning id into v_sol;
 
   insert into public.respuestas_servicio (solicitud_id, proveedor_id, mensaje)
@@ -298,17 +302,17 @@ declare
 begin
   insert into public.proveedores
     (nombre_visible, tipo, telefono, municipio, acepto_publicacion,
-     autorizacion_version, token_hash, telefono_verificado, es_prueba)
+     autorizacion_version, token_hash, telefono_verificado, zona_texto, es_prueba)
   values
     ('PRUEBA S2', 'persona', '3000000009', '76001', true, 'prueba',
-     encode(extensions.digest(v_tok, 'sha256'), 'hex'), true, true)
+     encode(extensions.digest(v_tok, 'sha256'), 'hex'), true, 'Zona de prueba', true)
   returning id into v_id;
 
   -- ---- Un token que no existe no edita nada -------------------------
   v_fallo := false;
   begin
     perform public.guardar_proveedor(
-      'PRUEBA S2', 'persona', '3000000009', '76001', null, null,
+      'PRUEBA S2', 'persona', '3000000009', '76001', null, 'Zona de prueba',
       array['domicilio'], null, null, null, null, v_ok, true, 'prueba',
       'token-que-no-existe');
   exception when others then v_fallo := true;
@@ -319,7 +323,7 @@ begin
   v_fallo := false;
   begin
     perform public.guardar_proveedor(
-      'PRUEBA S2', 'persona', '3000000009', '76001', null, null,
+      'PRUEBA S2', 'persona', '3000000009', '76001', null, 'Zona de prueba',
       array['domicilio'], null, null, null, null, v_ok, false, 'prueba', v_tok);
   exception when others then v_fallo := true;
   end;
@@ -329,24 +333,38 @@ begin
   v_fallo := false;
   begin
     perform public.guardar_proveedor(
-      'PRUEBA S2', 'persona', '3000000009', '76001', null, null,
+      'PRUEBA S2', 'persona', '3000000009', '76001', null, 'Zona de prueba',
       array['domicilio'], null, null, null,
       'Escríbeme al 3001234567', v_ok, true, 'prueba', v_tok);
   exception when others then v_fallo := true;
   end;
   assert v_fallo, 'La descripción aceptó un teléfono';
 
-  -- ---- La zona: de la lista o escrita, no las dos -------------------
+  -- ---- Comuna y barrio conviven (S8) --------------------------------
+  -- Antes eran excluyentes. En Cali lo natural es decir las dos, así que
+  -- esto tiene que PASAR.
+  perform public.guardar_proveedor(
+    'PRUEBA S2', 'persona', '3000000009', '76001',
+    (select z.id from public.zonas z
+      where z.municipio = '76001' and z.estado = 'aprobada' limit 1),
+    'San Fernando', array['domicilio'], null, null, null, null,
+    v_ok, true, 'prueba', v_tok);
+
+  select count(*) into v_n from public.proveedores
+   where token_hash = encode(extensions.digest(v_tok, 'sha256'), 'hex')
+     and zona_id is not null and zona_texto = 'San Fernando';
+  assert v_n = 1, 'No se guardaron la comuna y el barrio a la vez';
+
+  -- ---- Pero sin ninguna de las dos, no ------------------------------
   v_fallo := false;
   begin
     perform public.guardar_proveedor(
-      'PRUEBA S2', 'persona', '3000000009', '76001',
-      (select z.id from public.zonas z where z.municipio = '76001' limit 1),
-      'San Fernando', array['domicilio'], null, null, null, null,
+      'PRUEBA S2', 'persona', '3000000009', '76001', null, null,
+      array['domicilio'], null, null, null, null,
       v_ok, true, 'prueba', v_tok);
   exception when others then v_fallo := true;
   end;
-  assert v_fallo, 'Se aceptaron zona de lista y zona escrita a la vez';
+  assert v_fallo, 'Se guardó una ficha sin comuna y sin barrio';
 
   -- ---- Una zona de otro municipio no es de este ---------------------
   v_fallo := false;
@@ -364,7 +382,7 @@ begin
   v_fallo := false;
   begin
     perform public.guardar_proveedor(
-      'PRUEBA S2', 'persona', '3000000009', '76001', null, null,
+      'PRUEBA S2', 'persona', '3000000009', '76001', null, 'Zona de prueba',
       '{}', null, null, null, null, v_ok, true, 'prueba', v_tok);
   exception when others then v_fallo := true;
   end;
@@ -374,7 +392,7 @@ begin
   v_fallo := false;
   begin
     perform public.guardar_proveedor(
-      'PRUEBA S2', 'persona', '3000000009', '76001', null, null,
+      'PRUEBA S2', 'persona', '3000000009', '76001', null, 'Zona de prueba',
       array['domicilio'], null, null, null, null,
       '[{"oficio_id":"reconstruccion_estructural","modo":"normal"}]'::jsonb,
       true, 'prueba', v_tok);
@@ -475,10 +493,10 @@ declare
 begin
   insert into public.proveedores
     (nombre_visible, tipo, telefono, municipio, acepto_publicacion,
-     autorizacion_version, token_hash, es_prueba)
+     autorizacion_version, token_hash, zona_texto, es_prueba)
   values
     ('PRUEBA S3', 'persona', '3000000010', '76001', true, 'prueba',
-     'hash-prueba-s3', true)
+     'hash-prueba-s3', 'Zona de prueba', true)
   returning id into v_id;
 
   -- ---- Nadie verifica un teléfono sin ser admin ni del equipo -------
@@ -516,7 +534,7 @@ begin
     perform public.crear_proveedor_asistido(
       gen_random_uuid(),
       repeat('a', 64),
-      'PRUEBA intrusa', 'persona', '3000000011', '76001', null, null,
+      'PRUEBA intrusa', 'persona', '3000000011', '76001', null, 'Zona de prueba',
       array['domicilio'],
       '[{"oficio_id":"arreglos_ropa","modo":"normal"}]'::jsonb,
       'prueba');
@@ -557,10 +575,10 @@ declare
 begin
   insert into public.proveedores
     (nombre_visible, tipo, telefono, municipio, acepto_publicacion,
-     autorizacion_version, token_hash, es_prueba)
+     autorizacion_version, token_hash, zona_texto, es_prueba)
   values
     ('PRUEBA S4', 'persona', '3000000020', '76001', true, 'prueba',
-     encode(extensions.digest(v_tok, 'sha256'), 'hex'), true)
+     encode(extensions.digest(v_tok, 'sha256'), 'hex'), 'Zona de prueba', true)
   returning id into v_prov;
 
   insert into public.proveedor_oficios (proveedor_id, oficio_id, modo)
@@ -753,7 +771,7 @@ begin
   v_fallo := false;
   begin
     perform public.crear_solicitud_servicio(
-      'arreglos_ropa', '76001', null, null, 'hoy', 'puedo_pagar',
+      'arreglos_ropa', '76001', null, 'Zona de prueba', 'hoy', 'puedo_pagar',
       'Llamame al 3001234567', v_tok);
   exception when others then v_fallo := true;
   end;
@@ -763,7 +781,7 @@ begin
   v_fallo := false;
   begin
     perform public.crear_solicitud_servicio(
-      'arreglos_ropa', '76001', null, null, 'hoy', 'puedo_pagar',
+      'arreglos_ropa', '76001', null, 'Zona de prueba', 'hoy', 'puedo_pagar',
       'escribeme a juan@correo.com', v_tok);
   exception when others then v_fallo := true;
   end;
@@ -807,10 +825,10 @@ begin
   -- Ahora sí, con ficha publicada.
   insert into public.proveedores
     (nombre_visible, tipo, telefono, municipio, acepto_publicacion,
-     autorizacion_version, token_hash, es_prueba)
+     autorizacion_version, token_hash, zona_texto, es_prueba)
   values
     ('PRUEBA S5', 'persona', '3000000030', '76001', true, 'prueba',
-     encode(extensions.digest(v_ptok, 'sha256'), 'hex'), true)
+     encode(extensions.digest(v_ptok, 'sha256'), 'hex'), 'Zona de prueba', true)
   returning id into v_prov;
 
   insert into public.proveedor_oficios (proveedor_id, oficio_id, modo)
@@ -906,10 +924,10 @@ declare
 begin
   insert into public.proveedores
     (nombre_visible, tipo, telefono, municipio, acepto_publicacion,
-     autorizacion_version, token_hash, es_prueba)
+     autorizacion_version, token_hash, zona_texto, es_prueba)
   values
     ('PRUEBA S6', 'persona', '3000000040', '76001', true, 'prueba',
-     encode(extensions.digest(v_ptok, 'sha256'), 'hex'), true)
+     encode(extensions.digest(v_ptok, 'sha256'), 'hex'), 'Zona de prueba', true)
   returning id into v_prov;
 
   insert into public.proveedor_oficios (proveedor_id, oficio_id, modo)
@@ -1066,10 +1084,10 @@ declare
 begin
   insert into public.proveedores
     (nombre_visible, tipo, telefono, municipio, acepto_publicacion,
-     autorizacion_version, token_hash, es_prueba)
+     autorizacion_version, token_hash, zona_texto, es_prueba)
   values
     ('PRUEBA S7', 'persona', '3000000050', '76001', true, 'prueba',
-     'hash-prueba-s7', true)
+     'hash-prueba-s7', 'Zona de prueba', true)
   returning id into v_prov;
 
   insert into public.proveedor_oficios (proveedor_id, oficio_id, modo)
@@ -1155,5 +1173,118 @@ begin
   delete from public.proveedores where es_prueba;
 
   raise notice 'Pruebas de la fase S7: OK';
+end;
+$$;
+
+-- =====================================================================
+-- Fase S8 — comuna y zona a la vez, y las zonas propuestas
+-- =====================================================================
+
+do $$
+declare
+  v_tok  text := 'token-de-prueba-s8-no-usar-en-nada-real';
+  v_prov uuid;
+  v_zona uuid;
+  v_n    integer;
+  v_fallo boolean;
+  v_ok   jsonb := '[{"oficio_id":"arreglos_ropa","modo":"normal"}]'::jsonb;
+begin
+  insert into public.proveedores
+    (nombre_visible, tipo, telefono, municipio, acepto_publicacion,
+     autorizacion_version, token_hash, zona_texto, es_prueba)
+  values
+    ('PRUEBA S8', 'persona', '3000000060', '76001', true, 'prueba',
+     encode(extensions.digest(v_tok, 'sha256'), 'hex'), 'Zona de prueba', true)
+  returning id into v_prov;
+
+  insert into public.proveedor_oficios (proveedor_id, oficio_id, modo)
+  values (v_prov, 'arreglos_ropa', 'normal');
+
+  -- ---- Guardar en un municipio sin comunas propone la zona -----------
+  -- 76109 es Buenaventura: no tiene nada sembrado, así que lo que se
+  -- escriba tiene que caer en la cola.
+  delete from public.zonas where municipio = '76109' and nombre = 'Barrio de prueba S8';
+
+  perform public.guardar_proveedor(
+    'PRUEBA S8', 'persona', '3000000060', '76109', null, 'Barrio de prueba S8',
+    array['domicilio'], null, null, null, null, v_ok, true, 'prueba', v_tok);
+
+  select z.id into v_zona from public.zonas z
+   where z.municipio = '76109' and z.nombre = 'Barrio de prueba S8';
+  assert v_zona is not null, 'La zona escrita a mano no entró en la cola';
+
+  select count(*) into v_n from public.zonas z
+   where z.id = v_zona and z.estado = 'propuesta';
+  assert v_n = 1, 'La zona propuesta nació aprobada: saldría en el desplegable sin que nadie la mire';
+
+  -- ---- Y una propuesta NO se puede elegir todavía --------------------
+  v_fallo := false;
+  begin
+    perform public.guardar_proveedor(
+      'PRUEBA S8', 'persona', '3000000060', '76109', v_zona, null,
+      array['domicilio'], null, null, null, null, v_ok, true, 'prueba', v_tok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Se pudo elegir una zona que todavía está por revisar';
+
+  -- ---- Ni la ve `anon` -----------------------------------------------
+  -- La política filtra por estado, así que una consulta del cliente no
+  -- puede sacar lo propuesto. Se comprueba que la política diga eso.
+  select count(*) into v_n from pg_policies
+   where schemaname = 'public' and tablename = 'zonas'
+     and qual like '%aprobada%';
+  assert v_n = 1,
+    'La política de zonas no filtra por estado: lo propuesto saldría en los desplegables';
+
+  -- ---- Escribirla otra vez no duplica la propuesta -------------------
+  perform public.guardar_proveedor(
+    'PRUEBA S8', 'persona', '3000000060', '76109', null, 'Barrio de prueba S8',
+    array['domicilio'], null, null, null, null, v_ok, true, 'prueba', v_tok);
+
+  select count(*) into v_n from public.zonas z
+   where z.municipio = '76109' and z.nombre = 'Barrio de prueba S8';
+  assert v_n = 1, 'La misma zona se propuso dos veces';
+
+  -- ---- Resolverla es de quien modera ---------------------------------
+  v_fallo := false;
+  begin
+    perform public.resolver_zona(v_zona, true, null, null);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Un anónimo aprobó una zona';
+
+  v_fallo := false;
+  begin
+    perform public.zonas_propuestas();
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'zonas_propuestas respondió sin sesión';
+
+  -- ---- Una zona rechazada no vuelve a la cola ------------------------
+  update public.zonas set estado = 'rechazada' where id = v_zona;
+
+  perform public.guardar_proveedor(
+    'PRUEBA S8', 'persona', '3000000060', '76109', null, 'Barrio de prueba S8',
+    array['domicilio'], null, null, null, null, v_ok, true, 'prueba', v_tok);
+
+  select count(*) into v_n from public.zonas z
+   where z.id = v_zona and z.estado = 'rechazada';
+  assert v_n = 1,
+    'Un nombre rechazado volvió a la cola solo porque alguien lo escribió otra vez';
+
+  -- ---- La solicitud también exige al menos una -----------------------
+  v_fallo := false;
+  begin
+    perform public.crear_solicitud_servicio(
+      'arreglos_ropa', '76001', null, null, 'hoy', 'puedo_pagar', null,
+      'token-de-prueba-s8-solicitud-no-usar-en-nada-real');
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Se publicó una solicitud sin comuna y sin barrio';
+
+  delete from public.proveedores where es_prueba;
+  delete from public.zonas where municipio = '76109' and nombre = 'Barrio de prueba S8';
+
+  raise notice 'Pruebas de la fase S8: OK';
 end;
 $$;

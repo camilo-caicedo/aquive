@@ -9,15 +9,27 @@ export interface Pestana {
 }
 
 /**
- * La misma barra de píldoras que ya usaban la portada y /servidores, ahora
- * en un solo sitio. Enlaces con el estado en la URL, no estado de cliente:
- * se puede compartir, el atrás del navegador funciona y no hace falta
- * JavaScript.
+ * La barra de pestañas de todo el sitio. Enlaces con el estado en la URL,
+ * no estado de cliente: se puede compartir, el atrás del navegador
+ * funciona y cada pestaña consulta solo lo suyo.
  *
- * Existe porque cuatro pantallas —solicitud, perfil, organización y
- * moderación— habían crecido hasta ser un rollo vertical donde todo
- * competía por la atención. Separar en pestañas no es decoración: cada
- * pestaña consulta solo lo suyo, así que además se carga menos.
+ * Existe porque cinco pantallas —solicitud, perfil, organización,
+ * moderación y servicios— habían crecido hasta ser un rollo vertical
+ * donde todo competía por la atención.
+ *
+ * ⚠ Antes eran píldoras con borde, iguales a los botones `outline` que
+ * suelen ir justo debajo, y en /servicios no se distinguía qué era
+ * navegación y qué era una acción. Ahora es un control segmentado —una
+ * sola pieza con fondo apagado, y la activa levantada en blanco—, que se
+ * lee como «un grupo donde eliges uno» y no como «tres botones sueltos».
+ * Es la forma del componente Tabs de shadcn sobre Base UI.
+ *
+ * No usa `Tabs` de Base UI a propósito: aquello monta paneles y estado en
+ * el cliente, y esto son enlaces a rutas distintas renderizadas en el
+ * servidor. Se toma la apariencia, no la maquinaria.
+ *
+ * El alto sigue en 48 px, que es lo que manda CLAUDE.md aunque el
+ * original de shadcn sea más bajo: esto se toca de pie y con prisa.
  */
 export function Pestanas({
   etiqueta,
@@ -29,26 +41,30 @@ export function Pestanas({
 }) {
   return (
     <nav aria-label={etiqueta} className="-mx-4 overflow-x-auto px-4">
-      <ul className="flex gap-2">
+      <ul className="inline-flex w-full min-w-fit items-center gap-1 rounded-xl bg-muted p-1">
         {pestanas.map((p) => (
-          <li key={p.href} className="shrink-0">
+          <li key={p.href} className="min-w-fit flex-1">
             <Link
               href={p.href}
               aria-current={p.activa ? 'page' : undefined}
-              // Alto mínimo de 48px como el resto: se usa desde el celular
-              // y de pie. El color no es la única señal — la píldora activa
-              // cambia de fondo, no solo de tinte.
-              className={`inline-flex min-h-12 items-center gap-1.5 rounded-full border px-4 text-base transition-colors ${
+              // La activa va en primario, no en el papel del fondo: sobre
+              // el papel cálido de este sitio, un blanco sobre beige casi
+              // no se distingue —y menos con el sol de frente, que es
+              // donde de verdad se usa esto—. El contraste es de color y
+              // de peso, no solo de tono.
+              className={`inline-flex min-h-12 w-full items-center justify-center gap-1.5 rounded-lg px-3 text-base whitespace-nowrap transition-colors ${
                 p.activa
-                  ? 'border-primary bg-primary font-medium text-primary-foreground'
-                  : 'border-border bg-card hover:bg-muted'
+                  ? 'bg-primary font-medium text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {p.etiqueta}
               {p.cuenta !== undefined && p.cuenta > 0 && (
                 <span
                   className={`rounded-full px-2 text-sm ${
-                    p.activa ? 'bg-primary-foreground/20' : 'bg-muted text-muted-foreground'
+                    p.activa
+                      ? 'bg-primary-foreground/20'
+                      : 'bg-background text-muted-foreground'
                   }`}
                 >
                   {p.cuenta}

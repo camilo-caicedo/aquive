@@ -148,6 +148,12 @@ export function diasLegibles(dias: DiaSemana[]): string | null {
   return indices.map((i) => DIAS[i].etiqueta).join(', ')
 }
 
-/** La zona a mostrar: la de la lista si existe, si no la escrita a mano. */
+/**
+ * Dónde atiende, dentro del municipio.
+ *
+ * Pueden venir las dos —«Comuna 3 · San Fernando»— porque en Cali lo
+ * natural es decir la comuna y el barrio. Con una basta; con ninguna no
+ * se guarda, así que esto nunca debería devolver null en datos reales.
+ */
 export const zonaLegible = (nombre: string | null, texto: string | null) =>
-  nombre ?? texto ?? null
+  [nombre, texto].filter(Boolean).join(' · ') || null

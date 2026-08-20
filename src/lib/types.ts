@@ -106,6 +106,11 @@ export type DiaSemana = 'lun' | 'mar' | 'mie' | 'jue' | 'vie' | 'sab' | 'dom'
 export type FranjaHoraria = 'manana' | 'tarde' | 'noche'
 export type MedioPago = 'efectivo' | 'nequi' | 'daviplata'
 export type TipoZona = 'comuna' | 'corregimiento' | 'barrio'
+/**
+ * Lo sembrado nace `aprobada`. Lo que escribe alguien al publicar entra
+ * como `propuesta` y no sale en ningún desplegable hasta que se revise.
+ */
+export type EstadoZona = 'propuesta' | 'aprobada' | 'rechazada'
 export type UrgenciaServicio = 'hoy' | 'esta_semana' | 'sin_prisa'
 export type CapacidadPago = 'puedo_pagar' | 'pago_poco' | 'no_puedo_pagar'
 export type EstadoReferencia = 'pendiente' | 'confirmada' | 'no_contesta' | 'rechazada'
@@ -778,6 +783,12 @@ export interface Database {
           tipo: TipoZona
           activa: boolean
           orden: number
+          /**
+           * Solo lo `aprobada` sale en los desplegables: la política de
+           * RLS lo filtra, así que una consulta desde el cliente nunca ve
+           * lo propuesto.
+           */
+          estado: EstadoZona
         }
         Insert: {
           id?: string
@@ -2056,6 +2067,19 @@ export interface Database {
       panel_admin_servicios: {
         Args: Record<string, never>
         Returns: Json
+      }
+      zonas_propuestas: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      resolver_zona: {
+        Args: {
+          p_id: string
+          p_aprobar: boolean
+          p_nombre?: string | null
+          p_tipo?: TipoZona | null
+        }
+        Returns: undefined
       }
       guardar_zona: {
         Args: {

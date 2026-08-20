@@ -7,6 +7,7 @@ import { BadgeCheck, Eye, Phone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { PanelZonas, type ZonaPropuesta } from '@/components/panel-zonas'
 
 export interface PanelServiciosDatos {
   por_verificar: {
@@ -33,6 +34,7 @@ export interface PanelServiciosDatos {
     creada_at: string
   }[]
   referencias_pendientes: number
+  zonas_pendientes: number
   totales: {
     proveedores: number
     publicados: number
@@ -61,9 +63,11 @@ export interface AccesoAReferencia {
 export function PanelServicios({
   datos,
   accesos,
+  zonas,
 }: {
   datos: PanelServiciosDatos
   accesos: AccesoAReferencia[]
+  zonas: ZonaPropuesta[]
 }) {
   const router = useRouter()
   const [ocupado, setOcupado] = useState(false)
@@ -283,6 +287,18 @@ export function PanelServicios({
             ))}
           </ul>
         )}
+      </section>
+
+      <section>
+        <h2 className="font-heading text-2xl">
+          Zonas por revisar ({datos.zonas_pendientes})
+        </h2>
+        <p className="mt-1 text-base text-muted-foreground">
+          Barrios y veredas que escribió alguien al registrarse, en municipios
+          sin comunas cargadas. Al aprobarlos quedan en el desplegable para los
+          siguientes.
+        </p>
+        <PanelZonas zonas={zonas} />
       </section>
 
       <section>

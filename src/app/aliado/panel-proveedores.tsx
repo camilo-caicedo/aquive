@@ -121,10 +121,13 @@ export function PanelProveedores({
   const municipioElegido = municipios.find((m) => m.codigo_dane === municipio)
   const errorZona = zonaTexto.trim() && contienePII(zonaTexto) ? MENSAJE_PII : null
 
+  const hayUbicacion = zonaId !== '' || zonaTexto.trim().length >= 2
+
   const puedeGuardar =
     nombre.trim().length >= 3 &&
     /^[0-9+()\- ]{7,20}$/.test(telefono.trim()) &&
     municipio !== '' &&
+    hayUbicacion &&
     modalidad.length > 0 &&
     elegidos.length > 0 &&
     !errorZona &&
@@ -158,8 +161,8 @@ export function PanelProveedores({
         tipo,
         telefono: telefono.trim(),
         municipio,
-        zona_id: zonasDelMunicipio.length > 0 ? zonaId || null : null,
-        zona_texto: zonasDelMunicipio.length > 0 ? null : zonaTexto.trim() || null,
+        zona_id: zonaId || null,
+        zona_texto: zonaTexto.trim() || null,
         modalidad,
         // Todos entran en «precio normal» y sin monto: el aliado no puede
         // inventarle la tarifa a nadie. La persona la pone después desde
@@ -324,31 +327,37 @@ export function PanelProveedores({
             </Combobox>
           </div>
 
-          {municipio !== '' &&
-            (zonasDelMunicipio.length > 0 ? (
-              <div>
-                <Label>Comuna o corregimiento</Label>
-                <Select value={zonaId} onValueChange={(v) => setZonaId(v ?? '')}>
-                  <SelectTrigger aria-label="Comuna" className="mt-1 bg-background">
-                    <SelectValue placeholder="Toda la ciudad">
-                      {(v: string) =>
-                        zonasDelMunicipio.find((z) => z.id === v)?.nombre ?? 'Toda la ciudad'
-                      }
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Toda la ciudad</SelectItem>
-                    {zonasDelMunicipio.map((z) => (
-                      <SelectItem key={z.id} value={z.id}>
-                        {z.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            ) : (
-              <div>
-                <Label htmlFor="p-zona">Barrio o zona</Label>
+          {municipio !== '' && (
+            <fieldset>
+              <legend className="text-base font-medium">¿En qué parte?</legend>
+
+              {zonasDelMunicipio.length > 0 && (
+                <div className="mt-2">
+                  <Label>Comuna o corregimiento</Label>
+                  <Select value={zonaId} onValueChange={(v) => setZonaId(v ?? '')}>
+                    <SelectTrigger aria-label="Comuna" className="mt-1 bg-background">
+                      <SelectValue placeholder="Sin especificar">
+                        {(v: string) =>
+                          zonasDelMunicipio.find((z) => z.id === v)?.nombre ?? 'Sin especificar'
+                        }
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Sin especificar</SelectItem>
+                      {zonasDelMunicipio.map((z) => (
+                        <SelectItem key={z.id} value={z.id}>
+                          {z.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="mt-3">
+                <Label htmlFor="p-zona">
+                  {zonasDelMunicipio.length > 0 ? 'Barrio' : 'Barrio o vereda'}
+                </Label>
                 <Input
                   id="p-zona"
                   value={zonaTexto}
@@ -356,9 +365,23 @@ export function PanelProveedores({
                   maxLength={60}
                   className="mt-1"
                 />
+                {zonasDelMunicipio.length === 0 && (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Ese municipio todavía no tiene comunas cargadas. Lo que
+                    escribas entra a la cola de zonas por revisar y, cuando se
+                    apruebe, queda en la lista para los demás.
+                  </p>
+                )}
                 {errorZona && <p className="mt-1 text-sm text-destructive">{errorZona}</p>}
               </div>
-            ))}
+
+              {!hayUbicacion && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Hace falta al menos una de las dos.
+                </p>
+              )}
+            </fieldset>
+          )}
 
           <fieldset>
             <legend className="mb-2 text-base font-medium">¿Dónde atiende?</legend>
