@@ -72,12 +72,23 @@ export function TarjetaProveedor({
 
       {/* El precio alineado a la derecha, no pegado al nombre del oficio:
           así se pueden comparar dos precios de un vistazo, que es lo que
-          hace quien está eligiendo. */}
+          hace quien está eligiendo.
+
+          ⚠ Pero solo desde `sm`. El precio era `shrink-0` en una fila que
+          no envuelve, así que cuando lleva el prefijo largo —«Precio
+          solidario: Desde $ 45.000 por prenda», que a 16 px no cabe ni
+          solo en 360— se desbordaba hacia la izquierda y se imprimía
+          ENCIMA del nombre del oficio. En el teléfono van apilados, que es
+          lo único que cabe; comparar de un vistazo sigue funcionando en
+          pantalla ancha, que es donde esa comparación se hacía. */}
       <ul className="mt-3 space-y-1.5">
         {oficios.map((o) => (
-          <li key={o.oficio_id} className="flex items-baseline justify-between gap-3 text-base">
+          <li
+            key={o.oficio_id}
+            className="flex flex-col gap-0.5 text-base sm:flex-row sm:items-baseline sm:justify-between sm:gap-3"
+          >
             <span className="min-w-0">{o.oficio_nombre}</span>
-            <span className="shrink-0 text-muted-foreground">
+            <span className="text-muted-foreground sm:shrink-0 sm:text-right">
               {precioLegible(o.modo, o.precio_desde, o.unidad)}
             </span>
           </li>
