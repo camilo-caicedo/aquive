@@ -2,7 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { HandHeart, Stethoscope, PackageOpen, PackageCheck, UserRound } from 'lucide-react'
+import {
+  HandHeart,
+  Stethoscope,
+  PackageOpen,
+  PackageCheck,
+  MessageSquare,
+  UserRound,
+} from 'lucide-react'
 
 // Cuatro destinos y siempre los mismos. Los tres primeros son «qué hay»;
 // el cuarto es «lo mío», que absorbe las dos bandejas personales, el
@@ -48,13 +55,27 @@ const ENLACES = [
   { href: '/mis-solicitudes', etiqueta: 'Lo mío', Icono: UserRound },
 ]
 
-// La quinta, antes de «Lo mío». Solo se dibuja con `coordinacion`, que es
-// lo mismo que decide si la fila existía en «Lo mío».
-const ENTREGAS = { href: '/aliado', etiqueta: 'Entregas', Icono: PackageCheck }
+// La quinta, antes de «Lo mío», y distinta según el público — que son dos
+// y no se cruzan nunca:
+//
+//   · `organizacion` — el equipo de una fundación. Su sitio es /aliado, que
+//     además de los hilos tiene el equipo, las solicitudes por atender y
+//     los proveedores. Se llama «Entregas» por lo que se hace ahí.
+//   · `coordinacion` — quien ofreció ayuda en una solicitud acompañada. No
+//     pertenece a ninguna organización: lo suyo son sus conversaciones, y
+//     viven en /coordinacion.
+//
+// Nadie ve las dos, así que la barra no cambia bajo los pies de nadie.
+const QUINTA = {
+  organizacion: { href: '/aliado', etiqueta: 'Entregas', Icono: PackageCheck },
+  coordinacion: { href: '/coordinacion', etiqueta: 'Mensajes', Icono: MessageSquare },
+} as const
 
-function celdas(coordinacion: boolean) {
+export type Coordinacion = keyof typeof QUINTA | null
+
+function celdas(coordinacion: Coordinacion) {
   if (!coordinacion) return ENLACES
-  return [...ENLACES.slice(0, -1), ENTREGAS, ENLACES[ENLACES.length - 1]]
+  return [...ENLACES.slice(0, -1), QUINTA[coordinacion], ENLACES[ENLACES.length - 1]]
 }
 
 // Rutas que marcan una celda sin colgar de ella.
@@ -94,7 +115,7 @@ function estaActiva(ruta: string, href: string) {
  * Solo para pantallas medianas y grandes. En un teléfono la navegación es
  * `BarraInferior`, aquí abajo.
  */
-export function Navegacion({ coordinacion = false }: { coordinacion?: boolean }) {
+export function Navegacion({ coordinacion = null }: { coordinacion?: Coordinacion }) {
   const ruta = usePathname()
 
   return (
@@ -154,7 +175,7 @@ export function Navegacion({ coordinacion = false }: { coordinacion?: boolean })
  * 10 del sistema de diseño). Sin el atributo, un formulario de pantalla
  * completa vuelve a ofrecer cuatro salidas a medio llenar.
  */
-export function BarraInferior({ coordinacion = false }: { coordinacion?: boolean }) {
+export function BarraInferior({ coordinacion = null }: { coordinacion?: Coordinacion }) {
   const ruta = usePathname()
   const lista = celdas(coordinacion)
 

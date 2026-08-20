@@ -3,7 +3,7 @@ import { ShieldCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { Marca } from '@/components/marca'
 import { Button } from '@/components/ui/button'
-import { BarraInferior, Navegacion } from '@/components/navegacion'
+import { BarraInferior, Navegacion, type Coordinacion } from '@/components/navegacion'
 import { BotonAvisos } from '@/components/boton-avisos'
 import type { EstadoEncabezado, IndiceAdmin } from '@/lib/types'
 
@@ -27,10 +27,12 @@ export async function Encabezado() {
       ])
     : [null, null, null]
 
-  // Quien tiene algo que coordinar ve una celda más en la barra. El valor
-  // ya venía en esta misma consulta: antes bajaba a «Lo mío» y ahora
-  // vuelve a decidir una celda, esta vez con nombre de contenido.
-  const hayCoordinacion = !!(estado?.data as EstadoEncabezado | null)?.coordinacion
+  // Quien tiene algo que coordinar ve una celda más en la barra, y cuál
+  // depende de quién sea: el equipo de una fundación va a /aliado y quien
+  // solo ofreció ayuda va a /coordinacion. El valor ya venía en esta misma
+  // consulta.
+  const coordinacion = ((estado?.data as EstadoEncabezado | null)?.coordinacion ??
+    null) as Coordinacion
 
   const esAdmin = !!admin?.data
 
@@ -114,10 +116,10 @@ export async function Encabezado() {
         </div>
       </div>
 
-      <Navegacion coordinacion={hayCoordinacion} />
+      <Navegacion coordinacion={coordinacion} />
     </header>
 
-    <BarraInferior coordinacion={hayCoordinacion} />
+    <BarraInferior coordinacion={coordinacion} />
     </>
   )
 }

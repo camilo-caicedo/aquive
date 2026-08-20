@@ -22,10 +22,19 @@ export const metadata = { title: 'Conversación' }
  */
 export default async function ConversacionPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ volver?: string }>
 }) {
   const { id } = await params
+  const { volver } = await searchParams
+  // A donde se vuelve depende de quien abrio el hilo: el equipo de una
+  // fundacion vuelve a su panel y quien ofrecio ayuda a sus mensajes. Se
+  // valida contra una lista corta y no se usa tal cual: un `volver` que
+  // venga de la URL y se pinte sin mirar es un redirect abierto con otro
+  // nombre.
+  const atras = volver === '/coordinacion' ? '/coordinacion' : '/aliado?hilos=1'
   const supabase = await createClient()
 
   const {
@@ -39,7 +48,7 @@ export default async function ConversacionPage({
 
   if (error || !data) {
     return (
-      <MarcoFlujo titulo="Conversación" volver="/aliado?hilos=1">
+      <MarcoFlujo titulo="Conversación" volver={atras}>
         <Alert variant="destructive">
           <AlertDescription>
             No pudimos abrir esta conversación. Puede que se haya borrado con
@@ -76,7 +85,7 @@ export default async function ConversacionPage({
           {ETIQUETA_ESTADO[hilo.estado]}
         </span>
       }
-      volver="/aliado?hilos=1"
+      volver={atras}
     >
       <Chat
         conversacionId={hilo.id}

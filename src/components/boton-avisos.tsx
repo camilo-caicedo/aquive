@@ -74,10 +74,46 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
   const campana = useRef<HTMLButtonElement>(null)
   const router = useRouter()
   const [avisos, setAvisos] = useState<Aviso[] | null>(null)
-  // Congelado a propósito en el valor de la primera pintada: al abrir se
-  // marcan como vistos y el servidor pasa a decir 0, pero los que estaban
-  // sin ver tienen que seguir resaltados mientras el panel está abierto.
-  const [nuevos] = useState(sinVer)
+  // ⚠ Esto era `const [nuevos] = useState(sinVer)`, y ahí estaba el error:
+  // `useState` lee su valor inicial UNA vez, al montar. El encabezado vive
+  // en el layout, que no se vuelve a pintar al navegar con `Link`, así que
+  // el número se quedaba congelado en el de la primera carga de la página
+  // —normalmente cero— y no volvía a subir nunca. La campana solo enseñaba
+  // algo cuando alguien la abría, que es justo cuando ya no hace falta
+  // avisar.
+  //
+  // Ahora el numero del servidor es solo el valor de arranque y el sondeo
+  // de abajo lo mantiene al dia, siempre con el panel CERRADO: al abrir se
+  // marcan como vistos y el servidor pasa a decir 0, y los que estaban sin
+  // ver tienen que seguir resaltados mientras se leen.
+  const [nuevos, setNuevos] = useState(sinVer)
+
+  const estaAbierto = () => !!panel.current?.matches(':popover-open')
+
+
+  // Y se pregunta cada tanto, porque un aviso llega mientras la pestaña ya
+  // está abierta: sin esto habría que recargar a mano para enterarse. Solo
+  // con la pestaña a la vista, para no consultar en segundo plano en el
+  // teléfono de alguien.
+  useEffect(() => {
+    let vivo = true
+
+    async function mirar() {
+      if (document.visibilityState !== 'visible' || estaAbierto()) return
+      const { data } = await createClient().rpc('estado_encabezado')
+      if (!vivo || estaAbierto()) return
+      setNuevos((data as { avisos_sin_ver?: number } | null)?.avisos_sin_ver ?? 0)
+    }
+
+    const reloj = setInterval(mirar, 60000)
+    document.addEventListener('visibilitychange', mirar)
+    mirar()
+    return () => {
+      vivo = false
+      clearInterval(reloj)
+      document.removeEventListener('visibilitychange', mirar)
+    }
+  }, [])
   const [push, setPush] = useState<EstadoPush>('cargando')
   const [mensaje, setMensaje] = useState<string | null>(null)
 
@@ -169,11 +205,11 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
         ref={campana}
         type="button"
         popoverTarget="panel-avisos"
-        aria-label={sinVer > 0 ? `Avisos, ${sinVer} sin ver` : 'Avisos'}
+        aria-label={nuevos > 0 ? `Avisos, ${nuevos} sin ver` : 'Avisos'}
         className="relative flex size-12 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
       >
         <Bell className="size-5" aria-hidden="true" />
-        {sinVer > 0 && (
+        {nuevos > 0 && (
           // Un punto, no el número. Antes iba el conteo, con el argumento
           // de que «hay algo» y «hay siete cosas» no piden la misma prisa;
           // es verdad, pero un «9+» sobre un icono de 20 px no se lee en un

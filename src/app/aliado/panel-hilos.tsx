@@ -19,7 +19,25 @@ import type { HiloResumen } from '@/lib/types'
  * `/aliado/conversacion/[id]`, y `leer_conversacion` la pide allá — bajo
  * demanda, igual que antes, con los mismos argumentos.
  */
-export function PanelHilos({ hilos }: { hilos: HiloResumen[] }) {
+export function PanelHilos({
+  hilos,
+  conColas = true,
+  volverA = '/aliado',
+}: {
+  hilos: HiloResumen[]
+  /**
+   * Las tres colas son conceptos de quien coordina: «Sin asignar» son los
+   * hilos que ninguna persona de la fundación ha tomado todavía.
+   *
+   * ⚠ Para quien solo ofreció ayuda no significan nada, y la de por
+   * defecto —«Sin asignar»— excluye los hilos propios, así que estaba
+   * siempre vacía: lo primero que veía era una lista en blanco teniendo
+   * conversaciones abiertas. Ver `/coordinacion`.
+   */
+  conColas?: boolean
+  /** A dónde vuelve el hilo que se abra desde aquí. */
+  volverA?: string
+}) {
   const router = useRouter()
   const [cargando, setCargando] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -36,7 +54,7 @@ export function PanelHilos({ hilos }: { hilos: HiloResumen[] }) {
     { clave: 'mias' as const, etiqueta: 'Mías', lista: mias },
     { clave: 'entregadas' as const, etiqueta: 'Entregadas', lista: entregadas },
   ]
-  const visibles = COLAS.find((c) => c.clave === cola)?.lista ?? []
+  const visibles = conColas ? (COLAS.find((c) => c.clave === cola)?.lista ?? []) : hilos
 
   async function hacerseCargo(id: string) {
     setCargando(id)
@@ -62,7 +80,11 @@ export function PanelHilos({ hilos }: { hilos: HiloResumen[] }) {
         </Alert>
       )}
 
-      <div className="riel -mx-4 mb-3 flex gap-2 overflow-x-auto px-4">
+      <div
+        className={
+          conColas ? 'riel -mx-4 mb-3 flex gap-2 overflow-x-auto px-4' : 'hidden'
+        }
+      >
         {COLAS.map((c) => (
           <button
             key={c.clave}
@@ -86,7 +108,7 @@ export function PanelHilos({ hilos }: { hilos: HiloResumen[] }) {
         {visibles.map((h) => (
           <FilaBandeja
             key={h.id}
-            href={`/aliado/conversacion/${h.id}`}
+            href={`/aliado/conversacion/${h.id}?volver=${encodeURIComponent(volverA)}`}
             codigo={h.codigo}
             lugar={`${h.municipio} · ${h.barrio}`}
             quien={

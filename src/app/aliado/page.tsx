@@ -30,13 +30,14 @@ export const metadata: Metadata = {
 type Vista = 'conversaciones' | 'coincidencias' | 'equipo' | 'proveedores'
 
 /**
- * Dos públicos en una sola ruta: el equipo de una fundación y quien
- * ofreció ayuda en una solicitud acompañada. El segundo no pertenece a
- * ninguna organización y aun así tiene hilos que leer.
+ * El panel de una fundación, y solo eso.
  *
- * Por eso quien solo ofrece no ve pestañas: para él esto es una sola
- * pantalla, la de sus conversaciones. Una barra de navegación con una sola
- * opción no es navegación, es ruido.
+ * ⚠ Antes esta ruta servía a dos públicos: el equipo de una organización y
+ * quien ofreció ayuda en una solicitud acompañada. El segundo aterrizaba
+ * en el panel de una fundación que no es la suya, con las colas de
+ * `PanelHilos` —conceptos de quien coordina— y con la de por defecto
+ * siempre vacía. Ahora se va a `/coordinacion`, que es una lista de sus
+ * conversaciones y nada más.
  *
  * Cada pestaña consulta lo suyo y nada más. Antes se hacían las cuatro
  * consultas siempre, aunque solo se entrara a leer un mensaje.
@@ -55,6 +56,7 @@ export default async function AliadoPage({
   if (!user) redirect('/login')
 
   const { data: esAliado } = await supabase.rpc('soy_aliado')
+  if (!esAliado) redirect('/coordinacion')
 
   const vista: Vista =
     ver === 'coincidencias' || ver === 'equipo' || ver === 'proveedores'
