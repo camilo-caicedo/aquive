@@ -19,9 +19,12 @@ export default function TerminosPage() {
 
       <h2 className="font-heading mt-6 text-2xl">1. Qué es esto.</h2>
       <p className="mt-3 text-base">
-        Un tablón de anuncios gratuito que permite a personas afectadas por el sismo publicar qué artículos
-        necesitan, y a otras personas ofrecer ayuda. Es un proyecto personal, gratuito y sin ánimo de lucro,
-        operado por {RESPONSABLE} a título individual. No hay empresa ni organización detrás.
+        Un tablón de anuncios gratuito, con dos partes. La ayuda de emergencia permite publicar qué
+        artículos se necesitan y a otras personas ofrecerlos; nació para el sismo del 10 de agosto de
+        2026 y dejará de operar cuando deje de ser útil. El directorio de servicios permite a quien
+        vive de un oficio publicar su ficha, y a quien necesita ese oficio encontrarlo; no tiene fecha
+        de cierre. Es un proyecto personal, gratuito y sin ánimo de lucro, operado por {RESPONSABLE} a
+        título individual. No hay empresa ni organización detrás.
       </p>
 
       <h2 className="font-heading mt-6 text-2xl">2. Qué NO es.</h2>

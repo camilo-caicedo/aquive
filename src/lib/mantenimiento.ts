@@ -121,8 +121,9 @@ const PAGINA = `<!doctype html>
 <body>
 <main>
   <span class="marca">AquíVe</span>
-  <p class="que-es">Conecta a quien necesita insumos tras el sismo del 10 de
-  agosto de 2026 en Colombia con quien puede darlos.</p>
+  <p class="que-es">Conecta, en Colombia, a quien necesita algo con quien
+  puede darlo: insumos, servicios con matrícula y el trabajo de quien vive
+  de su oficio.</p>
   <h1>Estamos haciendo un ajuste</h1>
   <p>La página vuelve a funcionar en un rato. No hace falta que hagas nada:
   vuelve a entrar más tarde.</p>

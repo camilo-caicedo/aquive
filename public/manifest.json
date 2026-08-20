@@ -1,7 +1,7 @@
 {
   "name": "AquíVe · Ayuda directa en Colombia",
   "short_name": "AquíVe",
-  "description": "Publica qué insumos necesitas tras el sismo, sin dar datos personales.",
+  "description": "Encuentra a quien puede hacerte un trabajo, o pide lo que necesitas. Gratis y sin dar tus datos.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f5ead8",

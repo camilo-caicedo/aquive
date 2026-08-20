@@ -38,8 +38,9 @@ export default function PrivacidadPage() {
         contacto: {CORREO_CONTACTO}.
       </p>
       <p className="mt-3 text-base">
-        Es un proyecto personal y sin ánimo de lucro, hecho por una sola persona para apoyar a los
-        afectados por el sismo del 10 de agosto de 2026. No hay ninguna empresa detrás.
+        Es un proyecto personal y sin ánimo de lucro, hecho por una sola persona: primero para
+        apoyar a los afectados por el sismo del 10 de agosto de 2026, y después para que quien vive
+        de un oficio pueda darse a conocer. No hay ninguna empresa detrás.
       </p>
       <p className="mt-3 text-base">
         Del módulo de servicios: {RESPONSABLE_SERVICIOS}, NIT {NIT_RESPONSABLE_SERVICIOS}. Correo

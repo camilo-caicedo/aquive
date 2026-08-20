@@ -14,7 +14,7 @@ export const CORREO_CONTACTO = 'soporte@aquive.co'
 // 19/08/2026: entra el módulo de Servicios. Cambian el aviso de privacidad
 // (dos regímenes), los términos §3 (antes decían que nunca habría
 // reputación) y §12 (alcance ampliado dentro de /servicios).
-export const FECHA_LEGALES = '19 de agosto de 2026'
+export const FECHA_LEGALES = '20 de agosto de 2026'
 
 // El módulo de Servicios tiene OTRO responsable del tratamiento. Aquí la
 // fundación decide para qué se usan los datos y AquíVe solo los guarda:

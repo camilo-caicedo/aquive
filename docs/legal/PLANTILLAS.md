@@ -53,15 +53,16 @@ ese en todos los documentos.
 
 **Cómo tratamos la información en AquíVe**
 
-Última actualización: 15/08/2026
+Última actualización: 20/08/2026
 
 **Quién es responsable**
 Juan Camilo Caicedo Sepulveda, persona natural, Cali, Colombia.
 Correo de contacto: soporte@aquive.co.
 
 Este es un proyecto personal y sin ánimo de lucro, hecho por una sola
-persona para apoyar a los afectados por el sismo del 10 de agosto de
-2026. No hay ninguna empresa ni entidad detrás de la plataforma.
+persona: primero para apoyar a los afectados por el sismo del 10 de agosto
+de 2026, y después para que quien vive de un oficio pueda darse a conocer.
+No hay ninguna empresa ni entidad detrás de la plataforma.
 
 Hay fundaciones que trabajan **con** la plataforma —aparecen por su
 nombre y solo si tú las escoges— pero ninguna la opera ni responde por
@@ -190,13 +191,16 @@ deje de operar, eliminaremos sus bases de datos.
 
 **Términos de uso de AquíVe**
 
-Última actualización: 15/08/2026
+Última actualización: 20/08/2026
 
-**1. Qué es esto.** Un tablón de anuncios gratuito que permite a personas
-afectadas por el sismo publicar qué artículos necesitan, y a otras
-personas ofrecer ayuda. Es un proyecto personal, gratuito y sin ánimo de
-lucro, operado por Juan Camilo Caicedo Sepulveda a título individual. No hay
-empresa ni organización detrás.
+**1. Qué es esto.** Un tablón de anuncios gratuito, con dos partes. La
+ayuda de emergencia permite publicar qué artículos se necesitan y a otras
+personas ofrecerlos; nació para el sismo del 10 de agosto de 2026 y dejará
+de operar cuando deje de ser útil. El directorio de servicios permite a
+quien vive de un oficio publicar su ficha, y a quien necesita ese oficio
+encontrarlo; no tiene fecha de cierre. Es un proyecto personal, gratuito y
+sin ánimo de lucro, operado por Juan Camilo Caicedo Sepulveda a título
+individual. No hay empresa ni organización detrás.
 
 **2. Qué NO es.** No somos una entidad de socorro, ni una ONG, ni una
 autoridad. No entregamos ayuda, no transportamos, no almacenamos ni
