@@ -149,10 +149,13 @@ export function ListaLocal() {
   return (
     <ul className="mt-6 space-y-3">
       {solicitudes.map((s) => (
-        // ⚠ `bg-muted` y no `bg-card`: estas filas viven DENTRO de un
-        // plegable, que ya es papel elevado. Tarjeta blanca sobre tarjeta
-        // blanca no se distingue, y la sombra tampoco la salva.
-        <li key={s.token} className="rounded-2xl bg-muted p-4">
+        // ⚠ Arena, no papel elevado ni apagado. Estas filas viven DENTRO de
+        // un plegable, que ya es una tarjeta blanca: en `bg-card` no se veía
+        // el borde de cada fila, y `bg-muted` está a un pelo del blanco
+        // —#eee7db contra #fefcfa— así que había que fijarse para separarlas.
+        // La arena es el mismo tono de los rieles y las franjas del resto
+        // del sitio, y aguanta encima los botones en papel.
+        <li key={s.token} className="rounded-2xl bg-secondary p-4">
           <div className="flex items-start justify-between gap-2">
             {/* Antes solo estaba el código. Quien publicó tres cosas
                 distintas no tiene forma de saber cuál es cuál mirando cuatro

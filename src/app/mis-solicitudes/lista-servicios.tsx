@@ -70,9 +70,10 @@ export function ListaServicios() {
         <li key={s.token}>
           <Link
             href={`/servicios/solicitud/${s.token}`}
-            // Apagado y no papel elevado: va dentro de un plegable, que ya
-            // es una tarjeta. Ver la nota de `lista-local`.
-            className="flex min-h-16 items-center gap-3 rounded-2xl bg-muted p-4 transition-colors hover:bg-secondary"
+            // Arena, por lo mismo que en `lista-local`. El hover usa la
+            // misma receta que el botón `secondary` de ui/button, para no
+            // inventar un tono que no esté en los tokens.
+            className="flex min-h-16 items-center gap-3 rounded-2xl bg-secondary p-4 transition-colors hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]"
           >
             <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card text-primary">
               <Briefcase className="size-5" aria-hidden="true" />
