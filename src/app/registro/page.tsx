@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
@@ -7,6 +8,7 @@ import {
   type OfrecimientoResumen,
 } from '@/lib/types'
 import { Pestanas } from '@/components/pestanas'
+import { Button } from '@/components/ui/button'
 import { FormularioRegistro } from './formulario-registro'
 import { AvisosOfertador } from './avisos-ofertador'
 import { CerrarSesion } from './cerrar-sesion'
@@ -46,7 +48,14 @@ export default async function RegistroPage({
 
   // El catálogo, los servicios y el inventario solo hacen falta para
   // dibujar el formulario. Las otras dos pestañas no los tocan.
-  const [municipios, { data: servidor }, { data: servicios }, { data: itemsCatalogo }, { data: ofrecimientos }] =
+  const [
+    municipios,
+    { data: servidor },
+    { data: servicios },
+    { data: itemsCatalogo },
+    { data: ofrecimientos },
+    { data: mio },
+  ] =
     vista === 'perfil'
       ? await Promise.all([
           listarMunicipios(supabase),
@@ -63,8 +72,13 @@ export default async function RegistroPage({
             .neq('categoria', 'servicios')
             .order('orden'),
           supabase.rpc('mis_ofrecimientos'),
+          // Solo para saber si ya tiene ficha en el directorio de
+          // servicios y decirle por dónde volver a ella.
+          supabase.rpc('mi_proveedor', {}),
         ])
-      : [[], { data: null }, { data: null }, { data: null }, { data: null }]
+      : [[], { data: null }, { data: null }, { data: null }, { data: null }, { data: null }]
+
+  const miFicha = mio as { id: string } | null
 
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
@@ -120,6 +134,30 @@ export default async function RegistroPage({
             itemsCatalogo={itemsCatalogo ?? []}
             ofrecimientos={(ofrecimientos as unknown as OfrecimientoResumen[] | null) ?? []}
           />
+
+          {/* El puente al otro módulo. Esta pantalla es el perfil de la
+              ayuda de emergencia; la ficha del directorio de servicios es
+              otra cosa, con otro responsable y otra vida útil. Pero quien
+              entró con su cuenta y ofreció su trabajo viene a buscar «lo
+              mío» aquí, que es donde vive todo lo demás suyo. */}
+          <div className="mt-8 rounded-xl border border-border p-4">
+            <h2 className="font-heading text-2xl">
+              {miFicha ? 'Mi ficha de servicios' : '¿Vives de un oficio?'}
+            </h2>
+            <p className="mt-1 text-base text-muted-foreground">
+              {miFicha
+                ? 'Tu ficha del directorio de servicios se maneja aparte de este perfil: son dos cosas distintas y se borran por separado.'
+                : 'El directorio de servicios es otra parte del sitio: ahí publicas tu oficio, tu precio y tu teléfono para que te contraten. No se borra sola como las solicitudes.'}
+            </p>
+            <Button
+              variant="outline"
+              className="mt-3"
+              nativeButton={false}
+              render={<Link href="/servicios/soy-proveedor" />}
+            >
+              {miFicha ? 'Ver mi ficha' : 'Ofrecer mi trabajo'}
+            </Button>
+          </div>
         </>
       ) : (
         <div className="mt-6 space-y-8">

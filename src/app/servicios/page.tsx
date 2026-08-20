@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { SelectFiltro } from '@/components/select-filtro'
 import { FormularioFiltros } from '@/components/formulario-filtros'
 import { PestanasServicios } from '@/components/pestanas-servicios'
-import type { ModalidadServicio, ModoPrecio } from '@/lib/types'
+import type { MiProveedor, ModalidadServicio, ModoPrecio } from '@/lib/types'
 
 export const metadata = { title: 'Servicios' }
 
@@ -66,13 +66,27 @@ export default async function ServiciosPage({
   if (modalidad) query = query.contains('modalidad', [modalidad])
   if (modo) query = query.contains('modos', [modo])
 
-  const [{ data: proveedores }, { data: oficiosCatalogo }, { data: municipiosLista }, todos] =
-    await Promise.all([
-      query,
-      supabase.from('oficios_con_proveedores').select('*').order('orden'),
-      supabase.from('municipios_con_proveedores').select('*').order('nombre'),
-      listarMunicipios(supabase),
-    ])
+  const [
+    { data: proveedores },
+    { data: oficiosCatalogo },
+    { data: municipiosLista },
+    todos,
+    { data: mio },
+  ] = await Promise.all([
+    query,
+    supabase.from('oficios_con_proveedores').select('*').order('orden'),
+    supabase.from('municipios_con_proveedores').select('*').order('nombre'),
+    listarMunicipios(supabase),
+    // Sin sesión devuelve null y no cuesta nada. Con sesión es lo que
+    // convierte «Ofrecer mi trabajo» en «Mi ficha»: quien ya la publicó
+    // no tenía por dónde volver a ella, y el botón le seguía ofreciendo
+    // crear una que ya existe.
+    supabase.rpc('mi_proveedor', {}),
+  ])
+
+  const miFicha = (mio as MiProveedor | null) ?? null
+  const misOficiosEscondidos =
+    miFicha?.oficios.filter((o) => !o.publicado).length ?? 0
 
   const nombreMunicipio = mapaDeNombres(todos ?? [])
 
@@ -136,14 +150,34 @@ export default async function ServiciosPage({
           Quién está pidiendo
         </Button>
         <Button
-          variant="outline"
+          variant={miFicha ? 'default' : 'outline'}
           className="flex-1 sm:flex-initial"
           nativeButton={false}
           render={<Link href="/servicios/soy-proveedor" />}
         >
-          Ofrecer mi trabajo
+          {miFicha ? 'Mi ficha' : 'Ofrecer mi trabajo'}
         </Button>
       </div>
+
+      {/* Dónde está lo suyo, dicho apenas entra. Sin esto, quien ya
+          publicó su ficha no tenía forma de saber si aparece ni por dónde
+          volver a ella: el botón le seguía ofreciendo crear una. */}
+      {miFicha && (
+        <p className="mt-2 text-sm text-muted-foreground">
+          {miFicha.suspendido
+            ? 'Tu ficha está suspendida y no aparece en el directorio.'
+            : misOficiosEscondidos > 0
+              ? `Tu ficha está publicada, pero ${
+                  misOficiosEscondidos === 1
+                    ? 'uno de tus oficios no aparece'
+                    : `${misOficiosEscondidos} de tus oficios no aparecen`
+                } todavía.`
+              : 'Tu ficha está publicada.'}{' '}
+          <Link href="/servicios/soy-proveedor" className="underline">
+            Ver y editar
+          </Link>
+        </p>
+      )}
 
       <FormularioFiltros
         action="/servicios"
