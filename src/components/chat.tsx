@@ -194,7 +194,12 @@ export function Chat({
                   ? 'rounded-xl border border-dashed border-border text-muted-foreground'
                   : mio
                     ? 'rounded-xl rounded-br-sm bg-primary text-primary-foreground'
-                    : 'rounded-xl rounded-bl-sm bg-muted text-foreground'
+                    : // Papel elevado y no `bg-muted`: el apagado es apenas
+                      // más oscuro que el papel del fondo, así que sobre el
+                      // hilo las burbujas recibidas casi no se recortaban.
+                      // La sombra hace el resto — el borde sobraría con
+                      // quince mensajes seguidos.
+                      'rounded-xl rounded-bl-sm bg-card text-foreground shadow-sm'
               }`}
             >
               {/* Moderar oculta, no borra, y el hueco se ve: si un mensaje
