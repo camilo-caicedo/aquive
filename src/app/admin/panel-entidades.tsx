@@ -134,7 +134,7 @@ function FormularioEntidad({
   }
 
   return (
-    <div className="space-y-4 rounded-lg border border-border p-4">
+    <div className="space-y-4 rounded-2xl bg-card p-4 shadow-sm">
       <div>
         <Label htmlFor="entidad-nombre" className="mb-1">
           Nombre
@@ -451,7 +451,7 @@ function FichaEntidad({
   onEditar: () => void
 }) {
   return (
-    <li className="rounded-lg border border-border p-4">
+    <li className="rounded-2xl bg-card p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-lg font-bold">{entidad.nombre}</span>
         <span

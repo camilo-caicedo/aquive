@@ -1,10 +1,17 @@
 import { redirect } from 'next/navigation'
-import { LogOut } from 'lucide-react'
+import { LogOut, ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { Button } from '@/components/ui/button'
 
-// Server Action dentro de un <form>: se envía como formulario normal, así
-// que cerrar sesión también funciona con JavaScript desactivado.
+/**
+ * Cerrar sesión, como una fila entera.
+ *
+ * ⚠ Sigue siendo un `<form>` con Server Action y no un `onClick`: se envía
+ * como formulario normal, así que cerrar sesión funciona también con
+ * JavaScript desactivado. Lo que cambia es que el botón ES la fila —icono,
+ * título, explicación y flecha— en vez de un `<section>` con su propio
+ * título encima de un botón suelto: dentro de la lista de ajustes, aquello
+ * pintaba dos títulos superpuestos.
+ */
 export function CerrarSesion() {
   async function salir() {
     'use server'
@@ -14,18 +21,22 @@ export function CerrarSesion() {
   }
 
   return (
-    <section className="mt-10 border-t border-border pt-6">
-      <h2 className="font-heading text-2xl">Cerrar sesión</h2>
-      <p className="mt-2 text-base text-muted-foreground">
-        Sales de tu cuenta en este teléfono. Tu perfil sigue publicado y
-        puedes volver a entrar con Google cuando quieras.
-      </p>
-      <form action={salir}>
-        <Button type="submit" variant="outline" className="mt-3 w-full sm:w-auto">
+    <form action={salir}>
+      <button
+        type="submit"
+        className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-card p-4 text-left shadow-sm transition-colors hover:bg-muted"
+      >
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
           <LogOut className="size-5" aria-hidden="true" />
-          Cerrar sesión
-        </Button>
-      </form>
-    </section>
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-base font-medium">Cerrar sesión</span>
+          <span className="block text-sm text-muted-foreground">
+            Sales en este teléfono. Tu perfil sigue publicado.
+          </span>
+        </span>
+        <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+      </button>
+    </form>
   )
 }

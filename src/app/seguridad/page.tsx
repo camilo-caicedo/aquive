@@ -29,7 +29,7 @@ export default function SeguridadPage() {
 
       <ul className="mt-6 space-y-4">
         {CONSEJOS.map((c, i) => (
-          <li key={c.titulo} className="rounded-xl border border-border bg-card p-4">
+          <li key={c.titulo} className="rounded-2xl bg-card p-4 shadow-sm">
             <h2 className="font-heading flex items-start gap-2 text-xl">
               <span
                 className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent text-base text-accent-foreground"

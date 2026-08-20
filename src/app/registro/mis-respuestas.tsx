@@ -19,7 +19,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 export function MisRespuestas({ respuestas }: { respuestas: MiRespuesta[] }) {
   if (respuestas.length === 0) {
     return (
-      <p className="mt-3 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
+      <p className="mt-3 rounded-2xl border border-dashed border-border p-6 text-center text-base text-muted-foreground">
         Todavía no has respondido ninguna solicitud. Las que respondas
         aparecen aquí mientras sigan abiertas.
       </p>
@@ -31,7 +31,7 @@ export function MisRespuestas({ respuestas }: { respuestas: MiRespuesta[] }) {
       {respuestas.map((r) => {
         const horas = Math.max(0, Math.round(horasParaVencer(r.expira_at)))
         return (
-          <li key={r.id} className="rounded-xl border border-border p-4">
+          <li key={r.id} className="rounded-2xl bg-card p-4 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-mono text-lg font-bold">{r.codigo}</span>
               <span className="text-sm text-muted-foreground">

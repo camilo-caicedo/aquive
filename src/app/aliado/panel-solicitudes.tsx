@@ -67,7 +67,7 @@ export function PanelSolicitudes({ solicitudes }: { solicitudes: SolicitudPorAte
 
   if (solicitudes.length === 0) {
     return (
-      <p className="mt-3 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
+      <p className="mt-3 rounded-2xl border border-dashed border-border p-6 text-center text-base text-muted-foreground">
         No hay solicitudes pendientes de tu organización. Aparecen cuando
         alguien de tus municipios pide que la acompañen.
       </p>
@@ -77,7 +77,7 @@ export function PanelSolicitudes({ solicitudes }: { solicitudes: SolicitudPorAte
   return (
     <ul className="mt-3 space-y-3">
       {solicitudes.map((s) => (
-        <li key={s.solicitud_id} className="rounded-xl border border-border p-4">
+        <li key={s.solicitud_id} className="rounded-2xl bg-card p-4 shadow-sm">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <span className="font-mono text-lg font-bold">{s.codigo}</span>
             {s.hilos > 0 && (

@@ -140,7 +140,7 @@ export default async function SolicitudPage({
       {/* Lo que pediste va arriba de todo y fuera de las pestañas: es la
           respuesta a «¿esta es mi solicitud?», y hay que poder contestarla
           sin navegar. Ocupa cuatro líneas. */}
-      <div className="rounded-xl border border-border bg-card p-4">
+      <div className="rounded-2xl bg-card p-4 shadow-sm">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <span className="text-lg font-bold">{categoria(solicitud.categoria).etiqueta}</span>
           <span className="flex items-center gap-1.5 text-sm text-muted-foreground">

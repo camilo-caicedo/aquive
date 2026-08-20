@@ -83,7 +83,9 @@ export default async function SolicitudesDeServicioPage({
           título, el mismo segmentado, y un chip que dice cuál de las dos
           listas se está mirando. Antes tenía título propio, dos botones y
           el formulario de filtros desplegado, así que parecía otro sitio. */}
-      <CabeceraPantalla titulo="Servicios">
+      {/* Con vuelta al directorio: se entra aquí desde ahí, y el
+          segmentado de arriba solo cambia de lista, no de vista. */}
+      <CabeceraPantalla titulo="Servicios" volver="/servicios">
         <PestanasServicios activa="oficios" />
 
         <HojaFiltros
@@ -184,7 +186,7 @@ export default async function SolicitudesDeServicioPage({
       ) : (
         <ListaSolicitudesServicio
           solicitudes={solicitudes}
-          nombreMunicipio={Object.fromEntries(nombreMunicipio)}
+          nombreMunicipio={Object.fromEntries((todos ?? []).map((m) => [m.codigo_dane, m.nombre]))}
           puedeResponder={!!proveedor}
         />
       )}

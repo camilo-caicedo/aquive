@@ -116,19 +116,19 @@ export async function CruceInverso({
   return (
     <>
       {idsInventario.length > 0 && !mismoQueInventario && (
-        <div className="mb-4 flex flex-col gap-3 rounded-xl border border-border bg-secondary p-4 sm:flex-row sm:items-center">
-          <PackageOpen className="size-6 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <p className="flex-1 text-base">
-            Ya nos contaste que tienes {idsInventario.length}{' '}
-            {idsInventario.length === 1 ? 'cosa' : 'cosas'} en tu perfil.
+        <div className="mb-4 flex items-center gap-3 rounded-2xl bg-secondary px-4 py-3 text-secondary-foreground">
+          <PackageOpen className="size-5 shrink-0" aria-hidden="true" />
+          <p className="min-w-0 flex-1 text-base">
+            Guardaste {idsInventario.length}{' '}
+            {idsInventario.length === 1 ? 'cosa' : 'cosas'} en tu perfil
           </p>
           <Button
             variant="outline"
-            className="w-full sm:w-auto"
+            className="shrink-0 bg-background"
             nativeButton={false}
             render={<Link href={href({ tengo: idsInventario })} />}
           >
-            Usar lo que tengo guardado
+            Usarlas
           </Button>
         </div>
       )}
@@ -149,11 +149,19 @@ export async function CruceInverso({
         </p>
       ) : (
         <section className="mt-6">
-          <h2 className="font-heading text-2xl">
-            {resultados.length === 0
-              ? 'Nadie está pidiendo eso ahora'
-              : `Quién necesita lo que tienes (${resultados.length})`}
-          </h2>
+          <p className="text-base text-muted-foreground">
+            {resultados.length === 0 ? (
+              'Nadie está pidiendo eso ahora'
+            ) : (
+              <>
+                <span className="font-semibold text-foreground">
+                  {resultados.length}{' '}
+                  {resultados.length === 1 ? 'solicitud pide' : 'solicitudes piden'}
+                </span>{' '}
+                algo tuyo
+              </>
+            )}
+          </p>
 
           {municipiosCalzan.length > 0 && (
             <FormularioFiltros

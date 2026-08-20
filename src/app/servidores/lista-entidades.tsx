@@ -36,7 +36,7 @@ export function ListaEntidades({
   return (
     <ul className="mt-6 space-y-3">
       {entidades.map((e) => (
-        <li key={e.id} className="rounded-lg border border-border p-4 sm:p-5">
+        <li key={e.id} className="rounded-2xl bg-card p-4 shadow-sm">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-0.5 text-sm font-medium text-muted-foreground">
               <Building2 className="size-4" aria-hidden="true" />
@@ -58,10 +58,10 @@ export function ListaEntidades({
 
           {e.enlaces.length > 0 && (
             <>
-              <p className="mt-3 text-sm text-muted-foreground">
+              <p className="mt-4 border-t border-border pt-3 text-sm text-muted-foreground">
                 {AVISO_SALIR_DEL_SITIO}
               </p>
-              <ul className="mt-2 space-y-3">
+              <ul className="mt-3 space-y-3">
                 {e.enlaces
                   // Última red antes de pintar. React no sanea `href`:
                   // renderiza `javascript:` sin quejarse. Si algo se coló
@@ -76,7 +76,7 @@ export function ListaEntidades({
                     <li key={`${enlace.etiqueta}|${enlace.url}`}>
                       <Button
                         variant="outline"
-                        className="w-full"
+                        className="w-full border-primary text-primary"
                         nativeButton={false}
                         render={
                           <a

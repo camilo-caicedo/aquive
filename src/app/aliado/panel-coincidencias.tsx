@@ -61,7 +61,7 @@ export function PanelCoincidencias({ coincidencias }: { coincidencias: Coinciden
 
   if (coincidencias.length === 0) {
     return (
-      <p className="mt-3 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
+      <p className="mt-3 rounded-2xl border border-dashed border-border p-6 text-center text-base text-muted-foreground">
         No hay coincidencias por ahora. Aparecen cuando alguien de tus
         municipios declara tener justo lo que pide una solicitud acompañada.
       </p>
@@ -73,7 +73,7 @@ export function PanelCoincidencias({ coincidencias }: { coincidencias: Coinciden
       {coincidencias.map((c) => {
         const clave = `${c.solicitud_id}-${c.ofertador_id}`
         return (
-          <li key={clave} className="rounded-lg border border-border p-4">
+          <li key={clave} className="rounded-2xl bg-card p-4 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-mono text-lg font-bold">{c.codigo}</span>
               <span className="text-base text-muted-foreground">{c.municipio}</span>

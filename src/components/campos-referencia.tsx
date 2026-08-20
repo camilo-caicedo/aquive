@@ -173,7 +173,7 @@ export function CamposReferencia({
           Agregar una referencia
         </Button>
       ) : (
-        <div className="mt-3 space-y-4 rounded-lg border border-border p-4">
+        <div className="mt-3 space-y-4 rounded-2xl bg-card p-4 shadow-sm">
           <div>
             <Label htmlFor="ref-nombre">Nombre de tu cliente</Label>
             <Input

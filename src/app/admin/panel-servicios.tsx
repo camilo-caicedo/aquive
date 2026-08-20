@@ -109,7 +109,7 @@ export function PanelServicios({
             ['Solicitudes vivas', datos.totales.solicitudes],
             ['Servicios confirmados', datos.totales.servicios_confirmados],
           ].map(([etiqueta, valor]) => (
-            <div key={etiqueta as string} className="rounded-lg border border-border p-3">
+            <div key={etiqueta as string} className="rounded-2xl bg-card p-3 shadow-sm">
               <dt className="text-sm text-muted-foreground">{etiqueta}</dt>
               <dd className="text-2xl font-bold">{valor}</dd>
             </div>
@@ -141,7 +141,7 @@ export function PanelServicios({
         ) : (
           <ul className="mt-3 space-y-3">
             {datos.por_verificar.map((p) => (
-              <li key={p.id} className="rounded-lg border border-border p-4">
+              <li key={p.id} className="rounded-2xl bg-card p-4 shadow-sm">
                 <Link
                   href={`/servicios/${p.id}`}
                   className="text-base font-bold underline-offset-4 hover:underline"
@@ -217,7 +217,7 @@ export function PanelServicios({
         ) : (
           <ul className="mt-3 space-y-3">
             {datos.resenas_ocultas.map((r) => (
-              <li key={r.id} className="rounded-lg border border-border p-4">
+              <li key={r.id} className="rounded-2xl bg-card p-4 shadow-sm">
                 <Link
                   href={`/servicios/${r.proveedor_id}`}
                   className="text-base font-bold underline-offset-4 hover:underline"

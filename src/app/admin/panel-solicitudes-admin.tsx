@@ -56,7 +56,7 @@ export function PanelSolicitudesAdmin({ solicitudes }: { solicitudes: SolicitudA
 
   if (solicitudes.length === 0) {
     return (
-      <p className="mt-3 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
+      <p className="mt-3 rounded-2xl border border-dashed border-border p-6 text-center text-base text-muted-foreground">
         No hay solicitudes vivas ahora mismo.
       </p>
     )

@@ -96,7 +96,7 @@ function FormularioOrganizacion({
   }
 
   return (
-    <div className="space-y-4 rounded-lg border border-border p-4">
+    <div className="space-y-4 rounded-2xl bg-card p-4 shadow-sm">
       <div>
         <Label htmlFor="org-nombre" className="mb-1">
           Nombre
@@ -283,7 +283,7 @@ function Invitacion({
   }
 
   return (
-    <li className="rounded-lg border border-border p-3">
+    <li className="rounded-2xl bg-card p-3 shadow-sm">
       <p className="text-base font-medium">
         {invitacion.rol_otorgado === 'coordinador' ? 'Coordinador' : 'Miembro'} ·{' '}
         {invitacion.usos}/{invitacion.usos_max} usos
@@ -339,7 +339,7 @@ function FichaOrganizacion({
   }
 
   return (
-    <li className="rounded-lg border border-border p-4">
+    <li className="rounded-2xl bg-card p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-lg font-bold">{organizacion.nombre}</span>
         <span

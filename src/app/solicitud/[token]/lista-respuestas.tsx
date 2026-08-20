@@ -11,7 +11,7 @@ type Respuesta = SolicitudConRespuestas['respuestas'][number]
 export function ListaRespuestas({ respuestas }: { respuestas: Respuesta[] }) {
   if (respuestas.length === 0) {
     return (
-      <div className="mt-3 rounded-lg border border-dashed border-border p-6 text-center">
+      <div className="mt-3 rounded-2xl border border-dashed border-border p-6 text-center">
         <Inbox className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
         <p className="mt-2 text-base text-muted-foreground">
           Todavía nadie responde. Guarda tu enlace y vuelve más tarde.
@@ -23,7 +23,7 @@ export function ListaRespuestas({ respuestas }: { respuestas: Respuesta[] }) {
   return (
     <ul className="mt-3 space-y-3">
       {respuestas.map((r) => (
-        <li key={r.id} className="rounded-lg border border-border p-4">
+        <li key={r.id} className="rounded-2xl bg-card p-4 shadow-sm">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-lg font-bold">{r.nombre}</span>
             {r.tipo === 'servidor' &&

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Check } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { contienePII } from '@/lib/validacion'
 import { CAPACIDADES_PAGO, URGENCIAS, zonaLegible } from '@/lib/servicios'
@@ -110,9 +111,12 @@ export function ListaSolicitudesServicio({
                     : `${s.num_respuestas} personas respondieron`}
               </p>
             {s.ya_respondi ? (
-              <p className="mt-3 text-base text-ok">
-                Ya respondiste. Esa persona tiene tu teléfono y decide si te
-                escribe.
+              // Compacto: ya respondió, así que lo único que queda por saber
+              // es cuánta competencia hay. El párrafo entero de antes ocupaba
+              // tres líneas para decir eso.
+              <p className="flex shrink-0 items-center gap-1.5 text-base text-ok">
+                <Check className="size-5 shrink-0" aria-hidden="true" />
+                Ya respondiste
               </p>
             ) : !puedeResponder ? null : (
               // El formulario se abría dentro de la tarjeta y empujaba el

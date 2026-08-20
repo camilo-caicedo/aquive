@@ -126,7 +126,7 @@ export default async function SolicitudServicioPage({
 
           <ul className="mt-4 space-y-3">
             {solicitud.respuestas.map((r) => (
-              <li key={r.id} className="rounded-lg border border-border p-4">
+              <li key={r.id} className="rounded-2xl bg-card p-4 shadow-sm">
                 <Link
                   href={`/servicios/${r.proveedor_id}`}
                   className="text-lg font-bold underline-offset-4 hover:underline"

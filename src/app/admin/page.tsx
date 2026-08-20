@@ -304,13 +304,13 @@ export default async function AdminPage({
         <>
       <section className="mt-6">
         {!reportes || reportes.length === 0 ? (
-          <p className="mt-3 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
+          <p className="mt-3 rounded-2xl border border-dashed border-border p-6 text-center text-base text-muted-foreground">
             No hay reportes pendientes.
           </p>
         ) : (
           <ul className="mt-3 space-y-3">
             {reportes.map((r) => (
-              <li key={r.id} className="rounded-lg border border-border p-4">
+              <li key={r.id} className="rounded-2xl bg-card p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-lg font-bold">{MOTIVOS[r.motivo]}</span>
                   <span className="text-base text-muted-foreground">
@@ -344,7 +344,7 @@ export default async function AdminPage({
           </p>
         </details>
         {!servidores || servidores.length === 0 ? (
-          <p className="mt-3 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
+          <p className="mt-3 rounded-2xl border border-dashed border-border p-6 text-center text-base text-muted-foreground">
             No hay matrículas pendientes.
           </p>
         ) : (
@@ -352,7 +352,7 @@ export default async function AdminPage({
             {servidores.map((s) => {
               const perfil = porPerfil.get(s.perfil_id)
               return (
-                <li key={s.perfil_id} className="rounded-lg border border-border p-4">
+                <li key={s.perfil_id} className="rounded-2xl bg-card p-4 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-lg font-bold">
                       {perfil?.nombre_visible ?? 'Perfil sin nombre'}
@@ -400,13 +400,13 @@ export default async function AdminPage({
           </p>
         </details>
         {sugerencias.length === 0 ? (
-          <p className="mt-3 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
+          <p className="mt-3 rounded-2xl border border-dashed border-border p-6 text-center text-base text-muted-foreground">
             No hay ítems sugeridos por revisar.
           </p>
         ) : (
           <ul className="mt-3 space-y-3">
             {sugerencias.map((s) => (
-              <li key={s.id} className="rounded-lg border border-border p-4">
+              <li key={s.id} className="rounded-2xl bg-card p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-lg font-bold">{s.nombre_propuesto}</span>
                   <span className="text-base text-muted-foreground">
@@ -473,6 +473,32 @@ export default async function AdminPage({
       {vista === 'aliados' && (
       <section className="mt-6">
         <h2 className="font-heading text-2xl">Organizaciones aliadas</h2>
+
+        {/* La instrucción, como lista de comprobación y no como tres
+            párrafos: sirve en el momento de crear una, y ahí lo que hace
+            falta es poder ir tachando. La verificación ocurre afuera —en el
+            RUES, por teléfono— así que no hay cola que mostrar. */}
+        <ul className="mt-3 space-y-2 rounded-2xl border border-dashed border-border p-4">
+          <li className="text-base font-medium">Antes de crear una, revisa</li>
+          {[
+            'El certificado del RUES y el NIT',
+            'Que la persona de contacto exista y responda',
+            'Que su sitio no sea una página de donaciones de un tercero',
+          ].map((linea) => (
+            <li key={linea} className="flex items-start gap-2 text-base text-muted-foreground">
+              <span
+                aria-hidden="true"
+                className="mt-1 size-4 shrink-0 rounded border border-border"
+              />
+              {linea}
+            </li>
+          ))}
+          <li className="text-sm text-muted-foreground">
+            No hay cola de verificación: la verificación ocurre afuera, y eres
+            tú. Crear la organización no le da acceso a nadie — eso lo hace la
+            invitación de coordinador.
+          </li>
+        </ul>
         <details className="group mt-3">
           <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 text-base text-primary underline [&::-webkit-details-marker]:hidden">
             Cómo se verifica
@@ -498,9 +524,10 @@ export default async function AdminPage({
       )}
 
       {vista === 'aliados' && flujo2 && (
-        <section className="mt-6">
-          {/* Primero, no al final: si hay hilos sin fundación hay dos
-              personas esperando a que alguien decida. */}
+        <section className="mt-4">
+          {/* Primero y en arena, no al final: si hay un hilo sin fundación
+              hay dos personas esperando a que alguien decida, y eso es lo
+              único urgente de esta pantalla. */}
           <h2 className="font-heading text-2xl">Acompañamiento</h2>
           <Alert className="mt-3">
             <AlertDescription>

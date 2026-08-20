@@ -309,6 +309,18 @@ export default async function ServiciosPage({
 
       <p className="mt-4 text-sm text-muted-foreground">{AVISO_SERVICIOS}</p>
 
+      {/* La única puerta a /servicios/confirmar. El código no viaja en
+          ningún enlace ni en ningún QR: esto solo lleva al formulario donde
+          se escribe a mano. Va ENCIMA de la lista porque quien llega con un
+          papel en la mano no baja veinte fichas para encontrar dónde
+          meterlo. */}
+      <p className="mt-4 text-base text-muted-foreground">
+        ¿Te hicieron un trabajo y te dieron un código?{' '}
+        <Link href="/servicios/confirmar" className="underline">
+          Califícalo aquí
+        </Link>
+      </p>
+
       <p className="mt-4 text-base font-semibold">
         {proveedores?.length ?? 0}{' '}
         {proveedores?.length === 1 ? 'persona' : 'personas'}
@@ -367,23 +379,13 @@ export default async function ServiciosPage({
         </AlertDescription>
       </Alert>
 
-      {/* La única puerta a /servicios/confirmar. El código no viaja en
-          ningún enlace ni en ningún QR: esto solo lleva al formulario
-          donde se escribe a mano. */}
-      <p className="mt-4 text-sm text-muted-foreground">
-        ¿Te hicieron un trabajo y te dieron un código?{' '}
-        <Link href="/servicios/confirmar" className="underline">
-          Califícalo aquí
-        </Link>
-        .
-      </p>
 
       {/* Puente al otro lado del sitio. Estaba en la portada, que se lo
           quedaba entero para explicar dos cosas que no eran suyas; aquí es
           donde de verdad se busca. Lo que importa de este texto es la
           diferencia de vida útil, que es lo que sostiene la promesa de
           borrado del tablero. */}
-      <section className="mt-8 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:p-5">
+      <section className="mt-8 flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:p-5">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
           <Stethoscope className="size-6" aria-hidden="true" />
         </span>

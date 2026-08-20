@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { BadgeCheck, Copy, Phone } from 'lucide-react'
+import { BadgeCheck, Copy, Phone, Info } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { contienePII, MENSAJE_PII } from '@/lib/validacion'
 import { nombreConDepartamento, type MunicipioBasico } from '@/lib/municipios'
@@ -101,6 +101,7 @@ export function PanelProveedores({
 }) {
   const router = useRouter()
   const [abierto, setAbierto] = useState(false)
+  const [llamado, setLlamado] = useState(false)
   const [nombre, setNombre] = useState('')
   const [tipo, setTipo] = useState<TipoProveedor>('persona')
   const [telefono, setTelefono] = useState('')
@@ -178,6 +179,11 @@ export function PanelProveedores({
       return
     }
 
+    // Si de verdad se llamo, el sello se pone aqui mismo con la misma
+    // RPC que usa el boton de la lista: es una llamada mas, no un argumento
+    // nuevo en la de crear.
+    if (llamado && datos.id) await verificar(datos.id, true)
+
     setEnlace({
       nombre: nombre.trim(),
       url: `${origen}/servicios/mi-perfil/${datos.token}`,
@@ -242,11 +248,20 @@ export function PanelProveedores({
           Registrar a alguien
         </Button>
       ) : (
-        <div className="space-y-4 rounded-lg border border-border p-4">
+        <div className="space-y-4 rounded-2xl bg-card p-4 shadow-sm">
+          {/* Para leer en voz alta, con la persona enfrente: lo que se va a
+              publicar son sus datos, no los de quien llena el formulario. */}
+          <p className="flex items-start gap-2 rounded-xl bg-secondary p-3 text-base text-secondary-foreground">
+            <Info className="size-5 shrink-0 translate-y-0.5" aria-hidden="true" />
+            <span>
+              Estás publicando datos de otra persona en internet. Léele en voz
+              alta lo que va a quedar público antes de guardar.
+            </span>
+          </p>
+
           <p className="text-base text-muted-foreground">
-            Para quien no tiene cuenta de Google. Pide lo mínimo: el resto —
-            precios, horarios, descripción — lo completa la persona desde su
-            enlace.
+            Pide lo mínimo: el resto —precios, horarios, descripción— lo
+            completa la persona desde su enlace.
           </p>
 
           <div>
@@ -280,9 +295,31 @@ export function PanelProveedores({
               className="mt-1"
             />
             <p className="mt-1 text-sm text-muted-foreground">
-              Queda público. Nace sin verificar: la marca se pone después,
-              llamando.
+              Queda público.
             </p>
+
+            {/* ⚠ Nunca marcada de entrada, y nunca la marca el sistema: el
+                sello de «teléfono verificado» significa exactamente que una
+                persona llamó a ese número y alguien contestó. Si esto se
+                marcara solo, el sello dejaría de querer decir nada — y es uno
+                de los tres que sostienen la regla S. */}
+            <label className="mt-2 flex min-h-12 cursor-pointer items-start gap-3 rounded-xl bg-muted p-3 has-checked:bg-accent">
+              <input
+                type="checkbox"
+                checked={llamado}
+                onChange={(e) => setLlamado(e.target.checked)}
+                className="mt-0.5 size-6 shrink-0"
+              />
+              <span>
+                <span className="text-base font-medium">
+                  Llamé a este número y contestó
+                </span>
+                <span className="block text-sm text-muted-foreground">
+                  Es lo único que significa el sello de «teléfono verificado».
+                  Márcalo solo si de verdad llamaste.
+                </span>
+              </span>
+            </label>
           </div>
 
           <div>
@@ -462,7 +499,7 @@ export function PanelProveedores({
       ) : (
         <ul className="mt-3 space-y-3">
           {proveedores.map((p) => (
-            <li key={p.id} className="rounded-lg border border-border p-4">
+            <li key={p.id} className="rounded-2xl bg-card p-4 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Link
                   href={`/servicios/${p.id}`}

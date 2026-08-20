@@ -197,7 +197,7 @@ export function PanelServiciosProveedor({
       ) : (
         <ul className="mt-3 space-y-3">
           {datos.resenas.map((r) => (
-            <li key={r.id} className="rounded-lg border border-border p-4">
+            <li key={r.id} className="rounded-2xl bg-card p-4 shadow-sm">
               <p className="text-sm text-muted-foreground">
                 Cumplimiento: {NIVEL[r.cumplimiento]} · Trato: {NIVEL[r.trato]} ·
                 Puntualidad: {NIVEL[r.puntualidad]}

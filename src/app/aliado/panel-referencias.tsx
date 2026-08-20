@@ -106,10 +106,28 @@ export function PanelReferencias({
         {referencias.map((r) => {
           const visto = datos[r.id]
           return (
-            <li key={r.id} className="rounded-lg border border-border p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-base font-medium">{r.proveedor_nombre}</span>
-                <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm">
+            <li
+              key={r.id}
+              className={
+                r.puedo_leerla
+                  ? 'rounded-2xl bg-card p-4 shadow-sm'
+                  : 'rounded-2xl border border-dashed border-border p-4'
+              }
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="min-w-0 text-lg font-bold">{r.proveedor_nombre}</span>
+                {/* El estado en palabras y con su color, nunca solo color
+                    (regla 9). «Por llamar» es lo único que pide algo. */}
+                <span
+                  className={
+                    'shrink-0 rounded-full px-3 py-1 text-sm font-medium ' +
+                    (r.estado === 'confirmada'
+                      ? 'bg-ok-suave text-ok'
+                      : r.estado === 'pendiente'
+                        ? 'bg-accent text-accent-foreground'
+                        : 'bg-muted text-muted-foreground')
+                  }
+                >
                   {ESTADOS[r.estado]}
                 </span>
               </div>

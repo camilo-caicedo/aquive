@@ -61,7 +61,7 @@ export default async function MisDatosPage({
 
       <section className="mt-6">
         <h2 className="font-heading text-2xl">De la solicitud</h2>
-        <div className="mt-2 rounded-lg border border-border p-4 text-base">
+        <div className="mt-2 rounded-2xl bg-card p-4 text-base shadow-sm">
           <p>
             {datos.municipio} — {datos.barrio}
           </p>
@@ -90,7 +90,7 @@ export default async function MisDatosPage({
               La guardamos cifrada porque {datos.organizacion ?? 'una fundación'}{' '}
               acompaña tu entrega. Solo ellos la ven.
             </p>
-            <div className="mt-2 rounded-lg border border-border p-4 text-base">
+            <div className="mt-2 rounded-2xl bg-card p-4 text-base shadow-sm">
               <p>
                 {datos.identidad.documento_tipo} terminado en{' '}
                 {datos.identidad.documento_ultimos4}

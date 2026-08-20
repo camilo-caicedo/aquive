@@ -876,7 +876,7 @@ export function FormularioPublicar({
                 Quiero que una fundación coordine la entrega
               </button>
             ) : (
-              <div className="rounded-xl border border-border p-4">
+              <div className="rounded-2xl bg-card p-4 shadow-sm">
                 <CamposAcompanamiento
                   aliados={aliados}
                   datos={datosAliado}

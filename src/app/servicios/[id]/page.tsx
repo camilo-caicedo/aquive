@@ -193,7 +193,7 @@ export default async function FichaPage({
             {ficha.resenas
               .filter((r) => r.comentario || r.replica)
               .map((r) => (
-                <li key={r.id} className="rounded-lg border border-border p-3">
+                <li key={r.id} className="rounded-2xl bg-card p-3 shadow-sm">
                   {r.comentario && <p className="text-base">{r.comentario}</p>}
                   {r.replica && (
                     <p className="mt-2 border-l-2 border-border pl-3 text-base text-muted-foreground">

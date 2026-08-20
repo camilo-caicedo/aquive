@@ -64,7 +64,24 @@ export function TarjetaSolicitud({
   const ocultos = solicitud.items.length - visibles.length
 
   return (
-    <li className="animar-entrada rounded-2xl bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
+    <li
+      className={`animar-entrada overflow-hidden rounded-2xl bg-card shadow-sm transition-shadow hover:shadow-md ${
+        coincidencias ? 'border border-primary/40' : ''
+      }`}
+    >
+      {/* La coincidencia va arriba y a lo ancho, no como un chip perdido en
+          medio: es exactamente lo que la persona vino a ver, y en el cruce
+          inverso decide si sigue leyendo la tarjeta o pasa a la siguiente. */}
+      {coincidencias !== undefined && coincidencias > 0 && (
+        <p className="flex items-center gap-1.5 bg-accent px-4 py-2 text-sm font-medium text-accent-foreground">
+          <Check className="size-4 shrink-0" aria-hidden="true" />
+          {coincidencias === 1
+            ? 'Pide una de las cosas que marcaste'
+            : `Pide ${coincidencias} de las cosas que marcaste`}
+        </p>
+      )}
+
+      <div className="p-4">
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-start gap-3">
           {/* Círculo, no cuadrado redondeado: es el mismo gesto que el
@@ -81,15 +98,6 @@ export function TarjetaSolicitud({
         </div>
         <BadgeFrescura horas={solicitud.horas_sin_confirmar} />
       </div>
-
-      {coincidencias !== undefined && coincidencias > 0 && (
-        <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-accent px-2.5 py-1.5 text-sm font-medium text-accent-foreground">
-          <Check className="size-4 shrink-0" aria-hidden="true" />
-          {coincidencias === 1
-            ? 'Pide una de las cosas que marcaste'
-            : `Pide ${coincidencias} de las cosas que marcaste`}
-        </p>
-      )}
 
       {/* Dos líneas y corta: la nota completa está en /responder. Cuatro
           párrafos en una tarjeta empujan la siguiente solicitud fuera de
@@ -156,6 +164,7 @@ export function TarjetaSolicitud({
         >
           Puedo ayudar
         </Button>
+      </div>
       </div>
     </li>
   )

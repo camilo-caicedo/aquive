@@ -182,27 +182,33 @@ function Miembro({
         : 'Fuera del equipo'
 
   return (
-    <li className="rounded-lg border border-border p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-lg font-bold">{miembro.nombre_visible}</span>
-        <span
-          className={
-            miembro.estado === 'activo'
-              ? 'inline-flex shrink-0 items-center rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-base font-medium text-ok'
-              : 'inline-flex shrink-0 items-center rounded-full border border-primary/25 bg-accent px-2.5 py-0.5 text-base font-medium text-accent-foreground'
-          }
-        >
+    // Fila, no tarjeta con seis botones: quien coordina mira el equipo
+    // entero de un vistazo y solo entra a uno cuando va a cambiarle algo.
+    <li
+      className={
+        miembro.estado === 'activo'
+          ? 'flex items-center gap-3 rounded-2xl bg-card p-4 shadow-sm'
+          : miembro.estado === 'pendiente'
+            ? 'flex items-center gap-3 rounded-2xl border border-primary/40 bg-accent p-4'
+            : 'flex items-center gap-3 rounded-2xl border border-dashed border-border p-4'
+      }
+    >
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-base font-bold">
+          {miembro.nombre_visible}
+          {esYo && <span className="font-normal text-muted-foreground"> · eres tú</span>}
+        </p>
+        <p className="truncate text-sm text-muted-foreground">
           {etiquetaEstado}
-        </span>
+          {miembro.estado === 'activo' && miembro.rol === 'coordinador'
+            ? ' · coordinador'
+            : ''}
+          {miembro.puede_ver_identidad ? ' · ve identidades' : ''}
+        </p>
       </div>
 
-      <p className="mt-1 text-base text-muted-foreground">
-        Entró el {fecha(miembro.creado_at)}
-        {esYo && ' · eres tú'}
-      </p>
-
       {esYo ? null : (
-        <div className="mt-3">
+        <div className="shrink-0">
           <HojaGestion
             id={`gestionar-${miembro.perfil_id}`}
             titulo={miembro.nombre_visible}

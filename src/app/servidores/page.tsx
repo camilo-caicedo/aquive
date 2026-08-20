@@ -242,7 +242,7 @@ export default async function ServidoresPage({
       ) : (
         <ul className="mt-6 space-y-3">
           {servidores.map((s) => (
-            <li key={s.id} className="rounded-lg border border-border p-4 sm:p-5">
+            <li key={s.id} className="animar-entrada rounded-2xl bg-card p-4 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-lg font-bold">{s.nombre_visible}</span>
                 {s.verificado ? (
@@ -334,7 +334,7 @@ export default async function ServidoresPage({
           donde de verdad se busca. Lo que importa de este texto es la
           diferencia de vida útil, que es lo que sostiene la promesa de
           borrado del tablero. */}
-      <section className="mt-8 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:p-5">
+      <section className="mt-8 flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:p-5">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
           <Briefcase className="size-6" aria-hidden="true" />
         </span>
