@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
 import { RESPONSABLE_SERVICIOS } from '@/lib/config'
 import { FormularioProveedor } from './formulario-proveedor'
+import { CamposReferencia, type MiReferencia } from '@/components/campos-referencia'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import type { MiProveedor } from '@/lib/types'
@@ -42,20 +43,25 @@ export default async function SoyProveedorPage() {
     )
   }
 
-  const [{ data: mio }, { data: oficios }, { data: zonas }, municipios] = await Promise.all([
-    supabase.rpc('mi_proveedor', {}),
-    supabase.from('catalogo_oficios').select('*').eq('activo', true).order('orden'),
-    // Todas las zonas de una vez y se filtran en el cliente al elegir
-    // municipio. Hoy son 37 filas —solo Cali—; si algún día se siembran
-    // varias ciudades, esto pasa a una consulta por municipio.
-    supabase.from('zonas').select('*').eq('activa', true).order('orden'),
-    listarMunicipios(supabase),
-  ])
+  const [{ data: mio }, { data: oficios }, { data: zonas }, municipios, { data: refs }] =
+    await Promise.all([
+      supabase.rpc('mi_proveedor', {}),
+      supabase.from('catalogo_oficios').select('*').eq('activo', true).order('orden'),
+      // Todas las zonas de una vez y se filtran en el cliente al elegir
+      // municipio. Hoy son 37 filas —solo Cali—; si algún día se siembran
+      // varias ciudades, esto pasa a una consulta por municipio.
+      supabase.from('zonas').select('*').eq('activa', true).order('orden'),
+      listarMunicipios(supabase),
+      supabase.rpc('mis_referencias', {}),
+    ])
+
+  const proveedor = (mio as MiProveedor | null) ?? null
+  const referencias = (refs as unknown as MiReferencia[]) ?? []
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       <h1 className="font-heading text-3xl">
-        {mio ? 'Mi ficha' : 'Ofrecer mi trabajo'}
+        {proveedor ? 'Mi ficha' : 'Ofrecer mi trabajo'}
       </h1>
       <p className="mt-1 text-base text-muted-foreground">
         Tu nombre, tu teléfono y lo que haces quedan públicos en internet para
@@ -64,11 +70,20 @@ export default async function SoyProveedorPage() {
       </p>
 
       <FormularioProveedor
-        proveedor={(mio as MiProveedor | null) ?? null}
+        proveedor={proveedor}
         municipios={municipios ?? []}
         oficios={oficios ?? []}
         zonas={zonas ?? []}
       />
+
+      {/* Solo cuando ya existe la ficha: una referencia cuelga de ella, y
+          pedirla antes obligaría a guardar el dato de un tercero para algo
+          que todavía puede no publicarse. */}
+      {proveedor && (
+        <div className="mt-10">
+          <CamposReferencia referencias={referencias} oficios={oficios ?? []} />
+        </div>
+      )}
     </main>
   )
 }

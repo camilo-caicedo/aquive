@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
 import { CORREO_HABEAS_DATA_SERVICIOS, RESPONSABLE_SERVICIOS } from '@/lib/config'
 import { FormularioProveedor } from '../../soy-proveedor/formulario-proveedor'
+import { CamposReferencia, type MiReferencia } from '@/components/campos-referencia'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import type { MiProveedor } from '@/lib/types'
@@ -33,14 +34,17 @@ export default async function MiPerfilPage({
   const { token } = await params
   const supabase = await createClient()
 
-  const [{ data: mio }, { data: oficios }, { data: zonas }, municipios] = await Promise.all([
-    supabase.rpc('mi_proveedor', { p_token: token }),
-    supabase.from('catalogo_oficios').select('*').eq('activo', true).order('orden'),
-    supabase.from('zonas').select('*').eq('activa', true).order('orden'),
-    listarMunicipios(supabase),
-  ])
+  const [{ data: mio }, { data: oficios }, { data: zonas }, municipios, { data: refs }] =
+    await Promise.all([
+      supabase.rpc('mi_proveedor', { p_token: token }),
+      supabase.from('catalogo_oficios').select('*').eq('activo', true).order('orden'),
+      supabase.from('zonas').select('*').eq('activa', true).order('orden'),
+      listarMunicipios(supabase),
+      supabase.rpc('mis_referencias', { p_token: token }),
+    ])
 
   const proveedor = (mio as MiProveedor | null) ?? null
+  const referencias = (refs as unknown as MiReferencia[]) ?? []
 
   if (!proveedor) {
     return (
@@ -85,6 +89,14 @@ export default async function MiPerfilPage({
         zonas={zonas ?? []}
         token={token}
       />
+
+      <div className="mt-10">
+        <CamposReferencia
+          referencias={referencias}
+          oficios={oficios ?? []}
+          token={token}
+        />
+      </div>
 
       <p className="mt-6 text-sm text-muted-foreground">
         Ver también el{' '}

@@ -17,6 +17,7 @@ import { PanelHilos } from './panel-hilos'
 import { PanelCoincidencias } from './panel-coincidencias'
 import { PanelSolicitudes } from './panel-solicitudes'
 import { PanelProveedores, type ProveedorDeOrganizacion } from './panel-proveedores'
+import { PanelReferencias, type ReferenciaPorRevisar } from './panel-referencias'
 
 export const metadata: Metadata = {
   title: 'Mi organización',
@@ -193,13 +194,14 @@ export default async function AliadoPage({
  */
 async function Proveedores() {
   const supabase = await createClient()
-  const [{ data: lista }, { data: oficios }, { data: zonas }, municipios, origen] =
+  const [{ data: lista }, { data: oficios }, { data: zonas }, municipios, origen, { data: refs }] =
     await Promise.all([
       supabase.rpc('proveedores_de_mi_organizacion'),
       supabase.from('catalogo_oficios').select('*').eq('activo', true).order('orden'),
       supabase.from('zonas').select('*').eq('activa', true).order('orden'),
       listarMunicipios(supabase),
       origenDelSitio(),
+      supabase.rpc('referencias_por_revisar'),
     ])
 
   const { data: organizacionId } = await supabase.rpc('mi_organizacion_activa')
@@ -228,6 +230,16 @@ async function Proveedores() {
         oficios={oficios ?? []}
         zonas={zonas ?? []}
         origen={origen}
+      />
+
+      <h3 className="font-heading mt-10 text-2xl">Referencias por comprobar</h3>
+      <p className="mt-1 text-base text-muted-foreground">
+        Cada una es el contacto de alguien que no usa esta plataforma y que
+        autorizó que lo llamaran una vez. Los datos se destapan de a uno, con
+        motivo escrito, y cada lectura queda registrada.
+      </p>
+      <PanelReferencias
+        referencias={(refs as unknown as ReferenciaPorRevisar[]) ?? []}
       />
     </section>
   )

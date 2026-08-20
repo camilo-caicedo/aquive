@@ -1937,6 +1937,41 @@ export interface Database {
         Args: { p_proveedor_id: string; p_suspendido: boolean }
         Returns: undefined
       }
+      crear_referencia: {
+        Args: {
+          p_nombre: string
+          p_telefono: string
+          p_oficio_id: string | null
+          p_consentimiento_version: string
+          p_token?: string | null
+        }
+        Returns: string
+      }
+      mis_referencias: {
+        Args: { p_token?: string | null }
+        Returns: Json
+      }
+      borrar_referencia: {
+        Args: { p_id: string; p_token?: string | null }
+        Returns: undefined
+      }
+      // Descifra. Escribe `accesos_referencia` antes de devolver.
+      leer_referencia: {
+        Args: { p_id: string; p_motivo: string }
+        Returns: Json
+      }
+      marcar_referencia: {
+        Args: { p_id: string; p_estado: EstadoReferencia }
+        Returns: undefined
+      }
+      referencias_por_revisar: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      accesos_a_referencias: {
+        Args: Record<string, never>
+        Returns: Json
+      }
       crear_perfil: {
         Args: {
           p_nombre_visible: string

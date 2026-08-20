@@ -536,3 +536,200 @@ begin
   raise notice 'Pruebas de la fase S3: OK';
 end;
 $$;
+
+-- =====================================================================
+-- Fase S4 — referencias cifradas
+--
+-- Si el bloque revienta con «Falta la llave de cifrado», el problema no
+-- es esta prueba: es que el secreto `aquive_identidad_key` no está en el
+-- Vault de esta base. Es exactamente lo que tiene que pasar antes que
+-- guardar un NULL donde debería ir un nombre cifrado.
+-- =====================================================================
+
+do $$
+declare
+  v_tok   text := 'token-de-prueba-s4-no-usar-en-nada-real';
+  v_prov  uuid;
+  v_ref   uuid;
+  v_lista jsonb;
+  v_n     integer;
+  v_fallo boolean;
+begin
+  insert into public.proveedores
+    (nombre_visible, tipo, telefono, municipio, acepto_publicacion,
+     autorizacion_version, token_hash, es_prueba)
+  values
+    ('PRUEBA S4', 'persona', '3000000020', '76001', true, 'prueba',
+     encode(extensions.digest(v_tok, 'sha256'), 'hex'), true)
+  returning id into v_prov;
+
+  insert into public.proveedor_oficios (proveedor_id, oficio_id, modo)
+  values (v_prov, 'cuidado_ninos', 'normal');
+
+  -- ---- El teléfono no va escondido en el nombre ---------------------
+  v_fallo := false;
+  begin
+    perform public.crear_referencia(
+      'Ana Perez 3001234567', '3009999001', null, 'prueba', v_tok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'El nombre de la referencia aceptó un teléfono dentro';
+
+  -- ---- Y el teléfono tiene que parecer un teléfono ------------------
+  v_fallo := false;
+  begin
+    perform public.crear_referencia('Ana Perez', 'llamame', null, 'prueba', v_tok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Se aceptó un teléfono que no lo es';
+
+  -- ---- Sin versión del consentimiento no se guarda nada -------------
+  v_fallo := false;
+  begin
+    perform public.crear_referencia('Ana Perez', '3009999001', null, '', v_tok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo,
+    'Se guardó el dato de un tercero sin dejar constancia de qué texto se le leyó';
+
+  -- ---- Camino feliz ---------------------------------------------------
+  v_ref := public.crear_referencia(
+    'Ana Perez', '300 999 9001', 'cuidado_ninos', 'prueba', v_tok);
+  assert v_ref is not null, 'No se creó la referencia';
+
+  -- Lo guardado está cifrado de verdad: el nombre en claro no aparece.
+  --
+  -- El BEGIN interno no es adorno: en plpgsql, un `exception` atrapa
+  -- deshaciendo TODO su bloque, así que ponerlo en el bloque de afuera
+  -- borraría los fixtures y el siguiente bloque no encontraría la ficha.
+  -- Aquí lo que se traga es solo el error de codificación de
+  -- `convert_from` sobre bytea cifrado, que además prueba lo mismo.
+  begin
+    select count(*) into v_n from public.referencias r
+     where r.id = v_ref
+       and position('Ana Perez' in convert_from(r.nombre_cifrado, 'UTF8')) > 0;
+    assert v_n = 0, 'El nombre quedó guardado en claro';
+  exception
+    when character_not_in_repertoire or untranslatable_character then
+      null;
+  end;
+end;
+$$;
+
+do $$
+declare
+  v_tok   text := 'token-de-prueba-s4-no-usar-en-nada-real';
+  v_prov  uuid;
+  v_ref   uuid;
+  v_lista jsonb;
+  v_n     integer;
+  v_fallo boolean;
+begin
+  select p.id into v_prov from public.proveedores p
+   where p.token_hash = encode(extensions.digest(v_tok, 'sha256'), 'hex');
+  select r.id into v_ref from public.referencias r where r.proveedor_id = v_prov limit 1;
+
+  -- ---- La misma persona no cuenta dos veces --------------------------
+  v_fallo := false;
+  begin
+    -- Escrito distinto, mismo número: `normalizar_telefono` los iguala.
+    perform public.crear_referencia('Ana P.', '+573009999001', null, 'prueba', v_tok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo,
+    'El mismo teléfono escrito distinto entró como una segunda referencia';
+
+  -- ---- Tope de tres ---------------------------------------------------
+  perform public.crear_referencia('Beto', '3009999002', null, 'prueba', v_tok);
+  perform public.crear_referencia('Carla', '3009999003', null, 'prueba', v_tok);
+  v_fallo := false;
+  begin
+    perform public.crear_referencia('Dora', '3009999004', null, 'prueba', v_tok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Se pudo pasar del tope de tres referencias';
+
+  -- ---- Lo que ve el proveedor NO trae los datos del tercero ---------
+  v_lista := public.mis_referencias(v_tok);
+  assert jsonb_array_length(v_lista) = 3, 'mis_referencias no trajo las tres';
+  assert not (v_lista::text like '%Ana%'),
+    'mis_referencias devuelve el nombre de la referencia: eso solo sale por leer_referencia';
+  assert not (v_lista::text like '%9999001%'),
+    'mis_referencias devuelve el teléfono de la referencia';
+
+  -- ---- Regla S: pendientes no destapan el oficio de riesgo ----------
+  update public.proveedores set telefono_verificado = true where id = v_prov;
+  select count(*) into v_n from public.proveedor_oficios_publicos
+   where proveedor_id = v_prov;
+  assert v_n = 0,
+    'Regla S rota: tres referencias PENDIENTES ya publican el oficio de riesgo';
+
+  -- ---- Nadie descifra sin ser quien dice ser -------------------------
+  v_fallo := false;
+  begin
+    perform public.leer_referencia(v_ref, 'comprobacion de la prueba');
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Regla U rota: un anónimo descifró una referencia';
+
+  -- Y sin motivo falla ANTES de mirar si existe: una llamada sin motivo
+  -- no puede servir ni para sondear qué uuid hay.
+  v_fallo := false;
+  begin
+    perform public.leer_referencia(gen_random_uuid(), 'x');
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'leer_referencia aceptó un motivo de un carácter';
+
+  select count(*) into v_n from public.accesos_referencia
+   where motivo = 'comprobacion de la prueba';
+  assert v_n = 0, 'Se escribió bitácora de una lectura que no ocurrió';
+
+  -- ---- Marcar tampoco --------------------------------------------------
+  v_fallo := false;
+  begin
+    perform public.marcar_referencia(v_ref, 'confirmada');
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Un anónimo pudo confirmar una referencia';
+
+  -- ---- Las colas son del equipo y del administrador -------------------
+  v_fallo := false;
+  begin
+    perform public.referencias_por_revisar();
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'referencias_por_revisar respondió sin sesión';
+
+  v_fallo := false;
+  begin
+    perform public.accesos_a_referencias();
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'La bitácora se puede leer sin ser administrador';
+
+  -- ---- El proveedor sí puede borrar la suya ---------------------------
+  perform public.borrar_referencia(v_ref, v_tok);
+  select count(*) into v_n from public.referencias where id = v_ref;
+  assert v_n = 0, 'borrar_referencia no borró';
+
+  -- ---- Y no puede borrar la de otro -----------------------------------
+  v_fallo := false;
+  begin
+    perform public.borrar_referencia(
+      (select r.id from public.referencias r where r.proveedor_id <> v_prov limit 1),
+      v_tok);
+  exception when others then v_fallo := true;
+  end;
+  -- Si no hay referencias de nadie más, no hay nada que probar y la
+  -- llamada falla por «no existe», que también es un fallo.
+  assert v_fallo or not exists (
+    select 1 from public.referencias r where r.proveedor_id <> v_prov),
+    'Un proveedor pudo borrar la referencia de otro';
+
+  delete from public.proveedores where es_prueba;
+  delete from public.accesos_referencia where es_prueba;
+
+  raise notice 'Pruebas de la fase S4: OK';
+end;
+$$;
