@@ -118,6 +118,23 @@ begin
     return;
   end if;
 
+  -- Solo donde NO hay desplegable todavía.
+  --
+  -- En Cali hay 22 comunas y unos 340 barrios: proponer cada barrio que
+  -- alguien escriba ahogaría la cola en trabajo que no sirve para nada,
+  -- porque la división que se elige de la lista ya existe. La propuesta
+  -- es para los municipios que aún no tienen ninguna, que es donde el
+  -- desplegable está vacío y hay algo que construir.
+  if exists (
+    select 1 from public.zonas z
+    where z.municipio = p_municipio
+      and z.activa
+      and z.estado = 'aprobada'
+      and z.tipo in ('comuna','corregimiento')
+  ) then
+    return;
+  end if;
+
   -- `barrio` como tipo por defecto porque es lo que más se escribe. Quien
   -- aprueba puede corregirlo a comuna o corregimiento en el mismo paso.
   insert into public.zonas (municipio, nombre, tipo, estado, orden)

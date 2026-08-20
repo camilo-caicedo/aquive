@@ -65,6 +65,15 @@ con no confundir `seed-servicios.sql` —los 36 servicios profesionales con
 matrícula, del paso 3— con `seed-oficios.sql`, que es la taxonomía del
 rebusque y no verifica nada. Son dos catálogos distintos a propósito.
 
+**Solo en el proyecto de PRUEBAS**, después de todo lo anterior:
+`96-seed-servicios-pruebas.sql` llena el directorio con nueve fichas, sus
+calificaciones, cuatro solicitudes y tres zonas por revisar. Sirve para
+ver las pantallas con contenido y, sobre todo, para ver la regla S
+funcionando: una de las nueve no aparece en el directorio porque su único
+oficio es de riesgo alto y no está verificada. Todos los nombres empiezan
+por «PRUEBA — » y todos los teléfonos son ceros, que es lo que impide que
+alguien llame de verdad a una ficha inventada.
+
 Antes del paso 5, **el proveedor de Google tiene que estar ya configurado**
 (ver "Consola", punto 1).
 

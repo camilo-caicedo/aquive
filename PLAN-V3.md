@@ -287,6 +287,12 @@ desplegable, y un administrador o el equipo de la fundación lo aprueba
 —corrigiendo el nombre y el tipo, que es lo que casi siempre hace falta—.
 Desde entonces aparece en la lista de ese municipio.
 
+**Solo donde el desplegable está vacío.** En Cali hay 22 comunas y unos
+340 barrios: proponer cada barrio que alguien escriba ahogaría la cola en
+trabajo inútil, porque la división que se elige de la lista ya existe.
+`proponer_zona` no hace nada si el municipio ya tiene alguna comuna o
+corregimiento aprobado.
+
 La propuesta ocurre **dentro** de `guardar_proveedor`,
 `crear_proveedor_asistido` y `crear_solicitud_servicio`, como efecto de
 guardar. No hay RPC pública para proponer: sería una puerta más que
@@ -546,9 +552,10 @@ Lo que sostiene, por fase:
   datos abiertos.
 - **S8** · Que comuna y barrio se guarden juntos, que sin ninguna de las
   dos no se guarde nada, que lo escrito en un municipio sin comunas caiga
-  en la cola como `propuesta`, que una propuesta no se pueda elegir
-  todavía ni la vea `anon`, que escribirla dos veces no la duplique, y
-  que un nombre rechazado no vuelva a la cola.
+  en la cola como `propuesta`, que en Cali **no** se proponga nada, que
+  una propuesta no se pueda elegir todavía ni la vea `anon`, que
+  escribirla dos veces no la duplique, y que un nombre rechazado no
+  vuelva a la cola.
 
 **Manual.** `migracion/99-verificar.sql` trae los puntos 13 a 17 del
 módulo: catálogos sembrados, que los cuatro oficios de riesgo sigan en

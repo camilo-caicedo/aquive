@@ -471,6 +471,10 @@ begin
 
   delete from public.reportes where objeto_id = v_id;
   delete from public.proveedores where es_prueba;
+  -- Guardar con un barrio escrito a mano lo propone como zona (S8). Si no
+  -- se limpia, cada corrida deja basura en la cola del administrador.
+  delete from public.zonas
+   where estado = 'propuesta' and municipio = '76001' and nombre = 'San Fernando';
 
   raise notice 'Pruebas de la fase S2: OK';
 end;
@@ -1244,6 +1248,21 @@ begin
   select count(*) into v_n from public.zonas z
    where z.municipio = '76109' and z.nombre = 'Barrio de prueba S8';
   assert v_n = 1, 'La misma zona se propuso dos veces';
+
+  -- ---- En Cali NO se propone nada ------------------------------------
+  -- Hay 22 comunas y unos 340 barrios: proponer cada uno ahogaría la cola
+  -- en trabajo que no sirve, porque el desplegable ya existe.
+  perform public.guardar_proveedor(
+    'PRUEBA S8', 'persona', '3000000060', '76001',
+    (select z.id from public.zonas z
+      where z.municipio = '76001' and z.estado = 'aprobada' limit 1),
+    'Barrio de prueba S8 en Cali', array['domicilio'], null, null, null, null,
+    v_ok, true, 'prueba', v_tok);
+
+  select count(*) into v_n from public.zonas z
+   where z.municipio = '76001' and z.nombre = 'Barrio de prueba S8 en Cali';
+  assert v_n = 0,
+    'Se propuso un barrio en un municipio que ya tiene comunas: la cola se ahogaría';
 
   -- ---- Resolverla es de quien modera ---------------------------------
   v_fallo := false;
