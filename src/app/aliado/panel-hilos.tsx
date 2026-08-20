@@ -23,6 +23,20 @@ export function PanelHilos({ hilos }: { hilos: HiloResumen[] }) {
   const router = useRouter()
   const [cargando, setCargando] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  // Tres colas sobre la misma lista, no tres listas: lo que cambia es qué
+  // se mira, no dónde se mira. La que pide acción va primero y con su
+  // número, para no entrar a una cola vacía.
+  const [cola, setCola] = useState<'sin_asignar' | 'mias' | 'entregadas'>('sin_asignar')
+
+  const sinAsignar = hilos.filter((h) => h.sin_asignar && !h.soy_ofertador)
+  const entregadas = hilos.filter((h) => h.estado === 'entregada' || h.estado === 'cerrada')
+  const mias = hilos.filter((h) => !sinAsignar.includes(h) && !entregadas.includes(h))
+  const COLAS = [
+    { clave: 'sin_asignar' as const, etiqueta: 'Sin asignar', lista: sinAsignar },
+    { clave: 'mias' as const, etiqueta: 'Mías', lista: mias },
+    { clave: 'entregadas' as const, etiqueta: 'Entregadas', lista: entregadas },
+  ]
+  const visibles = COLAS.find((c) => c.clave === cola)?.lista ?? []
 
   async function hacerseCargo(id: string) {
     setCargando(id)
@@ -48,8 +62,28 @@ export function PanelHilos({ hilos }: { hilos: HiloResumen[] }) {
         </Alert>
       )}
 
+      <div className="riel -mx-4 mb-3 flex gap-2 overflow-x-auto px-4">
+        {COLAS.map((c) => (
+          <button
+            key={c.clave}
+            type="button"
+            aria-pressed={cola === c.clave}
+            onClick={() => setCola(c.clave)}
+            className={`inline-flex min-h-12 shrink-0 items-center gap-1.5 rounded-full border px-4 text-base transition-colors ${
+              cola === c.clave
+                ? 'border-primary bg-accent font-medium text-accent-foreground'
+                : 'border-border bg-card text-foreground'
+            }`}
+          >
+            {c.etiqueta}
+            {c.lista.length > 0 && <span aria-hidden="true">· {c.lista.length}</span>}
+            <span className="sr-only">, {c.lista.length}</span>
+          </button>
+        ))}
+      </div>
+
       <ul className="space-y-2">
-        {hilos.map((h) => (
+        {visibles.map((h) => (
           <FilaBandeja
             key={h.id}
             href={`/aliado/conversacion/${h.id}`}
@@ -66,7 +100,10 @@ export function PanelHilos({ hilos }: { hilos: HiloResumen[] }) {
               (h.aliado ? ` · coordina ${h.aliado}` : '')
             }
             estado={h.estado}
-            ultimo={`${h.mensajes_total} ${h.mensajes_total === 1 ? 'mensaje' : 'mensajes'}`}
+            hora={null}
+            ultimo={`${h.mensajes_total} ${
+              h.mensajes_total === 1 ? 'mensaje' : 'mensajes'
+            }`}
             accion={
               // Solo para quien puede: `asignar_aliado` exige ser miembro
               // activo de la organización, y la RPC lo vuelve a comprobar.

@@ -2,20 +2,22 @@
 
 import { useMemo, useState } from 'react'
 import qrcode from 'qrcode-generator'
-import { Copy, Check, QrCode, Bookmark } from 'lucide-react'
+import { Link2, Copy, Check, QrCode, Bookmark } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 /**
  * La llave de una solicitud, siempre a la vista.
  *
- * Va fija bajo el encabezado de `/solicitud/[token]` porque perder el
- * enlace es perder la solicitud: no hay cuenta, no hay correo y no se puede
+ * Va bajo el encabezado de `/solicitud/[token]` porque perder el enlace es
+ * perder la solicitud: no hay cuenta, no hay correo y no se puede
  * recuperar. Antes vivía en una pestaña llamada «Tu enlace», que
  * desaparecía de la vista en cuanto llegaba la primera respuesta — justo
  * cuando la persona empieza a entrar todos los días y más veces tiene la
  * ocasión de guardarlo.
  *
- * Tres cosas y nada más: copiar, ver el QR y guardar en este teléfono. El
- * QR se genera en el navegador con `qrcode-generator`, que ya está.
+ * Copiar es lo único que va en grande: es lo que resuelve el problema de
+ * verdad —mandárselo a alguien de confianza, pegarlo en una nota—. El QR y
+ * «guardar aquí» son dos botones pequeños al lado, que se usan una vez.
  */
 export function CintaEnlace({
   link,
@@ -73,52 +75,52 @@ export function CintaEnlace({
   }
 
   return (
-    <div className="sticky top-14 z-30 -mx-4 border-b border-border bg-secondary px-4 py-2 sm:top-16">
-      <div className="mx-auto flex max-w-lg items-center gap-2">
-        <span className="min-w-0 flex-1">
-          <span className="block text-sm text-secondary-foreground">Tu solicitud</span>
-          <span className="block truncate font-mono text-lg font-bold">{codigo}</span>
-        </span>
-
-        <button
-          type="button"
+    <div className="rounded-2xl border border-primary/30 bg-accent p-3 text-accent-foreground">
+      <div className="flex items-center gap-3">
+        <Link2 className="size-5 shrink-0" aria-hidden="true" />
+        <p className="min-w-0 flex-1 text-base">
+          Guarda este enlace: es la única llave
+        </p>
+        <Button
+          variant="outline"
+          className="shrink-0 bg-background"
           onClick={copiar}
-          className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:text-foreground"
-          aria-label={copiado ? 'Enlace copiado' : 'Copiar el enlace'}
         >
           {copiado ? (
             <Check className="size-5 text-ok" aria-hidden="true" />
           ) : (
             <Copy className="size-5" aria-hidden="true" />
           )}
-        </button>
+          {copiado ? 'Copiado' : 'Copiar'}
+        </Button>
+      </div>
 
+      <div className="mt-2 flex flex-wrap gap-4">
         <button
           type="button"
           onClick={() => setVerQr((v) => !v)}
           aria-expanded={verQr}
-          className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:text-foreground"
-          aria-label="Ver el código QR"
+          className="inline-flex min-h-12 items-center gap-1.5 text-sm underline underline-offset-4"
         >
-          <QrCode className="size-5" aria-hidden="true" />
+          <QrCode className="size-4 shrink-0" aria-hidden="true" />
+          {verQr ? 'Ocultar el QR' : 'Ver el QR'}
         </button>
-
         <button
           type="button"
           onClick={guardarAqui}
-          className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:text-foreground"
-          aria-label={guardado ? 'Guardada en este teléfono' : 'Guardar en este teléfono'}
+          className="inline-flex min-h-12 items-center gap-1.5 text-sm underline underline-offset-4"
         >
           {guardado ? (
-            <Check className="size-5 text-ok" aria-hidden="true" />
+            <Check className="size-4 shrink-0 text-ok" aria-hidden="true" />
           ) : (
-            <Bookmark className="size-5" aria-hidden="true" />
+            <Bookmark className="size-4 shrink-0" aria-hidden="true" />
           )}
+          {guardado ? 'Guardada aquí' : 'Guardar en este teléfono'}
         </button>
       </div>
 
       {verQr && (
-        <div className="mx-auto mt-2 max-w-lg text-center">
+        <div className="mt-2 text-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={qrDataUrl}
@@ -127,7 +129,7 @@ export function CintaEnlace({
             width={160}
             height={160}
           />
-          <p className="mt-1 text-sm break-all text-secondary-foreground">{link}</p>
+          <p className="mt-1 text-sm break-all">{link}</p>
         </div>
       )}
 

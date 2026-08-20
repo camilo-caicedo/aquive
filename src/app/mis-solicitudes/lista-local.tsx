@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
-import { FileQuestion, MapPin, Copy, Check, QrCode } from 'lucide-react'
+import { FileQuestion, Check, QrCode, Link2 } from 'lucide-react'
 import qrcode from 'qrcode-generator'
 import { categoria as categoriaInfo } from '@/lib/catalogo'
 import type { Categoria } from '@/lib/types'
@@ -20,6 +20,8 @@ interface Guardada {
 interface DatosVivos {
   categoria: string
   barrio: string
+  /** Cuántas respuestas tiene. Es un número, no dice quién respondió. */
+  num_respuestas?: number
 }
 
 const CLAVE = 'mis_solicitudes'
@@ -46,6 +48,9 @@ export function ListaLocal() {
   const [depurado, setDepurado] = useState(false)
   const [datos, setDatos] = useState<Record<string, DatosVivos>>({})
   const [copiado, setCopiado] = useState<string | null>(null)
+  const respuestas: Record<string, number | undefined> = Object.fromEntries(
+    Object.entries(datos).map(([k, v]) => [k, v.num_respuestas])
+  )
   const [qrDe, setQrDe] = useState<string | null>(null)
 
   const solicitudes = useMemo<Guardada[] | null>(() => {
@@ -145,52 +150,52 @@ export function ListaLocal() {
     <ul className="mt-6 space-y-3">
       {solicitudes.map((s) => (
         <li key={s.token} className="rounded-2xl bg-card p-4 shadow-sm">
-          {/* Antes solo estaba el código. Quien publicó tres cosas distintas
-              no tiene forma de saber cuál es cuál mirando cuatro letras: lo
-              que reconoce es «Agua y aseo, El Jordán». */}
-          <p className="text-lg font-semibold">
-            {datos[s.token] ? categoriaInfo(datos[s.token].categoria as Categoria).etiqueta : 'Tu solicitud'}
-          </p>
-          <p className="mt-0.5 flex items-center gap-1.5 text-base text-muted-foreground">
-            {datos[s.token] && (
-              <>
-                <MapPin className="size-4 shrink-0" aria-hidden="true" />
-                {datos[s.token].barrio}
-                <span aria-hidden="true">·</span>
-              </>
+          <div className="flex items-start justify-between gap-2">
+            {/* Antes solo estaba el código. Quien publicó tres cosas
+                distintas no tiene forma de saber cuál es cuál mirando cuatro
+                letras: lo que reconoce es «Alimentación · Comuna 15». */}
+            <p className="min-w-0 text-lg font-bold">
+              {datos[s.token]
+                ? `${categoriaInfo(datos[s.token].categoria as Categoria).etiqueta} · ${
+                    datos[s.token].barrio
+                  }`
+                : 'Tu solicitud'}
+            </p>
+            {(respuestas[s.token] ?? 0) > 0 && (
+              <span className="shrink-0 rounded-full bg-accent px-3 py-1 text-sm font-medium text-accent-foreground">
+                {respuestas[s.token]}{' '}
+                {respuestas[s.token] === 1 ? 'respuesta' : 'respuestas'}
+              </span>
             )}
-            <span className="font-mono text-sm">{s.codigo}</span>
-          </p>
-          <p className="mt-0.5 text-sm text-muted-foreground">
+          </div>
+
+          <p className="mt-1 text-base text-muted-foreground">
             Publicada el{' '}
             {new Date(s.creada_at).toLocaleDateString('es-CO', {
               day: 'numeric',
               month: 'long',
-            })}
+            })}{' '}
+            · código <span className="font-mono">{s.codigo}</span>
           </p>
 
           <div className="mt-3 flex items-center gap-2">
             <Button
               variant="outline"
-              className="flex-1"
+              className="border-primary text-primary"
               nativeButton={false}
               render={<Link href={`/solicitud/${s.token}`} />}
             >
               Ver respuestas
             </Button>
             {/* El enlace es la llave: aquí también, no solo dentro. */}
-            <button
-              type="button"
-              onClick={() => copiar(s.token)}
-              aria-label={copiado === s.token ? 'Enlace copiado' : 'Copiar el enlace'}
-              className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
-            >
+            <Button variant="outline" onClick={() => copiar(s.token)}>
               {copiado === s.token ? (
                 <Check className="size-5 text-ok" aria-hidden="true" />
               ) : (
-                <Copy className="size-5" aria-hidden="true" />
+                <Link2 className="size-5" aria-hidden="true" />
               )}
-            </button>
+              {copiado === s.token ? 'Copiado' : 'Enlace'}
+            </Button>
             <button
               type="button"
               onClick={() => setQrDe((q) => (q === s.token ? null : s.token))}

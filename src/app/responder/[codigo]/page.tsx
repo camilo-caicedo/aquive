@@ -1,8 +1,8 @@
 import Link from 'next/link'
-import { MessageSquare } from 'lucide-react'
+import { MessageSquare, PhoneCall } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { formatearHoras } from '@/lib/tiempo'
-import { describirItem } from '@/lib/catalogo'
+import { categoria, describirItem } from '@/lib/catalogo'
 import { AVISO_RESPONDER } from '@/lib/honestidad'
 import { BadgeFrescura } from '@/components/badge-frescura'
 import { BotonReportar } from '@/components/boton-reportar'
@@ -52,7 +52,7 @@ export default async function ResponderPage({
   // hacia Google —nunca en la URL, ver `src/lib/destino.ts`— y vuelve aquí.
   if (!user) {
     return (
-      <MarcoFlujo titulo="Puedo ayudar" volver="/">
+      <MarcoFlujo titulo="Ofrecer ayuda" volver="/">
         <PuertaCerrada
           titulo="Para responder hace falta una cuenta"
           porque="Quien pidió esto va a ver tu nombre y tu contacto, así que tiene que haber alguien detrás de la respuesta. De tu cuenta de Google solo guardamos un identificador interno."
@@ -71,7 +71,7 @@ export default async function ResponderPage({
 
   if (!perfil) {
     return (
-      <MarcoFlujo titulo="Puedo ayudar" volver="/">
+      <MarcoFlujo titulo="Ofrecer ayuda" volver="/">
         <PuertaCerrada
           titulo="Falta tu perfil"
           porque="Quien pidió esto necesita saber a quién le está escribiendo: tu nombre visible y una forma de contacto. Son tres campos."
@@ -148,29 +148,42 @@ export default async function ResponderPage({
     )
 
   return (
-    <MarcoFlujo titulo="Puedo ayudar" volver="/">
-      <div className="rounded-lg border border-border p-4">
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-mono text-xl font-bold">{solicitud.codigo}</span>
+    <MarcoFlujo titulo="Ofrecer ayuda" volver="/">
+      {/* En modo lectura: qué se pide, dónde y cuándo. El código va al
+          final y en pequeño — sirve para nombrar la solicitud por teléfono,
+          no para decidir. */}
+      <div className="rounded-2xl bg-card p-4 shadow-sm">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-lg font-bold">
+              {categoria(solicitud.categoria).etiqueta}
+            </p>
+            <p className="mt-0.5 text-base text-muted-foreground">
+              {solicitud.municipio_nombre} · {solicitud.barrio} ·{' '}
+              {formatearHoras(solicitud.horas_sin_confirmar)}
+            </p>
+          </div>
           <BadgeFrescura horas={solicitud.horas_sin_confirmar} />
         </div>
-        <p className="mt-1 text-base">
-          {solicitud.municipio_nombre} — {solicitud.barrio}
-        </p>
+
         {solicitud.items.length > 0 && (
-          <ul className="mt-3 space-y-1 text-base">
+          <ul className="mt-3 flex flex-wrap gap-2">
             {solicitud.items.map((it, i) => (
-              <li key={i}>
+              <li
+                key={i}
+                className="rounded-full bg-muted px-3.5 py-1.5 text-sm text-foreground"
+              >
                 {describirItem(it)}
               </li>
             ))}
           </ul>
         )}
-        {solicitud.nota && (
-          <p className="mt-3 text-base text-muted-foreground">{solicitud.nota}</p>
-        )}
+
+        {solicitud.nota && <p className="mt-3 text-base">{solicitud.nota}</p>}
+
         <p className="mt-3 text-sm text-muted-foreground">
-          {formatearHoras(solicitud.horas_sin_confirmar)}
+          {puedeRecoger === true ? 'Puede recoger · ' : ''}código{' '}
+          <span className="font-mono">{solicitud.codigo}</span>
         </p>
       </div>
 
@@ -179,9 +192,10 @@ export default async function ResponderPage({
           Solo se muestra si esta persona lo dejó, y solo aquí: no sale en
           el tablero ni en ninguna otra pantalla. */}
       {hayContacto && (
-        <div className="mt-4 rounded-xl border border-primary/30 bg-accent p-4">
-          <p className="text-base font-medium text-accent-foreground">
-            Quien pidió esto dejó un contacto directo
+        <div className="mt-4 rounded-2xl border border-primary/30 bg-accent p-4">
+          <p className="flex items-center gap-2 text-base font-medium text-accent-foreground">
+            <PhoneCall className="size-5 shrink-0" aria-hidden="true" />
+            Dejó un contacto directo
           </p>
           <ul className="mt-1 space-y-0.5 text-base text-accent-foreground">
             {contacto?.nombre && <li>{contacto.nombre}</li>}

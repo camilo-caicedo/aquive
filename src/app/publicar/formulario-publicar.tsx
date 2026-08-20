@@ -3,10 +3,10 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { HeartHandshake, Check, Minus, Plus } from 'lucide-react'
+import { HeartHandshake, Check, Minus, Plus, ShieldAlert } from 'lucide-react'
 import type { Categoria, ItemCatalogoPublico, ItemSolicitudInput } from '@/lib/types'
 import { LIMITE_MUNICIPIOS, nombreConDepartamento, type MunicipioBasico as Municipio } from '@/lib/municipios'
-import { CATEGORIAS } from '@/lib/catalogo'
+import { categoria as categoriaInfo, CATEGORIAS } from '@/lib/catalogo'
 import { FECHA_LEGALES } from '@/lib/config'
 import { validarBarrio, validarCorreo, validarNota, validarSugerencia, validarTelefono } from '@/lib/validacion'
 import { createClient } from '@/lib/supabase/client'
@@ -19,6 +19,7 @@ import {
 } from '@/components/campos-acompanamiento'
 import { TurnstileWidget } from '@/components/turnstile-widget'
 import { Button } from '@/components/ui/button'
+import { MarcoFlujo } from '@/components/marco-flujo'
 import { SeccionPlegable } from '@/components/seccion-plegable'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -290,37 +291,85 @@ export function FormularioPublicar({
     }
   }
 
+  // Una barra de acción por paso. Antes cada paso repetía su propio par de
+  // botones al final del cuerpo, así que en un formulario largo quedaban a
+  // dos pantallas de donde se estaba escribiendo.
+  //
+  // Regla R al pie de la letra: el botón grande publica directo, no hay nada
+  // preseleccionado, y la opción anónima no se pinta como la mala.
+  const acciones =
+    paso === 1 ? (
+      <Button className="w-full" disabled={!puedeAvanzarPaso1} onClick={() => setPaso(2)}>
+        Continuar
+      </Button>
+    ) : paso === 2 ? (
+      <div className="flex gap-2">
+        <Button type="button" variant="outline" onClick={() => setPaso(1)}>
+          Atrás
+        </Button>
+        <Button
+          type="button"
+          className="flex-1"
+          disabled={!puedeAvanzarPaso2}
+          onClick={() => {
+
+            setPaso(3)
+          }}
+        >
+          Continuar
+        </Button>
+      </div>
+    ) : (
+      <div className="flex gap-2">
+        <Button type="button" variant="outline" onClick={() => setPaso(2)}>
+          Atrás
+        </Button>
+        <Button
+          type="button"
+          className="flex-1"
+          disabled={!puedeEnviar || (conAliado && !datosCompletos(datosAliado))}
+          onClick={enviar}
+        >
+          {enviando
+            ? 'Publicando…'
+            : conAliado
+              ? 'Publicar con acompañamiento'
+              : 'Publicar solicitud'}
+        </Button>
+      </div>
+    )
+
+  // El aviso del paso 1, que estaba en la página: va donde se escribe el
+  // barrio, no encima de los tres pasos.
+  const avisoSinDatos = (
+    <Alert variant="warning">
+      <ShieldAlert className="size-5" aria-hidden="true" />
+      <AlertDescription>
+        No escribas tu nombre, teléfono ni dirección exacta. Con el barrio
+        basta.
+      </AlertDescription>
+    </Alert>
+  )
+
   return (
-    <div className="mt-6">
-      {/* Tres pasos con nombre, no cinco numerados. «Paso 3 de 5» no dice
-          de qué es el 3, y quien va por la mitad no sabe cuánto falta ni de
-          qué. El actual se marca con texto y con peso, no solo con color
-          (regla 9). */}
-      <ol className="riel mb-6 flex gap-1.5 overflow-x-auto text-sm" aria-label="Progreso">
-        {NOMBRES_PASO.map((nombre, i) => (
-          <li key={nombre} className="min-w-0 flex-1">
-            <span
-              aria-current={i + 1 === paso ? 'step' : undefined}
-              className={`block truncate border-t-2 pt-1.5 ${
-                i + 1 === paso
-                  ? 'border-primary font-semibold text-foreground'
-                  : i + 1 < paso
-                    ? 'border-ok text-muted-foreground'
-                    : 'border-border text-muted-foreground'
-              }`}
-            >
-              {nombre}
-            </span>
-          </li>
-        ))}
-      </ol>
+    // El marco lo monta el formulario y no la página: el progreso y la barra
+    // de acción son del paso, y el paso solo lo sabe este componente.
+    <MarcoFlujo
+      titulo="Pedir ayuda"
+      volver="/"
+      pasos={NOMBRES_PASO}
+      pasoActual={paso - 1}
+      accion={acciones}
+    >
+    <div>
 
 
       {paso === 1 && (
         <div className="space-y-4">
+          {avisoSinDatos}
           <div>
             <Label htmlFor="municipio" className="mb-1">
-              Municipio
+              ¿En qué municipio estás?
             </Label>
             <Combobox
               items={municipios}
@@ -397,32 +446,42 @@ export function FormularioPublicar({
             </Alert>
           )}
 
-          <Button className="w-full" disabled={!puedeAvanzarPaso1} onClick={() => setPaso(2)}>
-            Continuar
-          </Button>
         </div>
       )}
 
       {paso === 2 && (
         <div className="space-y-4">
-          <div>
-            <Label className="mb-1">Categoría</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {CATEGORIAS.map((c) => (
-                <Button
-                  key={c.valor}
-                  type="button"
-                  variant={categoria === c.valor ? 'default' : 'outline'}
-                  onClick={() => {
-                    setCategoria(c.valor)
-                    setSeleccionados([])
-                  }}
-                >
-                  {c.etiqueta}
-                </Button>
-              ))}
+          <fieldset>
+            <legend className="mb-2 text-base font-medium">¿Qué tipo de ayuda?</legend>
+            {/* Chips con el icono de la categoría, no una rejilla de botones
+                del mismo tamaño que los de navegar: son seis y se eligen de
+                un vistazo. */}
+            <div className="flex flex-wrap gap-2">
+              {CATEGORIAS.map((c) => {
+                const { Icono } = categoriaInfo(c.valor)
+                const elegida = categoria === c.valor
+                return (
+                  <button
+                    key={c.valor}
+                    type="button"
+                    aria-pressed={elegida}
+                    onClick={() => {
+                      setCategoria(c.valor)
+                      setSeleccionados([])
+                    }}
+                    className={`inline-flex min-h-12 items-center gap-2 rounded-full px-4 text-base transition-colors ${
+                      elegida
+                        ? 'bg-primary font-semibold text-primary-foreground'
+                        : 'bg-card text-foreground shadow-sm hover:bg-muted'
+                    }`}
+                  >
+                    <Icono className="size-5 shrink-0" aria-hidden="true" />
+                    {c.etiqueta}
+                  </button>
+                )
+              })}
             </div>
-          </div>
+          </fieldset>
 
           {/* Pedir un servicio de salud ya insinúa una necesidad de salud.
               La solicitud es anónima, pero el aviso evita que la persona
@@ -442,61 +501,82 @@ export function FormularioPublicar({
               <Label className="mb-1">
                 {categoria === 'servicios' ? 'Servicios que necesitas' : 'Ítems que necesitas'}
               </Label>
-              <ul className="flex flex-wrap gap-2">
+              <ul className="space-y-2">
                 {itemsDeCategoria.map((item) => {
                   const sel = seleccionados.find((s) => 'item_id' in s && s.item_id === item.id)
+                  const cantidad = sel ? (sel.cantidad === 0 ? 1 : sel.cantidad) : 0
                   return (
-                    <li key={item.id} className="flex flex-wrap items-center gap-2">
-                      {/* Chip, no fila con caja: se elige de un vistazo y
-                          caben tres por línea en un teléfono. */}
+                    // Una fila de ancho completo por ítem, no un chip: el
+                    // nombre y el stepper caben en la misma línea y la lista
+                    // se recorre con el pulgar sin apuntar.
+                    <li
+                      key={item.id}
+                      className={`flex min-h-14 items-center gap-2 rounded-full pr-2 pl-4 transition-colors ${
+                        sel
+                          ? 'border border-primary bg-accent'
+                          : 'border border-border bg-card'
+                      }`}
+                    >
                       <button
                         type="button"
                         onClick={() => alternarItem(item.id)}
                         aria-pressed={!!sel}
-                        className={`inline-flex min-h-12 items-center gap-1.5 rounded-full border px-4 text-base transition-colors ${
-                          sel
-                            ? 'border-primary bg-secondary font-semibold text-secondary-foreground'
-                            : 'border-border bg-card'
-                        }`}
+                        className="flex min-h-12 min-w-0 flex-1 items-center gap-1.5 text-left text-base"
                       >
-                        {sel && <Check className="size-4 shrink-0" aria-hidden="true" />}
-                        {item.nombre}
+                        <span
+                          className={sel ? 'truncate font-semibold text-accent-foreground' : 'truncate'}
+                        >
+                          {item.nombre}
+                        </span>
+                        {sel && item.unidad !== 'servicio' && (
+                          <span className="shrink-0 text-sm text-muted-foreground">
+                            · {item.unidad}
+                          </span>
+                        )}
                       </button>
 
                       {/* Un servicio no se pide por cantidad: se pide o no. */}
-                      {sel && item.unidad !== 'servicio' && (
-                        <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card p-1">
+                      {sel && item.unidad !== 'servicio' ? (
+                        <span className="flex shrink-0 items-center gap-1">
                           <button
                             type="button"
-                            onClick={() => cambiarCantidad(item.id, Math.max(1, sel.cantidad - 1))}
-                            disabled={sel.cantidad <= 1}
+                            onClick={() => cambiarCantidad(item.id, Math.max(1, cantidad - 1))}
+                            disabled={cantidad <= 1}
                             aria-label={`Quitar uno de ${item.nombre}`}
-                            className="flex size-10 items-center justify-center rounded-full text-foreground disabled:opacity-40"
+                            className="flex size-10 items-center justify-center rounded-full bg-card text-foreground disabled:opacity-40"
                           >
                             <Minus className="size-4" aria-hidden="true" />
                           </button>
-                          {/* El número es texto y no un campo: con teclado
-                              numérico encima, en un teléfono, la lista se va
-                              debajo del dedo. Se corrige con los dos botones,
-                              que es lo que se usa para pedir seis cobijas. */}
                           <span
                             aria-live="polite"
                             aria-label={`Cantidad de ${item.nombre}`}
                             className="min-w-8 text-center text-base font-semibold tabular-nums"
                           >
-                            {sel.cantidad === 0 ? 1 : sel.cantidad}
+                            {cantidad}
                           </span>
                           <button
                             type="button"
-                            onClick={() => cambiarCantidad(item.id, (sel.cantidad || 1) + 1)}
-                            disabled={sel.cantidad >= 9999}
+                            onClick={() => cambiarCantidad(item.id, cantidad + 1)}
+                            disabled={cantidad >= 9999}
                             aria-label={`Agregar uno de ${item.nombre}`}
-                            className="flex size-10 items-center justify-center rounded-full text-foreground disabled:opacity-40"
+                            className="flex size-10 items-center justify-center rounded-full bg-card text-foreground disabled:opacity-40"
                           >
                             <Plus className="size-4" aria-hidden="true" />
                           </button>
-                          <span className="pr-2 text-sm text-muted-foreground">{item.unidad}</span>
                         </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => alternarItem(item.id)}
+                          aria-label={`Agregar ${item.nombre}`}
+                          className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground"
+                        >
+                          {sel ? (
+                            <Check className="size-5 text-primary" aria-hidden="true" />
+                          ) : (
+                            <Plus className="size-5" aria-hidden="true" />
+                          )}
+                        </button>
                       )}
                     </li>
                   )
@@ -576,15 +656,15 @@ export function FormularioPublicar({
                   </div>
                 </div>
               ) : (
-                <Button
+                <button
                   type="button"
-                  variant="outline"
-                  className="mt-2 w-full"
                   disabled={numSugerencias >= MAX_SUGERENCIAS || seleccionados.length >= 12}
                   onClick={() => setMostrarSugerencia(true)}
+                  className="mt-2 inline-flex min-h-12 items-center gap-1.5 text-base text-primary underline underline-offset-4 disabled:opacity-50 disabled:no-underline"
                 >
+                  <Plus className="size-4 shrink-0" aria-hidden="true" />
                   No encuentro lo que necesito
-                </Button>
+                </button>
               )}
               {numSugerencias >= MAX_SUGERENCIAS && (
                 <p className="mt-1 text-sm text-muted-foreground">
@@ -594,29 +674,6 @@ export function FormularioPublicar({
             </div>
           )}
 
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={() => setPaso(1)}>
-              Atrás
-            </Button>
-            {/* Cierra los campos de cantidad que quedaran vacíos antes de
-                pasar de pantalla. No se hace deshabilitando «Continuar»:
-                un botón deshabilitado no recibe el toque, así que haría
-                falta tocar dos veces —una para cerrar el campo y otra para
-                avanzar— y eso se siente como que la app no responde. */}
-            <Button
-              type="button"
-              className="flex-1"
-              disabled={!puedeAvanzarPaso2}
-              onClick={() => {
-                setSeleccionados((prev) =>
-                  prev.map((s) => (s.cantidad === 0 ? { ...s, cantidad: 1 } : s))
-                )
-                setPaso(3)
-              }}
-            >
-              Continuar
-            </Button>
-          </div>
         </div>
       )}
 
@@ -812,28 +869,9 @@ export function FormularioPublicar({
             </Alert>
           )}
 
-          {/* Regla R al pie de la letra: el botón grande publica directo, no
-              hay nada preseleccionado, y la opción anónima no se pinta como
-              la mala. */}
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={() => setPaso(2)}>
-              Atrás
-            </Button>
-            <Button
-              type="button"
-              className="flex-1"
-              disabled={!puedeEnviar || (conAliado && !datosCompletos(datosAliado))}
-              onClick={enviar}
-            >
-              {enviando
-                ? 'Publicando…'
-                : conAliado
-                  ? 'Publicar con acompañamiento'
-                  : 'Publicar solicitud'}
-            </Button>
-          </div>
         </div>
       )}
     </div>
+    </MarcoFlujo>
   )
 }

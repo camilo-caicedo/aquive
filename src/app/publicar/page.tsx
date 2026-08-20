@@ -1,8 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
 import { COLUMNAS_ITEM_PUBLICO } from '@/lib/types'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { MarcoFlujo } from '@/components/marco-flujo'
 import { FormularioPublicar } from './formulario-publicar'
 
 export default async function PublicarPage() {
@@ -21,18 +19,13 @@ export default async function PublicarPage() {
 
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ''
 
-  // Pantalla de flujo, no destino (regla 10): lleva volver y título, y
-  // mientras está montada la barra inferior no se dibuja. Cuatro salidas a
-  // medio llenar un formulario no ayudan a nadie.
+  // El marco lo monta el formulario: el título, el progreso y la barra de
+  // acción dependen del paso, y el paso vive ahí dentro.
   return (
-    <MarcoFlujo titulo="Publicar solicitud" volver="/">
-      <Alert variant="warning" className="mt-2">
-        <AlertDescription>
-          Por tu seguridad, no escribas tu nombre, teléfono, dirección exacta
-          ni datos de tus hijos. Solo pedimos el barrio y qué necesitas.
-        </AlertDescription>
-      </Alert>
-      <FormularioPublicar municipios={municipios ?? []} items={items ?? []} turnstileSiteKey={siteKey} />
-    </MarcoFlujo>
+    <FormularioPublicar
+      municipios={municipios ?? []}
+      items={items ?? []}
+      turnstileSiteKey={siteKey}
+    />
   )
 }

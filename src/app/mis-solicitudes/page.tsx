@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { AccionPrincipal } from '@/components/accion-principal'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Smartphone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import type { EstadoEncabezado } from '@/lib/types'
 import { PestanasLoMio } from '@/components/pestanas-lo-mio'
@@ -57,12 +57,16 @@ export default async function MisSolicitudesPage() {
         <PestanasLoMio activa="solicitudes" conSesion={!!user} />
       </CabeceraPantalla>
 
-      <h2 className="font-heading mt-6 text-2xl">Mis solicitudes</h2>
-      <p className="mt-2 text-base text-muted-foreground">
-        Guardadas solo en este teléfono. Si cambias de teléfono o borras los
-        datos del navegador, se pierden: no las tenemos guardadas en ningún
-        lado.
-      </p>
+      {/* En tarjeta y con icono, no como párrafo suelto: es lo único que
+          hay que entender de esta pantalla, y de ello depende que la persona
+          guarde el enlace antes de perderlo. */}
+      <div className="flex items-start gap-3 rounded-2xl bg-secondary p-4 text-secondary-foreground">
+        <Smartphone className="size-5 shrink-0 translate-y-0.5" aria-hidden="true" />
+        <p className="text-base">
+          Estas solicitudes viven solo en este teléfono. Si lo cambias o borras
+          los datos del navegador, se pierden: guarda el enlace de cada una.
+        </p>
+      </div>
       <ListaLocal />
 
       {/* Lo demás que es «mío» y no cabe en la barra: el perfil de quien

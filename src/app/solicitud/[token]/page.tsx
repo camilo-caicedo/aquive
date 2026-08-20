@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Chat } from '@/components/chat'
 import { Pestanas } from '@/components/pestanas'
 import { CintaEnlace } from '@/components/cinta-enlace'
+import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { ActivarAvisos } from '@/components/activar-avisos'
 import { Acompanamiento } from './acompanamiento'
 import { ConfirmarRecepcion } from './confirmar-recepcion'
@@ -91,16 +92,50 @@ export default async function SolicitudPage({
   const hilos = (hilosData as unknown as ConversacionDelSolicitante[]) ?? []
   const horasRestantes = Math.max(0, Math.round(horasParaVencer(solicitud.expira_at)))
 
+  const PESTANAS = [
+    {
+      href: `${base}?ver=respuestas`,
+      etiqueta: 'Respuestas',
+      activa: vista === 'respuestas',
+      cuenta: numRespuestas,
+    },
+    ...(acompanada
+      ? [
+          {
+            href: `${base}?ver=coordinacion`,
+            etiqueta: 'Coordinación',
+            activa: vista === 'coordinacion',
+          },
+        ]
+      : []),
+    {
+      href: `${base}?ver=ajustes`,
+      etiqueta: 'Ajustes',
+      activa: vista === 'ajustes',
+    },
+  ]
+
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
-      {/* La llave de la solicitud, fija y siempre visible: perderla es
-          perder la solicitud, y antes vivía en una pestaña que se dejaba de
-          ver justo cuando la persona empezaba a entrar todos los días. */}
-      <CintaEnlace
-        link={`${await origenDelSitio()}${base}`}
-        codigo={solicitud.codigo}
-        token={token}
-      />
+      <CabeceraPantalla titulo="Mi solicitud" volver="/mis-solicitudes">
+        {/* La llave de la solicitud, siempre visible: perderla es perder la
+            solicitud, y antes vivía en una pestaña que se dejaba de ver justo
+            cuando la persona empezaba a entrar todos los días. */}
+        <div className="mt-3">
+          <CintaEnlace
+            link={`${await origenDelSitio()}${base}`}
+            codigo={solicitud.codigo}
+            token={token}
+          />
+        </div>
+
+        <div className="mt-3">
+          <Pestanas
+            etiqueta="Secciones de tu solicitud"
+            pestanas={PESTANAS}
+          />
+        </div>
+      </CabeceraPantalla>
 
       {/* Lo que pediste va arriba de todo y fuera de las pestañas: es la
           respuesta a «¿esta es mi solicitud?», y hay que poder contestarla
@@ -126,33 +161,6 @@ export default async function SolicitudPage({
         )}
       </div>
 
-      <div className="mt-4">
-        <Pestanas
-          etiqueta="Secciones de tu solicitud"
-          pestanas={[
-            {
-              href: `${base}?ver=respuestas`,
-              etiqueta: 'Respuestas',
-              activa: vista === 'respuestas',
-              cuenta: numRespuestas,
-            },
-            ...(acompanada
-              ? [
-                  {
-                    href: `${base}?ver=coordinacion`,
-                    etiqueta: 'Coordinación',
-                    activa: vista === 'coordinacion',
-                  },
-                ]
-              : []),
-            {
-              href: `${base}?ver=ajustes`,
-              etiqueta: 'Ajustes',
-              activa: vista === 'ajustes',
-            },
-          ]}
-        />
-      </div>
 
       {vista === 'enlace' && numRespuestas === 0 && (
         <section className="mt-6">

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { MapPin } from 'lucide-react'
@@ -100,12 +101,16 @@ export default async function AliadoPage({
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="font-heading text-3xl">
-        {esAliado ? 'Mi organización' : 'Coordinación'}
-      </h1>
-
+      {/* El nombre de la organización, no «Mi organización»: quien
+          coordina trabaja en una que se llama de alguna forma, y verla
+          nombrada es lo que dice que está en el sitio correcto. */}
+      <CabeceraPantalla
+        titulo={
+          esAliado ? (organizaciones[0]?.organizacion.nombre ?? 'Mi organización') : 'Coordinación'
+        }
+      >
       {esAliado && (
-        <div className="mt-4">
+        <div className="mt-3">
           <Pestanas
             etiqueta="Secciones de tu organización"
             pestanas={[
@@ -133,6 +138,7 @@ export default async function AliadoPage({
           />
         </div>
       )}
+      </CabeceraPantalla>
 
       {vista === 'conversaciones' && (
         <section className="mt-6">

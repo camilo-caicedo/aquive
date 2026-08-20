@@ -39,40 +39,43 @@ export function MarcoFlujo({
 }) {
   return (
     <div data-marco-flujo>
-      <div className="mx-auto max-w-lg px-4 py-4">
-        <div className="flex items-center gap-1">
-          {volver && (
-            <Link
-              href={volver}
-              aria-label="Volver"
-              className="-ml-3 flex size-12 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            >
-              <ArrowLeft className="size-6" aria-hidden="true" />
-            </Link>
-          )}
-          <h1 className="font-heading text-2xl">{titulo}</h1>
-        </div>
+      {/* Cabecera y progreso son un bloque, cerrado por una línea: el
+          contenido del paso empieza después. */}
+      <div className="border-b border-border">
+        <div className="mx-auto max-w-lg px-4 pt-2 pb-3">
+          <div className="flex items-center gap-1">
+            {volver && (
+              <Link
+                href={volver}
+                aria-label="Volver"
+                className="-ml-3 flex size-12 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+              >
+                <ArrowLeft className="size-6" aria-hidden="true" />
+              </Link>
+            )}
+            <h1 className="font-heading text-2xl">{titulo}</h1>
+          </div>
 
-        {pasos && pasos.length > 0 && (
-          // El paso actual se marca con texto —«Paso 2 de 3»— y con peso,
-          // no solo con color (regla 9): en una pantalla al sol, o para
-          // quien no distingue la terracota del papel, la barrita sola no
-          // dice nada.
-          <div className="mt-3">
-            <p className="text-sm text-muted-foreground">
-              Paso {pasoActual + 1} de {pasos.length}
-            </p>
-            <ol className="mt-1 flex gap-1.5">
+          {pasos && pasos.length > 0 && (
+            // Una barra por paso y su nombre debajo. El actual se marca con
+            // peso y con color, y los ya hechos con la barra llena: el
+            // estado no puede depender solo del color (regla 9), y por eso
+            // el nombre del paso actual va además en negrita.
+            <ol className="mt-3 flex gap-2" aria-label="Progreso">
               {pasos.map((nombre, i) => (
-                <li key={nombre} className="flex-1">
+                <li key={nombre} className="min-w-0 flex-1">
+                  <span
+                    aria-hidden="true"
+                    className={`block h-1 rounded-full ${
+                      i <= pasoActual ? 'bg-primary' : 'bg-secondary'
+                    }`}
+                  />
                   <span
                     aria-current={i === pasoActual ? 'step' : undefined}
-                    className={`block border-t-2 pt-1.5 text-sm ${
+                    className={`mt-1.5 block truncate text-sm ${
                       i === pasoActual
-                        ? 'border-primary font-semibold text-foreground'
-                        : i < pasoActual
-                          ? 'border-ok text-muted-foreground'
-                          : 'border-border text-muted-foreground'
+                        ? 'font-semibold text-primary'
+                        : 'text-muted-foreground'
                     }`}
                   >
                     {nombre}
@@ -80,11 +83,11 @@ export function MarcoFlujo({
                 </li>
               ))}
             </ol>
-          </div>
-        )}
-
-        <div className="mt-4">{children}</div>
+          )}
+        </div>
       </div>
+
+      <div className="mx-auto max-w-lg px-4 py-4">{children}</div>
 
       {accion && (
         <>

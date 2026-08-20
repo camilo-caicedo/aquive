@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { Flag, BadgeCheck, Lightbulb, PhoneCall } from 'lucide-react'
+import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { origenDelSitio } from '@/lib/origen'
@@ -212,9 +214,8 @@ export default async function AdminPage({
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="font-heading text-3xl">Administración</h1>
-
-      <div className="mt-4">
+      <CabeceraPantalla titulo="Administración" volver="/">
+      <div className="mt-3">
         <Pestanas
           etiqueta="Secciones de administración"
           pestanas={[
@@ -233,12 +234,14 @@ export default async function AdminPage({
           ]}
         />
       </div>
+      </CabeceraPantalla>
 
       {enPendientes && (
         <ColaTrabajo
           colas={[
             {
               href: '/admin',
+              Icono: Flag,
               etiqueta: 'Reportes',
               detalle: 'Contenido que alguien marcó como problemático',
               cuantas: nReportes ?? 0,
@@ -246,6 +249,7 @@ export default async function AdminPage({
             },
             {
               href: '/admin?cola=matriculas',
+              Icono: BadgeCheck,
               etiqueta: 'Matrículas por verificar',
               detalle: 'Comprobar el número en el registro de la entidad',
               cuantas: nMatriculas ?? 0,
@@ -253,6 +257,7 @@ export default async function AdminPage({
             },
             {
               href: '/admin?ver=catalogo',
+              Icono: Lightbulb,
               etiqueta: 'Ítems sugeridos',
               detalle: 'Aprobar, fusionar o rechazar lo que la gente propuso',
               cuantas: sugerencias.length,
@@ -260,6 +265,7 @@ export default async function AdminPage({
             },
             {
               href: '/admin?ver=servicios',
+              Icono: PhoneCall,
               etiqueta: 'Teléfonos por llamar',
               detalle: 'Proveedores esperando que alguien verifique su número',
               cuantas: telefonosPorLlamar,
