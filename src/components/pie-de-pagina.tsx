@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Phone } from 'lucide-react'
+import { RESPONSABLE } from '@/lib/config'
 
 const EMERGENCIAS = [
   { nombre: 'Emergencias', numero: '123' },
@@ -46,8 +47,8 @@ export function PieDePagina() {
             Lo que NO cambió: que no reemplaza a las autoridades, que no
             entrega nada, y que la ayuda de emergencia es temporal. */}
         <p className="mt-4 text-base text-muted-foreground">
-          AquíVe es una plataforma gratuita y sin ánimo de lucro, operada por
-          Fundación Nodo Social. No entregamos ayuda ni la transportamos:
+          AquíVe es una plataforma gratuita y sin ánimo de lucro, operada por{' '}
+          {RESPONSABLE}. No entregamos ayuda ni la transportamos:
           solo conectamos a quien la necesita con quien puede darla. La ayuda
           de emergencia nació para el sismo del 10 de agosto de 2026 y dejará
           de operar cuando deje de ser útil.

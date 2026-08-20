@@ -1,5 +1,6 @@
 import {
   RESPONSABLE,
+  RAZON_SOCIAL_RESPONSABLE,
   CORREO_CONTACTO,
   FECHA_LEGALES,
   RESPONSABLE_SERVICIOS,
@@ -41,7 +42,7 @@ export default function PrivacidadPage() {
       <p className="mt-3 text-base">
         {/* Una sola interpolación: partirla en dos deja un espacio de JSX
             antes de la coma —«Fundación Nodo Social , entidad»—. */}
-        {`${RESPONSABLE}${
+        {`${RAZON_SOCIAL_RESPONSABLE || RESPONSABLE}${
           NIT_RESPONSABLE_SERVICIOS ? `, NIT ${NIT_RESPONSABLE_SERVICIOS}` : ''
         }, entidad sin ánimo de lucro, Cali, Colombia.`}{' '}
         Correo de contacto: {CORREO_CONTACTO}.

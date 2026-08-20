@@ -13,7 +13,7 @@
 // las dos partes, la inscripción de las bases en el RNBD a nombre de la
 // fundación, y qué pasa con las autorizaciones que se firmaron con el
 // nombre anterior. Ver el inventario del traspaso.
-export const RESPONSABLE = 'Fundación Nodo Social'
+export const RESPONSABLE = 'Nodo Social'
 export const CORREO_CONTACTO = 'soporte@aquive.co'
 // Se mueve cada vez que cambia un texto legal, y no antes: es lo que se
 // guarda en `identidades.autorizacion_version` y por tanto la prueba de
@@ -35,13 +35,26 @@ export const FECHA_LEGALES = '20 de agosto de 2026'
 //
 // Nada de /servicios se despliega hasta que exista el contrato de encargo
 // firmado y el registro en el RNBD a nombre de la fundación (PLAN-V3 §7).
-export const RESPONSABLE_SERVICIOS = 'Fundación Nodo Social'
+// Mismo responsable que el resto del sitio desde el 20/08/2026. La
+// constante sobrevive porque hay pantallas donde nombrar a la organización
+// se lee mejor que decir «el responsable» —«pregunta en el punto de Nodo
+// Social más cercano»—, no porque quede algún reparto.
+export const RESPONSABLE_SERVICIOS = RESPONSABLE
 // TODO PLAN-V3 §7: pedir el NIT del certificado del RUES y el correo de
 // habeas data que la fundación vaya a atender. Hasta entonces el aviso de
 // privacidad de Servicios está incompleto y no se puede publicar.
-// Vacío mientras no llegue: las pantallas que lo usan no dibujan la línea
-// del NIT si no hay número. Es mejor no decirlo que decir «[PENDIENTE]»
-// dentro de un aviso de privacidad, que era lo que salía impreso.
+// TODO: los dos datos que faltan para que el aviso de privacidad
+// identifique al responsable como exige el artículo 12 de la Ley 1581.
+// Salen del certificado de existencia y representación legal del RUES.
+//
+// Vacíos, no «[PENDIENTE]»: las pantallas que los usan no dibujan la línea
+// si no hay valor, y mejor no decirlo que imprimir un marcador de posición
+// dentro de un aviso de privacidad, que era lo que estaba pasando.
+//
+// Mientras tanto se publica el nombre corto —Nodo Social— y el correo de
+// contacto, que es lo mínimo con lo que ese artículo se cumple: pide
+// identificación y una dirección física O electrónica.
+export const RAZON_SOCIAL_RESPONSABLE = ''
 export const NIT_RESPONSABLE_SERVICIOS = ''
 // Un solo canal de habeas data mientras la fundación no abra el suyo. Este
 // buzón existe y se atiende; el de antes era un marcador de posición que

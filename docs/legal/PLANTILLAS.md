@@ -68,7 +68,8 @@ ese en todos los documentos.
 Última actualización: 20/08/2026
 
 **Quién es responsable**
-Fundación Nodo Social, entidad sin ánimo de lucro, Cali, Colombia.
+Nodo Social, entidad sin ánimo de lucro, Cali, Colombia.
+[Falta la razón social completa y el NIT del certificado del RUES.]
 Correo de contacto: soporte@aquive.co.
 
 Este es un proyecto sin ánimo de lucro: primero para apoyar a los
@@ -211,7 +212,7 @@ personas ofrecerlos; nació para el sismo del 10 de agosto de 2026 y dejará
 de operar cuando deje de ser útil. El directorio de servicios permite a
 quien vive de un oficio publicar su ficha, y a quien necesita ese oficio
 encontrarlo; no tiene fecha de cierre. Es un proyecto personal, gratuito y
-sin ánimo de lucro, operado por Fundación Nodo Social. La plataforma no
+sin ánimo de lucro, operado por Nodo Social. La plataforma no
 cobra nada a nadie ni recibe dinero de nadie.
 
 **2. Qué NO es.** No somos una entidad de socorro, ni una ONG, ni una
@@ -323,7 +324,7 @@ explicación previa, especialmente si hay riesgo para alguien.
 
 ## 3. Texto de autorización (checkbox al registrarse)
 
-> Autorizo a Fundación Nodo Social, responsable de esta plataforma, a
+> Autorizo a Nodo Social, responsable de esta plataforma, a
 > tratar los datos que estoy entregando —nombre visible, municipios, forma de contacto, descripción,
 > los insumos que diga tener y, si aplica, profesión y matrícula— con la finalidad de publicarlos de
 > forma **pública** en esta plataforma para que personas afectadas puedan
