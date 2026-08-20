@@ -50,12 +50,20 @@ En el **SQL Editor del proyecto nuevo**, uno por uno, verificando cada paso.
 | 2 | `seed-municipios.sql` | repo, `supabase/` |
 | 3 | `03-seed-servicios.sql` | **esta carpeta** |
 | 4 | `seed-catalogo.sql` | repo, `supabase/` |
-| 5 | `05-datos-cuentas.sql` | **esta carpeta** |
+| 5 | `seed-oficios.sql` | repo, `supabase/` |
+| 6 | `seed-zonas.sql` | repo, `supabase/` |
+| 7 | `05-datos-cuentas.sql` | **esta carpeta** |
 
 El orden 3 → 4 no es negociable: `seed-catalogo.sql` hace
 `insert into catalogo_items ... select from catalogo_servicios where activo`.
 Si corres el 4 antes del 3, no deriva nada y te quedas sin los 36 ítems de
 servicios, sin ningún error visible.
+
+Los pasos 5 y 6 son del módulo de Servicios y van después del 1, que es
+donde se crean `catalogo_oficios` y `zonas`. Entre ellos no hay orden. Ojo
+con no confundir `seed-servicios.sql` —los 36 servicios profesionales con
+matrícula, del paso 3— con `seed-oficios.sql`, que es la taxonomía del
+rebusque y no verifica nada. Son dos catálogos distintos a propósito.
 
 Antes del paso 5, **el proveedor de Google tiene que estar ya configurado**
 (ver "Consola", punto 1).
