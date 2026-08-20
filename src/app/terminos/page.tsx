@@ -1,5 +1,15 @@
 import Link from 'next/link'
-import { RESPONSABLE, CORREO_CONTACTO, FECHA_LEGALES } from '@/lib/config'
+import {
+  RESPONSABLE,
+  CORREO_CONTACTO,
+  FECHA_LEGALES,
+  RESPONSABLE_SERVICIOS,
+} from '@/lib/config'
+import {
+  DESLINDE_CALIDAD,
+  SOBRE_LAS_INSIGNIAS,
+  NO_PAGUES_POR_ADELANTADO,
+} from '@/lib/honestidad'
 
 export default function TerminosPage() {
   return (
@@ -29,9 +39,16 @@ export default function TerminosPage() {
         quien lo usa, su experiencia ni sus intenciones. Un perfil sin ese sello no ha sido revisado en absoluto.
       </p>
       <p className="mt-3 text-base">
-        Tampoco calificamos ni recomendamos a nadie. No hay estrellas, ni reputación, ni sellos de
-        &quot;confiable&quot;, y no los va a haber: un sistema así, sin verificación de identidad detrás, solo
-        sirve para que quien quiera estafar acumule apariencia de confianza.
+        Tampoco recomendamos a nadie, en ninguna parte del sitio. En la ayuda de emergencia no hay
+        calificaciones y no las va a haber: sin nada que sostenga la identidad de quien califica, un
+        sistema así solo sirve para que quien quiera estafar acumule apariencia de confianza.
+      </p>
+      <p className="mt-3 text-base">
+        En el directorio de servicios <strong>sí hay calificaciones</strong>, y existen porque ahí no
+        están sueltas: solo puede calificar quien recibió el código que el proveedor entrega al
+        terminar un trabajo, y cada código sirve una sola vez. Que alguien tenga buenas
+        calificaciones no es una recomendación nuestra, no comprueba su identidad y no nos hace
+        responder por su trabajo. Está explicado en la §12.
       </p>
 
       <h2 className="font-heading mt-6 text-2xl">3b. El directorio de entidades.</h2>
@@ -85,16 +102,22 @@ export default function TerminosPage() {
 
       <h2 className="font-heading mt-6 text-2xl">6. Prohibido.</h2>
       <p className="mt-3 text-base">
-        Publicar datos personales de terceros o de menores; pedir o entregar dinero; ofrecer alojamiento de
-        personas, cuidado de menores o transporte de personas; ofrecer medicamentos de control; suplantar a
-        alguien; usar la plataforma con fines comerciales o para recolectar datos.
+        Publicar datos personales de terceros o de menores; pedir o entregar dinero a través de la
+        plataforma; ofrecer alojamiento de personas; ofrecer medicamentos de control; suplantar a
+        alguien; recolectar datos de otros usuarios. En la ayuda de emergencia queda además prohibido
+        ofrecer cuidado de menores o transporte de personas; en el directorio de servicios esos dos
+        oficios sí se pueden ofrecer, con las condiciones de la §12.
       </p>
 
       <h2 className="font-heading mt-6 text-2xl">7. Contenido efímero.</h2>
       <p className="mt-3 text-base">
-        Las solicitudes se eliminan automáticamente a las 72 horas. Si hay una coordinación abierta con una
+        Las solicitudes de ayuda se eliminan automáticamente a las 72 horas. Si hay una coordinación abierta con una
         fundación, ese plazo se prorroga solo mientras siga abierta, y nunca más allá de 5 días desde que se
         publicó: al llegar ahí se cierra y se borra igual. No garantizamos conservación ni recuperación de nada.
+      </p>
+      <p className="mt-3 text-base">
+        Las solicitudes de servicio se eliminan a los 15 días, renovables. Las fichas del directorio
+        de servicios no se eliminan solas: permanecen hasta que su titular las borre.
       </p>
 
       <h2 className="font-heading mt-6 text-2xl">8. Servicio &quot;tal como está&quot;.</h2>
@@ -118,6 +141,50 @@ export default function TerminosPage() {
       <h2 className="font-heading mt-6 text-2xl">11. Contacto.</h2>
       <p className="mt-3 text-base">
         {CORREO_CONTACTO}
+      </p>
+
+      <h2 className="font-heading mt-6 text-2xl">12. El directorio de servicios.</h2>
+      <p className="mt-3 text-base">
+        Es una parte aparte de este sitio, con otra finalidad: que quien vive de su trabajo pueda ser
+        encontrado después del sismo. La responsable del tratamiento de esos datos es{' '}
+        {RESPONSABLE_SERVICIOS} y AquíVe actúa como encargado. Todo lo demás de estos términos sigue
+        aplicando.
+      </p>
+      <p className="mt-3 text-base">
+        <strong>Solo conectamos.</strong> {DESLINDE_CALIDAD} El precio lo declara cada proveedor y se
+        acuerda directamente entre las partes.
+      </p>
+      <p className="mt-3 text-base">
+        <strong>Qué significan las insignias.</strong> {SOBRE_LAS_INSIGNIAS}
+      </p>
+      <p className="mt-3 text-base">
+        <strong>Calificaciones.</strong> Solo puede calificar quien recibió el código que el proveedor
+        entrega al terminar un trabajo, y cada código sirve una sola vez. El proveedor puede responder
+        públicamente a cualquier calificación y reportarla. Usar una calificación —o la amenaza de
+        ponerla— para presionar a alguien es motivo de eliminación de la cuenta, y hay un botón de
+        reporte específico para eso. Moderamos con atención a la discriminación racial o de género.
+      </p>
+      <p className="mt-3 text-base">
+        <strong>Referencias.</strong> Si das el contacto de un cliente anterior, necesitas su
+        autorización previa y al darla declaras que la tienes. Ese dato se guarda cifrado, no aparece
+        en ninguna página pública y solo lo consulta la fundación para confirmar el servicio.
+      </p>
+      <p className="mt-3 text-base">
+        <strong>Oficios que aquí sí se pueden ofrecer.</strong> A diferencia del resto del sitio, en
+        el directorio se admite transporte de personas, trasteos, cuidado de personas y cuidado de
+        mascotas. El cuidado de niños, el cuidado de personas dependientes y el transporte de
+        pasajeros solo aparecen publicados si el proveedor tiene el teléfono verificado y al menos una
+        referencia confirmada. Eso no comprueba su idoneidad ni sus antecedentes: sigue siendo tu
+        decisión y tu responsabilidad.
+      </p>
+      <p className="mt-3 text-base">
+        <strong>Oficios que no.</strong> Reconstrucción o revisión estructural de viviendas, salud,
+        gas, instalaciones eléctricas y asesoría jurídica no van en el directorio: exigen matrícula y
+        se ofrecen en la sección de profesionales.
+      </p>
+      <p className="mt-3 text-base">
+        <strong>Sigue sin haber dinero de por medio.</strong> AquíVe no cobra, no recibe pagos, no
+        toma comisión y no tiene pasarela. {NO_PAGUES_POR_ADELANTADO}
       </p>
     </main>
   )

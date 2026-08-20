@@ -14,13 +14,25 @@ Colombia:
   psicología, medicina, derecho) que ofrece sus servicios y puede tomar
   solicitudes.
 
+Desde el 19 de agosto de 2026 hay **un módulo más, al lado y no encima**:
+`/servicios`, el directorio del rebusque, para la reactivación económica.
+Ahí un proveedor publica su nombre, su teléfono y sus oficios de forma
+permanente, y quien necesita un servicio lo busca o publica lo que le
+hace falta. La responsable del tratamiento de esos datos es la **Fundación
+Nodo Social**; AquíVe es encargada. Todo su detalle está en `PLAN-V3.md`,
+y las reglas que cambian están abajo, marcadas.
+
 **No es una app de mapas.** Ya existen varias (mapadelterremoto.com,
 cuidarcolombia, conectacolombia) y cubren bien esa capa. No dupliques
 mapas de acopios, directorios de donación ni búsqueda de personas.
 El eje diferencial es **solicitud ↔ oferta directa entre personas**.
 
-Es una plataforma **deliberadamente temporal**. Se espera que deje de
-operar en semanas o meses. No diseñes para permanencia.
+El módulo de emergencia es **deliberadamente temporal**. Se espera que
+deje de operar en semanas o meses. No diseñes para permanencia.
+
+El módulo de Servicios no: nació de mediano plazo, porque un directorio
+que se vacía solo no es un directorio. Esa diferencia es la razón de que
+sean dos módulos y no uno con opciones.
 
 ## Reglas duras (NO NEGOCIABLES)
 
@@ -86,6 +98,18 @@ el botón grande es publicar directo, el acompañamiento se anuncia una vez
 en el paso de municipio y se acepta después, nunca viene preseleccionado,
 y la opción anónima no se pinta como la mala.
 
+**En Servicios esta regla no se relaja: cambia de sujeto.** Habla de quien
+pide, y quien pide un servicio sigue sin dejar rastro —oficio, municipio,
+zona, urgencia, capacidad de pago y una nota de 140 filtrada, nada más—.
+Lo que publica el proveedor es otra cosa: publicación consentida y con
+finalidad declarada, con casilla explícita, versión de autorización
+guardada y borrado a un toque, exactamente como hoy hace `perfiles`.
+
+Y la persona que sirve de **referencia** de un proveedor no está aquí, no
+aceptó nada y puede que ni sepa que existimos: su nombre y su teléfono van
+cifrados con la llave del Vault, nunca aparecen en una vista pública y
+cada lectura deja rastro. Es la regla U de `PLAN-V3.md`.
+
 ### 2. Sin campo de texto libre sin restricción
 
 Los ítems se eligen de un **catálogo predefinido** (`catalogo_items`).
@@ -93,6 +117,15 @@ La interfaz debe hacer *imposible* publicar datos personales, no solo
 desaconsejarlo. Si agregas una nota libre, va con `maxlength=140`,
 validación en servidor y detección de patrones (teléfonos colombianos,
 correos, cédulas) que **rechaza el envío** con mensaje explicativo.
+
+En Servicios los oficios salen de `catalogo_oficios` y los campos libres
+son exactamente cuatro, todos con tope y filtro `contiene_pii`: la
+descripción del proveedor (300), el comentario de reseña (140), la réplica
+del proveedor (140) y la nota de solicitud (140). **El precio no es campo
+libre**, aunque el documento fuente lo pedía así: es modo (`gratis`,
+`aporte`, `solidario`, `normal`) más un valor «desde» numérico y una
+unidad de lista. Un campo libre en un perfil público es por donde se cuela
+el segundo teléfono.
 
 ### 3. El contacto nunca pasa por la plataforma
 
@@ -106,6 +139,12 @@ Flujo correcto:
    llamada) usando el contacto que el ofertador publicó voluntariamente
 
 La plataforma nunca conoce el canal de contacto del necesitado.
+
+**En el módulo de Servicios el contacto también queda fuera, y por la
+misma puerta al revés.** No hay mensajería interna. El teléfono del
+proveedor está en su ficha porque él lo puso ahí, con casilla explícita:
+quien necesita el servicio llama o escribe por WhatsApp. La plataforma
+nunca conoce el canal de quien pide, igual que siempre.
 
 **En el flujo acompañado ocurre al revés, y a propósito.** Cuando una
 fundación aliada coordina la entrega, la conversación pasa por aquí —los
@@ -123,6 +162,16 @@ tres en pantalla.
 - `DELETE` real, nunca `estado = 'eliminada'`
 - TTL por defecto 72 horas, renovable en un toque
 - Job de expiración cada hora
+
+**En Servicios hay dos relojes y los dos terminan en `DELETE` real.** La
+solicitud de servicio vive 15 días renovables —conseguir una modista no es
+conseguir agua— y el perfil del proveedor es permanente: se borra cuando
+su dueño lo pide o cuando un admin lo suspende y lo elimina. Un código de
+servicio sin usar muere a los 30 días. `resenas.oculta` no es borrado
+lógico: es moderación reversible sobre algo que no es dato personal de
+quien lo escribió, y un reporte por extorsión termina en borrado de
+verdad. Detalle en `PLAN-V3.md` §2.
+
 - No habilitar Point-in-Time Recovery: contradiría la promesa de borrado
 - Al borrar, conservar solo una fila anónima en `metricas` (municipio,
   categoría, si se cumplió, horas hasta primera respuesta). Sin texto,
@@ -189,6 +238,32 @@ AquíVe. Y antes de enlazar a una página de donación de un tercero, mirar
 `PLAN-V2.md` §13.8: el plan Hobby de Vercel cuenta las donaciones como uso
 comercial, y esa lectura no está resuelta.
 
+**Ampliación acotada para el módulo de Servicios.** Decisión del
+responsable, agosto de 2026, tomada por escrito y no al pasar. Dentro de
+`/servicios` entran además:
+
+- Transporte de personas
+- Trasteos y acarreos
+- Cuidado de personas
+- Cuidado de mascotas
+
+Fuera de `/servicios` estos cuatro **siguen prohibidos**, y en todo el
+proyecto siguen prohibidos sin fecha de revisión el dinero en cualquier
+forma, que AquíVe opere alojamiento y los medicamentos de control.
+
+La ampliación viene con su contrapeso en la base de datos, no en la buena
+intención: `catalogo_oficios.riesgo` marca como `alto` el cuidado de
+niños, el cuidado de personas dependientes y el transporte de pasajeros, y
+la vista pública **esconde** esos oficios de todo proveedor que no tenga
+teléfono verificado y al menos una referencia confirmada. Es la regla S de
+`PLAN-V3.md`. Si alguien propone quitarla para tener más perfiles
+visibles, la respuesta es no.
+
+Los oficios de riesgo que el documento fuente excluye —reconstrucción
+estructural, salud, gas, instalaciones eléctricas, asesoría jurídica— no
+entran en `catalogo_oficios`, porque ya existen en `catalogo_servicios`
+con matrícula verificable. Esa es su vía.
+
 ### 6. Sin PII en logs ni en URLs
 
 - Nunca poner el token en query string (va en el path o en el body)
@@ -199,6 +274,35 @@ comercial, y esa lectura no está resuelta.
   pública, ni en un QR, ni en una URL. El código de entrega que se escanea
   en el acopio es el identificador de la conversación, opaco por
   construcción
+- El token de una solicitud de servicio y el del perfil de alta asistida
+  van en el path, nunca en query string
+- **El código de confirmación de servicio no va en ninguna URL.** Se
+  escribe a mano en `/servicios/confirmar`. No hay enlace, no hay QR y no
+  hay path que lo lleve: quien lo tiene lo recibió del proveedor en papel
+  o por WhatsApp, y esa es toda la cadena
+
+### Reglas del módulo de Servicios
+
+Las seis de arriba siguen valiendo, con lo que cada una dice arriba sobre
+Servicios. Estas se **suman**, y están desarrolladas en `PLAN-V3.md` §2:
+
+- **S · El riesgo del oficio manda sobre la visibilidad.** Cuidado de
+  niños, cuidado de personas dependientes y transporte de pasajeros nacen
+  en `riesgo = 'alto'` y no aparecen en el directorio si el proveedor no
+  tiene teléfono verificado **y** una referencia confirmada. Lo sostiene
+  la vista pública, no la interfaz.
+- **T · La reputación se gana con un servicio, no con una opinión.** Solo
+  reseña quien tiene el código que el proveedor generó y entregó. Un
+  código sirve una vez y lo garantiza un `unique`. La ficha muestra en
+  grande cuántos servicios confirmados hay y en pequeño el promedio: una
+  sola reseña mala no puede hundir a alguien que vive de esto.
+- **U · Una referencia es PII de un tercero que no está aquí.** Cifrada,
+  nunca pública, con autorización guardada y con rastro de cada lectura en
+  `accesos_referencia`, que sobrevive a la referencia. Si eso no se puede
+  cumplir, no hay referencias.
+- **V · El teléfono lo verifica una persona, y nada nace verificado.** No
+  hay OTP ni proveedor de SMS. Un miembro de la fundación llama y marca,
+  igual que hoy se verifica una matrícula.
 
 ### Reglas del flujo acompañado
 
@@ -267,6 +371,19 @@ administrador ya miró el certificado del RUES y el NIT—.
 - **Una organización con equipo no se queda sin coordinador activo.** Lo
   sostiene un trigger, no la interfaz.
 
+**Proveedores de Servicios → Google, o token portador si los dan de alta.**
+Quien tiene cuenta de Google entra como siempre. Quien no —que es buena
+parte del rebusque, y es a quien el módulo quiere incluir— lo registra un
+miembro de la fundación desde el panel de aliado, y recibe **su propio
+token**, con el mismo mecanismo de las solicitudes: 32 bytes, se guarda
+solo el hash, se muestra una vez.
+
+Ese token no es comodidad, es la puerta de habeas data de alguien que no
+tiene cuenta: con él ve, corrige y borra su perfil sin pedirle permiso a
+la fundación. Sin él, el alta asistida sería la fundación siendo dueña de
+los datos de otra persona. Un `check (num_nonnulls(perfil_id, token_hash)
+= 1)` impide que un proveedor tenga los dos dueños o ninguno.
+
 ## Notificaciones
 
 Web Push (VAPID). Se guarda `endpoint`, `p256dh`, `auth` asociados a la
@@ -288,6 +405,15 @@ Se pide entidad y número de matrícula:
 La verificación inicial es **manual por un administrador**. No inventes
 scraping de esos registros. Mientras no esté verificado, el perfil se
 muestra con advertencia visible.
+
+**En Servicios no hay matrícula que mirar, y por eso la confianza se apoya
+en otras tres cosas, todas blandas y todas manuales:** teléfono verificado
+por una persona de la fundación, referencia de un cliente anterior
+comprobada por muestreo, y servicios confirmados con código. Ninguna
+equivale a una verificación de identidad y la interfaz tiene que decirlo
+—una referencia la puede dar un conocido—. No inventes OTP, no metas un
+proveedor de SMS y no llames «verificado» a nada que no haya mirado
+alguien.
 
 ## Estilo de código
 

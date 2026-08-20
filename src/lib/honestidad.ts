@@ -14,6 +14,19 @@
 // estrellas, ni reputación. Un sistema de reputación sin verificación de
 // identidad es una invitación al fraude por acumulación, y además
 // arrastraría responsabilidad hacia el responsable del proyecto.
+//
+// 19/08/2026 — esa última frase dejó de valer para /servicios, y hay que
+// decirlo aquí en vez de dejar el comentario contradiciendo al producto.
+// El módulo de Servicios SÍ tiene reputación, y la tiene porque no es «sin
+// verificación de identidad detrás»: una reseña exige un código que el
+// proveedor generó y entregó (regla T), el teléfono lo comprueba una
+// persona de la fundación, y una referencia se verifica por muestreo.
+//
+// Lo que sigue prohibido, ahí también: llamar «confiable» a nadie,
+// recomendar a alguien, y presentar cualquiera de esas tres señales como
+// garantía. Son señales blandas, y los textos de abajo lo dicen con esas
+// palabras. El resto del sitio —tablero, respuestas, entidades— no cambia:
+// ahí no hay reputación y no la va a haber.
 
 /** Encabezado de una lista de solicitudes. Se dice una vez, no por tarjeta. */
 export const AVISO_TABLERO =
@@ -146,6 +159,67 @@ export const AVISO_ENTIDADES =
 export const AVISO_SALIR_DEL_SITIO =
   'Estos botones te sacan de AquíVe. Mira la dirección antes de tocar, y ' +
   'no pagues nada por adelantado.'
+
+// ─────────────────────────────────────────────────────────────────────
+// Módulo de Servicios (PLAN-V3). Otro responsable, otro riesgo, otro copy.
+//
+// Aquí el encuentro no es una entrega de diez minutos en un parque: es
+// alguien entrando a trabajar a una casa, o alguien subiéndose a un carro.
+// Los avisos de arriba no alcanzan y no se reusan tal cual.
+// ─────────────────────────────────────────────────────────────────────
+
+/** Encabezado del directorio. Se dice una vez, no por tarjeta. */
+export const AVISO_SERVICIOS =
+  'AquíVe no emplea ni recomienda a estas personas: solo publica lo que ' +
+  'ellas dijeron de sí mismas. Acuerda el precio antes de empezar.'
+
+/**
+ * Qué sostiene cada insignia, en la ficha. Es lo mismo que
+ * SOBRE_LOS_PROFESIONALES hace con la matrícula: explicar el techo del
+ * sello en vez de dejar que el usuario le suponga uno.
+ */
+export const SOBRE_LAS_INSIGNIAS =
+  'Teléfono verificado significa que alguien de la fundación llamó a ese ' +
+  'número y contestó esta persona. Con referencias significa que dio el ' +
+  'contacto de un cliente anterior y que ese cliente confirmó. Servicios ' +
+  'confirmados es cuántas veces alguien usó su código después de un ' +
+  'trabajo. Ninguna de las tres comprueba su identidad ni su experiencia, ' +
+  'y una referencia la puede dar un conocido. Un perfil sin insignias no ' +
+  'ha sido revisado en absoluto.'
+
+/**
+ * El §7 del documento fuente lo pide neutro, no alarmista: la advertencia
+ * tiene que caber en el flujo normal de contratar a alguien, no espantar.
+ */
+export const NO_PAGUES_POR_ADELANTADO =
+  'AquíVe no maneja dinero y no interviene en el pago. Acuerda el precio ' +
+  'antes de empezar y paga cuando el trabajo esté hecho: nadie de esta ' +
+  'plataforma debería pedirte un adelanto para reservarte el cupo.'
+
+/**
+ * Seguridad para un servicio a domicilio. El §7 pide atención diferenciada
+ * al riesgo para mujeres, y eso no se resuelve con una frase genérica
+ * sobre "tener cuidado": se resuelve diciendo qué hacer.
+ */
+export const SEGURIDAD_DOMICILIO =
+  'Si el servicio es en tu casa o en la de la otra persona, cuéntale a ' +
+  'alguien quién viene, a qué hora y cuánto va a durar. Si puedes, que ' +
+  'haya alguien más. Puedes pedir que el primer encuentro sea en un lugar ' +
+  'público para acordar el trabajo. Si algo no se siente bien, no tienes ' +
+  'que dar explicaciones: cancela y repórtalo.'
+
+/** Encabezado de las reseñas de una ficha. */
+export const SOBRE_LAS_RESENAS =
+  'Solo puede calificar quien recibió el código que esta persona entrega ' +
+  'al terminar un trabajo, y cada código sirve una sola vez. Aun así son ' +
+  'opiniones, no comprobaciones. Si una reseña te parece injusta o te la ' +
+  'usaron como amenaza, repórtala.'
+
+/** El deslinde, para la ficha y para los términos. */
+export const DESLINDE_CALIDAD =
+  'AquíVe solo pone en contacto. No fija precios, no maneja dinero, no ' +
+  'interviene en el acuerdo y no responde por la calidad del servicio, ' +
+  'los incumplimientos, las pérdidas ni los daños.'
 
 /**
  * El dominio de una URL, para ponerlo delante de la dirección completa.

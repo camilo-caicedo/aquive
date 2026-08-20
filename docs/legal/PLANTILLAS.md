@@ -25,6 +25,11 @@ documentos tiene por responsable a la fundación, y es **ella** quien la
 inscribe en el RNBD. Que tú no tengas que registrar nada no significa que
 esa base no se registre: significa que no la registras tú.
 
+Tampoco se extiende al directorio de servicios, y ahí con menos margen
+todavía. La responsable es la fundación y la base **no caduca**: el
+análisis de «son datos que se borran a las 72 horas» no aplica. Se
+inscribe, y la inscribe ella. Ver `CONTRATO-SERVICIOS.md`.
+
 **2. Sigues teniendo que publicar aviso de privacidad, política de
 tratamiento y recoger autorización.** Esas obligaciones no dependen de
 ser empresa.
@@ -144,9 +149,40 @@ Si tu solicitud tiene acompañamiento, no hace falta que escribas: desde
 el enlace de tu solicitud puedes ver todo lo que guardamos, quién lo ha
 consultado y borrarlo ahí mismo, sin pedirle permiso a nadie.
 
-**Esta plataforma es temporal.** Fue creada para la emergencia del sismo
-del 10 de agosto de 2026 y dejará de operar cuando deje de ser útil.
-Cuando eso ocurra, eliminaremos todas las bases de datos.
+**Si necesitas un servicio: seguimos sin guardar datos tuyos.**
+
+Buscar en el directorio no exige cuenta y no deja rastro tuyo. Si publicas
+lo que necesitas, guardamos únicamente el oficio, el municipio, la zona,
+qué tan urgente es, si puedes pagar y una nota opcional de 140 caracteres.
+Nada de nombre, teléfono, dirección exacta ni quiénes viven contigo. Esa
+solicitud se borra a los 15 días.
+
+**Si ofreces un servicio: tu ficha es pública y permanece.**
+
+Guardamos tu nombre visible, tu teléfono, si eres persona o microempresa,
+tus oficios con su precio, tu municipio y zona, tus horarios, tus medios de
+pago y tu descripción. Todo eso se muestra públicamente en internet, porque
+esa es la finalidad. Es un directorio abierto, no una lista privada.
+
+Tu ficha no caduca sola: se queda hasta que tú la borres, y el borrado es
+definitivo. Si te dio de alta la fundación porque no tienes cuenta de
+Google, recibiste un enlace secreto que hace lo mismo.
+
+Si das el contacto de un cliente anterior como referencia, esa persona es
+un tercero: su nombre y su teléfono se guardan cifrados, nunca aparecen en
+ninguna página pública y solo los consulta la fundación para llamarla y
+confirmar. Cada consulta queda registrada. Necesitas su autorización antes
+de darla.
+
+Responsable de esta parte: [NOMBRE DE LA FUNDACIÓN], NIT [NIT]. Correo para
+ejercer tus derechos: [CORREO DE HABEAS DATA]. Nosotros solo guardamos esos
+datos por encargo suyo.
+
+**La ayuda de emergencia es temporal.** Fue creada para la emergencia del
+sismo del 10 de agosto de 2026 y dejará de operar cuando deje de ser útil.
+El directorio de servicios está pensado para durar más, porque la
+recuperación económica toma más tiempo. Cuando cualquiera de las dos partes
+deje de operar, eliminaremos sus bases de datos.
 
 ---
 
@@ -175,10 +211,17 @@ registro correspondiente: no dice nada sobre la identidad de quien lo usa,
 su experiencia ni sus intenciones. Un perfil sin ese sello no ha sido
 revisado en absoluto.
 
-Tampoco calificamos ni recomendamos a nadie. No hay estrellas, ni
-reputación, ni sellos de "confiable", y no los va a haber: un sistema así,
-sin verificación de identidad detrás, solo sirve para que quien quiera
-estafar acumule apariencia de confianza.
+Tampoco recomendamos a nadie, en ninguna parte del sitio. En la ayuda de
+emergencia no hay calificaciones y no las va a haber: sin nada que sostenga
+la identidad de quien califica, un sistema así solo sirve para que quien
+quiera estafar acumule apariencia de confianza.
+
+En el directorio de servicios sí hay calificaciones, y existen porque ahí
+no están sueltas: solo puede calificar quien recibió el código que el
+proveedor entrega al terminar un trabajo, y cada código sirve una sola vez.
+Que alguien tenga buenas calificaciones no es una recomendación nuestra, no
+comprueba su identidad y no nos hace responder por su trabajo. Está
+explicado en la §12.
 
 **3b. El directorio de entidades.** En la sección de servicios hay una
 lista de organizaciones que un administrador dio de alta. Es informativa:
@@ -222,16 +265,31 @@ repórtalo. Están explicadas una por una en la página «Cómo cuidarte»
 (`/seguridad`).
 
 **6. Prohibido.** Publicar datos personales de terceros o de menores;
-pedir o entregar dinero; ofrecer alojamiento de personas, cuidado de
-menores o transporte de personas; ofrecer medicamentos de control;
-suplantar a alguien; usar la plataforma con fines comerciales o para
-recolectar datos.
+pedir o entregar dinero a través de la plataforma; ofrecer alojamiento de
+personas; ofrecer medicamentos de control; suplantar a alguien; recolectar
+datos de otros usuarios. En la ayuda de emergencia queda además prohibido
+ofrecer cuidado de menores o transporte de personas; en el directorio de
+servicios esos dos oficios sí se pueden ofrecer, con las condiciones de la
+§12.
 
-**7. Contenido efímero.** Las solicitudes se eliminan automáticamente a
-las 72 horas. Si hay una coordinación abierta con una fundación, ese plazo
-se prorroga solo mientras siga abierta, y nunca más allá de 5 días desde
-que se publicó: al llegar ahí se cierra y se borra igual. No garantizamos
-conservación ni recuperación de nada.
+**7. Contenido efímero.** Las solicitudes de ayuda se eliminan
+automáticamente a las 72 horas. Si hay una coordinación abierta con una
+fundación, ese plazo se prorroga solo mientras siga abierta, y nunca más
+allá de 5 días desde que se publicó: al llegar ahí se cierra y se borra
+igual. No garantizamos conservación ni recuperación de nada.
+
+Las solicitudes de servicio se eliminan a los 15 días, renovables. Las
+fichas del directorio de servicios no se eliminan solas: permanecen hasta
+que su titular las borre.
+
+**12. El directorio de servicios.** El texto completo está en
+`src/app/terminos/page.tsx`, §12, y es el que manda. En resumen: otra
+responsable —la fundación—, solo conectamos y no respondemos por la
+calidad, las insignias no comprueban identidad, solo califica quien tiene
+el código de un servicio prestado, las referencias exigen autorización
+previa del referido, y los oficios de cuidado de niños, cuidado de personas
+dependientes y transporte de pasajeros solo se publican con teléfono
+verificado y referencia confirmada.
 
 **8. Servicio "tal como está".** Gratuito, sin garantía de
 disponibilidad, mantenido por una sola persona en su tiempo libre, y
@@ -294,6 +352,81 @@ carpeta, con su lista de qué mirar antes de firmarlo.
 
 **Sin datos de menores.** Solo CC, CE, PEP y PPT. TI y RC están prohibidos
 por un CHECK en la base, no por una validación de pantalla.
+
+### 3c. Texto de autorización del proveedor de servicios
+
+Tercer consentimiento y también aparte. Lo firma quien publica su ficha en
+`/servicios`, y lo que autoriza es publicar sus datos **de forma
+permanente** y con **otra responsable**: la fundación, no la persona
+natural que opera el resto del sitio.
+
+> Autorizo a [NOMBRE DE LA FUNDACIÓN], NIT [NIT], responsable del
+> directorio de servicios de AquíVe, a tratar los datos que estoy
+> entregando —mi nombre visible, mi teléfono, si soy persona o
+> microempresa, mis oficios con su precio, mi municipio y zona, mis
+> horarios, mis medios de pago y mi descripción— con la finalidad de
+> publicarlos de forma **pública** en internet para que quien necesite mi
+> trabajo pueda encontrarme y contactarme.
+>
+> Entiendo que esta información será visible para cualquiera, que **mi
+> ficha no se borra sola** y permanece hasta que yo la borre, que puedo
+> borrarla en cualquier momento y que al hacerlo se elimina de forma
+> definitiva junto con las calificaciones que haya recibido. He leído el
+> aviso de privacidad.
+
+Se guarda `acepto_publicacion = true` y `autorizacion_version =
+AUTORIZACION_PROVEEDOR_VERSION` (`src/lib/config.ts`). La versión importa
+más aquí que en ningún otro sitio: el dato no caduca, así que dentro de un
+año hay que poder decir qué texto exacto aceptó esta persona.
+
+Esta lista enumera lo que se publica y hay que ampliarla **antes** de
+publicar un campo nuevo. Lo que deliberadamente **no** está en la lista, y
+no puede publicarse: la referencia que dio, el estado de esa referencia, y
+cualquier dato de quien lo dio de alta.
+
+### 3d. Consentimiento de la persona que sirve de referencia
+
+El más delicado de los cuatro, porque el titular **no está usando la
+plataforma**: no la abrió, no la conoce y no puede leer nada de esto en
+pantalla. Lo recoge el proveedor por fuera, y aquí solo se declara.
+
+Lo que el proveedor acepta al agregar una referencia:
+
+> Declaro que le pedí permiso a esta persona para dar su nombre y su
+> teléfono como referencia de mi trabajo, y que aceptó. Entiendo que
+> [NOMBRE DE LA FUNDACIÓN] puede llamarla para confirmar que le presté el
+> servicio, que sus datos quedan cifrados y **no se publican en ninguna
+> parte**, y que se borran cuando yo borre mi ficha.
+
+Lo que el proveedor tiene que haberle dicho a esa persona, y que conviene
+darle escrito para que lo lea o lo reenvíe:
+
+> [NOMBRE DEL PROVEEDOR] te puso como referencia de su trabajo en AquíVe,
+> el directorio de servicios de [NOMBRE DE LA FUNDACIÓN]. Eso significa que
+> alguien de la fundación puede llamarte una vez para preguntarte si te
+> prestó el servicio. Tu nombre y tu teléfono quedan guardados cifrados, no
+> aparecen en internet, nadie más los ve y se borran cuando esa persona
+> borre su ficha. Si no quieres, dile que te quite: no tiene ninguna
+> consecuencia. Para pedirlo directamente escribe a [CORREO DE HABEAS
+> DATA].
+
+Se guarda `consentimiento_version = CONSENTIMIENTO_REFERENCIA_VERSION` y
+`consentimiento_at`. Cada lectura de la referencia queda en
+`accesos_referencia`, con motivo obligatorio, y ese rastro sobrevive al
+borrado de la referencia.
+
+**Ojo con la asimetría.** Aquí se guarda un dato personal de alguien
+apoyado en la palabra de un tercero. Es defendible porque el dato es
+mínimo, está cifrado, tiene una finalidad estrecha y una vía de salida
+clara — pero si el consentimiento no se puede probar, la referencia no se
+guarda. Antes que una libreta de teléfonos sin permiso, no hay
+referencias.
+
+**Reparto de papeles.** En el módulo de Servicios la fundación es
+**responsable** y esta plataforma es **encargada**, igual que en el Flujo 2
+pero para una base que no caduca. Exige contrato firmado antes del primer
+proveedor real y registro en el RNBD a nombre de la fundación. Borrador en
+`CONTRATO-SERVICIOS.md`.
 
 ---
 
@@ -450,10 +583,40 @@ la de `PLAN-V2.md` §12; aquí está el estado real de cada punto.
       `PLAN-V2.md` §13.8.
 - [ ] **Revisión de abogado** de este documento y del contrato, juntos.
 
+### Antes de publicar el PRIMER proveedor real de /servicios
+
+La lista es la de `PLAN-V3.md` §7. Ninguno de estos puntos es código, y el
+módulo se decidió sin interruptor de despliegue: el orden de trabajo es lo
+único que los protege.
+
+- [ ] **Contrato de encargo firmado** con la fundación, donde ella es
+      responsable y AquíVe encargada. Borrador en `CONTRATO-SERVICIOS.md`.
+      Va **antes** de que exista la primera fila en `proveedores`.
+- [ ] **Base inscrita en el RNBD** a nombre de la fundación. Es una base
+      permanente, no una que se borra a las 72 horas: aquí el registro no
+      es discutible.
+- [ ] **NIT y correo de habeas data de la fundación** puestos en
+      `src/lib/config.ts`. Hoy están en `[PENDIENTE]` y con eso el aviso de
+      privacidad está incompleto.
+- [ ] **Canal de habeas data atendido por la fundación**, con los plazos de
+      10 y 15 días hábiles.
+- [ ] **Revisión de abogado de la ampliación de alcance** a transporte y
+      cuidado de personas. Es donde más crece la exposición.
+- [x] **Términos §3 reescritos.** Decían que nunca habría reputación.
+- [x] **Aviso de privacidad en dos regímenes**, sin diluir la promesa de la
+      ayuda de emergencia.
+- [ ] **Consulta a soporte de Vercel** rehecha, ahora con una fundación con
+      posible personal asalariado de por medio. `PLAN-V2.md` §13.8.
+
 ### Al mover cualquier texto legal
 
 - [ ] Mover `FECHA_LEGALES` en `src/lib/config.ts`. Alimenta
       `autorizacion_version`, que es la prueba de qué versión aceptó cada
       persona: si el texto cambia y la fecha no, la prueba deja de servir.
+- [ ] Si el texto que cambió es el §3c o el §3d, mover además
+      `AUTORIZACION_PROVEEDOR_VERSION` o
+      `CONSENTIMIENTO_REFERENCIA_VERSION`. Son constantes aparte de
+      `FECHA_LEGALES` porque esos datos no caducan: dentro de un año hay
+      que poder decir qué texto exacto aceptó cada quien.
 - [ ] Revisar que este archivo y `src/lib/honestidad.ts` sigan diciendo lo
       mismo. Son las dos caras de lo mismo.
