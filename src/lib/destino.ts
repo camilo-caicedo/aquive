@@ -27,6 +27,7 @@ const PERMITIDAS = [
   /^\/servicios\/soy-proveedor$/,
   /^\/registro$/,
   /^\/aliado$/,
+  /^\/coordinacion$/,
 ]
 
 export function guardarDestino(ruta: string) {

@@ -40,11 +40,22 @@ export async function notificarConversacion(
         // Mismo `tag` por hilo: tres mensajes seguidos reemplazan la
         // notificación anterior en vez de apilar tres.
         tag: `hilo-${conversacionId}`,
-        // Cada quien a su puerta. Quien tiene cuenta llega a su hilo por
-        // /aliado; a quien pidió ayuda no se le puede enlazar su
-        // solicitud, porque el servidor solo guarda el hash de su token,
-        // así que va a la lista que guarda su propio navegador.
-        url: d.de_solicitante ? `${origen}/mis-solicitudes` : `${origen}/aliado`,
+        // Cada quien a su puerta.
+        //
+        // ⚠ Quien tiene cuenta va al HILO, no a un panel. Antes iba a
+        // /aliado, y desde que quien solo ofreció ayuda tiene su propia
+        // ruta —/coordinacion— eso lo dejaba en el panel de una fundación
+        // que no es la suya. Enlazar el hilo evita además tener que
+        // averiguar el papel de cada destinatario para escribir la URL:
+        // `leer_conversacion` ya autoriza, y el botón de volver del hilo
+        // lleva a donde corresponda.
+        //
+        // A quien pidió ayuda no se le puede enlazar su solicitud, porque
+        // el servidor solo guarda el hash de su token: va a la lista que
+        // guarda su propio navegador.
+        url: d.de_solicitante
+          ? `${origen}/mis-solicitudes`
+          : `${origen}/aliado/conversacion/${conversacionId}`,
       })
       if ((await enviarPush(d, payload)) === 'muerta') {
         muertas[d.de_solicitante ? 'solicitante' : 'perfil'].push(d.suscripcion_id)
