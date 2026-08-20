@@ -5,6 +5,7 @@ import {
   SearchX,
   ShieldCheck,
   ChevronDown,
+  Timer,
   X,
   Info,
   PackageOpen,
@@ -163,14 +164,13 @@ export default async function InicioPage({
             albergue no tiene de dónde deducirlo. */}
         <p className="mt-3 max-w-prose text-base">
           AquíVe es una plataforma gratuita que conecta, en Colombia, a quien
-          necesita insumos tras el sismo del 10 de agosto de 2026 con quien
-          puede entregarlos: alimentos, agua, aseo, abrigo y servicios de
-          profesionales con matrícula.
+          necesita algo con quien puede darlo: insumos que alguien entrega sin
+          cobrar, servicios de profesionales con matrícula, y el trabajo de
+          gente que vive de su oficio.
         </p>
         <p className="mt-2 max-w-prose text-base text-muted-foreground">
-          Publica qué te hace falta. No pedimos tu nombre, tu teléfono ni tu
-          dirección: solo el barrio y qué necesitas. Todo se borra solo a las
-          72 horas.
+          Pedir no exige cuenta. No pedimos tu nombre, tu teléfono ni tu
+          dirección: solo el barrio y qué necesitas.
         </p>
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
           <Button className="w-full sm:w-auto" nativeButton={false} render={<Link href="/publicar" />}>
@@ -204,7 +204,18 @@ export default async function InicioPage({
             Qué se borra, qué se queda y para qué es la cuenta
           </summary>
 
+          {/* ⚠ Antes la portada decía «todo se borra solo a las 72 horas»,
+              y desde que existe el directorio de servicios eso ya no es
+              cierto de todo. Si la diferencia no se entiende aquí, la
+              existencia del directorio desmiente la promesa de borrado. */}
           <p className="mt-3 flex items-start gap-1.5 text-sm text-muted-foreground">
+            <Timer className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
+            Las solicitudes de insumos se borran solas a las 72 horas, con todo
+            lo que llevan dentro. El directorio de servicios es lo contrario:
+            esas fichas se quedan mientras la persona quiera, y las borra
+            cuando quiera.
+          </p>
+          <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
             <ShieldCheck className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
             El contacto ocurre por fuera de la plataforma. Nunca vemos tu
             teléfono ni tus conversaciones.

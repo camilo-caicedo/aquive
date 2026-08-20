@@ -1,8 +1,13 @@
 # AquíVe · Ayuda directa en Colombia
 
-Plataforma web temporal para conectar a quien necesita insumos tras el
-sismo del 10 de agosto de 2026 con quien puede darlos, y con
-profesionales con matrícula que ofrecen sus servicios.
+AquíVe es una plataforma gratuita que conecta, en Colombia, a quien
+necesita algo con quien puede darlo: insumos que alguien entrega sin
+cobrar, servicios de profesionales con matrícula, y el trabajo de gente que
+vive de su oficio.
+
+> Esta frase es la misma, palabra por palabra, que la de `src/app/page.tsx`
+> y las tres de `src/app/layout.tsx`. Si dos dejan de coincidir, la revisión
+> de la marca de Google encuentra dos versiones de qué es esto.
 
 **En vivo:** https://aquive.co
 

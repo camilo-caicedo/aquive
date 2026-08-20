@@ -45,15 +45,22 @@ export const metadata: Metadata = {
     siteName: "AquíVe",
     title: "AquíVe",
     description:
-      "AquíVe conecta a quien necesita insumos tras el sismo del 10 de agosto de 2026 en Colombia con quien puede entregarlos.",
+      "AquíVe es una plataforma gratuita que conecta, en Colombia, a quien necesita algo con quien puede darlo: insumos que alguien entrega sin cobrar, servicios de profesionales con matrícula, y el trabajo de gente que vive de su oficio.",
     url: "https://aquive.co/",
     locale: "es_CO",
   },
-  // Empieza por el nombre y dice qué es, no solo qué se puede hacer. Es la
-  // misma frase de la portada: si quien lee esto es un revisor automático,
-  // encuentra lo mismo en los dos sitios.
+  // ⚠ Esta frase es la misma, palabra por palabra, en cinco sitios:
+  // `page.tsx` (que es la fuente, porque es lo que se ve), aquí en
+  // `metadata.description`, en `openGraph.description`, en
+  // `DATOS_ESTRUCTURADOS.description` y en el README. Si dos dejan de
+  // coincidir, la revisión de la marca de Google encuentra dos versiones de
+  // qué es esto y vuelve a caer. Ya la rechazaron dos veces.
+  //
+  // Y dejó de hablar del sismo a propósito: la aplicación ya no es
+  // temporal, y el módulo de Servicios —el trabajo de quien vive de su
+  // oficio— no aparecía en ninguna descripción.
   description:
-    "AquíVe conecta a quien necesita insumos tras el sismo del 10 de agosto de 2026 en Colombia con quien puede entregarlos. Pedir ayuda no exige dar datos personales.",
+    "AquíVe es una plataforma gratuita que conecta, en Colombia, a quien necesita algo con quien puede darlo: insumos que alguien entrega sin cobrar, servicios de profesionales con matrícula, y el trabajo de gente que vive de su oficio. Pedir ayuda no exige dar datos personales.",
   manifest: "/manifest.json",
   // Verificación de propiedad del dominio ante Google. Hace falta para que
   // Google apruebe la marca de la pantalla de consentimiento OAuth: sin
@@ -100,7 +107,7 @@ const DATOS_ESTRUCTURADOS = {
   url: "https://aquive.co/",
   inLanguage: "es-CO",
   description:
-    "AquíVe conecta a quien necesita insumos tras el sismo del 10 de agosto de 2026 en Colombia con quien puede entregarlos: alimentos, agua, aseo, abrigo y servicios de profesionales con matrícula.",
+    "AquíVe es una plataforma gratuita que conecta, en Colombia, a quien necesita algo con quien puede darlo: insumos que alguien entrega sin cobrar, servicios de profesionales con matrícula, y el trabajo de gente que vive de su oficio.",
   publisher: {
     "@type": "Organization",
     name: "AquíVe",
