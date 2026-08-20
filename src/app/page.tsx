@@ -7,6 +7,7 @@ import {
   HandHeart,
   SearchX,
   ShieldCheck,
+  ShieldAlert,
   ChevronDown,
   Timer,
   X,
@@ -20,7 +21,7 @@ import { TarjetaSolicitud } from '@/components/tarjeta-solicitud'
 import { SelectFiltro } from '@/components/select-filtro'
 import { HojaFiltros, GrupoChips } from '@/components/hoja-filtros'
 import { Button } from '@/components/ui/button'
-import { AVISO_TABLERO } from '@/lib/honestidad'
+import { AVISO_TABLERO_CORTO } from '@/lib/honestidad'
 import { PlegableRecordado } from '@/components/plegable-recordado'
 import { Estado } from '@/components/estado'
 import { CruceInverso } from './cruce-inverso'
@@ -202,14 +203,23 @@ export default async function InicioPage({
             `PlegableRecordado`. */}
         <PlegableRecordado
           id="portada-avisos"
-          className="group mt-4 border-t border-border/70 pt-3"
+          className="group mt-4 rounded-2xl border border-border bg-card p-4"
         >
-          <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 text-base font-medium [&::-webkit-details-marker]:hidden">
-            <ChevronDown
-              className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+          {/* El escudo a la izquierda y el galón a la derecha, no los dos
+              del mismo lado: el escudo dice de qué habla esto y el galón
+              dice que se abre, y juntos se leían como un solo control. */}
+          <summary className="flex min-h-12 cursor-pointer list-none items-start gap-2.5 text-base font-medium [&::-webkit-details-marker]:hidden">
+            <ShieldCheck
+              className="size-5 shrink-0 translate-y-0.5 text-primary"
               aria-hidden="true"
             />
-            Qué se borra, qué se queda y para qué es la cuenta
+            <span className="min-w-0 flex-1">
+              Qué se borra, qué se queda y para qué es la cuenta
+            </span>
+            <ChevronDown
+              className="size-5 shrink-0 translate-y-0.5 text-muted-foreground transition-transform group-open:rotate-180"
+              aria-hidden="true"
+            />
           </summary>
 
           {/* ⚠ Antes la portada decía «todo se borra solo a las 72 horas»,
@@ -217,14 +227,14 @@ export default async function InicioPage({
               cierto de todo. Si la diferencia no se entiende aquí, la
               existencia del directorio desmiente la promesa de borrado. */}
           <p className="mt-3 flex items-start gap-1.5 text-sm text-muted-foreground">
-            <Timer className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
+            <Timer className="size-4 shrink-0 translate-y-0.5 text-primary" aria-hidden="true" />
             Las solicitudes de insumos se borran solas a las 72 horas, con todo
             lo que llevan dentro. El directorio de servicios es lo contrario:
             esas fichas se quedan mientras la persona quiera, y las borra
             cuando quiera.
           </p>
           <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
-            <ShieldCheck className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
+            <ShieldCheck className="size-4 shrink-0 translate-y-0.5 text-primary" aria-hidden="true" />
             El contacto ocurre por fuera de la plataforma. Nunca vemos tu
             teléfono ni tus conversaciones.
           </p>
@@ -235,11 +245,24 @@ export default async function InicioPage({
               saber quien duda antes de tocarlo. Y es cierto: el callback usa
               solo `user.id` y descarta el correo. */}
           <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
-            <LogIn className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
+            <LogIn className="size-4 shrink-0 translate-y-0.5 text-primary" aria-hidden="true" />
             Quien pide ayuda no necesita cuenta. Quien quiere ayudar entra con
             su cuenta de Google para poder responder solicitudes y sostener su
             perfil; de esa cuenta solo guardamos un identificador interno, y el
             correo no se almacena.
+          </p>
+
+          {/* Las dos salidas, al pie de lo que explican. Estaban solo en el
+              pie de página, a una portada entera de distancia de la única
+              pantalla donde alguien se hace estas preguntas. */}
+          <p className="mt-3 text-sm">
+            <Link href="/como-funciona" className="text-primary underline underline-offset-4">
+              Cómo funciona
+            </Link>
+            {' · '}
+            <Link href="/privacidad" className="text-primary underline underline-offset-4">
+              Aviso de privacidad
+            </Link>
           </p>
         </PlegableRecordado>
       </section>
@@ -414,7 +437,21 @@ export default async function InicioPage({
           </div>
         ) : (
           <>
-            <p className="mt-4 text-sm text-muted-foreground">{AVISO_TABLERO}</p>
+            {/* Regla 5: arriba una línea corta con su enlace, no el
+                párrafo entero. Antes esto era texto suelto que decía que no
+                verificamos a nadie y ahí se acababa — cierto, y sin ninguna
+                salida: quien lo leía y se preocupaba no tenía a dónde ir.
+                El texto íntegro sigue pegado a la decisión, en cada
+                respuesta. */}
+            <p className="mt-4 flex items-start gap-1.5 text-sm text-muted-foreground">
+              <ShieldAlert className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
+              <span>
+                {AVISO_TABLERO_CORTO}{' '}
+                <Link href="/seguridad" className="underline underline-offset-4">
+                  Cómo cuidarte
+                </Link>
+              </span>
+            </p>
             <ul className="lista-escalonada mt-3 space-y-3">
               {solicitudes.map((s) => (
                 <TarjetaSolicitud key={s.codigo} solicitud={s} />

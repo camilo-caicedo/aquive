@@ -32,6 +32,20 @@
 export const AVISO_TABLERO =
   'AquíVe no verifica a quien publica ni a quien responde. Ninguna de estas solicitudes está comprobada.'
 
+/**
+ * La versión corta del mismo aviso, para el encabezado de una lista.
+ *
+ * Regla 5: arriba va una línea con enlace a «Cómo cuidarte», y el texto
+ * íntegro va pegado a la decisión. Sobre una lista de doce tarjetas la
+ * segunda frase de AVISO_TABLERO se lee una vez y se deja de ver; el
+ * enlace, en cambio, lleva a las siete cosas que sí hay que mirar.
+ *
+ * ⚠ Se AÑADE, no reemplaza: AVISO_TABLERO sigue entero donde no hay
+ * enlace que lo complete —el cruce inverso y /seguridad—.
+ */
+export const AVISO_TABLERO_CORTO =
+  'AquíVe no verifica a quien publica ni a quien responde.'
+
 /** El aviso completo, para la confirmación de publicación. */
 export const AVISO_PUBLICAR =
   'Cuando alguien responda vas a ver su nombre y su forma de contacto. ' +
