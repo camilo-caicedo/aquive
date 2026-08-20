@@ -328,12 +328,7 @@ export function FormularioProveedor({
         >
           <ComboboxTrigger
             aria-label="Municipio donde trabajas"
-            render={
-              <Button
-                variant="outline"
-                className="mt-1 w-full justify-between bg-background px-3 font-normal"
-              />
-            }
+            className="mt-1 bg-background"
           >
             <ComboboxValue placeholder="Elige tu municipio" />
           </ComboboxTrigger>

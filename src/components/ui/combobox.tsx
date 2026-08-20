@@ -19,6 +19,20 @@ function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {
   return <ComboboxPrimitive.Value data-slot="combobox-value" {...props} />
 }
 
+/**
+ * AquíVe: estilo propio, igual al de `SelectTrigger`.
+ *
+ * Antes venía sin estilo y cada pantalla le pasaba
+ * `render={<Button variant="outline" />}`. El botón es píldora
+ * (`rounded-full`, que es la identidad de marca) y los campos de
+ * formulario son `rounded-lg`, así que en el mismo bloque de filtros
+ * convivían dos formas distintas para el mismo control: los que tenían
+ * buscador salían redondeados y los demás cuadrados.
+ *
+ * Un desplegable es un campo, no un botón. Se peina como `Input`,
+ * `Textarea` y `SelectTrigger`: mismo alto de 48 px, mismo radio, mismo
+ * borde y mismo foco.
+ */
 function ComboboxTrigger({
   className,
   children,
@@ -27,11 +41,15 @@ function ComboboxTrigger({
   return (
     <ComboboxPrimitive.Trigger
       data-slot="combobox-trigger"
-      className={cn("[&_svg:not([class*='size-'])]:size-4", className)}
+      className={cn(
+        "flex h-12 w-full items-center justify-between gap-1.5 rounded-lg border border-input bg-transparent px-3 text-base whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50",
+        "[&_svg:not([class*='size-'])]:size-4",
+        className
+      )}
       {...props}
     >
       {children}
-      <ChevronDownIcon className="pointer-events-none size-4 text-muted-foreground" />
+      <ChevronDownIcon className="pointer-events-none size-4 shrink-0 text-muted-foreground" />
     </ComboboxPrimitive.Trigger>
   )
 }

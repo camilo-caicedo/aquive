@@ -245,15 +245,7 @@ export function FormularioPublicarServicio({
                 a.codigo_dane === b.codigo_dane
               }
             >
-              <ComboboxTrigger
-                aria-label="Municipio"
-                render={
-                  <Button
-                    variant="outline"
-                    className="mt-1 w-full justify-between bg-background px-3 font-normal"
-                  />
-                }
-              >
+              <ComboboxTrigger aria-label="Municipio" className="mt-1 bg-background">
                 <ComboboxValue placeholder="Elige el municipio" />
               </ComboboxTrigger>
               <ComboboxContent>

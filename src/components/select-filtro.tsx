@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Button } from '@/components/ui/button'
 
 export interface OpcionFiltro {
   valor: string
@@ -58,9 +57,16 @@ export function SelectFiltro({
   const hidratado = useSyncExternalStore(sinSuscripcion, enCliente, enServidor)
   const [valor, setValor] = useState(valorInicial)
 
-  // min-w-0 + flex-1: sin esto, dentro de un `flex-row` los controles no
-  // encogen y la página se desborda a lo ancho.
-  const envoltura = 'min-w-0 flex-1'
+  // `min-w-0` para que dentro de un `flex-row` los controles encojan y la
+  // página no se desborde a lo ancho.
+  //
+  // ⚠ `flex-1` SOLO desde `sm`. Los bloques de filtros son `flex-col` en
+  // el teléfono y `sm:flex-row` en pantalla grande, y en columna el eje
+  // principal es el vertical: ahí `flex-1` significa `flex-basis: 0` de
+  // ALTO, que gana sobre el `h-12` del control. El resultado era un
+  // desplegable de 26 px al lado de uno de 48, y solo en móvil — en el
+  // escritorio, con el eje horizontal, los dos se veían bien.
+  const envoltura = 'w-full min-w-0 sm:flex-1'
 
   if (!hidratado) {
     return (
@@ -100,12 +106,7 @@ export function SelectFiltro({
               botón queda sin valor visible ni chevron. */}
           <ComboboxTrigger
             aria-label={label}
-            render={
-              <Button
-                variant="outline"
-                className={`justify-between bg-background px-3 font-normal ${envoltura}`}
-              />
-            }
+            className={`bg-background ${envoltura}`}
           >
             <ComboboxValue />
           </ComboboxTrigger>

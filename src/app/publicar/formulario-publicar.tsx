@@ -339,15 +339,7 @@ export function FormularioPublicar({
               itemToStringLabel={nombreConDepartamento}
               isItemEqualToValue={(a: Municipio, b: Municipio) => a.codigo_dane === b.codigo_dane}
             >
-              <ComboboxTrigger
-                id="municipio"
-                render={
-                  <Button
-                    variant="outline"
-                    className="w-full justify-between px-3 font-normal"
-                  />
-                }
-              >
+              <ComboboxTrigger id="municipio">
                 <ComboboxValue placeholder="Busca tu municipio" />
               </ComboboxTrigger>
               <ComboboxContent>
