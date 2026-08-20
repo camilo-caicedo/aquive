@@ -84,6 +84,26 @@ export default async function RegistroPage({
 
   const miFicha = mio as { id: string } | null
 
+  // Sin perfil, la pantalla ES el asistente: monta su propio MarcoFlujo
+  // con el progreso y la barra de acción, y no lleva ni cabecera ni
+  // pestañas. Con las pestañas encima, quien está creando su perfil veía
+  // cuatro salidas y ninguna señal de cuánto le faltaba.
+  if (!perfil && vista === 'perfil') {
+    return (
+      <>
+        <VueltaAlDestino />
+        <FormularioRegistro
+          municipios={municipios ?? []}
+          perfil={null}
+          servidor={servidor ?? null}
+          servicios={servicios ?? []}
+          itemsCatalogo={itemsCatalogo ?? []}
+          ofrecimientos={(ofrecimientos as unknown as OfrecimientoResumen[] | null) ?? []}
+        />
+      </>
+    )
+  }
+
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
       <VueltaAlDestino />

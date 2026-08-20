@@ -20,6 +20,7 @@ import { validarSugerencia } from '@/lib/validacion'
 import { Button } from '@/components/ui/button'
 import { SeccionPlegable } from '@/components/seccion-plegable'
 import { AccionPrincipal } from '@/components/accion-principal'
+import { MarcoFlujo } from '@/components/marco-flujo'
 import { Check } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -102,9 +103,22 @@ export function FormularioRegistro({
   // a una organización. Se arranca en 'ofertador' para que el formulario
   // funcione, y el aviso de arriba explica qué significa guardarlo.
   const eraAliado = perfil?.tipo === 'aliado'
-  const [tipo, setTipo] = useState<TipoPerfil>(
-    !perfil || eraAliado ? 'ofertador' : perfil.tipo
+  // ⚠ Dos casillas independientes, no una elección de una u otra. Alguien
+  // con matrícula también puede tener cobijas en la casa, y al revés: quien
+  // entrega insumos puede además ser ingeniero. Obligarle a elegir escondía
+  // media pantalla de su propio perfil.
+  //
+  // `crear_perfil` sigue recibiendo UN `p_tipo`, que no cambia: el tipo se
+  // deriva de las casillas —marcar servicios profesionales es lo que activa
+  // la matrícula— y el inventario ya se guardaba para los dos tipos, con su
+  // propia RPC.
+  const [ofreceInsumos, setOfreceInsumos] = useState(
+    !perfil || eraAliado ? true : perfil.tipo === 'ofertador'
   )
+  const [ofreceServicios, setOfreceServicios] = useState(
+    !perfil || eraAliado ? false : perfil.tipo === 'servidor'
+  )
+  const tipo: TipoPerfil = ofreceServicios ? 'servidor' : 'ofertador'
   const [nombre, setNombre] = useState(perfil?.nombre_visible ?? '')
   const [seleccionados, setSeleccionados] = useState<string[]>(perfil?.municipios ?? [])
   const [contacto, setContacto] = useState(perfil?.contacto_publico ?? '')
@@ -226,13 +240,15 @@ export function FormularioRegistro({
 
   // Un validador por seccion y no uno solo: plegar un formulario sin decir
   // que le falta a cada parte obliga a abrir las seis para averiguarlo.
-  const seccionQueOfreces = nombreValido
+  const seccionQueOfreces = nombreValido && (ofreceInsumos || ofreceServicios)
   const seccionContacto = contactoValido
   const seccionDonde = seleccionados.length > 0
   const seccionMatricula = servidorValido
 
   const resumenTipo =
-    (tipo === 'servidor' ? 'Servicios profesionales' : 'Insumos') +
+    [ofreceInsumos ? 'Insumos' : null, ofreceServicios ? 'Servicios profesionales' : null]
+      .filter(Boolean)
+      .join(' y ') +
     (nombre.trim() ? ' · ' + nombre.trim() : '')
   const resumenMunicipios =
     municipiosElegidos.length === 0
@@ -311,8 +327,11 @@ export function FormularioRegistro({
     router.refresh()
   }
 
-  return (
-    <div className="mt-6 space-y-6">
+  // Un caparazón u otro según el momento: la primera vez es un flujo con
+  // su progreso y su barra de acción; después, la pestaña «Mi perfil» de
+  // «Lo mío», que ya trae su propia cabecera.
+  const cuerpo = (
+    <div className={asistente ? 'space-y-3' : 'mt-6 space-y-3'}>
       {eraAliado && (
         <Alert variant="warning">
           <AlertDescription>
@@ -330,7 +349,7 @@ export function FormularioRegistro({
         titulo="Qué ofreces"
         resumen={resumenTipo}
         sello={seccionQueOfreces ? undefined : 'Falta tu nombre'}
-        abierta={!perfil || !seccionQueOfreces}
+        abierta={asistente || !seccionQueOfreces}
         accion={
           <Button variant="outline" className="w-full" disabled={!puedeGuardar} onClick={guardar}>
             {guardando ? 'Guardando…' : 'Guardar esta sección'}
@@ -339,34 +358,54 @@ export function FormularioRegistro({
       >
         <fieldset>
           <legend className="mb-2 text-base font-medium">¿Qué vas a ofrecer?</legend>
-          {/* Dos chips anchos y la explicación del elegido debajo. Antes
-              eran dos botones del mismo tamaño que todos los demás del
-              formulario, y ésta es la decisión que cambia lo que se pide
-              después: sin matrícula no hay sección de matrícula. */}
-          <div className="flex flex-wrap gap-2">
+          {/* Filas con círculo de marca, no chips: son dos cosas que se
+              pueden tener a la vez, y un par de píldoras donde solo una
+              queda encendida dice justo lo contrario. */}
+          <div className="space-y-2">
             {[
-              { valor: 'ofertador' as const, etiqueta: 'Insumos' },
-              { valor: 'servidor' as const, etiqueta: 'Profesional' },
+              {
+                marcado: ofreceInsumos,
+                alternar: () => setOfreceInsumos((v) => !v),
+                etiqueta: 'Insumos',
+                detalle: 'Cosas: agua, alimentos, cobijas, aseo.',
+              },
+              {
+                marcado: ofreceServicios,
+                alternar: () => setOfreceServicios((v) => !v),
+                etiqueta: 'Servicios profesionales',
+                detalle: 'Con matrícula: ingeniería, arquitectura, psicología, salud o derecho.',
+              },
             ].map((o) => (
               <button
-                key={o.valor}
+                key={o.etiqueta}
                 type="button"
-                aria-pressed={tipo === o.valor}
-                onClick={() => setTipo(o.valor)}
-                className={`inline-flex min-h-12 flex-1 items-center justify-center rounded-full px-6 text-base transition-colors ${
-                  tipo === o.valor
-                    ? 'bg-primary font-semibold text-primary-foreground'
-                    : 'bg-secondary text-secondary-foreground hover:bg-muted'
+                role="checkbox"
+                aria-checked={o.marcado}
+                onClick={o.alternar}
+                className={`flex min-h-16 w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${
+                  o.marcado ? 'border-primary bg-accent' : 'border-border bg-card'
                 }`}
               >
-                {o.etiqueta}
+                <span
+                  aria-hidden="true"
+                  className={`flex size-8 shrink-0 items-center justify-center rounded-full border-2 ${
+                    o.marcado
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border'
+                  }`}
+                >
+                  {o.marcado && <Check className="size-5" />}
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-base font-semibold">{o.etiqueta}</span>
+                  <span className="block text-sm text-muted-foreground">{o.detalle}</span>
+                </span>
               </button>
             ))}
           </div>
-          <p className="mt-3 text-base text-muted-foreground">
-            {tipo === 'ofertador'
-              ? 'Puedes entregar cosas: agua, alimentos, cobijas, aseo.'
-              : 'Con matrícula: ingeniería, arquitectura, psicología, salud o derecho. También puedes contar qué insumos tienes.'}
+          <p className="mt-2 text-base text-muted-foreground">
+            Puedes marcar las dos. Y si vives de un oficio —comida, arreglos,
+            trasteos— eso va en el directorio de servicios, que es otra cosa.
           </p>
         </fieldset>
 
@@ -395,7 +434,7 @@ export function FormularioRegistro({
         titulo="Cómo te contactan"
         resumen={contacto.trim() || 'Sin número todavía'}
         sello={seccionContacto ? undefined : 'Falta el número'}
-        abierta={!!perfil && !seccionContacto}
+        abierta={asistente || !seccionContacto}
         accion={
           <Button variant="outline" className="w-full" disabled={!puedeGuardar} onClick={guardar}>
             {guardando ? 'Guardando…' : 'Guardar esta sección'}
@@ -451,7 +490,7 @@ export function FormularioRegistro({
         titulo="Dónde puedes ayudar"
         resumen={resumenMunicipios}
         sello={seccionDonde ? undefined : 'Falta el municipio'}
-        abierta={!!perfil && !seccionDonde}
+        abierta={asistente || !seccionDonde}
         accion={
           <Button variant="outline" className="w-full" disabled={!puedeGuardar} onClick={guardar}>
             {guardando ? 'Guardando…' : 'Guardar esta sección'}
@@ -531,7 +570,7 @@ export function FormularioRegistro({
           titulo="Matrícula profesional"
           resumen={profesion.trim() || 'Sin declarar'}
           sello={servidor?.verificado ? undefined : 'Sin verificar'}
-          abierta={!!perfil && !seccionMatricula}
+          abierta={asistente || !seccionMatricula}
         accion={
           <Button variant="outline" className="w-full" disabled={!puedeGuardar} onClick={guardar}>
             {guardando ? 'Guardando…' : 'Guardar esta sección'}
@@ -642,7 +681,7 @@ export function FormularioRegistro({
         </>
       )}
 
-      {!asistente && (
+      {!asistente && ofreceInsumos && (
       <SeccionPlegable
         titulo="Qué tengo para dar"
         resumen={resumenInventario}
@@ -860,19 +899,43 @@ export function FormularioRegistro({
         </Alert>
       )}
 
-      {asistente && (
+      {/* La acción principal, en la píldora fija sobre la barra: es la única
+          terracota rellena que hay aquí (regla 2). Solo al editar — en el
+          asistente la acción vive en la barra del marco. */}
+      {!asistente && (
+        <AccionPrincipal
+          etiqueta={guardando ? 'Guardando…' : 'Guardar cambios'}
+          Icono={Check}
+          onClick={guardar}
+          visible={puedeGuardar || guardando}
+        />
+      )}
+    </div>
+  )
+
+  if (!asistente) return cuerpo
+
+  // ⚠ La primera vez NO es una pestaña de «Lo mío»: es un flujo. Con las
+  // pestañas encima, quien está creando su perfil veía cuatro salidas y
+  // ninguna barra de progreso, así que no sabía cuánto le faltaba ni de qué.
+  return (
+    <MarcoFlujo
+      titulo="Crear mi perfil"
+      volver="/"
+      pasos={['Qué ofreces', 'Cómo te ubican', 'Publicar']}
+      pasoActual={paso - 1}
+      accion={
         <div className="flex gap-2">
           {paso > 1 && (
             <Button
               type="button"
               variant="outline"
-              className="flex-1"
               onClick={() => setPaso((n) => (n === 3 ? 2 : 1))}
             >
               Atrás
             </Button>
           )}
-          {paso < 3 && (
+          {paso < 3 ? (
             <Button
               type="button"
               className="flex-1"
@@ -881,20 +944,15 @@ export function FormularioRegistro({
             >
               Continuar
             </Button>
+          ) : (
+            <Button type="button" className="flex-1" disabled={!puedeGuardar} onClick={guardar}>
+              {guardando ? 'Publicando…' : 'Publicar mi perfil'}
+            </Button>
           )}
         </div>
-      )}
-
-      {/* La acción principal de la pantalla, en la píldora fija sobre la
-          barra: es la única terracota rellena que hay aquí (regla 2), y en
-          un formulario de seis secciones queda siempre a mano en vez de al
-          final de un rollo de tres pantallas. */}
-      <AccionPrincipal
-        etiqueta={guardando ? 'Guardando…' : perfil ? 'Guardar cambios' : 'Publicar mi perfil'}
-        Icono={Check}
-        onClick={guardar}
-        visible={(puedeGuardar || guardando) && (!asistente || paso === 3)}
-      />
-    </div>
+      }
+    >
+      {cuerpo}
+    </MarcoFlujo>
   )
 }
