@@ -265,6 +265,17 @@ export default async function ServiciosPage({
           </Link>
         </AlertDescription>
       </Alert>
+
+      {/* La única puerta a /servicios/confirmar. El código no viaja en
+          ningún enlace ni en ningún QR: esto solo lleva al formulario
+          donde se escribe a mano. */}
+      <p className="mt-4 text-sm text-muted-foreground">
+        ¿Te hicieron un trabajo y te dieron un código?{' '}
+        <Link href="/servicios/confirmar" className="underline">
+          Califícalo aquí
+        </Link>
+        .
+      </p>
     </main>
   )
 }

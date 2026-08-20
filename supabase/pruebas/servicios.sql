@@ -888,3 +888,165 @@ begin
   raise notice 'Pruebas de la fase S5: OK';
 end;
 $$;
+
+-- =====================================================================
+-- Fase S6 — códigos de servicio y reseñas
+-- =====================================================================
+
+do $$
+declare
+  v_ptok  text := 'token-de-prueba-s6-proveedor-no-usar-en-nada-real';
+  v_prov  uuid;
+  v_cod   text;
+  v_cod2  text;
+  v_res   uuid;
+  v_datos jsonb;
+  v_n     integer;
+  v_fallo boolean;
+begin
+  insert into public.proveedores
+    (nombre_visible, tipo, telefono, municipio, acepto_publicacion,
+     autorizacion_version, token_hash, es_prueba)
+  values
+    ('PRUEBA S6', 'persona', '3000000040', '76001', true, 'prueba',
+     encode(extensions.digest(v_ptok, 'sha256'), 'hex'), true)
+  returning id into v_prov;
+
+  insert into public.proveedor_oficios (proveedor_id, oficio_id, modo)
+  values (v_prov, 'arreglos_ropa', 'normal');
+
+  -- ---- Sin ficha no hay código --------------------------------------
+  v_fallo := false;
+  begin
+    perform public.crear_codigo_servicio(null, 'token-que-no-existe');
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Se generó un código sin tener ficha';
+
+  -- ---- Un oficio que no es suyo tampoco -----------------------------
+  v_fallo := false;
+  begin
+    perform public.crear_codigo_servicio('cuidado_ninos', v_ptok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Se generó un código de un oficio que no está en su ficha';
+
+  -- ---- Camino feliz ---------------------------------------------------
+  v_cod := public.crear_codigo_servicio('arreglos_ropa', v_ptok);
+  assert char_length(v_cod) = 8, 'El código no tiene ocho caracteres';
+  assert v_cod !~ '[IO01]',
+    'El código trae caracteres confundibles: se dicta por teléfono y se copia de un papel';
+
+  -- El código NO queda guardado en claro.
+  select count(*) into v_n from public.servicios_prestados s
+   where s.proveedor_id = v_prov and s.codigo_hash = v_cod;
+  assert v_n = 0, 'El código quedó guardado en claro';
+
+  update public.servicios_prestados set es_prueba = true where proveedor_id = v_prov;
+
+  -- ---- Un código inventado no confirma nada ---------------------------
+  v_fallo := false;
+  begin
+    perform public.confirmar_y_resenar('ZZZZ9999', 3, 3, 3, null);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Un código inventado confirmó un servicio';
+
+  -- ---- Regla 2: el comentario pasa por el filtro ----------------------
+  v_fallo := false;
+  begin
+    perform public.confirmar_y_resenar(v_cod, 3, 3, 3, 'Excelente, llamalo al 3001234567');
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'El comentario de la reseña aceptó un teléfono';
+
+  -- Y el fallo no dejó el código quemado.
+  select count(*) into v_n from public.servicios_prestados s
+   where s.proveedor_id = v_prov and s.confirmado_at is not null;
+  assert v_n = 0, 'Un intento fallido dejó el código como usado';
+
+  -- ---- Se acepta escrito distinto -------------------------------------
+  v_datos := public.confirmar_y_resenar(
+    lower(substr(v_cod, 1, 4) || ' - ' || substr(v_cod, 5, 4)), 3, 2, 3, 'Quedó muy bien.');
+  assert v_datos->>'proveedor_nombre' = 'PRUEBA S6',
+    'confirmar_y_resenar no devolvió de quién era el código';
+
+  select count(*) into v_n from public.resenas r where r.proveedor_id = v_prov;
+  assert v_n = 1, 'No quedó la reseña';
+
+  -- ---- Regla T: el mismo código no sirve dos veces ---------------------
+  v_fallo := false;
+  begin
+    perform public.confirmar_y_resenar(v_cod, 1, 1, 1, null);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Regla T rota: el mismo código calificó dos veces';
+
+  -- ---- Un código vencido tampoco ---------------------------------------
+  v_cod2 := public.crear_codigo_servicio(null, v_ptok);
+  update public.servicios_prestados
+     set expira_at = now() - interval '1 day', es_prueba = true
+   where codigo_hash = encode(extensions.digest(v_cod2, 'sha256'), 'hex');
+  v_fallo := false;
+  begin
+    perform public.confirmar_y_resenar(v_cod2, 3, 3, 3, null);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Un código vencido sirvió para calificar';
+
+  -- ---- La ficha pública ya cuenta el servicio --------------------------
+  select p.servicios_confirmados into v_n
+  from public.proveedores_publicos p where p.id = v_prov;
+  assert v_n = 1, 'La ficha no cuenta el servicio confirmado';
+
+  -- ---- Derecho de réplica ----------------------------------------------
+  select r.id into v_res from public.resenas r where r.proveedor_id = v_prov;
+
+  v_fallo := false;
+  begin
+    perform public.responder_resena(v_res, 'Gracias, escribeme al 3001112222', v_ptok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'La réplica aceptó un teléfono';
+
+  perform public.responder_resena(v_res, 'Gracias por avisar, lo corrijo.', v_ptok);
+  select count(*) into v_n from public.resenas r
+   where r.id = v_res and r.replica is not null and r.replica_at is not null;
+  assert v_n = 1, 'No quedó la réplica';
+
+  -- Y nadie responde la reseña de otro.
+  v_fallo := false;
+  begin
+    perform public.responder_resena(v_res, 'Yo tambien opino', 'token-que-no-existe');
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Alguien respondió una reseña que no es de su ficha';
+
+  -- ---- Moderación es del administrador ----------------------------------
+  v_fallo := false;
+  begin
+    perform public.ocultar_resena(v_res, true);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Un anónimo ocultó una reseña';
+
+  v_fallo := false;
+  begin
+    perform public.borrar_resena(v_res);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Un anónimo borró una reseña';
+
+  -- ---- Lo que ve el proveedor --------------------------------------------
+  v_datos := public.mis_servicios(v_ptok);
+  assert jsonb_array_length(v_datos->'resenas') = 1, 'mis_servicios no trajo la reseña';
+  assert jsonb_array_length(v_datos->'codigos') = 2, 'mis_servicios no trajo los códigos';
+  -- El código en claro ya no existe en ninguna parte.
+  assert not (v_datos::text like '%' || v_cod || '%'),
+    'mis_servicios devuelve el código en claro: solo debería existir su hash';
+
+  delete from public.proveedores where es_prueba;
+
+  raise notice 'Pruebas de la fase S6: OK';
+end;
+$$;

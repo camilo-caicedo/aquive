@@ -4,6 +4,10 @@ import { listarMunicipios } from '@/lib/municipios'
 import { RESPONSABLE_SERVICIOS } from '@/lib/config'
 import { FormularioProveedor } from './formulario-proveedor'
 import { CamposReferencia, type MiReferencia } from '@/components/campos-referencia'
+import {
+  PanelServiciosProveedor,
+  type MisServicios,
+} from '@/components/panel-servicios-proveedor'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import type { MiProveedor } from '@/lib/types'
@@ -43,8 +47,14 @@ export default async function SoyProveedorPage() {
     )
   }
 
-  const [{ data: mio }, { data: oficios }, { data: zonas }, municipios, { data: refs }] =
-    await Promise.all([
+  const [
+    { data: mio },
+    { data: oficios },
+    { data: zonas },
+    municipios,
+    { data: refs },
+    { data: servicios },
+  ] = await Promise.all([
       supabase.rpc('mi_proveedor', {}),
       supabase.from('catalogo_oficios').select('*').eq('activo', true).order('orden'),
       // Todas las zonas de una vez y se filtran en el cliente al elegir
@@ -53,10 +63,17 @@ export default async function SoyProveedorPage() {
       supabase.from('zonas').select('*').eq('activa', true).order('orden'),
       listarMunicipios(supabase),
       supabase.rpc('mis_referencias', {}),
+      supabase.rpc('mis_servicios', {}),
     ])
 
   const proveedor = (mio as MiProveedor | null) ?? null
   const referencias = (refs as unknown as MiReferencia[]) ?? []
+  const misServicios = (servicios as unknown as MisServicios | null) ?? null
+  // Solo los oficios que están en su ficha: un código de algo que no
+  // ofrece no significa nada.
+  const misOficios = (oficios ?? []).filter((o) =>
+    proveedor?.oficios.some((p) => p.oficio_id === o.id)
+  )
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
@@ -80,9 +97,16 @@ export default async function SoyProveedorPage() {
           pedirla antes obligaría a guardar el dato de un tercero para algo
           que todavía puede no publicarse. */}
       {proveedor && (
-        <div className="mt-10">
-          <CamposReferencia referencias={referencias} oficios={oficios ?? []} />
-        </div>
+        <>
+          <div className="mt-10">
+            <CamposReferencia referencias={referencias} oficios={oficios ?? []} />
+          </div>
+          {misServicios && (
+            <div className="mt-10">
+              <PanelServiciosProveedor datos={misServicios} oficios={misOficios} />
+            </div>
+          )}
+        </>
       )}
     </main>
   )

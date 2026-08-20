@@ -222,7 +222,12 @@ export default async function FichaPage({
         </>
       )}
 
-      <p className="mt-4 text-sm text-muted-foreground">{SOBRE_LAS_RESENAS}</p>
+      <p className="mt-4 text-sm text-muted-foreground">
+        {SOBRE_LAS_RESENAS}{' '}
+        <Link href="/servicios/confirmar" className="underline">
+          Tengo un código
+        </Link>
+      </p>
 
       <Alert className="mt-6">
         <AlertDescription>

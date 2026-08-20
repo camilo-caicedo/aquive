@@ -2007,6 +2007,40 @@ export interface Database {
         }
         Returns: Json
       }
+      // Devuelve el código EN CLARO, una sola vez.
+      crear_codigo_servicio: {
+        Args: { p_oficio_id?: string | null; p_token?: string | null }
+        Returns: string
+      }
+      mis_servicios: {
+        Args: { p_token?: string | null }
+        Returns: Json
+      }
+      responder_resena: {
+        Args: { p_resena_id: string; p_replica: string; p_token?: string | null }
+        Returns: undefined
+      }
+      // Sin grant a `anon`: la llama /api/servicios/confirmar tras el
+      // Turnstile. El código es inadivinable, pero nada impide intentarlo
+      // un millón de veces desde un script.
+      confirmar_y_resenar: {
+        Args: {
+          p_codigo: string
+          p_cumplimiento: number
+          p_trato: number
+          p_puntualidad: number
+          p_comentario?: string | null
+        }
+        Returns: Json
+      }
+      ocultar_resena: {
+        Args: { p_resena_id: string; p_oculta: boolean }
+        Returns: undefined
+      }
+      borrar_resena: {
+        Args: { p_resena_id: string }
+        Returns: undefined
+      }
       crear_perfil: {
         Args: {
           p_nombre_visible: string

@@ -4,6 +4,10 @@ import { listarMunicipios } from '@/lib/municipios'
 import { CORREO_HABEAS_DATA_SERVICIOS, RESPONSABLE_SERVICIOS } from '@/lib/config'
 import { FormularioProveedor } from '../../soy-proveedor/formulario-proveedor'
 import { CamposReferencia, type MiReferencia } from '@/components/campos-referencia'
+import {
+  PanelServiciosProveedor,
+  type MisServicios,
+} from '@/components/panel-servicios-proveedor'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import type { MiProveedor } from '@/lib/types'
@@ -34,17 +38,28 @@ export default async function MiPerfilPage({
   const { token } = await params
   const supabase = await createClient()
 
-  const [{ data: mio }, { data: oficios }, { data: zonas }, municipios, { data: refs }] =
-    await Promise.all([
-      supabase.rpc('mi_proveedor', { p_token: token }),
-      supabase.from('catalogo_oficios').select('*').eq('activo', true).order('orden'),
-      supabase.from('zonas').select('*').eq('activa', true).order('orden'),
-      listarMunicipios(supabase),
-      supabase.rpc('mis_referencias', { p_token: token }),
-    ])
+  const [
+    { data: mio },
+    { data: oficios },
+    { data: zonas },
+    municipios,
+    { data: refs },
+    { data: servicios },
+  ] = await Promise.all([
+    supabase.rpc('mi_proveedor', { p_token: token }),
+    supabase.from('catalogo_oficios').select('*').eq('activo', true).order('orden'),
+    supabase.from('zonas').select('*').eq('activa', true).order('orden'),
+    listarMunicipios(supabase),
+    supabase.rpc('mis_referencias', { p_token: token }),
+    supabase.rpc('mis_servicios', { p_token: token }),
+  ])
 
   const proveedor = (mio as MiProveedor | null) ?? null
   const referencias = (refs as unknown as MiReferencia[]) ?? []
+  const misServicios = (servicios as unknown as MisServicios | null) ?? null
+  const misOficios = (oficios ?? []).filter((o) =>
+    proveedor?.oficios.some((p) => p.oficio_id === o.id)
+  )
 
   if (!proveedor) {
     return (
@@ -97,6 +112,16 @@ export default async function MiPerfilPage({
           token={token}
         />
       </div>
+
+      {misServicios && (
+        <div className="mt-10">
+          <PanelServiciosProveedor
+            datos={misServicios}
+            oficios={misOficios}
+            token={token}
+          />
+        </div>
+      )}
 
       <p className="mt-6 text-sm text-muted-foreground">
         Ver también el{' '}
