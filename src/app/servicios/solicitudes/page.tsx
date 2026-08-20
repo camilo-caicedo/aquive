@@ -98,13 +98,13 @@ export default async function SolicitudesDeServicioPage({
           // directorio. Sin esto, entrar aquí era un callejón —el segmentado
           // de arriba solo cambia de lista, no de vista— y no quedaba forma
           // de volver a ver proveedores.
-            <Link
-              href="/servicios"
-              aria-pressed="true"
-              className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-primary bg-accent px-4 text-base font-medium text-accent-foreground"
-            >
-              <Inbox className="size-4" aria-hidden="true" />
-              Quién está pidiendo
+            <Link
+              href="/servicios"
+              aria-pressed="true"
+              className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-primary bg-accent px-4 text-base font-medium text-accent-foreground"
+            >
+              <Inbox className="size-4" aria-hidden="true" />
+              Quién está pidiendo
             </Link>
           }
         >

@@ -146,52 +146,52 @@ export default async function ServidoresPage({
       <CabeceraPantalla titulo="Servicios">
         <PestanasServicios activa={verProfesionales ? 'profesionales' : 'entidades'} />
         {mostrarFiltros && (
-          <HojaFiltros
-            action="/servidores"
-            id="hoja-filtros-servidores"
-            titulo={verProfesionales ? 'Filtrar profesionales' : 'Filtrar entidades'}
-            aplicados={chipsAplicados}
-          >
-            {/* Un GET reemplaza el query string entero: sin esto, filtrar te
-                devuelve a la pestaña de entidades. */}
-            {verProfesionales && <input type="hidden" name="ver" value="profesionales" />}
-            <SelectFiltro
-              name="municipio"
-              label="Filtrar por municipio"
-              placeholder="Todos los municipios"
-              valorInicial={municipio ?? ''}
-              conBusqueda
-              opciones={(listaMunicipios ?? []).map((m) => ({
-                valor: m.codigo_dane,
-                etiqueta: m.nombre,
-                detalle: m.departamento,
-              }))}
-            />
-            {verProfesionales && (
-            <SelectFiltro
-              name="servicio"
-              label="Filtrar por servicio"
-              placeholder="Todos los servicios"
-              valorInicial={params.servicio ?? ''}
-              conBusqueda
-              opciones={(catalogoServicios ?? []).map((s) => ({
-                valor: s.id,
-                etiqueta: s.nombre,
-                detalle: AREAS[s.area],
-              }))}
-            />
-            )}
-
-            {/* La lista de municipios está recortada a los que tienen a alguien
-                registrado; si no se dice, parece que faltan municipios. */}
-            <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
-              <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
-              <span>
-                {verProfesionales
-                  ? `La lista de municipios solo muestra los ${listaMunicipios?.length ?? 0} donde ya hay profesionales registrados. La de servicios los muestra todos, aunque nadie los ofrezca todavía.`
-                  : `La lista solo muestra los ${listaMunicipios?.length ?? 0} municipios con entidades locales. Las de cobertura nacional salen siempre, filtres por donde filtres.`}
-              </span>
-            </p>
+          <HojaFiltros
+            action="/servidores"
+            id="hoja-filtros-servidores"
+            titulo={verProfesionales ? 'Filtrar profesionales' : 'Filtrar entidades'}
+            aplicados={chipsAplicados}
+          >
+            {/* Un GET reemplaza el query string entero: sin esto, filtrar te
+                devuelve a la pestaña de entidades. */}
+            {verProfesionales && <input type="hidden" name="ver" value="profesionales" />}
+            <SelectFiltro
+              name="municipio"
+              label="Filtrar por municipio"
+              placeholder="Todos los municipios"
+              valorInicial={municipio ?? ''}
+              conBusqueda
+              opciones={(listaMunicipios ?? []).map((m) => ({
+                valor: m.codigo_dane,
+                etiqueta: m.nombre,
+                detalle: m.departamento,
+              }))}
+            />
+            {verProfesionales && (
+            <SelectFiltro
+              name="servicio"
+              label="Filtrar por servicio"
+              placeholder="Todos los servicios"
+              valorInicial={params.servicio ?? ''}
+              conBusqueda
+              opciones={(catalogoServicios ?? []).map((s) => ({
+                valor: s.id,
+                etiqueta: s.nombre,
+                detalle: AREAS[s.area],
+              }))}
+            />
+            )}
+
+            {/* La lista de municipios está recortada a los que tienen a alguien
+                registrado; si no se dice, parece que faltan municipios. */}
+            <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
+              <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
+              <span>
+                {verProfesionales
+                  ? `La lista de municipios solo muestra los ${listaMunicipios?.length ?? 0} donde ya hay profesionales registrados. La de servicios los muestra todos, aunque nadie los ofrezca todavía.`
+                  : `La lista solo muestra los ${listaMunicipios?.length ?? 0} municipios con entidades locales. Las de cobertura nacional salen siempre, filtres por donde filtres.`}
+              </span>
+            </p>
           </HojaFiltros>
         )}
       </CabeceraPantalla>

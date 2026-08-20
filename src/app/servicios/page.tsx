@@ -168,72 +168,72 @@ export default async function ServiciosPage({
     <main className="mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Servicios">
         <PestanasServicios activa="oficios" />
-        <HojaFiltros
-          action="/servicios"
-          id="hoja-filtros-servicios"
-          titulo="Filtrar oficios"
-          aplicados={chipsAplicados}
-        >
-          <SelectFiltro
-            name="oficio"
-            label="Filtrar por oficio"
-            placeholder="Todos los oficios"
-            valorInicial={params.oficio ?? ''}
-            conBusqueda
-            opciones={(oficiosCatalogo ?? []).map((o) => ({
-              valor: o.id,
-              etiqueta: o.nombre,
-              detalle: GRUPOS[o.grupo],
-            }))}
-          />
-          <SelectFiltro
-            name="municipio"
-            label="Filtrar por municipio"
-            placeholder="Todos los municipios"
-            valorInicial={municipio ?? ''}
-            conBusqueda
-            opciones={(municipiosLista ?? []).map((m) => ({
-              valor: m.codigo_dane,
-              etiqueta: m.nombre,
-              detalle: m.departamento,
-            }))}
-          />
-
-          {/* Si no se dice, el desplegable recortado parece un error. */}
-          <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
-            <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
-            <span>
-              Las listas de oficios y municipios solo muestran los que ya tienen a
-              alguien registrado.
-            </span>
-          </p>
-
-          {/* Las tres listas cortas pasan a chips: un toque en vez de abrir un
-              desplegable, elegir y cerrarlo. */}
-          {(zonas?.length ?? 0) > 0 && (
-            <GrupoChips
-              name="zona"
-              label="Dónde"
-              todos="Toda la ciudad"
-              valorInicial={zona ?? ''}
-              opciones={(zonas ?? []).map((z) => ({ valor: z.id, etiqueta: z.nombre }))}
-              nota="Solo las zonas donde ya hay alguien registrado."
-            />
-          )}
-          <GrupoChips
-            name="modalidad"
-            label="Cómo atiende"
-            todos="En cualquier parte"
-            valorInicial={modalidad ?? ''}
-            opciones={MODALIDADES.map((m) => ({ valor: m.valor, etiqueta: m.etiqueta }))}
-          />
-          <GrupoChips
-            name="modo"
-            label="Precio"
-            todos="Cualquier precio"
-            valorInicial={modo ?? ''}
-            opciones={MODOS_PRECIO.map((m) => ({ valor: m.valor, etiqueta: m.etiqueta }))}
-          />
+        <HojaFiltros
+          action="/servicios"
+          id="hoja-filtros-servicios"
+          titulo="Filtrar oficios"
+          aplicados={chipsAplicados}
+        >
+          <SelectFiltro
+            name="oficio"
+            label="Filtrar por oficio"
+            placeholder="Todos los oficios"
+            valorInicial={params.oficio ?? ''}
+            conBusqueda
+            opciones={(oficiosCatalogo ?? []).map((o) => ({
+              valor: o.id,
+              etiqueta: o.nombre,
+              detalle: GRUPOS[o.grupo],
+            }))}
+          />
+          <SelectFiltro
+            name="municipio"
+            label="Filtrar por municipio"
+            placeholder="Todos los municipios"
+            valorInicial={municipio ?? ''}
+            conBusqueda
+            opciones={(municipiosLista ?? []).map((m) => ({
+              valor: m.codigo_dane,
+              etiqueta: m.nombre,
+              detalle: m.departamento,
+            }))}
+          />
+
+          {/* Si no se dice, el desplegable recortado parece un error. */}
+          <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
+            <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
+            <span>
+              Las listas de oficios y municipios solo muestran los que ya tienen a
+              alguien registrado.
+            </span>
+          </p>
+
+          {/* Las tres listas cortas pasan a chips: un toque en vez de abrir un
+              desplegable, elegir y cerrarlo. */}
+          {(zonas?.length ?? 0) > 0 && (
+            <GrupoChips
+              name="zona"
+              label="Dónde"
+              todos="Toda la ciudad"
+              valorInicial={zona ?? ''}
+              opciones={(zonas ?? []).map((z) => ({ valor: z.id, etiqueta: z.nombre }))}
+              nota="Solo las zonas donde ya hay alguien registrado."
+            />
+          )}
+          <GrupoChips
+            name="modalidad"
+            label="Cómo atiende"
+            todos="En cualquier parte"
+            valorInicial={modalidad ?? ''}
+            opciones={MODALIDADES.map((m) => ({ valor: m.valor, etiqueta: m.etiqueta }))}
+          />
+          <GrupoChips
+            name="modo"
+            label="Precio"
+            todos="Cualquier precio"
+            valorInicial={modo ?? ''}
+            opciones={MODOS_PRECIO.map((m) => ({ valor: m.valor, etiqueta: m.etiqueta }))}
+          />
         </HojaFiltros>
 
         {/* La otra vista del módulo, como interruptor. Era un enlace de
