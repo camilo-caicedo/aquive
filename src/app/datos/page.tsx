@@ -21,6 +21,36 @@ export default async function DatosPage() {
     .select('municipio, categoria, cumplida, horas_hasta_respuesta')
     .eq('es_prueba', false)
 
+  // Lo mismo para el módulo de Servicios, ya agregado por la vista.
+  const [{ data: servicios }, { data: oficios }] = await Promise.all([
+    supabase.from('datos_servicios').select('*'),
+    supabase.from('catalogo_oficios').select('id, nombre'),
+  ])
+
+  const nombreOficio = new Map((oficios ?? []).map((o) => [o.id, o.nombre]))
+
+  // La vista agrupa por municipio y por oficio; aquí se colapsa a oficio,
+  // que es lo que dice algo en una lista: «cuántas veces se buscó una
+  // modista» se entiende, «cuántas en el municipio 76001» no.
+  const porOficio = Object.values(
+    (servicios ?? []).reduce<Record<string, { oficio: string; solicitudes: number; con_respuesta: number }>>(
+      (acumulado, fila) => {
+        const previo = acumulado[fila.oficio] ?? {
+          oficio: fila.oficio,
+          solicitudes: 0,
+          con_respuesta: 0,
+        }
+        acumulado[fila.oficio] = {
+          oficio: fila.oficio,
+          solicitudes: previo.solicitudes + Number(fila.solicitudes),
+          con_respuesta: previo.con_respuesta + Number(fila.con_respuesta),
+        }
+        return acumulado
+      },
+      {}
+    )
+  ).sort((a, b) => b.solicitudes - a.solicitudes)
+
   const municipios = await listarMunicipios(supabase)
   const nombrePorCodigo = new Map((municipios ?? []).map((m) => [m.codigo_dane, m.nombre]))
 
@@ -135,6 +165,42 @@ export default async function DatosPage() {
           </section>
         </>
       )}
+
+      {/* El módulo de Servicios deja su propio rastro, y tampoco tiene
+          identificadores: la tabla de origen no guarda ni la zona. Va en
+          su propia sección porque es otra cosa —trabajo, no insumos— y
+          mezclar los dos conteos daría un número que no significa nada. */}
+      <section className="mt-10">
+        <h2 className="font-heading text-2xl">Servicios que se buscaron</h2>
+        <p className="mt-1 max-w-prose text-base text-muted-foreground">
+          Lo mismo para el directorio de oficios: cuántas veces se pidió cada
+          trabajo, en qué municipio, y si alguien respondió. Sin texto, sin
+          barrio y sin nada que permita reconstruir quién pidió qué.
+        </p>
+
+        {porOficio.length === 0 ? (
+          <p className="mt-4 rounded-xl border border-dashed border-border p-8 text-center text-base text-muted-foreground">
+            Todavía no hay datos. Aparecerán cuando las primeras solicitudes de
+            servicio se cierren o venzan.
+          </p>
+        ) : (
+          <ul className="mt-4 space-y-1">
+            {porOficio.map((o) => (
+              <li
+                key={o.oficio}
+                className="flex flex-wrap justify-between gap-2 border-b border-border py-2 text-base"
+              >
+                <span>{nombreOficio.get(o.oficio) ?? o.oficio}</span>
+                <span className="text-muted-foreground">
+                  {o.solicitudes}{' '}
+                  {o.solicitudes === 1 ? 'solicitud' : 'solicitudes'} ·{' '}
+                  {o.con_respuesta} con respuesta
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <Alert className="mt-8">
         <AlertDescription>

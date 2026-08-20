@@ -128,3 +128,54 @@ where table_schema = 'public'
 -- incluido el administrador: RLS activo con 0 políticas devuelve vacío.
 select policyname, cmd from pg_policies
 where schemaname = 'public' and tablename = 'administradores';
+
+
+-- =====================================================================
+-- Módulo de Servicios (PLAN-V3)
+-- =====================================================================
+
+-- 13. CATÁLOGOS SEMBRADOS ----------------------------------------------
+-- Esperado: 41 oficios y 37 zonas (22 comunas + 15 corregimientos de
+-- Cali). Si oficios da 0, faltó `seed-oficios.sql`; si zonas da 0, faltó
+-- `seed-zonas.sql`, y el desplegable de comuna sale vacío sin dar error.
+select (select count(*) from public.catalogo_oficios) as oficios,
+       (select count(*) from public.zonas)            as zonas;
+
+
+-- 14. LOS OFICIOS DE RIESGO SIGUEN EN RIESGO ---------------------------
+-- Esperado: 4 filas — cuidado de niños, de personas mayores,
+-- acompañamiento y transporte de pasajeros. Si alguno bajó a `bajo`, se
+-- publica sin verificación ni referencia (regla S) y eso es una decisión
+-- sobre personas, no un ajuste de datos.
+select id, nombre, riesgo from public.catalogo_oficios
+where riesgo = 'alto' order by id;
+
+
+-- 15. LAS REFERENCIAS ESTÁN REVOCADAS ----------------------------------
+-- Esperado: 4 filas, todas en `false`. Son datos cifrados de terceros que
+-- no usan la plataforma: si `anon` o `authenticated` pueden leerlas, la
+-- regla U está rota y el material cifrado es volcable.
+select r.rol, t.tabla, has_table_privilege(r.rol, t.tabla, 'SELECT') as puede_leer
+from (values ('anon'), ('authenticated')) r(rol),
+     (values ('public.referencias'), ('public.accesos_referencia')) t(tabla)
+order by 1, 2;
+
+
+-- 16. EL JOB DE EXPIRACIÓN DE SERVICIOS --------------------------------
+-- Esperado: 1 fila, activa. Sin él las solicitudes de servicio no se
+-- borran nunca y la promesa de los 15 días es mentira.
+select jobname, schedule, active from cron.job
+where jobname = 'expirar-servicios';
+
+
+-- 17. NI EL TOKEN NI EL CÓDIGO SE FILTRAN ------------------------------
+-- Esperado: 0 filas. Mismo criterio que el punto 11, para las columnas
+-- que el módulo de Servicios agregó.
+select table_name, column_name
+from information_schema.columns
+where table_schema = 'public'
+  and column_name in ('token_hash', 'codigo_hash',
+                      'nombre_cifrado', 'telefono_cifrado')
+  and table_name in (
+    select c.relname from pg_class c join pg_namespace n on n.oid=c.relnamespace
+    where n.nspname='public' and c.relkind='v');

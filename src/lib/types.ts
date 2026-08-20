@@ -1444,6 +1444,18 @@ export interface Database {
         Row: { codigo_dane: string; nombre: string; departamento: string }
         Relationships: []
       }
+      datos_servicios: {
+        Row: {
+          municipio: string
+          grupo: GrupoOficio
+          oficio: string
+          solicitudes: number
+          con_respuesta: number
+          resueltas: number
+          horas_promedio: number | null
+        }
+        Relationships: []
+      }
       oficios_con_proveedores: {
         Row: { id: string; nombre: string; grupo: GrupoOficio; orden: number }
         Relationships: []
@@ -2039,6 +2051,30 @@ export interface Database {
       }
       borrar_resena: {
         Args: { p_resena_id: string }
+        Returns: undefined
+      }
+      panel_admin_servicios: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      guardar_zona: {
+        Args: {
+          p_municipio: string
+          p_nombre: string
+          p_tipo: TipoZona
+          p_orden?: number
+        }
+        Returns: string
+      }
+      guardar_oficio: {
+        Args: {
+          p_id: string
+          p_grupo: GrupoOficio
+          p_nombre: string
+          p_riesgo: RiesgoOficio
+          p_activo?: boolean
+          p_orden?: number
+        }
         Returns: undefined
       }
       crear_perfil: {

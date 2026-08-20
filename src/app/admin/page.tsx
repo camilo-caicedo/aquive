@@ -24,6 +24,11 @@ import { PanelOrganizaciones } from './panel-organizaciones'
 import { PanelFlujoDos } from './panel-flujo2'
 import { Pestanas } from '@/components/pestanas'
 import { PanelSolicitudesAdmin } from './panel-solicitudes-admin'
+import {
+  PanelServicios,
+  type PanelServiciosDatos,
+  type AccesoAReferencia,
+} from './panel-servicios'
 
 const MOTIVOS: Record<MotivoReporte, string> = {
   datos_personales: 'Datos personales',
@@ -64,7 +69,13 @@ function fecha(iso: string) {
   })
 }
 
-type Vista = 'moderacion' | 'catalogo' | 'directorio' | 'aliados' | 'solicitudes'
+type Vista =
+  | 'moderacion'
+  | 'catalogo'
+  | 'directorio'
+  | 'aliados'
+  | 'solicitudes'
+  | 'servicios'
 
 export default async function AdminPage({
   searchParams,
@@ -73,7 +84,11 @@ export default async function AdminPage({
 }) {
   const { ver } = await searchParams
   const vista: Vista =
-    ver === 'catalogo' || ver === 'directorio' || ver === 'aliados' || ver === 'solicitudes'
+    ver === 'catalogo' ||
+    ver === 'directorio' ||
+    ver === 'aliados' ||
+    ver === 'solicitudes' ||
+    ver === 'servicios'
       ? ver
       : 'moderacion'
 
@@ -117,6 +132,8 @@ export default async function AdminPage({
     { data: organizacionesData },
     { data: flujo2Data },
     { data: solicitudesData },
+    { data: serviciosData },
+    { data: accesosRefData },
   ] = await Promise.all([
     enModeracion
       ? supabase
@@ -147,6 +164,15 @@ export default async function AdminPage({
     // Por RPC y no por la vista publica: el panel tiene que seguir viendo
     // las que acaba de cerrar, y esas ya no salen en el tablero.
     vista === 'solicitudes' ? supabase.rpc('solicitudes_admin') : Promise.resolve({ data: null }),
+    // Las tres colas del módulo de Servicios en una llamada, y la bitácora
+    // de lecturas de referencias en otra: la segunda solo se dibuja si el
+    // administrador la abre, pero traerla ya evita un viaje más.
+    vista === 'servicios'
+      ? supabase.rpc('panel_admin_servicios')
+      : Promise.resolve({ data: null }),
+    vista === 'servicios'
+      ? supabase.rpc('accesos_a_referencias')
+      : Promise.resolve({ data: null }),
   ])
 
   const solicitudes = (solicitudesData as unknown as SolicitudAdmin[]) ?? []
@@ -155,6 +181,8 @@ export default async function AdminPage({
   const entidades: EntidadAdmin[] = entidadesData ?? []
   const organizaciones = (organizacionesData as unknown as OrganizacionAdmin[]) ?? []
   const flujo2 = flujo2Data as unknown as PanelFlujo2 | null
+  const servicios = serviciosData as unknown as PanelServiciosDatos | null
+  const accesosRef = (accesosRefData as unknown as AccesoAReferencia[]) ?? []
 
   const porPerfil = new Map((perfiles ?? []).map((p) => [p.id, p]))
 
@@ -190,6 +218,7 @@ export default async function AdminPage({
               activa: vista === 'solicitudes',
             },
             { href: '/admin?ver=aliados', etiqueta: 'Aliados', activa: vista === 'aliados' },
+            { href: '/admin?ver=servicios', etiqueta: 'Servicios', activa: vista === 'servicios' },
           ]}
         />
       </div>
@@ -386,6 +415,10 @@ export default async function AdminPage({
           </Alert>
           <PanelFlujoDos datos={flujo2} />
         </section>
+      )}
+
+      {vista === 'servicios' && servicios && (
+        <PanelServicios datos={servicios} accesos={accesosRef} />
       )}
     </main>
   )

@@ -473,24 +473,63 @@ programando.
 No hay marco de pruebas en el repositorio y no se introduce uno para
 esto. Se sigue lo que ya se usa: SQL de comprobación más lista de humo.
 
-`supabase/pruebas/servicios.sql` — bloque `do $$ … $$` con `assert`, se
-corre contra el entorno de prueba después de cada migración y falla
-ruidosamente si deja de ser verdad alguna de estas:
+`supabase/pruebas/servicios.sql` — un bloque `do $$ … $$` con `assert`
+por fase. Se corre contra el entorno de prueba después de cada migración
+y falla ruidosamente, deshaciendo la transacción entera:
 
-1. `crear_solicitud_servicio` rechaza una nota con teléfono o correo.
-2. `guardar_proveedor` rechaza una descripción con PII.
-3. Un oficio de riesgo alto **no** aparece en `proveedores_publicos` si
-   el proveedor no tiene teléfono verificado ni referencia confirmada.
-4. `confirmar_y_resenar` con el mismo código dos veces falla la segunda.
-5. `leer_referencia` deja fila en `accesos_referencia`, y esa fila sigue
-   ahí después de borrar la referencia.
-6. `expirar_servicios()` borra la solicitud vencida y deja fila en
-   `metricas_servicio`.
-7. `anon` no puede seleccionar de `referencias` ni de
-   `accesos_referencia`.
+```
+cp supabase/pruebas/servicios.sql supabase/migraciones/_tmp-pruebas.sql
+node migracion/aplicar.mjs test _tmp-pruebas.sql
+rm supabase/migraciones/_tmp-pruebas.sql
+```
 
-Manual: extender `migracion/99-verificar.sql` con los conteos nuevos, y
-en el navegador — publicar una solicitud y ver que el token aparece una
+El copiado es porque `aplicar.mjs` solo lee de `supabase/migraciones/`.
+Y conviene comprobar de vez en cuando que los `assert` de verdad se
+evalúan —un `do $$ begin assert false, 'canario'; end; $$` tiene que
+fallar—: si `plpgsql.check_asserts` estuviera en off, este archivo
+pasaría siempre y no probaría nada.
+
+Lo que sostiene, por fase:
+
+- **S1** · La regla S en sus tres estados: sin nada, con teléfono
+  verificado solo, y con referencia apenas pendiente — en los tres el
+  oficio de riesgo sigue escondido, y un proveedor sin ningún oficio
+  publicable no aparece en absoluto. Más los CHECK de dueño único y de
+  precio, el `unique` de reseña, que el rastro de acceso sobreviva a la
+  referencia, que `anon` no lea `referencias`, y que
+  `expirar_servicios()` borre y deje métrica.
+- **S2** · Que `guardar_proveedor` rechace PII en la descripción, zona de
+  otro municipio, las dos zonas a la vez, oficio inventado y guardado sin
+  autorización; que un precio en modo gratis se descarte; que cambiar el
+  teléfono tumbe la verificación; y que `ficha_proveedor` no devuelva
+  fichas suspendidas.
+- **S3** · Sin sesión —el peor caso— ninguna RPC del equipo deja hacer
+  nada: ni verificar, ni suspender, ni dar de alta a nombre de una
+  organización ajena.
+- **S4** · Que el nombre no quede en claro en `nombre_cifrado`; que el
+  mismo teléfono escrito distinto no cuente dos veces; el tope de tres;
+  que `mis_referencias` no devuelva los datos del tercero; que nadie
+  descifre sin permiso; y que un motivo de un carácter falle **antes** de
+  mirar si la referencia existe.
+- **S5** · Que la nota rechace teléfono y correo; que responder exija
+  ficha publicada; que un proveedor suspendido desaparezca de las
+  respuestas; que una solicitud resuelta no admita más respuestas; y que
+  borrar a mano deje la métrica.
+- **S6** · Que el código no quede en claro en ninguna parte —tampoco en
+  `mis_servicios`—, que sirva una sola vez, que vencido no sirva, que se
+  acepte escrito con espacios y en minúsculas, y que un intento fallido
+  no lo queme.
+- **S7** · Que resolver un reporte, ver el panel y tocar los catálogos
+  exija ser administrador, y que una fila `es_prueba` no se cuele en los
+  datos abiertos.
+
+**Manual.** `migracion/99-verificar.sql` trae los puntos 13 a 17 del
+módulo: catálogos sembrados, que los cuatro oficios de riesgo sigan en
+`alto`, que `referencias` y `accesos_referencia` estén revocadas para los
+dos roles del cliente, que el job `expirar-servicios` exista, y que
+ningún hash ni ningún `bytea` cifrado se haya colado en una vista.
+
+Y en el navegador: publicar una solicitud y ver que el token aparece una
 sola vez; dar de alta un proveedor con Google y verlo en el directorio;
 dar de alta uno asistido y entrar con su token a corregirse y borrarse;
 generar un código, confirmarlo desde otro navegador, dejar reseña y

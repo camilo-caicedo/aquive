@@ -1050,3 +1050,110 @@ begin
   raise notice 'Pruebas de la fase S6: OK';
 end;
 $$;
+
+-- =====================================================================
+-- Fase S7 — moderación y datos abiertos
+-- =====================================================================
+
+do $$
+declare
+  v_prov  uuid;
+  v_serv  uuid;
+  v_res   uuid;
+  v_rep   uuid;
+  v_n     integer;
+  v_fallo boolean;
+begin
+  insert into public.proveedores
+    (nombre_visible, tipo, telefono, municipio, acepto_publicacion,
+     autorizacion_version, token_hash, es_prueba)
+  values
+    ('PRUEBA S7', 'persona', '3000000050', '76001', true, 'prueba',
+     'hash-prueba-s7', true)
+  returning id into v_prov;
+
+  insert into public.proveedor_oficios (proveedor_id, oficio_id, modo)
+  values (v_prov, 'arreglos_ropa', 'normal');
+
+  insert into public.servicios_prestados
+    (proveedor_id, codigo_hash, confirmado_at, es_prueba)
+  values (v_prov, 'hash-codigo-prueba-s7', now(), true)
+  returning id into v_serv;
+
+  insert into public.resenas
+    (servicio_id, proveedor_id, cumplimiento, trato, puntualidad,
+     comentario, es_prueba)
+  values (v_serv, v_prov, 1, 1, 1, 'Comentario de la prueba', true)
+  returning id into v_res;
+
+  -- ---- Los dos objetos nuevos se pueden reportar ---------------------
+  perform public.crear_reporte('proveedor', v_prov, 'estafa', null);
+  perform public.crear_reporte('resena', v_res, 'extorsion_resena', null);
+  select r.id into v_rep from public.reportes r
+   where r.objeto_id = v_res and not r.atendido limit 1;
+  assert v_rep is not null, 'No quedó el reporte sobre la calificación';
+
+  -- ---- Y resolverlos exige ser administrador -------------------------
+  v_fallo := false;
+  begin
+    perform public.resolver_reporte(v_rep, true);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Un anónimo resolvió un reporte';
+
+  -- ---- El panel y las funciones de catálogo, también -----------------
+  v_fallo := false;
+  begin
+    perform public.panel_admin_servicios();
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'panel_admin_servicios respondió sin ser administrador';
+
+  v_fallo := false;
+  begin
+    perform public.guardar_zona('76001', 'Comuna inventada', 'comuna', 99);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Un anónimo sembró una zona';
+
+  v_fallo := false;
+  begin
+    perform public.guardar_oficio('inventado', 'otros', 'Inventado', 'bajo', true, 0);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Un anónimo agregó un oficio al catálogo';
+
+  select count(*) into v_n from public.zonas where nombre = 'Comuna inventada';
+  assert v_n = 0, 'La zona se creó pese a que la llamada falló';
+  select count(*) into v_n from public.catalogo_oficios where id = 'inventado';
+  assert v_n = 0, 'El oficio se creó pese a que la llamada falló';
+
+  -- ---- Los datos abiertos no traen nada identificable ----------------
+  insert into public.metricas_servicio
+    (municipio, oficio, grupo, hubo_respuesta, hubo_confirmacion, es_prueba)
+  values ('76001', 'arreglos_ropa', 'confeccion', true, true, true);
+
+  -- Con es_prueba no debe salir: es el mismo filtro que /datos.
+  select count(*) into v_n from public.datos_servicios
+   where oficio = 'arreglos_ropa' and municipio = '76001';
+  assert v_n = 0, 'Una fila de prueba se coló en los datos abiertos';
+
+  insert into public.metricas_servicio
+    (municipio, oficio, grupo, hubo_respuesta, hubo_confirmacion, es_prueba)
+  values ('76001', 'arreglos_ropa', 'confeccion', true, false, false);
+
+  select count(*) into v_n from public.datos_servicios
+   where oficio = 'arreglos_ropa' and municipio = '76001';
+  assert v_n = 1, 'Los datos abiertos no agregan la fila real';
+
+  assert has_table_privilege('anon', 'public.datos_servicios', 'select'),
+    'anon no puede leer los datos abiertos: la página quedaría vacía';
+
+  delete from public.metricas_servicio
+   where oficio = 'arreglos_ropa' and municipio = '76001';
+  delete from public.reportes where objeto_id in (v_prov, v_res);
+  delete from public.proveedores where es_prueba;
+
+  raise notice 'Pruebas de la fase S7: OK';
+end;
+$$;
