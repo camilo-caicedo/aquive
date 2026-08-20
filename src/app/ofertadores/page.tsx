@@ -8,6 +8,7 @@ import { SelectFiltro } from '@/components/select-filtro'
 import { HojaFiltros } from '@/components/hoja-filtros'
 import { BotonReportar } from '@/components/boton-reportar'
 import { AccionPrincipal } from '@/components/accion-principal'
+import { PestanasAyudas } from '@/components/pestanas-ayudas'
 import { CintaMiSolicitud } from './cinta-mi-solicitud'
 
 export const metadata = { title: 'Quién está ofreciendo' }
@@ -48,7 +49,12 @@ export default async function OfertadoresPage({
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <CabeceraPantalla titulo="Quién ofrece" />
+      {/* Mismo titulo que la celda de la barra —«Ayudas»— y no «Quien
+          ofrece»: esto es una de las tres listas del mismo destino, y el
+          segmentado dice cual. */}
+      <CabeceraPantalla titulo="Ayudas">
+        <PestanasAyudas activa="ofrecen" />
+      </CabeceraPantalla>
       <p className="mt-1 text-base text-muted-foreground">
         Personas y negocios que ya dijeron con qué pueden ayudar.
       </p>

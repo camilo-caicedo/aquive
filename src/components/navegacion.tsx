@@ -51,12 +51,17 @@ const ENLACES = [
   // tratamiento— pero para quien busca es la misma pregunta. Las tres se
   // reparten en `PestanasServicios`.
   { href: '/', etiqueta: 'Servicios', Icono: Stethoscope },
+  // Los dos lados del directorio, uno en cada celda: quién presta un
+  // servicio y quién está pidiendo uno. Antes el segundo era una sección
+  // colgada del primero —/servicios/solicitudes— y no lo encontraba nadie.
   { href: '/solicitudes', etiqueta: 'Solicitudes', Icono: HandHeart },
-  // Pegada a «Solicitudes» desde que existe el cruce al revés: las dos
-  // pantallas se hablan —de una solicitud se llega a quién tiene, y de
-  // aquí se vuelve a la solicitud—, y separarlas ponía un módulo entero
-  // entre las dos mitades de un mismo movimiento.
-  { href: '/ofertadores', etiqueta: 'Quién ofrece', Icono: PackageOpen },
+  // ⚠ Toda la emergencia en una sola celda. Eran dos destinos de la barra
+  // —«Solicitudes» y «Quién ofrece»— más un segmentado propio dentro del
+  // primero: tres capas de navegación para tres listas de la misma
+  // pregunta, y encima compitiendo por sitio con el módulo de servicios,
+  // que es el que hoy recibe a la gente. Las tres se reparten ahora en
+  // `PestanasAyudas`.
+  { href: '/ayudas', etiqueta: 'Ayudas', Icono: PackageOpen },
   { href: '/mis-solicitudes', etiqueta: 'Lo mío', Icono: UserRound },
 ]
 
@@ -99,9 +104,10 @@ const TAMBIEN: Record<string, string[]> = {
   // pregunta cuelgan de ella, y también la puerta vieja /servicios y todo
   // lo que hay debajo: publicar una ficha, una ficha concreta, la demanda.
   '/': ['/servicios', '/servidores'],
-  // Publicar y responder son los dos extremos de una solicitud, y
-  // /solicitud/[token] no: esa es la propia, y vive en «Lo mío».
-  '/solicitudes': ['/publicar', '/responder'],
+  // Las otras dos listas de la emergencia, y los dos extremos de una
+  // solicitud. /solicitud/[token] no está aquí: esa es la propia, y vive
+  // en «Lo mío».
+  '/ayudas': ['/ofertadores', '/publicar', '/responder'],
   // /solicitud/[token] es la pantalla de una solicitud propia: se llega
   // desde «Lo mío» y se vuelve ahí. Sin esta línea, abrir la solicitud
   // apagaba las cuatro celdas y la barra parecía de otra aplicación.
