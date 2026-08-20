@@ -19,6 +19,8 @@ import { categoria as categoriaInfo } from '@/lib/catalogo'
 import { validarSugerencia } from '@/lib/validacion'
 import { Button } from '@/components/ui/button'
 import { SeccionPlegable } from '@/components/seccion-plegable'
+import { AccionPrincipal } from '@/components/accion-principal'
+import { Check } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -319,11 +321,11 @@ export function FormularioRegistro({
       <SeccionPlegable
         titulo="Qué ofreces"
         resumen={resumenTipo}
-        completa={seccionQueOfreces}
+        sello={seccionQueOfreces ? undefined : 'Falta tu nombre'}
         abierta={!perfil || !seccionQueOfreces}
         accion={
-          <Button className="w-full" disabled={!puedeGuardar} onClick={guardar}>
-            {guardando ? 'Guardando…' : 'Guardar'}
+          <Button variant="outline" className="w-full" disabled={!puedeGuardar} onClick={guardar}>
+            {guardando ? 'Guardando…' : 'Guardar esta sección'}
           </Button>
         }
       >
@@ -372,11 +374,11 @@ export function FormularioRegistro({
       <SeccionPlegable
         titulo="Cómo te contactan"
         resumen={contacto.trim() || 'Sin número todavía'}
-        completa={seccionContacto}
+        sello={seccionContacto ? undefined : 'Falta el número'}
         abierta={!!perfil && !seccionContacto}
         accion={
-          <Button className="w-full" disabled={!puedeGuardar} onClick={guardar}>
-            {guardando ? 'Guardando…' : 'Guardar'}
+          <Button variant="outline" className="w-full" disabled={!puedeGuardar} onClick={guardar}>
+            {guardando ? 'Guardando…' : 'Guardar esta sección'}
           </Button>
         }
       >
@@ -428,11 +430,11 @@ export function FormularioRegistro({
       <SeccionPlegable
         titulo="Dónde puedes ayudar"
         resumen={resumenMunicipios}
-        completa={seccionDonde}
+        sello={seccionDonde ? undefined : 'Falta el municipio'}
         abierta={!!perfil && !seccionDonde}
         accion={
-          <Button className="w-full" disabled={!puedeGuardar} onClick={guardar}>
-            {guardando ? 'Guardando…' : 'Guardar'}
+          <Button variant="outline" className="w-full" disabled={!puedeGuardar} onClick={guardar}>
+            {guardando ? 'Guardando…' : 'Guardar esta sección'}
           </Button>
         }
       >
@@ -508,11 +510,11 @@ export function FormularioRegistro({
         <SeccionPlegable
           titulo="Matrícula profesional"
           resumen={profesion.trim() || 'Sin declarar'}
-          completa={seccionMatricula}
+          sello={servidor?.verificado ? undefined : 'Sin verificar'}
           abierta={!!perfil && !seccionMatricula}
         accion={
-          <Button className="w-full" disabled={!puedeGuardar} onClick={guardar}>
-            {guardando ? 'Guardando…' : 'Guardar'}
+          <Button variant="outline" className="w-full" disabled={!puedeGuardar} onClick={guardar}>
+            {guardando ? 'Guardando…' : 'Guardar esta sección'}
           </Button>
         }
         >
@@ -621,8 +623,8 @@ export function FormularioRegistro({
         titulo="Qué tengo para dar"
         resumen={resumenInventario}
         accion={
-          <Button className="w-full" disabled={!puedeGuardar} onClick={guardar}>
-            {guardando ? 'Guardando…' : 'Guardar'}
+          <Button variant="outline" className="w-full" disabled={!puedeGuardar} onClick={guardar}>
+            {guardando ? 'Guardando…' : 'Guardar esta sección'}
           </Button>
         }
       >
@@ -775,7 +777,7 @@ export function FormularioRegistro({
       <SeccionPlegable
         titulo="Permiso de publicación"
         resumen={autorizo ? `Aceptado el ${hoy}` : 'Falta tu autorización'}
-        completa={autorizo}
+        sello={autorizo ? undefined : 'Falta tu permiso'}
         abierta={!autorizo}
       >
         {/* Texto exacto de docs/legal/PLANTILLAS.md sección 3. La marca
@@ -816,9 +818,16 @@ export function FormularioRegistro({
         </Alert>
       )}
 
-      <Button className="w-full" disabled={!puedeGuardar} onClick={guardar}>
-        {guardando ? 'Guardando…' : perfil ? 'Guardar cambios' : 'Publicar mi perfil'}
-      </Button>
+      {/* La acción principal de la pantalla, en la píldora fija sobre la
+          barra: es la única terracota rellena que hay aquí (regla 2), y en
+          un formulario de seis secciones queda siempre a mano en vez de al
+          final de un rollo de tres pantallas. */}
+      <AccionPrincipal
+        etiqueta={guardando ? 'Guardando…' : perfil ? 'Guardar cambios' : 'Publicar mi perfil'}
+        Icono={Check}
+        onClick={guardar}
+        visible={puedeGuardar || guardando}
+      />
     </div>
   )
 }

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { MapPin } from 'lucide-react'
@@ -42,9 +43,9 @@ type Vista = 'conversaciones' | 'coincidencias' | 'equipo' | 'proveedores'
 export default async function AliadoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ver?: string }>
+  searchParams: Promise<{ ver?: string; cola?: string }>
 }) {
-  const { ver } = await searchParams
+  const { ver, cola } = await searchParams
   const supabase = await createClient()
   const {
     data: { user },
@@ -88,6 +89,14 @@ export default async function AliadoPage({
   const yaOfrecieron = (ofrecidasData as unknown as Coincidencia[]) ?? []
   const propias = (propiasData as unknown as SolicitudPorAtender[]) ?? []
   const organizaciones = (aliadoData as unknown as AliadoResumen[]) ?? []
+
+  const colaActiva =
+    cola === 'ofrecieron' || cola === 'inventario' ? cola : 'propias'
+  const COLAS = [
+    { clave: 'propias', etiqueta: 'Puedes entregarlo tú', cuantas: propias.length },
+    { clave: 'ofrecieron', etiqueta: 'Ya ofrecieron', cuantas: yaOfrecieron.length },
+    { clave: 'inventario', etiqueta: 'Quién lo tiene', cuantas: coincidencias.length },
+  ] as const
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
@@ -139,44 +148,47 @@ export default async function AliadoPage({
       )}
 
       {vista === 'coincidencias' && (
-        <>
-          {/* Lo primero, lo que la organización puede resolver sola: si está
-              en la bodega no hay a quién esperar. Las otras dos secciones
-              son para cuando lo tiene otra persona. */}
-          <section className="mt-6">
-            <h2 className="font-heading text-2xl">Puedes entregarlo tú</h2>
-            <p className="mt-1 text-base text-muted-foreground">
-              Solicitudes que acompaña tu organización. Si tienes esto en la
-              bodega, abre la conversación y coordínalo directamente.
-            </p>
-            <PanelSolicitudes solicitudes={propias} />
-          </section>
+        <section className="mt-6">
+          {/* Antes eran tres secciones apiladas con su título y su párrafo:
+              para llegar a la tercera había que bajar dos pantallas, y las
+              tres contestan la misma pregunta —quién puede resolver esto—.
+              Ahora es una sola lista con chips que la acotan, y el chip
+              lleva su número para no entrar a una cola vacía. */}
+          <nav aria-label="Qué cola ver" className="riel -mx-4 flex gap-2 overflow-x-auto px-4">
+            {COLAS.map(({ clave, etiqueta, cuantas }) => {
+              const activa = colaActiva === clave
+              return (
+                <Link
+                  key={clave}
+                  href={clave === 'propias' ? '/aliado?ver=coincidencias' : `/aliado?ver=coincidencias&cola=${clave}`}
+                  aria-current={activa ? 'page' : undefined}
+                  className={`inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border px-4 text-base transition-colors ${
+                    activa
+                      ? 'border-border bg-card font-semibold text-foreground shadow-sm'
+                      : 'border-transparent text-muted-foreground hover:bg-muted'
+                  }`}
+                >
+                  {etiqueta}
+                  <span className="rounded-full bg-muted px-2 text-sm text-muted-foreground">
+                    {cuantas}
+                  </span>
+                </Link>
+              )
+            })}
+          </nav>
 
-          {/* Primero quien YA se ofreció: es mejor señal que el cruce por
-              inventario. Esa persona no solo tiene la cosa — ya dijo que
-              quiere ayudar en esta solicitud concreta. Aparecen aquí
-              porque respondieron antes de que se pidiera acompañamiento,
-              así que su ofrecimiento se quedó fuera de la coordinación. */}
-          {yaOfrecieron.length > 0 && (
-            <section className="mt-8">
-              <h2 className="font-heading text-2xl">Ya ofrecieron ayuda</h2>
-              <p className="mt-1 text-base text-muted-foreground">
-                Respondieron antes de que se pidiera acompañamiento, así que
-                todavía no están en ninguna conversación.
-              </p>
-              <PanelCoincidencias coincidencias={yaOfrecieron} />
-            </section>
-          )}
+          <p className="mt-3 text-base text-muted-foreground">
+            {colaActiva === 'propias'
+              ? 'Solicitudes que acompaña tu organización. Si tienes esto en la bodega, abre la conversación y coordínalo directamente.'
+              : colaActiva === 'ofrecieron'
+                ? 'Respondieron antes de que se pidiera acompañamiento, así que todavía no están en ninguna conversación.'
+                : 'Gente de tus municipios que declaró tener justo lo que pide una solicitud acompañada.'}
+          </p>
 
-          <section className="mt-8">
-            <h2 className="font-heading text-2xl">Quién tiene lo que piden</h2>
-            <p className="mt-1 text-base text-muted-foreground">
-              Gente de tus municipios que declaró tener justo lo que pide una
-              solicitud acompañada.
-            </p>
-            <PanelCoincidencias coincidencias={coincidencias} />
-          </section>
-        </>
+          {colaActiva === 'propias' && <PanelSolicitudes solicitudes={propias} />}
+          {colaActiva === 'ofrecieron' && <PanelCoincidencias coincidencias={yaOfrecieron} />}
+          {colaActiva === 'inventario' && <PanelCoincidencias coincidencias={coincidencias} />}
+        </section>
       )}
 
       {vista === 'proveedores' && esAliado && <Proveedores />}

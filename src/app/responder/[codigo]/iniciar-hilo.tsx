@@ -1,5 +1,7 @@
 'use client'
 
+import type { ReactNode } from 'react'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -18,7 +20,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
  * No se piden datos aquí. El documento se lo pide la fundación en el
  * acopio: la plataforma no lo necesita para abrir un hilo.
  */
-export function IniciarHilo({ codigo }: { codigo: string }) {
+export function IniciarHilo({ codigo, aviso }: { codigo: string; aviso?: ReactNode }) {
   const router = useRouter()
   const [mensaje, setMensaje] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -74,6 +76,8 @@ export function IniciarHilo({ codigo }: { codigo: string }) {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+
+      {aviso}
 
       <Button
         className="w-full"

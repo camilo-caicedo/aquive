@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { HeartHandshake } from 'lucide-react'
+import { HeartHandshake, Check, Minus, Plus } from 'lucide-react'
 import type { Categoria, ItemCatalogoPublico, ItemSolicitudInput } from '@/lib/types'
 import { LIMITE_MUNICIPIOS, nombreConDepartamento, type MunicipioBasico as Municipio } from '@/lib/municipios'
 import { CATEGORIAS } from '@/lib/catalogo'
@@ -19,6 +19,7 @@ import {
 } from '@/components/campos-acompanamiento'
 import { TurnstileWidget } from '@/components/turnstile-widget'
 import { Button } from '@/components/ui/button'
+import { SeccionPlegable } from '@/components/seccion-plegable'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -88,7 +89,7 @@ export function FormularioPublicar({
   turnstileSiteKey: string
 }) {
   const router = useRouter()
-  const [paso, setPaso] = useState<1 | 2 | 3 | 4 | 5>(1)
+  const [paso, setPaso] = useState<1 | 2 | 3>(1)
   const [municipio, setMunicipio] = useState('')
   const [barrio, setBarrio] = useState('')
   const [categoria, setCategoria] = useState<Categoria | ''>('')
@@ -169,18 +170,6 @@ export function FormularioPublicar({
     )
   }
 
-  // Al salir del campo, un hueco vuelve a ser 1: nadie quiere pedir cero
-  // de algo, y así no se llega al servidor con una cantidad inválida.
-  function cerrarCantidad(itemId: string) {
-    setSeleccionados((prev) =>
-      prev.map((s) =>
-        'item_id' in s && s.item_id === itemId && s.cantidad === 0
-          ? { ...s, cantidad: 1 }
-          : s
-      )
-    )
-  }
-
   // Las sugerencias no tienen un id de catálogo para identificarlas: se
   // ubican por su posición en `seleccionados`, que no cambia de orden.
   function cambiarCantidadSugerencia(indice: number, cantidad: number) {
@@ -232,7 +221,7 @@ export function FormularioPublicar({
   // El quinto paso solo existe donde hay una fundación que ofrecer. Donde
   // no la hay, el formulario sigue teniendo cuatro.
   const hayPasoAcompanamiento = aliados.length > 0
-  const pasos = hayPasoAcompanamiento ? [1, 2, 3, 4, 5] : [1, 2, 3, 4]
+  const NOMBRES_PASO = ['Dónde', 'Qué necesitas', 'Revisar']
 
   async function enviar() {
     if (!puedeEnviar) return
@@ -303,22 +292,29 @@ export function FormularioPublicar({
 
   return (
     <div className="mt-6">
-      <ol className="mb-6 flex gap-2 text-sm" aria-label="Progreso">
-        {pasos.map((n) => (
-          <li
-            key={n}
-            className={`flex-1 rounded-full py-1 text-center ${
-              n === paso
-                ? 'bg-primary font-semibold text-primary-foreground'
-                : n < paso
-                  ? 'bg-accent text-accent-foreground'
-                  : 'bg-muted text-muted-foreground'
-            }`}
-          >
-            Paso {n}
+      {/* Tres pasos con nombre, no cinco numerados. «Paso 3 de 5» no dice
+          de qué es el 3, y quien va por la mitad no sabe cuánto falta ni de
+          qué. El actual se marca con texto y con peso, no solo con color
+          (regla 9). */}
+      <ol className="riel mb-6 flex gap-1.5 overflow-x-auto text-sm" aria-label="Progreso">
+        {NOMBRES_PASO.map((nombre, i) => (
+          <li key={nombre} className="min-w-0 flex-1">
+            <span
+              aria-current={i + 1 === paso ? 'step' : undefined}
+              className={`block truncate border-t-2 pt-1.5 ${
+                i + 1 === paso
+                  ? 'border-primary font-semibold text-foreground'
+                  : i + 1 < paso
+                    ? 'border-ok text-muted-foreground'
+                    : 'border-border text-muted-foreground'
+              }`}
+            >
+              {nombre}
+            </span>
           </li>
         ))}
       </ol>
+
 
       {paso === 1 && (
         <div className="space-y-4">
@@ -446,43 +442,61 @@ export function FormularioPublicar({
               <Label className="mb-1">
                 {categoria === 'servicios' ? 'Servicios que necesitas' : 'Ítems que necesitas'}
               </Label>
-              <ul className="space-y-2">
+              <ul className="flex flex-wrap gap-2">
                 {itemsDeCategoria.map((item) => {
                   const sel = seleccionados.find((s) => 'item_id' in s && s.item_id === item.id)
                   return (
-                    <li
-                      key={item.id}
-                      className={`flex items-center gap-2 rounded-lg border p-2 ${
-                        sel ? 'border-primary bg-accent' : 'border-border'
-                      }`}
-                    >
+                    <li key={item.id} className="flex flex-wrap items-center gap-2">
+                      {/* Chip, no fila con caja: se elige de un vistazo y
+                          caben tres por línea en un teléfono. */}
                       <button
                         type="button"
                         onClick={() => alternarItem(item.id)}
                         aria-pressed={!!sel}
-                        className={`min-h-12 flex-1 px-2 text-left text-base ${
-                          sel ? 'font-semibold text-accent-foreground' : ''
+                        className={`inline-flex min-h-12 items-center gap-1.5 rounded-full border px-4 text-base transition-colors ${
+                          sel
+                            ? 'border-primary bg-secondary font-semibold text-secondary-foreground'
+                            : 'border-border bg-card'
                         }`}
                       >
-                        {sel ? '✓ ' : ''}
+                        {sel && <Check className="size-4 shrink-0" aria-hidden="true" />}
                         {item.nombre}
                       </button>
+
                       {/* Un servicio no se pide por cantidad: se pide o no. */}
                       {sel && item.unidad !== 'servicio' && (
-                        <Input
-                          type="number"
-                          inputMode="numeric"
-                          min={1}
-                          max={9999}
-                          value={sel.cantidad === 0 ? '' : sel.cantidad}
-                          onChange={(e) => cambiarCantidad(item.id, Number(e.target.value))}
-                          onBlur={() => cerrarCantidad(item.id)}
-                          className="w-20"
-                          aria-label={`Cantidad de ${item.nombre}`}
-                        />
-                      )}
-                      {item.unidad !== 'servicio' && (
-                        <span className="w-16 text-sm text-muted-foreground">{item.unidad}</span>
+                        <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card p-1">
+                          <button
+                            type="button"
+                            onClick={() => cambiarCantidad(item.id, Math.max(1, sel.cantidad - 1))}
+                            disabled={sel.cantidad <= 1}
+                            aria-label={`Quitar uno de ${item.nombre}`}
+                            className="flex size-10 items-center justify-center rounded-full text-foreground disabled:opacity-40"
+                          >
+                            <Minus className="size-4" aria-hidden="true" />
+                          </button>
+                          {/* El número es texto y no un campo: con teclado
+                              numérico encima, en un teléfono, la lista se va
+                              debajo del dedo. Se corrige con los dos botones,
+                              que es lo que se usa para pedir seis cobijas. */}
+                          <span
+                            aria-live="polite"
+                            aria-label={`Cantidad de ${item.nombre}`}
+                            className="min-w-8 text-center text-base font-semibold tabular-nums"
+                          >
+                            {sel.cantidad === 0 ? 1 : sel.cantidad}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => cambiarCantidad(item.id, (sel.cantidad || 1) + 1)}
+                            disabled={sel.cantidad >= 9999}
+                            aria-label={`Agregar uno de ${item.nombre}`}
+                            className="flex size-10 items-center justify-center rounded-full text-foreground disabled:opacity-40"
+                          >
+                            <Plus className="size-4" aria-hidden="true" />
+                          </button>
+                          <span className="pr-2 text-sm text-muted-foreground">{item.unidad}</span>
+                        </span>
                       )}
                     </li>
                   )
@@ -609,99 +623,6 @@ export function FormularioPublicar({
       {paso === 3 && (
         <div className="space-y-4">
           <div>
-            <h2 className="font-heading text-2xl">Contacto (opcional)</h2>
-            <p className="mt-1 text-base text-muted-foreground">
-              Nada de esto es obligatorio. Si dejas algo, quien responda tu
-              solicitud y el administrador de AquíVe van a poder escribirte
-              directamente.
-            </p>
-          </div>
-
-          <div>
-            <Label htmlFor="contacto-nombre" className="mb-1">
-              Nombre (opcional)
-            </Label>
-            <Input
-              id="contacto-nombre"
-              value={contactoNombre}
-              onChange={(e) => setContactoNombre(e.target.value)}
-              maxLength={80}
-              autoComplete="name"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="contacto-telefono" className="mb-1">
-              Teléfono (opcional)
-            </Label>
-            <Input
-              id="contacto-telefono"
-              value={contactoTelefono}
-              onChange={(e) => setContactoTelefono(e.target.value)}
-              maxLength={20}
-              inputMode="tel"
-              autoComplete="tel"
-            />
-            {errorContactoTelefono && (
-              <p className="mt-1 text-sm text-destructive">{errorContactoTelefono}</p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="contacto-correo" className="mb-1">
-              Correo (opcional)
-            </Label>
-            <Input
-              id="contacto-correo"
-              type="email"
-              value={contactoCorreo}
-              onChange={(e) => setContactoCorreo(e.target.value)}
-              maxLength={120}
-              autoComplete="email"
-            />
-            {errorContactoCorreo && (
-              <p className="mt-1 text-sm text-destructive">{errorContactoCorreo}</p>
-            )}
-          </div>
-
-          {contactoTieneDatos && (
-            <label className="flex items-start gap-2 text-base">
-              <input
-                type="checkbox"
-                checked={contactoAcepto}
-                onChange={(e) => setContactoAcepto(e.target.checked)}
-                className="mt-1 size-5 shrink-0"
-              />
-              <span>
-                Acepto que este contacto se muestre a quien responda esta
-                solicitud y al administrador de AquíVe, según el{' '}
-                <Link href="/privacidad" className="underline">
-                  aviso de privacidad
-                </Link>{' '}
-                del {FECHA_LEGALES}.
-              </span>
-            </label>
-          )}
-
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={() => setPaso(2)}>
-              Atrás
-            </Button>
-            <Button
-              type="button"
-              className="flex-1"
-              disabled={!puedeAvanzarContacto}
-              onClick={() => setPaso(4)}
-            >
-              Continuar
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {paso === 4 && (
-        <div className="space-y-4">
-          <div>
             <Label htmlFor="nota" className="mb-1">
               Nota opcional (máx. 140 caracteres)
             </Label>
@@ -740,89 +661,149 @@ export function FormularioPublicar({
 
           {turnstileSiteKey && <TurnstileWidget siteKey={turnstileSiteKey} onToken={setTurnstileToken} />}
 
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+          {/* El contacto y el acompañamiento dejan de ser pasos: eran dos
+              pantallas enteras que la mayoría atravesaba sin tocar nada, y
+              cada una de ellas es opcional. Van aquí, cerradas, donde se
+              revisa antes de publicar. */}
+          <SeccionPlegable
+            titulo="Dejar un contacto directo (opcional)"
+            resumen={
+              contactoNombre || contactoTelefono || contactoCorreo
+                ? 'Vas a compartir un dato de contacto'
+                : 'No hace falta. Tu solicitud se publica sin datos tuyos'
+            }
+          >
+            <div>
+              <h2 className="font-heading text-2xl">Contacto (opcional)</h2>
+              <p className="mt-1 text-base text-muted-foreground">
+                Nada de esto es obligatorio. Si dejas algo, quien responda tu
+                solicitud y el administrador de AquíVe van a poder escribirte
+                directamente.
+              </p>
+            </div>
 
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={() => setPaso(3)}>
-              Atrás
-            </Button>
-            {hayPasoAcompanamiento ? (
-              <Button
-                type="button"
-                className="flex-1"
-                disabled={!puedeEnviar}
-                onClick={() => setPaso(5)}
-              >
-                Continuar
-              </Button>
-            ) : (
-              <Button type="button" className="flex-1" disabled={!puedeEnviar} onClick={enviar}>
-                {enviando ? 'Publicando…' : 'Publicar solicitud'}
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Paso 5: el acompañamiento, donde sí se ve.
-          Estuvo un rato solo en la pantalla de la solicitud, después de
-          publicar, y ahí casi nadie llegaba a tocarlo.
-
-          La regla R se sostiene por la forma, no por el sitio: el botón
-          grande y el que está a la derecha es «Publicar sin esto», el
-          formulario empieza cerrado, no hay nada preseleccionado y la
-          opción anónima no se pinta como la mala. Lo que cambia es que
-          ahora se ve. */}
-      {paso === 5 && (
-        <div className="space-y-4">
-          <div>
-            <h2 className="font-heading text-2xl">
-              {aliados.length === 1
-                ? `${aliados[0].nombre} puede acompañarte`
-                : `En ${nombreMunicipio} hay fundaciones que pueden acompañarte`}
-            </h2>
-            <p className="mt-2 text-base text-muted-foreground">
-              Coordinan la entrega y la recibes en su punto de acopio, sin
-              tener que encontrarte con nadie que no conozcas. Es opcional: si
-              no quieres, tu solicitud se publica igual y sin ningún dato tuyo.
-            </p>
-          </div>
-
-          {!conAliado ? (
-            <button
-              type="button"
-              onClick={() => setConAliado(true)}
-              className="flex min-h-12 items-center gap-1.5 text-left text-base text-primary underline"
-            >
-              <HeartHandshake className="size-4 shrink-0" aria-hidden="true" />
-              Quiero que una fundación coordine la entrega
-            </button>
-          ) : (
-            <div className="rounded-xl border border-border p-4">
-              <CamposAcompanamiento
-                aliados={aliados}
-                datos={datosAliado}
-                onCambio={setDatosAliado}
+            <div>
+              <Label htmlFor="contacto-nombre" className="mb-1">
+                Nombre (opcional)
+              </Label>
+              <Input
+                id="contacto-nombre"
+                value={contactoNombre}
+                onChange={(e) => setContactoNombre(e.target.value)}
+                maxLength={80}
+                autoComplete="name"
               />
+            </div>
+
+            <div>
+              <Label htmlFor="contacto-telefono" className="mb-1">
+                Teléfono (opcional)
+              </Label>
+              <Input
+                id="contacto-telefono"
+                value={contactoTelefono}
+                onChange={(e) => setContactoTelefono(e.target.value)}
+                maxLength={20}
+                inputMode="tel"
+                autoComplete="tel"
+              />
+              {errorContactoTelefono && (
+                <p className="mt-1 text-sm text-destructive">{errorContactoTelefono}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="contacto-correo" className="mb-1">
+                Correo (opcional)
+              </Label>
+              <Input
+                id="contacto-correo"
+                type="email"
+                value={contactoCorreo}
+                onChange={(e) => setContactoCorreo(e.target.value)}
+                maxLength={120}
+                autoComplete="email"
+              />
+              {errorContactoCorreo && (
+                <p className="mt-1 text-sm text-destructive">{errorContactoCorreo}</p>
+              )}
+            </div>
+
+            {contactoTieneDatos && (
+              <label className="flex items-start gap-2 text-base">
+                <input
+                  type="checkbox"
+                  checked={contactoAcepto}
+                  onChange={(e) => setContactoAcepto(e.target.checked)}
+                  className="mt-1 size-5 shrink-0"
+                />
+                <span>
+                  Acepto que este contacto se muestre a quien responda esta
+                  solicitud y al administrador de AquíVe, según el{' '}
+                  <Link href="/privacidad" className="underline">
+                    aviso de privacidad
+                  </Link>{' '}
+                  del {FECHA_LEGALES}.
+                </span>
+              </label>
+            )}
+          </SeccionPlegable>
+
+          {hayPasoAcompanamiento && (
+            <SeccionPlegable
+              titulo="Que una fundación acompañe la entrega (opcional)"
+              resumen={
+                conAliado
+                  ? 'Vas a pedir acompañamiento'
+                  : 'Recibes en su punto de acopio, sin encontrarte con nadie'
+              }
+            >
+            <div>
+              <h2 className="font-heading text-2xl">
+                {aliados.length === 1
+                  ? `${aliados[0].nombre} puede acompañarte`
+                  : `En ${nombreMunicipio} hay fundaciones que pueden acompañarte`}
+              </h2>
+              <p className="mt-2 text-base text-muted-foreground">
+                Coordinan la entrega y la recibes en su punto de acopio, sin
+                tener que encontrarte con nadie que no conozcas. Es opcional: si
+                no quieres, tu solicitud se publica igual y sin ningún dato tuyo.
+              </p>
+            </div>
+
+            {!conAliado ? (
               <button
                 type="button"
-                onClick={() => {
-                  setConAliado(false)
-                  setDatosAliado(
-                    aliados.length === 1
-                      ? { ...DATOS_VACIOS, organizacionId: aliados[0].id }
-                      : DATOS_VACIOS
-                  )
-                }}
-                className="mt-4 flex min-h-12 items-center text-base text-muted-foreground underline"
+                onClick={() => setConAliado(true)}
+                className="flex min-h-12 items-center gap-1.5 text-left text-base text-primary underline"
               >
-                Mejor no, publicar sin esto
+                <HeartHandshake className="size-4 shrink-0" aria-hidden="true" />
+                Quiero que una fundación coordine la entrega
               </button>
-            </div>
+            ) : (
+              <div className="rounded-xl border border-border p-4">
+                <CamposAcompanamiento
+                  aliados={aliados}
+                  datos={datosAliado}
+                  onCambio={setDatosAliado}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConAliado(false)
+                    setDatosAliado(
+                      aliados.length === 1
+                        ? { ...DATOS_VACIOS, organizacionId: aliados[0].id }
+                        : DATOS_VACIOS
+                    )
+                  }}
+                  className="mt-4 flex min-h-12 items-center text-base text-muted-foreground underline"
+                >
+                  Mejor no, publicar sin esto
+                </button>
+              </div>
+            )}
+            </SeccionPlegable>
           )}
 
           {error && (
@@ -831,8 +812,11 @@ export function FormularioPublicar({
             </Alert>
           )}
 
+          {/* Regla R al pie de la letra: el botón grande publica directo, no
+              hay nada preseleccionado, y la opción anónima no se pinta como
+              la mala. */}
           <div className="flex gap-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={() => setPaso(4)}>
+            <Button type="button" variant="outline" className="flex-1" onClick={() => setPaso(2)}>
               Atrás
             </Button>
             <Button
@@ -845,7 +829,7 @@ export function FormularioPublicar({
                 ? 'Publicando…'
                 : conAliado
                   ? 'Publicar con acompañamiento'
-                  : 'Publicar sin esto'}
+                  : 'Publicar solicitud'}
             </Button>
           </div>
         </div>

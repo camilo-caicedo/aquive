@@ -40,7 +40,7 @@ export function Pestanas({
   pestanas: Pestana[]
 }) {
   return (
-    <nav aria-label={etiqueta} className="-mx-4 overflow-x-auto px-4">
+    <nav aria-label={etiqueta} className="riel -mx-4 overflow-x-auto px-4">
       <ul className="inline-flex w-full min-w-fit items-center gap-1 rounded-xl bg-muted p-1">
         {pestanas.map((p) => (
           <li key={p.href} className="min-w-fit flex-1">

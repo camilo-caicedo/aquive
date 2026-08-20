@@ -9,6 +9,7 @@ import type { AliadoDelMunicipio } from '@/lib/acompanamiento'
 import { Button } from '@/components/ui/button'
 import { Chat } from '@/components/chat'
 import { Pestanas } from '@/components/pestanas'
+import { CintaEnlace } from '@/components/cinta-enlace'
 import { ActivarAvisos } from '@/components/activar-avisos'
 import { Acompanamiento } from './acompanamiento'
 import { ConfirmarRecepcion } from './confirmar-recepcion'
@@ -61,9 +62,11 @@ export default async function SolicitudPage({
   // que más importa de esta pantalla: recién publicada, lo único que hay
   // que hacer es guardar el enlace — si se pierde, se pierde la solicitud.
   // En cuanto alguien responde, lo que se viene a ver son las respuestas.
-  const porDefecto: Vista = numRespuestas === 0 ? 'enlace' : 'respuestas'
+  // Ya no hay pestaña de enlace: el enlace vive en la cinta fija de
+  // arriba, visible siempre y no solo mientras no hubiera respuestas.
+  const porDefecto: Vista = 'respuestas'
   const vista: Vista =
-    ver === 'enlace' || ver === 'respuestas' || ver === 'ajustes'
+    ver === 'respuestas' || ver === 'ajustes' || ver === 'enlace'
       ? ver
       : ver === 'coordinacion' && acompanada
         ? 'coordinacion'
@@ -90,12 +93,21 @@ export default async function SolicitudPage({
 
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
+      {/* La llave de la solicitud, fija y siempre visible: perderla es
+          perder la solicitud, y antes vivía en una pestaña que se dejaba de
+          ver justo cuando la persona empezaba a entrar todos los días. */}
+      <CintaEnlace
+        link={`${await origenDelSitio()}${base}`}
+        codigo={solicitud.codigo}
+        token={token}
+      />
+
       {/* Lo que pediste va arriba de todo y fuera de las pestañas: es la
           respuesta a «¿esta es mi solicitud?», y hay que poder contestarla
           sin navegar. Ocupa cuatro líneas. */}
       <div className="rounded-xl border border-border bg-card p-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <span className="font-mono text-2xl font-bold">{solicitud.codigo}</span>
+          <span className="text-lg font-bold">{categoria(solicitud.categoria).etiqueta}</span>
           <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <Clock className="size-4" aria-hidden="true" />
             {horasRestantes > 0
@@ -103,9 +115,7 @@ export default async function SolicitudPage({
               : 'Está por borrarse'}
           </span>
         </div>
-        <p className="mt-1 text-base">
-          {solicitud.barrio} · {categoria(solicitud.categoria).etiqueta}
-        </p>
+        <p className="mt-1 text-base">{solicitud.barrio}</p>
         <ul className="mt-2 space-y-1 text-base text-muted-foreground">
           {solicitud.items.map((it, i) => (
             <li key={i}>{describirItem(it)}</li>
@@ -136,11 +146,6 @@ export default async function SolicitudPage({
                 ]
               : []),
             {
-              href: `${base}?ver=enlace`,
-              etiqueta: 'Tu enlace',
-              activa: vista === 'enlace',
-            },
-            {
               href: `${base}?ver=ajustes`,
               etiqueta: 'Ajustes',
               activa: vista === 'ajustes',
@@ -149,7 +154,7 @@ export default async function SolicitudPage({
         />
       </div>
 
-      {vista === 'enlace' && (
+      {vista === 'enlace' && numRespuestas === 0 && (
         <section className="mt-6">
           <PantallaConfirmacion
             token={token}

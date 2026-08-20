@@ -1,5 +1,7 @@
 'use client'
 
+import type { ReactNode } from 'react'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -9,11 +11,16 @@ import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export function FormularioRespuesta({
+  aviso,
   codigo,
   yaRespondio,
   puedeTrasladarse,
   puedeRecoger,
 }: {
+  /** El aviso completo de honestidad. Va pegado al botón, no arriba de la
+      pantalla: es donde se decide entregar el nombre y el teléfono. */
+  aviso?: ReactNode
+
   codigo: string
   yaRespondio: boolean
   /** Lo que ya dijo en su perfil. Precarga la casilla, no la fija. */
@@ -117,6 +124,8 @@ export function FormularioRespuesta({
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+
+      {aviso}
 
       <Button className="w-full" disabled={!puedeEnviar} onClick={enviar}>
         {enviando ? 'Enviando…' : 'Puedo ayudar'}

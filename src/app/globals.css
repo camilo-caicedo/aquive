@@ -134,8 +134,12 @@
   * {
     @apply border-border outline-ring/50;
   }
+  /* El papel cálido va en el body, no solo en el encabezado. Sin esto el
+     fondo real de la app era el blanco del navegador: las tarjetas, que
+     son de un crema apenas más claro que el papel, desaparecían encima, y
+     la identidad solo se veía en la franja de arriba. */
   body {
-    @apply text-foreground;
+    @apply bg-background text-foreground;
   }
   html {
     @apply font-sans;
@@ -262,4 +266,17 @@ body:has([data-marco-flujo]) {
     transform: translateY(1rem);
     opacity: 0;
   }
+}
+
+/* Rieles que se arrastran sin enseñar la barra: las pestañas y la fila de
+   chips de filtro. La barra del sistema se come 15 px de un riel de 360 y
+   además parte la píldora activa por la mitad. Se sigue pudiendo arrastrar
+   y el teclado sigue llegando: solo se esconde el dibujo. */
+.riel {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.riel::-webkit-scrollbar {
+  display: none;
 }

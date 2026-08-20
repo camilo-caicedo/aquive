@@ -2,13 +2,23 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
-import { FileQuestion } from 'lucide-react'
+import { FileQuestion, MapPin, Copy, Check, QrCode } from 'lucide-react'
+import qrcode from 'qrcode-generator'
+import { categoria as categoriaInfo } from '@/lib/catalogo'
+import type { Categoria } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 
 interface Guardada {
   codigo: string
   token: string
   creada_at: string
+}
+
+/** Lo que el servidor sabe de una solicitud viva. Nada de esto identifica
+ *  a nadie: municipio y barrio es lo más fino que existe (regla 1). */
+interface DatosVivos {
+  categoria: string
+  barrio: string
 }
 
 const CLAVE = 'mis_solicitudes'
@@ -33,6 +43,9 @@ const leerServidor = () => null
 export function ListaLocal() {
   const crudo = useSyncExternalStore(suscribir, leerCliente, leerServidor)
   const [depurado, setDepurado] = useState(false)
+  const [datos, setDatos] = useState<Record<string, DatosVivos>>({})
+  const [copiado, setCopiado] = useState<string | null>(null)
+  const [qrDe, setQrDe] = useState<string | null>(null)
 
   const solicitudes = useMemo<Guardada[] | null>(() => {
     if (crudo === null) return null
@@ -58,7 +71,11 @@ export function ListaLocal() {
           body: JSON.stringify({ tokens: lista.map((s) => s.token) }),
         })
         if (!res.ok || cancelado) return
-        const { vigentes } = (await res.json()) as { vigentes: string[] }
+        const { vigentes, datos: nuevos } = (await res.json()) as {
+          vigentes: string[]
+          datos?: Record<string, DatosVivos>
+        }
+        if (nuevos) setDatos(nuevos)
         const vivas = lista.filter((s) => vigentes.includes(s.token))
         if (vivas.length !== lista.length) {
           localStorage.setItem(CLAVE, JSON.stringify(vivas))
@@ -77,6 +94,23 @@ export function ListaLocal() {
       cancelado = true
     }
   }, [solicitudes, depurado])
+
+  async function copiar(token: string) {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/solicitud/${token}`)
+      setCopiado(token)
+      setTimeout(() => setCopiado(null), 2000)
+    } catch {
+      // Sin permiso de portapapeles: el enlace se abre igual con el botón.
+    }
+  }
+
+  function qrDataUrl(token: string) {
+    const qr = qrcode(0, 'M')
+    qr.addData(`${window.location.origin}/solicitud/${token}`)
+    qr.make()
+    return qr.createDataURL(6, 12)
+  }
 
   if (solicitudes === null) {
     return <p className="mt-6 text-base text-muted-foreground">Buscando…</p>
@@ -99,22 +133,76 @@ export function ListaLocal() {
   return (
     <ul className="mt-6 space-y-3">
       {solicitudes.map((s) => (
-        <li key={s.token} className="rounded-lg border border-border p-4">
-          <span className="font-mono text-xl font-bold">{s.codigo}</span>
-          <p className="mt-1 text-sm text-muted-foreground">
+        <li key={s.token} className="rounded-2xl bg-card p-4 shadow-sm">
+          {/* Antes solo estaba el código. Quien publicó tres cosas distintas
+              no tiene forma de saber cuál es cuál mirando cuatro letras: lo
+              que reconoce es «Agua y aseo, El Jordán». */}
+          <p className="text-lg font-semibold">
+            {datos[s.token] ? categoriaInfo(datos[s.token].categoria as Categoria).etiqueta : 'Tu solicitud'}
+          </p>
+          <p className="mt-0.5 flex items-center gap-1.5 text-base text-muted-foreground">
+            {datos[s.token] && (
+              <>
+                <MapPin className="size-4 shrink-0" aria-hidden="true" />
+                {datos[s.token].barrio}
+                <span aria-hidden="true">·</span>
+              </>
+            )}
+            <span className="font-mono text-sm">{s.codigo}</span>
+          </p>
+          <p className="mt-0.5 text-sm text-muted-foreground">
             Publicada el{' '}
             {new Date(s.creada_at).toLocaleDateString('es-CO', {
               day: 'numeric',
               month: 'long',
             })}
           </p>
-          <Button
-            className="mt-3 w-full"
-            nativeButton={false}
-            render={<Link href={`/solicitud/${s.token}`} />}
-          >
-            Ver respuestas
-          </Button>
+
+          <div className="mt-3 flex items-center gap-2">
+            <Button
+              variant="outline"
+              className="flex-1"
+              nativeButton={false}
+              render={<Link href={`/solicitud/${s.token}`} />}
+            >
+              Ver respuestas
+            </Button>
+            {/* El enlace es la llave: aquí también, no solo dentro. */}
+            <button
+              type="button"
+              onClick={() => copiar(s.token)}
+              aria-label={copiado === s.token ? 'Enlace copiado' : 'Copiar el enlace'}
+              className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
+            >
+              {copiado === s.token ? (
+                <Check className="size-5 text-ok" aria-hidden="true" />
+              ) : (
+                <Copy className="size-5" aria-hidden="true" />
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setQrDe((q) => (q === s.token ? null : s.token))}
+              aria-expanded={qrDe === s.token}
+              aria-label="Ver el código QR"
+              className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <QrCode className="size-5" aria-hidden="true" />
+            </button>
+          </div>
+
+          {qrDe === s.token && (
+            <div className="mt-3 text-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={qrDataUrl(s.token)}
+                alt={`Código QR de la solicitud ${s.codigo}`}
+                className="mx-auto rounded-lg bg-background p-2"
+                width={160}
+                height={160}
+              />
+            </div>
+          )}
         </li>
       ))}
     </ul>

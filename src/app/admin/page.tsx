@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { origenDelSitio } from '@/lib/origen'
@@ -23,6 +24,7 @@ import { PanelEntidades, type EntidadAdmin } from './panel-entidades'
 import { PanelOrganizaciones } from './panel-organizaciones'
 import { PanelFlujoDos } from './panel-flujo2'
 import { Pestanas } from '@/components/pestanas'
+import { ColaTrabajo } from './cola-trabajo'
 import { PanelSolicitudesAdmin } from './panel-solicitudes-admin'
 import {
   PanelServicios,
@@ -81,9 +83,9 @@ type Vista =
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ver?: string }>
+  searchParams: Promise<{ ver?: string; cola?: string }>
 }) {
-  const { ver } = await searchParams
+  const { ver, cola } = await searchParams
   const vista: Vista =
     ver === 'catalogo' ||
     ver === 'directorio' ||
@@ -124,6 +126,11 @@ export default async function AdminPage({
   ])
 
   const enModeracion = vista === 'moderacion'
+  // «Pendientes» reúne las cuatro colas de trabajo; «Catálogos», lo que se
+  // consulta y se edita. Seis pestañas de igual peso obligaban a entrar en
+  // cada una para saber si tenía algo.
+  const enPendientes =
+    vista === 'moderacion' || vista === 'catalogo' || vista === 'servicios'
   const [
     { data: reportes },
     { data: servidores },
@@ -153,7 +160,9 @@ export default async function AdminPage({
     enModeracion
       ? supabase.from('perfiles').select('id, nombre_visible, municipios, suspendido')
       : Promise.resolve({ data: null }),
-    vista === 'catalogo' ? supabase.rpc('sugerencias_pendientes') : Promise.resolve({ data: null }),
+    vista === 'catalogo' || enPendientes
+      ? supabase.rpc('sugerencias_pendientes')
+      : Promise.resolve({ data: null }),
     // Columnas explícitas: `select('*')` arrastraría `creada_por`, el uuid
     // de `auth.users` de quien dio de alta la entidad.
     vista === 'directorio'
@@ -169,7 +178,7 @@ export default async function AdminPage({
     // Las tres colas del módulo de Servicios en una llamada, y la bitácora
     // de lecturas de referencias en otra: la segunda solo se dibuja si el
     // administrador la abre, pero traerla ya evita un viaje más.
-    vista === 'servicios'
+    vista === 'servicios' || enPendientes
       ? supabase.rpc('panel_admin_servicios')
       : Promise.resolve({ data: null }),
     vista === 'servicios'
@@ -187,6 +196,7 @@ export default async function AdminPage({
   const organizaciones = (organizacionesData as unknown as OrganizacionAdmin[]) ?? []
   const flujo2 = flujo2Data as unknown as PanelFlujo2 | null
   const servicios = serviciosData as unknown as PanelServiciosDatos | null
+  const telefonosPorLlamar = servicios?.por_verificar.length ?? 0
   const accesosRef = (accesosRefData as unknown as AccesoAReferencia[]) ?? []
   const zonasProp = (zonasPropData as unknown as ZonaPropuesta[]) ?? []
 
@@ -204,35 +214,89 @@ export default async function AdminPage({
     <main className="mx-auto max-w-2xl px-4 py-6">
       <h1 className="font-heading text-3xl">Administración</h1>
 
-      {/* Los números en la barra son el punto: se entra a ver si hay algo
-          que atender, y antes había que bajar hasta el final para saberlo. */}
       <div className="mt-4">
         <Pestanas
           etiqueta="Secciones de administración"
           pestanas={[
             {
               href: '/admin',
-              etiqueta: 'Moderación',
-              activa: vista === 'moderacion',
-              cuenta: (nReportes ?? 0) + (nMatriculas ?? 0),
+              etiqueta: 'Pendientes',
+              activa: enPendientes,
+              cuenta:
+                (nReportes ?? 0) + (nMatriculas ?? 0) + sugerencias.length + telefonosPorLlamar,
             },
-            { href: '/admin?ver=catalogo', etiqueta: 'Catálogo', activa: vista === 'catalogo' },
-            { href: '/admin?ver=directorio', etiqueta: 'Directorio', activa: vista === 'directorio' },
             {
-              href: '/admin?ver=solicitudes',
-              etiqueta: 'Solicitudes',
-              activa: vista === 'solicitudes',
+              href: '/admin?ver=directorio',
+              etiqueta: 'Catálogos',
+              activa: !enPendientes,
             },
-            { href: '/admin?ver=aliados', etiqueta: 'Aliados', activa: vista === 'aliados' },
-            { href: '/admin?ver=servicios', etiqueta: 'Servicios', activa: vista === 'servicios' },
           ]}
         />
       </div>
 
-      {enModeracion && (
+      {enPendientes && (
+        <ColaTrabajo
+          colas={[
+            {
+              href: '/admin',
+              etiqueta: 'Reportes',
+              detalle: 'Contenido que alguien marcó como problemático',
+              cuantas: nReportes ?? 0,
+              activa: vista === 'moderacion' && cola !== 'matriculas',
+            },
+            {
+              href: '/admin?cola=matriculas',
+              etiqueta: 'Matrículas por verificar',
+              detalle: 'Comprobar el número en el registro de la entidad',
+              cuantas: nMatriculas ?? 0,
+              activa: vista === 'moderacion' && cola === 'matriculas',
+            },
+            {
+              href: '/admin?ver=catalogo',
+              etiqueta: 'Ítems sugeridos',
+              detalle: 'Aprobar, fusionar o rechazar lo que la gente propuso',
+              cuantas: sugerencias.length,
+              activa: vista === 'catalogo',
+            },
+            {
+              href: '/admin?ver=servicios',
+              etiqueta: 'Teléfonos por llamar',
+              detalle: 'Proveedores esperando que alguien verifique su número',
+              cuantas: telefonosPorLlamar,
+              activa: vista === 'servicios',
+            },
+          ]}
+        />
+      )}
+
+      {/* Las otras tres secciones no son colas: se consultan. Van en chips
+          para no volver a tener seis pestañas de igual peso. */}
+      {!enPendientes && (
+        <nav aria-label="Qué catálogo ver" className="riel -mx-4 mt-4 flex gap-2 overflow-x-auto px-4">
+          {[
+            { href: '/admin?ver=directorio', etiqueta: 'Entidades', clave: 'directorio' },
+            { href: '/admin?ver=solicitudes', etiqueta: 'Solicitudes', clave: 'solicitudes' },
+            { href: '/admin?ver=aliados', etiqueta: 'Organizaciones', clave: 'aliados' },
+          ].map((c) => (
+            <Link
+              key={c.clave}
+              href={c.href}
+              aria-current={vista === c.clave ? 'page' : undefined}
+              className={`inline-flex min-h-12 shrink-0 items-center rounded-full border px-4 text-base transition-colors ${
+                vista === c.clave
+                  ? 'border-border bg-card font-semibold text-foreground shadow-sm'
+                  : 'border-transparent text-muted-foreground hover:bg-muted'
+              }`}
+            >
+              {c.etiqueta}
+            </Link>
+          ))}
+        </nav>
+      )}
+
+      {enModeracion && cola !== 'matriculas' && (
         <>
       <section className="mt-6">
-        <h2 className="font-heading text-2xl">Reportes pendientes</h2>
         {!reportes || reportes.length === 0 ? (
           <p className="mt-3 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
             No hay reportes pendientes.
@@ -258,14 +322,21 @@ export default async function AdminPage({
         )}
       </section>
 
-      <section className="mt-8">
-        <h2 className="font-heading text-2xl">Matrículas por verificar</h2>
-        <Alert className="mt-3">
-          <AlertDescription>
+      </>
+      )}
+
+      {enModeracion && cola === 'matriculas' && (
+        <>
+      <section className="mt-6">
+        <details className="group mt-3">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 text-base text-primary underline [&::-webkit-details-marker]:hidden">
+            Cómo se verifica
+          </summary>
+          <p className="mt-1 text-base text-muted-foreground">
             Consulta el número en el registro de la entidad antes de marcarlo
             como verificado. Verificar solo dice que el número aparece ahí.
-          </AlertDescription>
-        </Alert>
+          </p>
+        </details>
         {!servidores || servidores.length === 0 ? (
           <p className="mt-3 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
             No hay matrículas pendientes.
@@ -312,13 +383,16 @@ export default async function AdminPage({
       {vista === 'catalogo' && (
       <section className="mt-6">
         <h2 className="font-heading text-2xl">Ítems sugeridos</h2>
-        <Alert className="mt-3">
-          <AlertDescription>
+        <details className="group mt-3">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 text-base text-primary underline [&::-webkit-details-marker]:hidden">
+            Cómo se verifica
+          </summary>
+          <p className="mt-1 text-base text-muted-foreground">
             Aprobar crea un ítem nuevo en el catálogo. Fusionar reutiliza uno
             que ya existe y hace que todo lo que ya usaba esta sugerencia
             apunte a ese ítem. Rechazar no crea ni cambia nada.
-          </AlertDescription>
-        </Alert>
+          </p>
+        </details>
         {sugerencias.length === 0 ? (
           <p className="mt-3 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
             No hay ítems sugeridos por revisar.
@@ -353,8 +427,11 @@ export default async function AdminPage({
       {vista === 'directorio' && (
       <section className="mt-6">
         <h2 className="font-heading text-2xl">Entidades</h2>
-        <Alert className="mt-3">
-          <AlertDescription>
+        <details className="group mt-3">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 text-base text-primary underline [&::-webkit-details-marker]:hidden">
+            Cómo se verifica
+          </summary>
+          <p className="mt-1 text-base text-muted-foreground">
             Aparecer en este directorio no es una recomendación de AquíVe:
             solo dice que la organización existe. Antes de enlazar a un
             sitio, revisa dos cosas: que no sea una página de donación de un
@@ -362,8 +439,8 @@ export default async function AdminPage({
             que enlazarla no sea una forma de dar, por otra vía, algo que el
             alcance cerrado prohíbe (alojamiento, transporte de personas,
             dinero).
-          </AlertDescription>
-        </Alert>
+          </p>
+        </details>
         <PanelEntidades entidades={entidades} municipios={municipios} />
       </section>
       )}
@@ -371,15 +448,18 @@ export default async function AdminPage({
       {vista === 'solicitudes' && (
       <section className="mt-6">
         <h2 className="font-heading text-2xl">Solicitudes vivas</h2>
-        <Alert className="mt-3">
-          <AlertDescription>
+        <details className="group mt-3">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 text-base text-primary underline [&::-webkit-details-marker]:hidden">
+            Cómo se verifica
+          </summary>
+          <p className="mt-1 text-base text-muted-foreground">
             Si sabes por fuera que algo ya se entregó, dilo aquí: sale en el
             tablero y evita que otras tres personas se movilicen por lo mismo.
             Marcarla entregada la saca del tablero pero <strong>no la
             borra</strong> — quien pidió conserva su enlace y sus respuestas, y
             se borra sola a las 72 horas como todas.
-          </AlertDescription>
-        </Alert>
+          </p>
+        </details>
         <PanelSolicitudesAdmin solicitudes={solicitudes} />
       </section>
       )}
@@ -387,8 +467,11 @@ export default async function AdminPage({
       {vista === 'aliados' && (
       <section className="mt-6">
         <h2 className="font-heading text-2xl">Organizaciones aliadas</h2>
-        <Alert className="mt-3">
-          <AlertDescription>
+        <details className="group mt-3">
+          <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 text-base text-primary underline [&::-webkit-details-marker]:hidden">
+            Cómo se verifica
+          </summary>
+          <p className="mt-1 text-base text-muted-foreground">
             Una organización aliada coordina entregas dentro de AquíVe, así
             que aquí no basta con que exista: mira el certificado del RUES y
             el NIT antes de crearla. No hay cola de verificación porque la
@@ -398,8 +481,8 @@ export default async function AdminPage({
             coordinador y pásale el enlace a la persona de contacto: quien lo
             abra e inicie sesión queda como su primer coordinador, y de ahí
             en adelante el equipo lo arma la organización.
-          </AlertDescription>
-        </Alert>
+          </p>
+        </details>
         <PanelOrganizaciones
           organizaciones={organizaciones}
           municipios={municipios}

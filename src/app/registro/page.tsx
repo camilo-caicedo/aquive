@@ -94,15 +94,6 @@ export default async function RegistroPage({
         respuestas={respuestas.length}
       />
 
-      <h2 className="font-heading mt-6 text-2xl">
-        {vista === 'respuestas'
-          ? 'Mis respuestas'
-          : vista === 'ajustes'
-            ? 'Ajustes'
-            : perfil
-              ? 'Mi perfil'
-              : 'Crear mi perfil'}
-      </h2>
 
       {vista === 'respuestas' ? (
         <section className="mt-4">

@@ -7,6 +7,7 @@ import { describirItem } from '@/lib/catalogo'
 import { AVISO_RESPONDER } from '@/lib/honestidad'
 import { BadgeFrescura } from '@/components/badge-frescura'
 import { BotonReportar } from '@/components/boton-reportar'
+import { MarcoFlujo } from '@/components/marco-flujo'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import type { ContactoSolicitante, HiloResumen } from '@/lib/types'
@@ -89,8 +90,37 @@ export default async function ResponderPage({
   const contacto = contactoData as unknown as ContactoSolicitante | null
   const hayContacto = !!(contacto?.nombre || contacto?.telefono || contacto?.correo)
 
+
+  // Un solo aviso, entero, y pegado al botón que decide (regla 5). Antes
+  // eran dos bloques encima del formulario: el de honestidad.ts y otro
+  // reescrito a mano diciendo casi lo mismo, con la mitad del texto
+  // hablándole de sí mismo a quien todavía no había decidido nada.
+  const aviso =
+    solicitud.flujo === 'acompanado' ? (
+      <Alert className="mt-4">
+        <AlertDescription>
+          Esta solicitud la acompaña una fundación. La entrega es en su punto
+          de acopio, no en la casa de nadie, y allá te van a pedir tu documento
+          para dejar constancia de quién entregó qué — ese dato lo guarda la
+          fundación, no nosotros.
+          <br />
+          Al ofrecer se abre una conversación entre los tres: tú, quien pidió y
+          la fundación. No se intercambian teléfonos.
+        </AlertDescription>
+      </Alert>
+    ) : (
+      <Alert variant="warning" className="mt-4">
+        <AlertDescription>
+          {AVISO_RESPONDER}{' '}
+          <Link href="/seguridad" className="underline">
+            Cómo cuidarte
+          </Link>
+        </AlertDescription>
+      </Alert>
+    )
+
   return (
-    <main className="mx-auto max-w-lg px-4 py-6">
+    <MarcoFlujo titulo="Puedo ayudar" volver="/">
       <div className="rounded-lg border border-border p-4">
         <div className="flex items-center justify-between gap-2">
           <span className="font-mono text-xl font-bold">{solicitud.codigo}</span>
@@ -114,21 +144,6 @@ export default async function ResponderPage({
         <p className="mt-3 text-sm text-muted-foreground">
           {formatearHoras(solicitud.horas_sin_confirmar)}
         </p>
-
-        {/* La otra mitad del recorrido, y también un paso irreversible:
-            aquí se entrega nombre real y teléfono a alguien anónimo, y
-            después se va a un encuentro físico. Una solicitud falsa para
-            cosechar teléfonos es el fraude obvio de este flujo. */}
-        <p className="mt-3 text-sm text-muted-foreground">
-          {AVISO_RESPONDER}{' '}
-          <Link href="/seguridad" className="underline">
-            Cómo cuidarte
-          </Link>
-        </p>
-
-        <div className="mt-3">
-          <BotonReportar tipoObjeto="solicitud" objetoId={solicitud.id} />
-        </div>
       </div>
 
       {/* Contacto opcional que dejó quien pidió — excepción explícita a la
@@ -146,32 +161,6 @@ export default async function ResponderPage({
             {contacto?.correo && <li>{contacto.correo}</li>}
           </ul>
         </div>
-      )}
-
-      {/* Las dos mitades del proyecto, y aquí se ve la diferencia entera.
-          En el Flujo 1 la plataforma se aparta y el contacto ocurre por
-          fuera. En el Flujo 2 no hay contacto por fuera: se coordina aquí,
-          con la fundación delante, y por eso el aviso es otro. */}
-      {solicitud.flujo === 'acompanado' ? (
-        <Alert className="mt-4">
-          <AlertDescription>
-            Esta solicitud la acompaña una fundación. La entrega es en su
-            punto de acopio, no en la casa de nadie, y allá te van a pedir tu
-            documento para dejar constancia de quién entregó qué — ese dato lo
-            guarda la fundación, no nosotros.
-            <br />
-            Al ofrecer se abre una conversación entre los tres: tú, quien pidió
-            y la fundación. No se intercambian teléfonos.
-          </AlertDescription>
-        </Alert>
-      ) : (
-        <Alert variant="warning" className="mt-4">
-          <AlertDescription>
-            Tu nombre y tu contacto público se muestran a quien publicó la
-            solicitud. Esa persona decide si te escribe: la plataforma no tiene
-            su teléfono ni le envía mensajes por ti.
-          </AlertDescription>
-        </Alert>
       )}
 
       {perfil.suspendido ? (
@@ -201,15 +190,21 @@ export default async function ResponderPage({
           </Button>
         </div>
       ) : solicitud.flujo === 'acompanado' ? (
-        <IniciarHilo codigo={solicitud.codigo} />
+        <IniciarHilo codigo={solicitud.codigo} aviso={aviso} />
       ) : (
         <FormularioRespuesta
+          aviso={aviso}
           codigo={solicitud.codigo}
           yaRespondio={!!yaRespondio}
           puedeTrasladarse={puedeTrasladarse === true}
           puedeRecoger={puedeRecoger === true}
         />
       )}
-    </main>
+      {/* Reportar baja al final y en texto: es una salida, no una acción
+          de esta pantalla, y arriba competía con el botón de ofrecer. */}
+      <div className="mt-8 border-t border-border pt-4">
+        <BotonReportar tipoObjeto="solicitud" objetoId={solicitud.id} />
+      </div>
+    </MarcoFlujo>
   )
 }

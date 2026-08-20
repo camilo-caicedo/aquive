@@ -152,7 +152,7 @@ export function HojaFiltros({
 
   const cabecera = (
     <div className="mt-3">
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+      <div className="riel -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
         {hidratado && (
           <button
             type="button"

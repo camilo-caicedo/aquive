@@ -10,6 +10,12 @@ import { hashToken } from '@/lib/tokens'
  * o se cerró. Sin esto la lista acumula tarjetas fantasma que llevan a
  * una página que ya no existe.
  *
+ * Devuelve además la categoría y el barrio de las que siguen vivas: la
+ * tarjeta de «Lo mío» solo tenía el código, que no le dice nada a quien
+ * publicó tres cosas distintas y no se acuerda de cuál es cuál. Son datos
+ * de la solicitud, no de nadie: municipio y barrio es lo más fino que
+ * existe en la base (regla 1).
+ *
  * Los tokens van en el cuerpo, nunca en la URL (CLAUDE.md regla 6).
  */
 export async function POST(request: Request) {
@@ -24,24 +30,29 @@ export async function POST(request: Request) {
     ? body.tokens.filter((t): t is string => typeof t === 'string').slice(0, 50)
     : []
 
-  if (tokens.length === 0) return NextResponse.json({ vigentes: [] })
+  if (tokens.length === 0) return NextResponse.json({ vigentes: [], datos: {} })
 
   const porHash = new Map(tokens.map((t) => [hashToken(t), t]))
 
   const supabase = createServiceClient()
   const { data, error } = await supabase
     .from('solicitudes')
-    .select('token_hash')
+    .select('token_hash, codigo, categoria, barrio, municipio')
     .in('token_hash', [...porHash.keys()])
 
   if (error) {
     // Ante la duda no se borra nada: perder un enlace es irreversible.
-    return NextResponse.json({ vigentes: tokens })
+    return NextResponse.json({ vigentes: tokens, datos: {} })
   }
 
-  const vigentes = (data ?? [])
-    .map((fila) => porHash.get(fila.token_hash))
-    .filter((t): t is string => !!t)
+  const vigentes: string[] = []
+  const datos: Record<string, { categoria: string; barrio: string }> = {}
+  for (const fila of data ?? []) {
+    const token = porHash.get(fila.token_hash)
+    if (!token) continue
+    vigentes.push(token)
+    datos[token] = { categoria: fila.categoria, barrio: fila.barrio }
+  }
 
-  return NextResponse.json({ vigentes })
+  return NextResponse.json({ vigentes, datos })
 }
