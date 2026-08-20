@@ -5,6 +5,7 @@ import {
   SearchX,
   ShieldCheck,
   ChevronDown,
+  X,
   Info,
   PackageOpen,
   LogIn,
@@ -18,6 +19,7 @@ import { HojaFiltros, GrupoChips } from '@/components/hoja-filtros'
 import { Button } from '@/components/ui/button'
 import { AVISO_TABLERO } from '@/lib/honestidad'
 import { PlegableRecordado } from '@/components/plegable-recordado'
+import { Estado } from '@/components/estado'
 import { CruceInverso } from './cruce-inverso'
 
 const POR_PAGINA = 20
@@ -331,28 +333,45 @@ export default async function InicioPage({
         )}
 
         {!solicitudes || solicitudes.length === 0 ? (
-          <div className="mt-6 rounded-xl border border-dashed border-border p-8 text-center">
-            <SearchX className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
-            <p className="mt-2 text-base text-muted-foreground">
-              {hayFiltro
-                ? 'No hay solicitudes abiertas con estos filtros.'
-                : 'Todavía no hay solicitudes abiertas en ningún municipio del país.'}
-            </p>
-            {hayFiltro ? (
-              <Button
-                variant="outline"
-                className="mt-4"
-                nativeButton={false}
-                render={<Link href="/" scroll={false} />}
-              >
-                Ver todas
-              </Button>
-            ) : (
-              <Button className="mt-4" nativeButton={false} render={<Link href="/publicar" />}>
-                <PlusCircle className="size-5" aria-hidden="true" />
-                Publicar la primera
-              </Button>
-            )}
+          <div className="mt-6">
+            <Estado
+              Icono={SearchX}
+              titulo={
+                hayFiltro
+                  ? 'No hay solicitudes con estos filtros'
+                  : 'Todavía no hay solicitudes abiertas'
+              }
+              detalle={
+                hayFiltro
+                  ? 'Quita uno y vuelve a mirar.'
+                  : 'En ningún municipio del país. Puedes publicar la primera.'
+              }
+              accion={
+                hayFiltro ? (
+                  // Enseña QUÉ chip quitar, no un «ver todas» genérico:
+                  // con tres filtros puestos, lo que hace falta saber es
+                  // cuál sobra.
+                  <>
+                    {chipsAplicados.map((c) => (
+                      <Link
+                        key={c.clave}
+                        href={c.href}
+                        scroll={false}
+                        className="inline-flex min-h-12 items-center gap-2 rounded-full border border-border bg-card px-4 text-base transition-colors hover:bg-muted"
+                      >
+                        Quitar {c.etiqueta}
+                        <X className="size-4 shrink-0" aria-hidden="true" />
+                      </Link>
+                    ))}
+                  </>
+                ) : (
+                  <Button nativeButton={false} render={<Link href="/publicar" />}>
+                    <PlusCircle className="size-5" aria-hidden="true" />
+                    Publicar la primera
+                  </Button>
+                )
+              }
+            />
           </div>
         ) : (
           <>

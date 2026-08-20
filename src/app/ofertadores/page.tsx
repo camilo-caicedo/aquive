@@ -105,7 +105,7 @@ export default async function OfertadoresPage({
       )}
 
       {ordenados.length === 0 ? (
-        <div className="mt-6 rounded-xl border border-dashed border-border p-8 text-center">
+        <div className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center">
           <Inbox className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
           <p className="mt-2 text-base text-muted-foreground">
             {hayFiltro

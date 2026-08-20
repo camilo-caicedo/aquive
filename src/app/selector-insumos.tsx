@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Categoria, ItemCatalogoPublico } from '@/lib/types'
 import { categoria as categoriaInfo, TOPE_SELECCION } from '@/lib/catalogo'
-import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
   Combobox,
@@ -47,9 +46,6 @@ export function SelectorInsumos({
 
   const elegidos = items.filter((i) => seleccion.includes(i.id))
   const lleno = seleccion.length >= TOPE_SELECCION
-  const cambiado =
-    seleccion.length !== seleccionInicial.length ||
-    seleccion.some((id) => !seleccionInicial.includes(id))
 
   function buscar(ids: string[] = seleccion) {
     const sp = new URLSearchParams()
@@ -60,7 +56,7 @@ export function SelectorInsumos({
   }
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div>
       <Label className="text-xl font-bold">¿Qué tienes para dar?</Label>
       <p className="mt-1 text-base text-muted-foreground">
         Escribe para buscar y marca lo que puedas entregar. Te mostramos quién
@@ -71,9 +67,15 @@ export function SelectorInsumos({
         multiple
         items={items}
         value={elegidos}
-        onValueChange={(nuevos: ItemCatalogoPublico[]) =>
-          setSeleccion(nuevos.slice(0, TOPE_SELECCION).map((i) => i.id))
-        }
+        onValueChange={(nuevos: ItemCatalogoPublico[]) => {
+          // Se busca al marcar, no con un botón aparte: la selección ya
+          // vive en la URL, así que marcar y navegar son la misma cosa.
+          // Antes había que marcar, bajar y tocar «Ver quién lo necesita»,
+          // y quien no lo tocaba se quedaba mirando una lista vieja.
+          const ids = nuevos.slice(0, TOPE_SELECCION).map((i) => i.id)
+          setSeleccion(ids)
+          buscar(ids)
+        }}
         itemToStringLabel={(i: ItemCatalogoPublico) => i.nombre}
         isItemEqualToValue={(a: ItemCatalogoPublico, b: ItemCatalogoPublico) => a.id === b.id}
       >
@@ -105,36 +107,12 @@ export function SelectorInsumos({
         </ComboboxContent>
       </Combobox>
 
-      {lleno && (
-        <p className="mt-2 text-sm text-muted-foreground">
-          Llegaste a {TOPE_SELECCION}, que es el máximo. Quita alguno con la
-          equis para cambiarlo.
-        </p>
-      )}
+      <p className="mt-2 text-sm text-muted-foreground">
+        {seleccion.length} de {TOPE_SELECCION}
+        {lleno ? ' — es el máximo. Quita alguno con la equis para cambiarlo.' : ''}
+      </p>
 
-      <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-        <Button
-          className="w-full sm:w-auto"
-          disabled={seleccion.length === 0}
-          onClick={() => buscar()}
-        >
-          {cambiado || seleccionInicial.length === 0
-            ? 'Ver quién lo necesita'
-            : 'Actualizar'}
-        </Button>
-        {seleccion.length > 0 && (
-          <Button
-            variant="outline"
-            className="w-full sm:w-auto"
-            onClick={() => {
-              setSeleccion([])
-              buscar([])
-            }}
-          >
-            Quitar todo
-          </Button>
-        )}
-      </div>
+
     </div>
   )
 }

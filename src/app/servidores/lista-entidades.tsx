@@ -114,6 +114,16 @@ export function ListaEntidades({
             </>
           )}
 
+          {/* Una ficha sin enlaces se quedaba muda: se leía el nombre, la
+              cobertura, y después nada, como si estuviera a medio hacer. Lo
+              que hay que decir es qué hacer en su lugar. */}
+          {e.enlaces.length === 0 && (
+            <p className="mt-3 text-base text-muted-foreground">
+              Esta organización no publicó un sitio ni un teléfono aquí.
+              Búscala por su nombre o pregunta en la alcaldía de tu municipio.
+            </p>
+          )}
+
           {e.pie && (
             <p className="mt-3 border-t border-border pt-3 text-sm text-muted-foreground">
               {e.pie}

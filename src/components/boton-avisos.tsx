@@ -3,7 +3,17 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Bell, BellOff, BellRing } from 'lucide-react'
+import {
+  Bell,
+  BellOff,
+  BellRing,
+  MessageSquare,
+  UserPlus,
+  Clock,
+  HeartHandshake,
+  ShieldAlert,
+  type LucideIcon,
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { activarAvisos, avisosActivosAqui, desactivarAvisos } from '@/lib/avisos'
 import type { Aviso } from '@/lib/types'
@@ -39,6 +49,26 @@ function haceCuanto(iso: string) {
  * estado es por navegador, así que apagarlo aquí no lo apaga en el otro
  * teléfono.
  */
+const ICONO_AVISO: Record<Aviso['tipo'], LucideIcon> = {
+  mensaje: MessageSquare,
+  invitacion: UserPlus,
+  sin_atender: Clock,
+  acompanamiento: HeartHandshake,
+  reporte: ShieldAlert,
+}
+
+/** El día de un aviso, para agrupar. «Hoy» y «Ayer» por nombre. */
+function diaDe(fecha: string) {
+  const d = new Date(fecha)
+  const hoy = new Date()
+  const ayer = new Date(hoy)
+  ayer.setDate(hoy.getDate() - 1)
+  const igual = (a: Date, b: Date) => a.toDateString() === b.toDateString()
+  if (igual(d, hoy)) return 'Hoy'
+  if (igual(d, ayer)) return 'Ayer'
+  return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })
+}
+
 export function BotonAvisos({ sinVer }: { sinVer: number }) {
   const panel = useRef<HTMLDivElement>(null)
   const campana = useRef<HTMLButtonElement>(null)
@@ -156,9 +186,43 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
         ref={panel}
         id="panel-avisos"
         popover="auto"
-        className="fixed inset-auto m-0 max-h-[70vh] w-80 max-w-[calc(100vw-1rem)] overflow-y-auto rounded-xl border border-border bg-popover p-0 text-foreground shadow-lg"
+        className="hoja-inferior fixed inset-x-0 top-auto bottom-0 m-0 max-h-[88vh] w-full max-w-none overflow-y-auto rounded-t-2xl border-t border-border bg-background p-0 text-foreground shadow-lg backdrop:bg-foreground/40 sm:inset-auto sm:max-h-[70vh] sm:w-96 sm:rounded-xl sm:border"
       >
-        <p className="border-b border-border px-4 py-3 font-semibold">Avisos</p>
+        <div className="sticky top-0 z-10 border-b border-border bg-background px-4 pt-2">
+          <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-border sm:hidden" />
+          <p className="py-2 font-semibold">Avisos</p>
+        </div>
+
+        {/* Si están apagados, esto es lo primero y lleva la razón, no solo
+            el interruptor: sin avisos hay que entrar a mirar a mano, y nadie
+            vuelve. El permiso exige un gesto y un «Bloquear» es permanente,
+            así que se explica antes de pedirlo — el mismo criterio que ya
+            usa `activar-avisos.tsx`. */}
+        {!activo && (
+          <div className="border-b border-border bg-accent px-4 py-3 text-accent-foreground">
+            <p className="text-base font-medium">Activa los avisos</p>
+            <p className="mt-1 text-sm">
+              Sin esto tienes que entrar a mirar si te respondieron. En iPhone
+              solo funciona si agregas AquíVe a la pantalla de inicio: hazlo
+              antes de tocar el botón, porque si dices que no, no se puede
+              deshacer.
+            </p>
+            <button
+              type="button"
+              onClick={alternarPush}
+              disabled={push === 'cargando' || push === 'trabajando'}
+              className="mt-2 inline-flex min-h-12 items-center gap-2 rounded-full bg-primary px-4 text-base font-medium text-primary-foreground disabled:opacity-50"
+            >
+              <IconoPush className="size-5 shrink-0" aria-hidden="true" />
+              Activar avisos
+            </button>
+            {mensaje && (
+              <p role="status" className="mt-2 text-sm">
+                {mensaje}
+              </p>
+            )}
+          </div>
+        )}
 
         {avisos === null ? (
           <p className="px-4 py-6 text-center text-sm text-muted-foreground">Cargando…</p>
@@ -169,48 +233,62 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
           </p>
         ) : (
           <ul>
-            {avisos.map((aviso, i) => (
-              <li key={`${aviso.tipo}-${aviso.fecha}-${i}`}>
-                <Link
-                  href={aviso.href}
-                  onClick={() => panel.current?.hidePopover()}
-                  className="flex min-h-12 flex-col justify-center gap-0.5 border-b border-border px-4 py-3 hover:bg-muted"
-                >
-                  {/* Los `nuevos` primeros son los que no había visto: la
-                      lista viene ordenada de más reciente a más viejo. */}
-                  <span className={i < nuevos ? 'font-semibold' : undefined}>
-                    {aviso.texto}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    {haceCuanto(aviso.fecha)}
-                  </span>
-                </Link>
-              </li>
-            ))}
+            {avisos.map((aviso, i) => {
+              const Icono = ICONO_AVISO[aviso.tipo]
+              const dia = diaDe(aviso.fecha)
+              const nuevoDia = i === 0 || diaDe(avisos[i - 1].fecha) !== dia
+              return (
+                <li key={aviso.tipo + aviso.fecha + i}>
+                  {nuevoDia && (
+                    <p className="bg-muted px-4 py-1.5 text-sm font-medium text-muted-foreground">
+                      {dia}
+                    </p>
+                  )}
+                  <Link
+                    href={aviso.href}
+                    onClick={() => panel.current?.hidePopover()}
+                    className="flex min-h-16 items-center gap-3 border-b border-border px-4 py-3 hover:bg-muted"
+                  >
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
+                      <Icono className="size-4" aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      {/* El texto lo escribe la RPC. Aquí solo se le pone
+                          icono y se agrupa: reescribirlo dejaría dos
+                          versiones del mismo aviso, y los tipos son los
+                          cinco que devuelve `mis_avisos()` y ni uno más. */}
+                      <span className={i < nuevos ? 'block text-base font-semibold' : 'block text-base'}>
+                        {aviso.texto}
+                      </span>
+                      <span className="block text-sm text-muted-foreground">
+                        {haceCuanto(aviso.fecha)}
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
         )}
 
-        <div className="p-3">
-          <button
-            type="button"
-            onClick={alternarPush}
-            disabled={push === 'cargando' || push === 'trabajando'}
-            aria-pressed={activo}
-            className="flex min-h-12 w-full items-center gap-3 rounded-lg px-2 text-left hover:bg-muted disabled:opacity-50"
-          >
-            <IconoPush className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-            <span className="flex-1 text-sm">
-              {activo
-                ? 'Avisos activados en este dispositivo'
-                : 'Activar avisos en este dispositivo'}
-            </span>
-          </button>
-          {mensaje && (
-            <p role="status" className="px-2 pt-2 text-sm text-muted-foreground">
-              {mensaje}
-            </p>
-          )}
-        </div>
+        {activo && (
+          <div className="p-3">
+            <button
+              type="button"
+              onClick={alternarPush}
+              aria-pressed
+              className="flex min-h-12 w-full items-center gap-3 rounded-lg px-2 text-left hover:bg-muted disabled:opacity-50"
+            >
+              <IconoPush className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <span className="flex-1 text-base">Avisos activados en este dispositivo</span>
+            </button>
+            {mensaje && (
+              <p role="status" className="px-2 pt-2 text-sm text-muted-foreground">
+                {mensaje}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </>
   )

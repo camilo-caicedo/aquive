@@ -7,6 +7,7 @@ import qrcode from 'qrcode-generator'
 import { categoria as categoriaInfo } from '@/lib/catalogo'
 import type { Categoria } from '@/lib/types'
 import { Button } from '@/components/ui/button'
+import { Estado, Siluetas } from '@/components/estado'
 
 interface Guardada {
   codigo: string
@@ -113,19 +114,29 @@ export function ListaLocal() {
   }
 
   if (solicitudes === null) {
-    return <p className="mt-6 text-base text-muted-foreground">Buscando…</p>
+    // «Buscando…» se conserva para el lector de pantalla; lo que se ve son
+    // las siluetas de las tarjetas que están por llegar.
+    return (
+      <div className="mt-6" aria-busy="true" aria-live="polite">
+        <span className="sr-only">Buscando…</span>
+        <Siluetas cuantas={2} />
+      </div>
+    )
   }
 
   if (solicitudes.length === 0) {
     return (
-      <div className="mt-6 rounded-lg border border-dashed border-border p-6 text-center">
-        <FileQuestion className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
-        <p className="mt-2 text-base text-muted-foreground">
-          No hay solicitudes guardadas en este teléfono.
-        </p>
-        <Button className="mt-4 w-full" nativeButton={false} render={<Link href="/publicar" />}>
-          Publicar una solicitud
-        </Button>
+      <div className="mt-6">
+        <Estado
+          Icono={FileQuestion}
+          titulo="No hay solicitudes guardadas en este teléfono"
+          detalle="Se guardan aquí al publicarlas, y solo aquí: si cambias de teléfono se pierden."
+          accion={
+            <Button nativeButton={false} render={<Link href="/publicar" />}>
+              Publicar una solicitud
+            </Button>
+          }
+        />
       </div>
     )
   }
