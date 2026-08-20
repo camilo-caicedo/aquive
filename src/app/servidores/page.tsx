@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Info, Inbox, Building2, Stethoscope } from 'lucide-react'
+import { Info, Inbox } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { ENTIDADES_MATRICULA } from '@/lib/config'
 import { enlaceWhatsapp } from '@/lib/contacto'
@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { SelectFiltro } from '@/components/select-filtro'
 import { FormularioFiltros } from '@/components/formulario-filtros'
+import { PestanasServicios } from '@/components/pestanas-servicios'
 
 export const metadata = { title: 'Quién ofrece servicios' }
 
@@ -107,35 +108,10 @@ export default async function ServidoresPage({
         El contacto ocurre por fuera: la plataforma no participa.
       </p>
 
-      {/* Enlaces, no pestañas con estado: la pestaña vive en la URL, así
-          que el enlace se puede compartir. Mismo patrón que los dos modos
-          de la portada. */}
-      <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Qué lista ver">
-        <Link
-          href="/servidores"
-          aria-current={verProfesionales ? undefined : 'page'}
-          className={`inline-flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-full border px-4 text-base transition-colors sm:flex-initial ${
-            verProfesionales
-              ? 'border-border bg-card hover:bg-muted'
-              : 'border-primary bg-primary text-primary-foreground'
-          }`}
-        >
-          <Building2 className="size-4 shrink-0" aria-hidden="true" />
-          Entidades
-        </Link>
-        <Link
-          href="/servidores?ver=profesionales"
-          aria-current={verProfesionales ? 'page' : undefined}
-          className={`inline-flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-full border px-4 text-base transition-colors sm:flex-initial ${
-            verProfesionales
-              ? 'border-primary bg-primary text-primary-foreground'
-              : 'border-border bg-card hover:bg-muted'
-          }`}
-        >
-          <Stethoscope className="size-4 shrink-0" aria-hidden="true" />
-          Profesionales
-        </Link>
-      </div>
+      {/* Las tres listas viven bajo un solo destino de la navegación. La
+          tercera, Oficios, es otro módulo con otro responsable; aquí solo
+          es un enlace. */}
+      <PestanasServicios activa={verProfesionales ? 'profesionales' : 'entidades'} />
 
       {/* Mismo criterio que el tablero: sin nadie registrado y sin filtros,
           los desplegables solo estorban. */}

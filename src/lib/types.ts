@@ -52,7 +52,13 @@ export type OrigenItem = 'semilla' | 'admin' | 'aliado' | 'sugerencia'
 export type OrigenSugerencia = 'solicitante' | 'ofertador' | 'aliado'
 export type EstadoSugerencia = 'pendiente' | 'aprobada' | 'rechazada' | 'fusionada'
 export type AccionSugerencia = 'aprobar' | 'rechazar' | 'fusionar'
-export type TipoObjetoReporte = 'solicitud' | 'respuesta' | 'perfil' | 'entidad'
+export type TipoObjetoReporte =
+  | 'solicitud'
+  | 'respuesta'
+  | 'perfil'
+  | 'entidad'
+  | 'proveedor'
+  | 'resena'
 // Nacional cubre lo virtual: un servicio en línea no está atado a ningún
 // municipio. El filtro por municipio devuelve las locales de ese municipio
 // y todas las nacionales.
@@ -63,7 +69,138 @@ export type MotivoReporte =
   | 'contenido_ofensivo'
   | 'informacion_falsa'
   | 'menor_de_edad'
+  // Los dos del módulo de Servicios. Son los riesgos que el documento
+  // fuente nombra en su §7 y que no caben en «otro»: una reseña usada
+  // como amenaza y el sesgo racial o de género se moderan distinto.
+  | 'extorsion_resena'
+  | 'discriminacion'
   | 'otro'
+
+// ---------------------------------------------------------------------
+// Módulo de Servicios (PLAN-V3)
+// ---------------------------------------------------------------------
+
+export type TipoProveedor = 'persona' | 'microempresa'
+export type GrupoOficio =
+  | 'comida'
+  | 'belleza'
+  | 'confeccion'
+  | 'transporte'
+  | 'aseo'
+  | 'cuidado'
+  | 'reparacion'
+  | 'otros'
+/** `alto` = si quien lo presta es un mal actor, el daño no es económico. */
+export type RiesgoOficio = 'bajo' | 'alto'
+export type ModoPrecio = 'gratis' | 'aporte' | 'solidario' | 'normal'
+export type UnidadPrecio =
+  | 'hora'
+  | 'trabajo'
+  | 'dia'
+  | 'prenda'
+  | 'viaje'
+  | 'plato'
+  | 'unidad'
+export type ModalidadServicio = 'domicilio' | 'local' | 'remoto'
+export type DiaSemana = 'lun' | 'mar' | 'mie' | 'jue' | 'vie' | 'sab' | 'dom'
+export type FranjaHoraria = 'manana' | 'tarde' | 'noche'
+export type MedioPago = 'efectivo' | 'nequi' | 'daviplata'
+export type TipoZona = 'comuna' | 'corregimiento' | 'barrio'
+export type UrgenciaServicio = 'hoy' | 'esta_semana' | 'sin_prisa'
+export type CapacidadPago = 'puedo_pagar' | 'pago_poco' | 'no_puedo_pagar'
+export type EstadoReferencia = 'pendiente' | 'confirmada' | 'no_contesta' | 'rechazada'
+
+/**
+ * Un oficio dentro del jsonb que recibe `guardar_proveedor`.
+ *
+ * `type` y no `interface`: un alias de tipo tiene firma de índice
+ * implícita y una interfaz no, así que solo el alias es asignable a
+ * `Json`. Mismo motivo por el que `OfrecimientoInput` también es alias.
+ */
+export type OficioProveedorInput = {
+  oficio_id: string
+  modo: ModoPrecio
+  precio_desde?: number | null
+  unidad?: UnidadPrecio | null
+}
+
+/** Lo que devuelve `ficha_proveedor`. Sale de la vista, no de la tabla. */
+export interface FichaProveedor {
+  id: string
+  nombre_visible: string
+  tipo: TipoProveedor
+  telefono: string
+  telefono_verificado: boolean
+  municipio: string
+  zona_nombre: string | null
+  zona_texto: string | null
+  modalidad: ModalidadServicio[]
+  dias: DiaSemana[]
+  franjas: FranjaHoraria[]
+  medios_pago: MedioPago[]
+  descripcion: string | null
+  creado_at: string
+  referencias_confirmadas: number
+  servicios_confirmados: number
+  total_resenas: number
+  cumplimiento: number | null
+  trato: number | null
+  puntualidad: number | null
+  oficios: {
+    oficio_id: string
+    nombre: string
+    grupo: GrupoOficio
+    modo: ModoPrecio
+    precio_desde: number | null
+    unidad: UnidadPrecio | null
+  }[]
+  resenas: {
+    id: string
+    cumplimiento: number
+    trato: number
+    puntualidad: number
+    comentario: string | null
+    replica: string | null
+    creada_at: string
+  }[]
+}
+
+/**
+ * Lo que devuelve `mi_proveedor`. Ve lo que la vista pública esconde: si
+ * está suspendida y qué oficios todavía no se publican por la regla S.
+ */
+export interface MiProveedor {
+  id: string
+  nombre_visible: string
+  tipo: TipoProveedor
+  telefono: string
+  telefono_verificado: boolean
+  municipio: string
+  zona_id: string | null
+  zona_texto: string | null
+  modalidad: ModalidadServicio[]
+  dias: DiaSemana[]
+  franjas: FranjaHoraria[]
+  medios_pago: MedioPago[]
+  descripcion: string | null
+  suspendido: boolean
+  alta_asistida: boolean
+  sin_cuenta: boolean
+  creado_at: string
+  oficios: {
+    oficio_id: string
+    nombre: string
+    grupo: GrupoOficio
+    riesgo: RiesgoOficio
+    modo: ModoPrecio
+    precio_desde: number | null
+    unidad: UnidadPrecio | null
+    /** Falso cuando la regla S lo está escondiendo. */
+    publicado: boolean
+  }[]
+  referencias_confirmadas: number
+  servicios_confirmados: number
+}
 
 // Forma del ítem dentro del jsonb p_items que recibe crear_solicitud. Es
 // uno de los dos, nunca los dos: el CHECK de solicitud_items lo impone.
@@ -611,6 +748,46 @@ export interface Database {
           orden?: number
         }
         Update: Partial<Database['public']['Tables']['catalogo_servicios']['Insert']>
+        Relationships: []
+      }
+      catalogo_oficios: {
+        Row: {
+          id: string
+          grupo: GrupoOficio
+          nombre: string
+          riesgo: RiesgoOficio
+          activo: boolean
+          orden: number
+        }
+        Insert: {
+          id: string
+          grupo: GrupoOficio
+          nombre: string
+          riesgo?: RiesgoOficio
+          activo?: boolean
+          orden?: number
+        }
+        Update: Partial<Database['public']['Tables']['catalogo_oficios']['Insert']>
+        Relationships: []
+      }
+      zonas: {
+        Row: {
+          id: string
+          municipio: string
+          nombre: string
+          tipo: TipoZona
+          activa: boolean
+          orden: number
+        }
+        Insert: {
+          id?: string
+          municipio: string
+          nombre: string
+          tipo: TipoZona
+          activa?: boolean
+          orden?: number
+        }
+        Update: Partial<Database['public']['Tables']['zonas']['Insert']>
         Relationships: []
       }
       municipios: {
@@ -1182,6 +1359,95 @@ export interface Database {
         }
         Relationships: []
       }
+      // Módulo de Servicios. `proveedores_publicos` ya trae aplicada la
+      // regla S: los oficios de riesgo alto de quien no está verificado
+      // no salen, y quien se queda sin ningún oficio publicable no sale
+      // en absoluto.
+      proveedores_publicos: {
+        Row: {
+          id: string
+          nombre_visible: string
+          tipo: TipoProveedor
+          telefono: string
+          telefono_verificado: boolean
+          municipio: string
+          zona_id: string | null
+          zona_nombre: string | null
+          zona_texto: string | null
+          modalidad: ModalidadServicio[]
+          dias: DiaSemana[]
+          franjas: FranjaHoraria[]
+          medios_pago: MedioPago[]
+          descripcion: string | null
+          creado_at: string
+          oficios: string[]
+          grupos: GrupoOficio[]
+          referencias_confirmadas: number
+          servicios_confirmados: number
+          cumplimiento: number | null
+          trato: number | null
+          puntualidad: number | null
+          total_resenas: number
+          /** Modos de precio de sus oficios PUBLICADOS, para el filtro. */
+          modos: ModoPrecio[]
+        }
+        Relationships: []
+      }
+      proveedor_oficios_publicos: {
+        Row: {
+          proveedor_id: string
+          oficio_id: string
+          modo: ModoPrecio
+          precio_desde: number | null
+          unidad: UnidadPrecio | null
+          oficio_nombre: string
+          grupo: GrupoOficio
+          riesgo: RiesgoOficio
+        }
+        Relationships: []
+      }
+      resenas_publicas: {
+        Row: {
+          id: string
+          proveedor_id: string
+          cumplimiento: number
+          trato: number
+          puntualidad: number
+          comentario: string | null
+          replica: string | null
+          replica_at: string | null
+          creada_at: string
+        }
+        Relationships: []
+      }
+      solicitudes_servicio_publicas: {
+        Row: {
+          id: string
+          codigo: string
+          oficio_id: string
+          oficio_nombre: string
+          grupo: GrupoOficio
+          municipio: string
+          zona_id: string | null
+          zona_nombre: string | null
+          zona_texto: string | null
+          urgencia: UrgenciaServicio
+          capacidad_pago: CapacidadPago
+          nota: string | null
+          creada_at: string
+          expira_at: string
+          num_respuestas: number
+        }
+        Relationships: []
+      }
+      municipios_con_proveedores: {
+        Row: { codigo_dane: string; nombre: string; departamento: string }
+        Relationships: []
+      }
+      oficios_con_proveedores: {
+        Row: { id: string; nombre: string; grupo: GrupoOficio; orden: number }
+        Relationships: []
+      }
     }
     Functions: {
       crear_solicitud: {
@@ -1604,6 +1870,40 @@ export interface Database {
       mis_ofrecimientos: {
         Args: Record<string, never>
         Returns: Json
+      }
+      // Módulo de Servicios. Devuelven jsonb; el llamante lo estrecha a
+      // `FichaProveedor` o `MiProveedor`, que es la forma real.
+      ficha_proveedor: {
+        Args: { p_id: string }
+        Returns: Json
+      }
+      mi_proveedor: {
+        Args: { p_token?: string | null }
+        Returns: Json
+      }
+      guardar_proveedor: {
+        Args: {
+          p_nombre_visible: string
+          p_tipo: TipoProveedor
+          p_telefono: string
+          p_municipio: string
+          p_zona_id: string | null
+          p_zona_texto: string | null
+          p_modalidad: ModalidadServicio[]
+          p_dias: DiaSemana[]
+          p_franjas: FranjaHoraria[]
+          p_medios_pago: MedioPago[]
+          p_descripcion: string | null
+          p_oficios: Json
+          p_acepto_publicacion: boolean
+          p_autorizacion_version: string
+          p_token?: string | null
+        }
+        Returns: string
+      }
+      borrar_proveedor: {
+        Args: { p_token?: string | null }
+        Returns: undefined
       }
       crear_perfil: {
         Args: {

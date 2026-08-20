@@ -7,9 +7,12 @@ import { HandHeart, Stethoscope, ListChecks, PackageOpen, Building2 } from 'luci
 const ENLACES = [
   { href: '/', etiqueta: 'Solicitudes', Icono: HandHeart },
   { href: '/ofertadores', etiqueta: 'Quién ofrece', Icono: PackageOpen },
-  // "Servicios" y no "Profesionales": esa pantalla ahora tiene dos listas y
-  // la primera son las entidades, así que el nombre anterior engañaba.
-  { href: '/servidores', etiqueta: 'Servicios', Icono: Stethoscope },
+  // Un solo destino para las tres listas de «quién puede hacer algo por
+  // mí»: oficios del rebusque, profesionales con matrícula y entidades.
+  // Detrás son módulos distintos —y el primero tiene otro responsable del
+  // tratamiento— pero para quien busca es la misma pregunta, y aquí abajo
+  // solo caben cinco celdas. Las tres se reparten en `PestanasServicios`.
+  { href: '/servicios', etiqueta: 'Servicios', Icono: Stethoscope },
   { href: '/mis-solicitudes', etiqueta: 'Mis solicitudes', Icono: ListChecks },
 ]
 
@@ -30,10 +33,21 @@ const ETIQUETA_CORTA: Record<string, string> = {
   '/aliado': 'Coordinar',
 }
 
+// Rutas que marcan una pestaña sin colgar de ella. Hoy solo una: las tres
+// listas de servicios están repartidas en dos rutas —/servicios para los
+// oficios, /servidores para profesionales y entidades— y las dos tienen
+// que dejar la misma celda encendida. Sin esto, tocar «Profesionales»
+// apaga la navegación entera y parece que uno se salió del sitio.
+const TAMBIEN: Record<string, string[]> = {
+  '/servicios': ['/servidores'],
+}
+
 // Coincidencia exacta para la portada; por prefijo para el resto, para que
 // /responder/ABCD siga marcando "Solicitudes".
 function estaActiva(ruta: string, href: string) {
-  return href === '/' ? ruta === '/' : ruta.startsWith(href)
+  if (href === '/') return ruta === '/'
+  if (ruta.startsWith(href)) return true
+  return (TAMBIEN[href] ?? []).some((otra) => ruta.startsWith(otra))
 }
 
 function enlaces(menuCoordinacion: string | null) {

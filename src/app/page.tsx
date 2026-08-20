@@ -8,6 +8,7 @@ import {
   MessageSquare,
   PhoneCall,
   Stethoscope,
+  Briefcase,
   Info,
   PackageOpen,
   LogIn,
@@ -200,6 +201,34 @@ export default async function InicioPage({
             render={<Link href="/servidores?ver=profesionales" />}
           >
             Ver profesionales
+          </Button>
+        </div>
+
+        {/* La otra mitad del sitio, y hay que decir en qué se diferencia:
+            aquí arriba todo se borra a las 72 horas y nadie deja datos;
+            abajo hay un directorio de personas que permanece. Si esa
+            diferencia no se entiende en la portada, la promesa de borrado
+            queda desmentida por la existencia del directorio. */}
+        <div className="animar-entrada mt-3 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:p-5">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+            <Briefcase className="size-6" aria-hidden="true" />
+          </span>
+          <div className="flex-1">
+            <h2 className="font-heading text-2xl">¿Necesitas contratar a alguien?</h2>
+            <p className="mt-1 text-base text-muted-foreground">
+              Comida, arreglos de ropa, trasteos, aseo, reparaciones. Gente que
+              vive de su trabajo y quiere que la encuentren: a diferencia de
+              las solicitudes de arriba, estas fichas no se borran solas. Tú
+              acuerdas el precio directamente con la persona.
+            </p>
+          </div>
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto"
+            nativeButton={false}
+            render={<Link href="/servicios" />}
+          >
+            Ver oficios
           </Button>
         </div>
       </section>

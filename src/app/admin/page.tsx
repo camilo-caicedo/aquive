@@ -31,6 +31,8 @@ const MOTIVOS: Record<MotivoReporte, string> = {
   contenido_ofensivo: 'Contenido ofensivo',
   informacion_falsa: 'Información falsa',
   menor_de_edad: 'Menor de edad',
+  extorsion_resena: 'Amenaza con una calificación',
+  discriminacion: 'Discriminación',
   otro: 'Otro',
 }
 
@@ -39,6 +41,8 @@ const TIPOS_OBJETO: Record<TipoObjetoReporte, string> = {
   respuesta: 'Respuesta',
   perfil: 'Perfil',
   entidad: 'Entidad del directorio',
+  proveedor: 'Ficha de servicios',
+  resena: 'Calificación',
 }
 
 const ORIGENES_SUGERENCIA: Record<OrigenSugerencia, string> = {

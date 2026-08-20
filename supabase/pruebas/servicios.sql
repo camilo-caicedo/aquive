@@ -277,3 +277,183 @@ begin
   raise notice 'Pruebas del módulo de Servicios: OK';
 end;
 $$;
+
+-- =====================================================================
+-- Fase S2 — la RPC que guarda la ficha
+--
+-- Se prueba por el camino del token: `auth.uid()` no existe en una sesión
+-- de psql, y el cuerpo de la función es el mismo para los dos dueños. Lo
+-- único que queda sin cubrir aquí es la rama de creación con cuenta, que
+-- son seis líneas de INSERT.
+-- =====================================================================
+
+do $$
+declare
+  v_tok   text := 'token-de-prueba-s2-no-usar-en-nada-real';
+  v_id    uuid;
+  v_ficha jsonb;
+  v_n     integer;
+  v_fallo boolean;
+  v_ok    jsonb := '[{"oficio_id":"arreglos_ropa","modo":"normal","precio_desde":15000,"unidad":"prenda"}]'::jsonb;
+begin
+  insert into public.proveedores
+    (nombre_visible, tipo, telefono, municipio, acepto_publicacion,
+     autorizacion_version, token_hash, telefono_verificado, es_prueba)
+  values
+    ('PRUEBA S2', 'persona', '3000000009', '76001', true, 'prueba',
+     encode(extensions.digest(v_tok, 'sha256'), 'hex'), true, true)
+  returning id into v_id;
+
+  -- ---- Un token que no existe no edita nada -------------------------
+  v_fallo := false;
+  begin
+    perform public.guardar_proveedor(
+      'PRUEBA S2', 'persona', '3000000009', '76001', null, null,
+      array['domicilio'], null, null, null, null, v_ok, true, 'prueba',
+      'token-que-no-existe');
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Un token inventado pudo guardar una ficha';
+
+  -- ---- Sin autorización no se publica nada --------------------------
+  v_fallo := false;
+  begin
+    perform public.guardar_proveedor(
+      'PRUEBA S2', 'persona', '3000000009', '76001', null, null,
+      array['domicilio'], null, null, null, null, v_ok, false, 'prueba', v_tok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Se guardó una ficha sin marcar la autorización de publicación';
+
+  -- ---- Regla 2: la descripción pasa por el filtro de PII ------------
+  v_fallo := false;
+  begin
+    perform public.guardar_proveedor(
+      'PRUEBA S2', 'persona', '3000000009', '76001', null, null,
+      array['domicilio'], null, null, null,
+      'Escríbeme al 3001234567', v_ok, true, 'prueba', v_tok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'La descripción aceptó un teléfono';
+
+  -- ---- La zona: de la lista o escrita, no las dos -------------------
+  v_fallo := false;
+  begin
+    perform public.guardar_proveedor(
+      'PRUEBA S2', 'persona', '3000000009', '76001',
+      (select z.id from public.zonas z where z.municipio = '76001' limit 1),
+      'San Fernando', array['domicilio'], null, null, null, null,
+      v_ok, true, 'prueba', v_tok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Se aceptaron zona de lista y zona escrita a la vez';
+
+  -- ---- Una zona de otro municipio no es de este ---------------------
+  v_fallo := false;
+  begin
+    perform public.guardar_proveedor(
+      'PRUEBA S2', 'persona', '3000000009', '76109',
+      (select z.id from public.zonas z where z.municipio = '76001' limit 1),
+      null, array['domicilio'], null, null, null, null,
+      v_ok, true, 'prueba', v_tok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Se aceptó una comuna de Cali en otro municipio';
+
+  -- ---- Hay que decir cómo se atiende --------------------------------
+  v_fallo := false;
+  begin
+    perform public.guardar_proveedor(
+      'PRUEBA S2', 'persona', '3000000009', '76001', null, null,
+      '{}', null, null, null, null, v_ok, true, 'prueba', v_tok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Se guardó una ficha sin modalidad de atención';
+
+  -- ---- Un oficio inventado no entra ---------------------------------
+  v_fallo := false;
+  begin
+    perform public.guardar_proveedor(
+      'PRUEBA S2', 'persona', '3000000009', '76001', null, null,
+      array['domicilio'], null, null, null, null,
+      '[{"oficio_id":"reconstruccion_estructural","modo":"normal"}]'::jsonb,
+      true, 'prueba', v_tok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Se aceptó un oficio que no está en el catálogo';
+
+  -- ---- El camino feliz, y el precio en modo gratis se descarta ------
+  perform public.guardar_proveedor(
+    'PRUEBA S2 editada', 'persona', '3000000009', '76001', null, 'San Fernando',
+    array['domicilio','local'], array['lun','mar'], array['manana'],
+    array['efectivo','nequi'], 'Arreglo ropa hace veinte años.',
+    '[{"oficio_id":"arreglos_ropa","modo":"normal","precio_desde":15000,"unidad":"prenda"},
+      {"oficio_id":"uniformes","modo":"gratis","precio_desde":99999,"unidad":"prenda"}]'::jsonb,
+    true, 'prueba', v_tok);
+
+  select count(*) into v_n from public.proveedor_oficios where proveedor_id = v_id;
+  assert v_n = 2, 'No quedaron los dos oficios';
+
+  select count(*) into v_n from public.proveedor_oficios
+   where proveedor_id = v_id and oficio_id = 'uniformes' and precio_desde is null;
+  assert v_n = 1, 'Un oficio en modo gratis conservó el precio en vez de descartarlo';
+
+  -- El teléfono no cambió, así que la verificación sigue en pie.
+  select count(*) into v_n from public.proveedores
+   where id = v_id and telefono_verificado;
+  assert v_n = 1, 'Guardar sin tocar el teléfono tumbó la verificación';
+
+  -- ---- Regla V: cambiar el teléfono tumba la marca ------------------
+  perform public.guardar_proveedor(
+    'PRUEBA S2 editada', 'persona', '3000000099', '76001', null, 'San Fernando',
+    array['domicilio'], null, null, null, null, v_ok, true, 'prueba', v_tok);
+
+  select count(*) into v_n from public.proveedores
+   where id = v_id and not telefono_verificado and verificado_at is null;
+  assert v_n = 1,
+    'Regla V rota: se cambió el teléfono y la marca de verificado sobrevivió';
+
+  -- Y el reemplazo de oficios es completo, no aditivo.
+  select count(*) into v_n from public.proveedor_oficios where proveedor_id = v_id;
+  assert v_n = 1, 'Los oficios se acumularon en vez de reemplazarse';
+
+  -- ---- La ficha pública ---------------------------------------------
+  v_ficha := public.ficha_proveedor(v_id);
+  assert v_ficha is not null, 'ficha_proveedor no devolvió nada para una ficha publicada';
+  assert v_ficha->>'nombre_visible' = 'PRUEBA S2 editada', 'La ficha devolvió otro nombre';
+  assert jsonb_array_length(v_ficha->'oficios') = 1, 'La ficha no trajo el oficio';
+
+  update public.proveedores set suspendido = true where id = v_id;
+  assert public.ficha_proveedor(v_id) is null,
+    'ficha_proveedor devuelve fichas suspendidas';
+  update public.proveedores set suspendido = false where id = v_id;
+
+  -- `mi_proveedor` sí las ve: es la pantalla de su dueño.
+  assert public.mi_proveedor(v_tok) is not null,
+    'El dueño no puede leer su propia ficha con su token';
+  assert public.mi_proveedor('token-que-no-existe') is null,
+    'Un token inventado leyó una ficha';
+
+  -- ---- Reportes: los dos objetos y los dos motivos nuevos -----------
+  perform public.crear_reporte('proveedor', v_id, 'extorsion_resena', null);
+  perform public.crear_reporte('proveedor', v_id, 'discriminacion', null);
+  v_fallo := false;
+  begin
+    perform public.crear_reporte('inventado', v_id, 'otro', null);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'crear_reporte aceptó un tipo de objeto inventado';
+
+  -- ---- Borrado duro ---------------------------------------------------
+  perform public.borrar_proveedor(v_tok);
+  select count(*) into v_n from public.proveedores where id = v_id;
+  assert v_n = 0, 'borrar_proveedor no borró';
+  select count(*) into v_n from public.proveedor_oficios where proveedor_id = v_id;
+  assert v_n = 0, 'Los oficios sobrevivieron al borrado de la ficha';
+
+  delete from public.reportes where objeto_id = v_id;
+  delete from public.proveedores where es_prueba;
+
+  raise notice 'Pruebas de la fase S2: OK';
+end;
+$$;
