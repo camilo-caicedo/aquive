@@ -25,6 +25,7 @@ export function FormularioFiltros({
   children,
   className,
   etiqueta = 'Filtrar',
+  variante = 'default',
   pie,
 }: {
   /** A dónde van los filtros. La ruta actual, sin query. */
@@ -32,6 +33,9 @@ export function FormularioFiltros({
   children: ReactNode
   className?: string
   etiqueta?: string
+  /** El camino sin JavaScript va en outline: la terracota rellena es de
+      la accion principal de la pantalla, que ahi sigue siendo la pildora. */
+  variante?: 'default' | 'outline'
   /**
    * Reemplaza el botón de enviar por un pie propio. Lo usa `HojaFiltros`,
    * que necesita «Quitar todo» y «Ver resultados» en la misma fila. Recibe
@@ -70,7 +74,7 @@ export function FormularioFiltros({
       {pie ? (
         pie(pendiente)
       ) : (
-        <Button type="submit" className="w-full sm:w-auto" disabled={pendiente}>
+        <Button type="submit" variant={variante} className="w-full sm:w-auto" disabled={pendiente}>
           {pendiente ? 'Buscando…' : etiqueta}
         </Button>
       )}

@@ -339,26 +339,34 @@ export function FormularioRegistro({
       >
         <fieldset>
           <legend className="mb-2 text-base font-medium">¿Qué vas a ofrecer?</legend>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Button
-              type="button"
-              variant={tipo === 'ofertador' ? 'default' : 'outline'}
-              onClick={() => setTipo('ofertador')}
-            >
-              Insumos
-            </Button>
-            <Button
-              type="button"
-              variant={tipo === 'servidor' ? 'default' : 'outline'}
-              onClick={() => setTipo('servidor')}
-            >
-              Servicios profesionales
-            </Button>
+          {/* Dos chips anchos y la explicación del elegido debajo. Antes
+              eran dos botones del mismo tamaño que todos los demás del
+              formulario, y ésta es la decisión que cambia lo que se pide
+              después: sin matrícula no hay sección de matrícula. */}
+          <div className="flex flex-wrap gap-2">
+            {[
+              { valor: 'ofertador' as const, etiqueta: 'Insumos' },
+              { valor: 'servidor' as const, etiqueta: 'Profesional' },
+            ].map((o) => (
+              <button
+                key={o.valor}
+                type="button"
+                aria-pressed={tipo === o.valor}
+                onClick={() => setTipo(o.valor)}
+                className={`inline-flex min-h-12 flex-1 items-center justify-center rounded-full px-6 text-base transition-colors ${
+                  tipo === o.valor
+                    ? 'bg-primary font-semibold text-primary-foreground'
+                    : 'bg-secondary text-secondary-foreground hover:bg-muted'
+                }`}
+              >
+                {o.etiqueta}
+              </button>
+            ))}
           </div>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-3 text-base text-muted-foreground">
             {tipo === 'ofertador'
               ? 'Puedes entregar cosas: agua, alimentos, cobijas, aseo.'
-              : 'Eres profesional con matrícula: ingeniería, arquitectura, psicología, salud o derecho. Más abajo también puedes contar qué insumos tienes.'}
+              : 'Con matrícula: ingeniería, arquitectura, psicología, salud o derecho. También puedes contar qué insumos tienes.'}
           </p>
         </fieldset>
 

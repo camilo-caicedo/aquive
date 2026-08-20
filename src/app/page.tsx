@@ -1,6 +1,8 @@
 import Link from 'next/link'
+import { AccionPrincipal } from '@/components/accion-principal'
 import { VueltaAlDestino } from '@/app/auth/vuelta'
 import {
+  Plus,
   PlusCircle,
   HandHeart,
   SearchX,
@@ -175,7 +177,12 @@ export default async function InicioPage({
           dirección: solo el barrio y qué necesitas.
         </p>
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-          <Button className="w-full sm:w-auto" nativeButton={false} render={<Link href="/publicar" />}>
+          <Button
+            variant="outline"
+            className="w-full sm:w-auto"
+            nativeButton={false}
+            render={<Link href="/publicar" />}
+          >
             <PlusCircle className="size-5" aria-hidden="true" />
             Necesito ayuda
           </Button>
@@ -415,6 +422,13 @@ export default async function InicioPage({
         </>
         )}
       </section>
+      {/* La acción principal de la portada. Los dos botones del héroe
+          bajan a arena para que la única terracota rellena de la pantalla
+          sea ésta (regla 2): el héroe se va con el desplazamiento y la
+          píldora se queda donde llega el pulgar. */}
+      {!modoTengo && (
+        <AccionPrincipal etiqueta="Necesito ayuda" Icono={Plus} href="/publicar" />
+      )}
     </main>
   )
 }

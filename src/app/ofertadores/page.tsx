@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { Info, Inbox, MapPin, PlusCircle, PackageOpen, Truck } from 'lucide-react'
+import { CabeceraPantalla } from '@/components/cabecera-pantalla'
+import { Info, Inbox, MapPin, Plus, PlusCircle, PackageOpen, Truck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios, mapaDeNombres } from '@/lib/municipios'
 import { Button } from '@/components/ui/button'
@@ -46,7 +47,7 @@ export default async function OfertadoresPage({
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="font-heading text-3xl">Quién está ofreciendo insumos</h1>
+      <CabeceraPantalla titulo="Quién ofrece" />
       <p className="mt-1 text-base text-muted-foreground">
         Personas y negocios que ya dijeron con qué pueden ayudar. Mira si
         alguien tiene lo que necesitas y publica tu solicitud: ellos la ven y
@@ -209,7 +210,7 @@ export default async function OfertadoresPage({
           Publicar mi solicitud
         </Button>
       </div>
-      <AccionPrincipal etiqueta="Necesito ayuda" Icono={PlusCircle} href="/publicar" />
+      <AccionPrincipal etiqueta="Necesito ayuda" Icono={Plus} href="/publicar" />
     </main>
   )
 }

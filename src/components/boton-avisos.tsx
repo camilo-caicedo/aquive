@@ -97,12 +97,23 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
       // Se calcula al abrir y no con `anchor-name` de CSS porque el
       // anclaje nativo todavía no existe en Safari, y aquí la mitad de
       // quien mira está en un iPhone.
+      // ⚠ El anclaje SOLO en pantalla mediana y grande, que es donde
+      // esto es un panel colgado de la campana. En el teléfono es una hoja
+      // inferior, y su sitio lo pone el CSS: si aquí se escribiera
+      // `style.top`, ese valor en línea le ganaría al `bottom-0 top-auto`
+      // de las clases y la hoja aparecía pegada arriba, debajo del
+      // encabezado. Por eso además se limpian los dos: el mismo panel
+      // cambia de forma al girar el teléfono.
+      const anclado = document.documentElement.clientWidth >= 640
       const boton = campana.current?.getBoundingClientRect()
-      if (boton && elemento) {
+      if (elemento && anclado && boton) {
         elemento.style.top = `${boton.bottom + 8}px`
         // `clientWidth` y no `window.innerWidth`: el segundo cuenta la
         // barra de desplazamiento y el panel quedaba corrido esos píxeles.
         elemento.style.right = `${document.documentElement.clientWidth - boton.right}px`
+      } else if (elemento) {
+        elemento.style.top = ''
+        elemento.style.right = ''
       }
 
       const supabase = createClient()
@@ -159,18 +170,19 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
         type="button"
         popoverTarget="panel-avisos"
         aria-label={sinVer > 0 ? `Avisos, ${sinVer} sin ver` : 'Avisos'}
-        className="relative flex size-11 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="relative flex size-12 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
       >
         <Bell className="size-5" aria-hidden="true" />
         {sinVer > 0 && (
-          // Número y no solo punto: «hay algo» y «hay siete cosas» no piden
-          // la misma prisa.
+          // Un punto, no el número. Antes iba el conteo, con el argumento
+          // de que «hay algo» y «hay siete cosas» no piden la misma prisa;
+          // es verdad, pero un «9+» sobre un icono de 20 px no se lee en un
+          // teléfono al sol, que es donde se usa esto. El número exacto
+          // sigue estando dentro, en la hoja, junto a cada aviso.
           <span
             aria-hidden="true"
-            className="absolute -top-1 -right-1 flex min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs font-semibold text-primary-foreground"
-          >
-            {sinVer > 9 ? '9+' : sinVer}
-          </span>
+            className="absolute top-2 right-2 size-2.5 rounded-full bg-primary ring-2 ring-background"
+          />
         )}
       </button>
 

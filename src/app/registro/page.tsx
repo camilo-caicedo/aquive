@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { VueltaAlDestino } from '@/app/auth/vuelta'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
@@ -85,15 +86,15 @@ export default async function RegistroPage({
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
       <VueltaAlDestino />
-      <h1 className="font-heading text-3xl">Lo mío</h1>
-
-      <PestanasLoMio
-        activa={
-          vista === 'respuestas' ? 'respuestas' : vista === 'ajustes' ? 'ajustes' : 'perfil'
-        }
-        conSesion
-        respuestas={respuestas.length}
-      />
+      <CabeceraPantalla titulo="Lo mío">
+        <PestanasLoMio
+          activa={
+            vista === 'respuestas' ? 'respuestas' : vista === 'ajustes' ? 'ajustes' : 'perfil'
+          }
+          conSesion
+          respuestas={respuestas.length}
+        />
+      </CabeceraPantalla>
 
 
       {vista === 'respuestas' ? (
@@ -107,9 +108,9 @@ export default async function RegistroPage({
         </section>
       ) : vista === 'perfil' ? (
         <>
-          <p className="mt-4 text-base text-muted-foreground">
-            Estos datos se muestran públicamente para que quien necesita ayuda
-            pueda contactarte.
+          <p className="text-base text-muted-foreground">
+            Tu nombre, tu contacto y tus municipios son públicos: así te
+            encuentra quien necesita ayuda. Cada sección se guarda por separado.
           </p>
           <FormularioRegistro
             municipios={municipios ?? []}

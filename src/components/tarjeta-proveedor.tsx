@@ -1,16 +1,20 @@
 import Link from 'next/link'
-import { MapPin } from 'lucide-react'
 import { InsigniasProveedor } from '@/components/insignias-proveedor'
+import { Button } from '@/components/ui/button'
 import { precioLegible, zonaLegible, etiquetaModalidad } from '@/lib/servicios'
 import type { Database, ModoPrecio, UnidadPrecio } from '@/lib/types'
 
 type ProveedorPublico = Database['public']['Views']['proveedores_publicos']['Row']
 
 /**
- * La tarjeta del directorio. No lleva el teléfono ni el botón de
- * contactar: el contacto es una decisión y se toma en la ficha, después
- * de leer las insignias y el aviso de seguridad. Un botón de WhatsApp en
- * una lista invita a escribirle a cinco personas sin mirar a ninguna.
+ * La tarjeta del directorio. No lleva el teléfono ni un botón de WhatsApp:
+ * el contacto es una decisión y se toma en la ficha, después de leer las
+ * insignias y el aviso de seguridad. Un botón de WhatsApp en una lista
+ * invita a escribirle a cinco personas sin mirar a ninguna.
+ *
+ * Lo que sí lleva es un botón para entrar, de ancho completo: antes era un
+ * enlace subrayado del tamaño del texto, al final de la tarjeta, y no se
+ * leía como la salida de la tarjeta sino como una nota más.
  */
 export function TarjetaProveedor({
   proveedor,
@@ -29,18 +33,57 @@ export function TarjetaProveedor({
   }[]
 }) {
   const zona = zonaLegible(proveedor.zona_nombre, proveedor.zona_texto)
+  const donde = [zona, nombreMunicipio]
+    .filter(Boolean)
+    .concat(
+      proveedor.modalidad.length > 0
+        ? [proveedor.modalidad.map(etiquetaModalidad).join(', ').toLowerCase()]
+        : []
+    )
+    .join(' · ')
 
   return (
-    <li className="rounded-lg border border-border p-4 sm:p-5">
-      <Link
-        href={`/servicios/${proveedor.id}`}
-        className="text-lg font-bold underline-offset-4 hover:underline"
-      >
-        {proveedor.nombre_visible}
-      </Link>
+    <li className="animar-entrada rounded-2xl bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <Link
+            href={`/servicios/${proveedor.id}`}
+            className="text-lg leading-tight font-bold underline-offset-4 hover:underline"
+          >
+            {proveedor.nombre_visible}
+          </Link>
+          <p className="mt-0.5 text-base text-muted-foreground">{donde}</p>
+        </div>
+        {/* El sello de teléfono verificado va arriba a la derecha, en la
+            línea del nombre: es lo primero que se mira al comparar dos
+            fichas. Las demás insignias van abajo, con el resto. */}
+        <span className="shrink-0">
+          <InsigniasProveedor
+            mostrar="telefono"
+            telefonoVerificado={proveedor.telefono_verificado}
+            referenciasConfirmadas={proveedor.referencias_confirmadas}
+            esMicroempresa={proveedor.tipo === 'microempresa'}
+          />
+        </span>
+      </div>
 
-      <div className="mt-2">
+      {/* El precio alineado a la derecha, no pegado al nombre del oficio:
+          así se pueden comparar dos precios de un vistazo, que es lo que
+          hace quien está eligiendo. */}
+      <ul className="mt-3 space-y-1.5">
+        {oficios.map((o) => (
+          <li key={o.oficio_id} className="flex items-baseline justify-between gap-3 text-base">
+            <span className="min-w-0">{o.oficio_nombre}</span>
+            <span className="shrink-0 text-muted-foreground">
+              {precioLegible(o.modo, o.precio_desde, o.unidad)}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <div className="mt-3">
         <InsigniasProveedor
+          mostrar="resto"
           telefonoVerificado={proveedor.telefono_verificado}
           referenciasConfirmadas={proveedor.referencias_confirmadas}
           esMicroempresa={proveedor.tipo === 'microempresa'}
@@ -48,36 +91,18 @@ export function TarjetaProveedor({
         />
       </div>
 
-      <ul className="mt-3 space-y-1">
-        {oficios.map((o) => (
-          <li key={o.oficio_id} className="flex flex-wrap items-baseline gap-x-2 text-base">
-            <span>{o.oficio_nombre}</span>
-            <span className="text-sm text-muted-foreground">
-              {precioLegible(o.modo, o.precio_desde, o.unidad)}
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
-        <MapPin className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
-        <span>
-          {[zona, nombreMunicipio].filter(Boolean).join(' · ')}
-          {proveedor.modalidad.length > 0 &&
-            ` · ${proveedor.modalidad.map(etiquetaModalidad).join(', ').toLowerCase()}`}
-        </span>
-      </p>
-
       {proveedor.descripcion && (
-        <p className="mt-2 line-clamp-2 text-base">{proveedor.descripcion}</p>
+        <p className="mt-3 line-clamp-2 text-base">{proveedor.descripcion}</p>
       )}
 
-      <Link
-        href={`/servicios/${proveedor.id}`}
-        className="mt-3 inline-flex min-h-12 items-center text-base underline underline-offset-4"
+      <Button
+        variant="outline"
+        className="mt-4 w-full border-primary text-primary"
+        nativeButton={false}
+        render={<Link href={`/servicios/${proveedor.id}`} />}
       >
         Ver y contactar
-      </Link>
+      </Button>
     </li>
   )
 }

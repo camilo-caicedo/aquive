@@ -184,7 +184,7 @@ export function HojaFiltros({
         ))}
       </div>
       {conteo && (
-        <p aria-live="polite" className="mt-2 text-base text-muted-foreground">
+        <p aria-live="polite" className="mt-3 text-base font-semibold text-foreground">
           {conteo}
         </p>
       )}
@@ -197,7 +197,8 @@ export function HojaFiltros({
         {cabecera}
         <FormularioFiltros
           action={action}
-          className="mt-3 flex flex-col gap-4 rounded-xl border border-border bg-card p-4"
+          variante="outline"
+          className="mt-3 flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-sm"
         >
           {children}
         </FormularioFiltros>

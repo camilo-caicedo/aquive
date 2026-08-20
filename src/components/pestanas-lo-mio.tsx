@@ -38,13 +38,13 @@ export function PestanasLoMio({
             etiqueta: 'Solicitudes',
             activa: activa === 'solicitudes',
           },
-          { href: '/registro', etiqueta: 'Mi perfil', activa: activa === 'perfil' },
           {
             href: '/registro?ver=respuestas',
             etiqueta: 'Respuestas',
             activa: activa === 'respuestas',
             cuenta: respuestas,
           },
+          { href: '/registro', etiqueta: 'Mi perfil', activa: activa === 'perfil' },
           {
             href: '/registro?ver=ajustes',
             etiqueta: 'Ajustes',

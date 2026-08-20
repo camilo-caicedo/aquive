@@ -1,4 +1,7 @@
 import Link from 'next/link'
+import { Plus } from 'lucide-react'
+import { AccionPrincipal } from '@/components/accion-principal'
+import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import type { EstadoEncabezado } from '@/lib/types'
@@ -50,9 +53,9 @@ export default async function MisSolicitudesPage() {
     <main className="mx-auto max-w-lg px-4 py-6">
       {/* El h1 repite la etiqueta de la barra (regla 8): quien tocó «Lo
           mío» tiene que aterrizar en algo que se llame igual. */}
-      <h1 className="font-heading text-3xl">Lo mío</h1>
-
-      <PestanasLoMio activa="solicitudes" conSesion={!!user} />
+      <CabeceraPantalla titulo="Lo mío">
+        <PestanasLoMio activa="solicitudes" conSesion={!!user} />
+      </CabeceraPantalla>
 
       <h2 className="font-heading mt-6 text-2xl">Mis solicitudes</h2>
       <p className="mt-2 text-base text-muted-foreground">
@@ -83,6 +86,7 @@ export default async function MisSolicitudesPage() {
           />
         )}
       </nav>
+      <AccionPrincipal etiqueta="Necesito ayuda" Icono={Plus} href="/publicar" />
     </main>
   )
 }

@@ -16,15 +16,23 @@ export function InsigniasProveedor({
   referenciasConfirmadas,
   esMicroempresa,
   serviciosConfirmados,
+  mostrar = 'todas',
 }: {
   telefonoVerificado: boolean
   referenciasConfirmadas: number
   esMicroempresa: boolean
   serviciosConfirmados?: number
+  /**
+   * Qué parte pintar. La tarjeta del directorio pone el sello del
+   * teléfono en la línea del nombre —es lo primero que se mira al
+   * comparar dos fichas— y el resto abajo, con los precios.
+   */
+  mostrar?: 'todas' | 'telefono' | 'resto'
 }) {
   return (
     <ul className="flex flex-wrap gap-1.5">
-      {telefonoVerificado ? (
+      {mostrar !== 'resto' &&
+        (telefonoVerificado ? (
         <li className="inline-flex items-center gap-1.5 rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-ok">
           <BadgeCheck className="size-4 shrink-0" aria-hidden="true" />
           Teléfono verificado
@@ -33,9 +41,9 @@ export function InsigniasProveedor({
         <li className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
           <span aria-hidden="true">!</span> Sin verificar
         </li>
-      )}
+      ))}
 
-      {referenciasConfirmadas > 0 && (
+      {mostrar !== 'telefono' && referenciasConfirmadas > 0 && (
         <li className="inline-flex items-center gap-1.5 rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-ok">
           <Users className="size-4 shrink-0" aria-hidden="true" />
           {referenciasConfirmadas === 1
@@ -44,7 +52,7 @@ export function InsigniasProveedor({
         </li>
       )}
 
-      {esMicroempresa && (
+      {mostrar !== 'telefono' && esMicroempresa && (
         <li className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-sm">
           <Store className="size-4 shrink-0" aria-hidden="true" />
           Negocio registrado
@@ -55,7 +63,7 @@ export function InsigniasProveedor({
           de servicios va con las insignias y la nota promedio se queda
           abajo, en pequeño. Al revés, una sola reseña mala hunde a
           alguien que vive de esto. */}
-      {serviciosConfirmados != null && serviciosConfirmados > 0 && (
+      {mostrar !== 'telefono' && serviciosConfirmados != null && serviciosConfirmados > 0 && (
         <li className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-sm">
           {serviciosConfirmados === 1
             ? '1 servicio confirmado'

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { MapPin, MessageSquare, Check, HeartHandshake, Info } from 'lucide-react'
+import { MessageSquare, Check, HeartHandshake, Info } from 'lucide-react'
 import type { Categoria, FlujoSolicitud, ItemResumen } from '@/lib/types'
 import { categoria, describirItem } from '@/lib/catalogo'
 import { BadgeFrescura } from '@/components/badge-frescura'
@@ -37,9 +37,9 @@ interface Solicitud {
  *
  * Lo que salió de aquí y por qué:
  *
- * - El código en monoespaciado grande era lo primero que se leía, y a quien
- *   mira el tablero no le dice nada: es la llave de quien pidió. Baja a
- *   chip discreto y sigue estando entero en el detalle.
+ * - El código. A quien mira el tablero no le dice nada: es la llave de
+ *   quien pidió, y ocupaba el renglón más visible de la tarjeta. Sigue
+ *   entero en el detalle y en «Lo mío».
  * - El tiempo se decía dos veces —`formatearHoras` abajo y `BadgeFrescura`
  *   arriba— con dos redacciones distintas del mismo número.
  * - «Se borra sola en N horas» se decía además del sello de frescura. Una
@@ -64,19 +64,18 @@ export function TarjetaSolicitud({
   const ocultos = solicitud.items.length - visibles.length
 
   return (
-    <li className="animar-entrada rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
+    <li className="animar-entrada rounded-2xl bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
       <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+        <div className="flex min-w-0 items-start gap-3">
+          {/* Círculo, no cuadrado redondeado: es el mismo gesto que el
+              avatar de un contacto, y a 40 px se distingue mejor. */}
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
             <Icono className="size-5" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <p className="text-lg font-bold">{etiqueta}</p>
-            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <MapPin className="size-4 shrink-0" aria-hidden="true" />
-              <span className="truncate">
-                {solicitud.municipio_nombre} · {solicitud.barrio}
-              </span>
+            <p className="text-lg leading-tight font-bold">{etiqueta}</p>
+            <p className="mt-0.5 truncate text-base text-muted-foreground">
+              {solicitud.municipio_nombre} · {solicitud.barrio}
             </p>
           </div>
         </div>
@@ -96,11 +95,11 @@ export function TarjetaSolicitud({
           párrafos en una tarjeta empujan la siguiente solicitud fuera de
           pantalla. */}
       {solicitud.nota && (
-        <p className="mt-3 line-clamp-2 text-base text-muted-foreground">{solicitud.nota}</p>
+        <p className="mt-3 line-clamp-2 text-base">{solicitud.nota}</p>
       )}
 
       {visibles.length > 0 && (
-        <ul className="mt-3 flex flex-wrap items-center gap-1.5">
+        <ul className="mt-3 flex flex-wrap items-center gap-2">
           {visibles.map((it, i) => (
             <li
               key={i}
@@ -110,7 +109,9 @@ export function TarjetaSolicitud({
             </li>
           ))}
           {ocultos > 0 && (
-            <li className="px-1 text-sm text-muted-foreground">+{ocultos}</li>
+            <li className="rounded-full bg-muted px-3 py-1.5 text-sm text-muted-foreground">
+              +{ocultos}
+            </li>
           )}
         </ul>
       )}
@@ -136,27 +137,20 @@ export function TarjetaSolicitud({
         </p>
       )}
 
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <p className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
-          <MessageSquare className="size-4 shrink-0" aria-hidden="true" />
-          <span
-            className={solicitud.num_respuestas > 0 ? 'font-medium text-foreground' : undefined}
-          >
+      <div className="mt-4 flex items-center justify-between gap-3">
+        <p className="flex min-w-0 items-center gap-1.5 text-base text-muted-foreground">
+          <MessageSquare className="size-5 shrink-0" aria-hidden="true" />
+          <span className={solicitud.num_respuestas > 0 ? 'font-medium text-foreground' : undefined}>
             {solicitud.num_respuestas === 0
               ? 'Sin respuestas'
               : `${solicitud.num_respuestas} ${
                   solicitud.num_respuestas === 1 ? 'respuesta' : 'respuestas'
                 }`}
           </span>
-          <span aria-hidden="true">·</span>
-          {/* El código, en pequeño. Es la llave de quien pidió, no un dato
-              de quien mira, pero sirve para nombrar la solicitud por
-              teléfono. */}
-          <span className="truncate font-mono text-sm">{solicitud.codigo}</span>
         </p>
         <Button
           variant="outline"
-          className="shrink-0"
+          className="shrink-0 border-primary text-primary"
           nativeButton={false}
           render={<Link href={`/responder/${solicitud.codigo}`} />}
         >

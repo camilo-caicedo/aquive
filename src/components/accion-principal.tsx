@@ -41,13 +41,13 @@ export function AccionPrincipal({ etiqueta, Icono, visible = true, href, onClick
   if (!visible) return null
 
   const clases =
-    'fixed right-4 z-40 flex h-14 items-center gap-2 rounded-full bg-primary px-5 text-base font-medium text-primary-foreground shadow-lg transition-transform active:translate-y-px ' +
+    'fixed right-4 z-40 flex h-14 items-center gap-2.5 rounded-full bg-primary px-6 text-lg font-semibold text-primary-foreground shadow-xl transition-transform active:translate-y-px ' +
     // En `sm` la barra inferior no se dibuja, así que sus 4rem sobran.
     'bottom-[calc(4rem+env(safe-area-inset-bottom)+1rem)] sm:bottom-6'
 
   const contenido = (
     <>
-      <Icono className="size-5" aria-hidden="true" />
+      <Icono className="size-6" aria-hidden="true" />
       {etiqueta}
     </>
   )

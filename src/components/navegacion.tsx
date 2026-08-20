@@ -148,7 +148,7 @@ export function BarraInferior() {
                 // igual que la de la fila de escritorio apunta hacia abajo.
                 className={`flex min-h-16 flex-col items-center justify-center gap-1 border-t-2 px-1 pt-0.5 transition-colors ${
                   activa
-                    ? 'border-primary text-foreground'
+                    ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground'
                 }`}
               >

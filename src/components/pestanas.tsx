@@ -41,7 +41,7 @@ export function Pestanas({
 }) {
   return (
     <nav aria-label={etiqueta} className="riel -mx-4 overflow-x-auto px-4">
-      <ul className="inline-flex w-full min-w-fit items-center gap-1 rounded-xl bg-muted p-1">
+      <ul className="inline-flex w-full min-w-fit items-center gap-1 rounded-full bg-secondary p-1.5">
         {pestanas.map((p) => (
           <li key={p.href} className="min-w-fit flex-1">
             <Link
@@ -59,9 +59,9 @@ export function Pestanas({
               // borde —que el papel pelado no tenía—, más la sombra y el
               // peso de la letra: tres señales en vez de una, y ninguna
               // depende solo del tono.
-              className={`inline-flex min-h-12 w-full items-center justify-center gap-1.5 rounded-lg px-3 text-base whitespace-nowrap transition-colors ${
+              className={`inline-flex min-h-12 w-full items-center justify-center gap-1.5 rounded-full px-5 text-base whitespace-nowrap transition-colors ${
                 p.activa
-                  ? 'border border-border bg-card font-semibold text-foreground shadow-sm'
+                  ? 'bg-card font-semibold text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >

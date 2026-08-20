@@ -41,7 +41,7 @@ export async function Encabezado() {
     // convierte al encabezado en bloque contenedor de los descendientes
     // `fixed` y dejaría la barra pegada debajo del logo.
     <>
-    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2">
         {/* El gato va suelto, sin caja: la identidad dice que no se encierra
             en un cuadro con borde cuando ya hay fondo. Antes había un
@@ -64,7 +64,7 @@ export async function Encabezado() {
               href="/admin"
               aria-label="Moderación"
               title="Moderación"
-              className="flex size-11 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="flex size-12 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <ShieldCheck className="size-5" aria-hidden="true" />
             </Link>
