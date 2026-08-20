@@ -228,15 +228,23 @@ export function Chat({
           </p>
         ) : (
           <>
+            {/* `items-end` y los dos del mismo alto: en reposo quedan a ras,
+                y cuando el campo crece con el texto el botón se queda
+                pegado a la última línea, que es donde lo busca el pulgar.
+                Con alturas distintas —el campo en 64 y el botón en 52— el
+                círculo flotaba a media altura del recuadro. */}
             <div className="flex items-end gap-2">
               <Textarea
                 value={cuerpo}
                 onChange={(e) => setCuerpo(e.target.value)}
                 maxLength={1000}
-                rows={2}
+                rows={1}
                 placeholder="Escribe aquí"
                 aria-label="Mensaje"
-                className="flex-1"
+                // `resize-none` porque `field-sizing-content` ya lo hace
+                // crecer solo: el agarre de la esquina era un adorno que
+                // además dejaba una marca diagonal sobre el borde.
+                className="min-h-14 flex-1 resize-none py-4"
               />
               {/* Icono al lado y no un botón de ancho completo debajo: el
                   redactor va fijo, y una fila de más le come dos líneas de
@@ -246,7 +254,7 @@ export function Chat({
                 disabled={enviando || cuerpo.trim().length === 0}
                 onClick={enviar}
                 aria-label={enviando ? 'Enviando' : 'Enviar mensaje'}
-                className="flex size-[3.25rem] shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-40"
+                className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-40"
               >
                 <Send className="size-5" aria-hidden="true" />
               </button>
