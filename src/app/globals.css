@@ -236,6 +236,31 @@ body:has([data-marco-flujo]) {
 }
 
 /* --------------------------------------------------------------------
+   Sitio para la pildora fija al final del pie de pagina.
+
+   `AccionPrincipal` ya deja un separador en flujo dentro del `<main>`,
+   que es lo que impide que tape la ultima tarjeta de una lista. Pero el
+   pie va DESPUES del `<main>`, asi que ese separador no lo alcanza: al
+   llegar al final del desplazamiento la pildora se sentaba encima de los
+   enlaces legales y tapaba el ultimo.
+
+   Se resuelve con margen y no escondiendo la pildora al ver el pie, que
+   seria mas bonito pero exige un observador: `AccionPrincipal` NO es un
+   componente cliente a proposito —recibe `Icono`, que no cruza la
+   frontera de serializacion— y volverlo cliente romperia todas las
+   pantallas de servidor que le pasan un icono.
+
+   5,5rem = el alto de la pildora (3,5) mas su separacion de la barra (1)
+   mas un respiro (1). En `sm` la barra inferior no se dibuja y la pildora
+   sube, pero el margen de mas no molesta: es el final de la pagina.
+   Fuera de `@layer`, por lo mismo que el bloque de arriba.
+   -------------------------------------------------------------------- */
+
+body:has([data-accion-principal]) [data-pie-de-pagina] {
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+}
+
+/* --------------------------------------------------------------------
    La hoja inferior de `HojaFiltros`, entrando desde abajo.
 
    Solo `transform` y `opacity`, que van por GPU (regla 9). El

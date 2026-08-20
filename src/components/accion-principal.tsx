@@ -40,6 +40,11 @@ type Props = Comun &
 export function AccionPrincipal({ etiqueta, Icono, visible = true, href, onClick }: Props) {
   if (!visible) return null
 
+  // `data-accion-principal` no es decorativo: es el gancho de la regla de
+  // `globals.css` que le abre sitio al pie de pagina. El separador en flujo
+  // de abajo protege la ultima tarjeta de la lista, pero el pie viene
+  // DESPUES del `<main>` y ese separador no lo alcanza: la pildora se le
+  // sentaba encima y tapaba el ultimo enlace.
   const clases =
     'fixed right-4 z-40 flex h-14 items-center gap-2.5 rounded-full bg-primary px-6 text-lg font-semibold text-primary-foreground shadow-xl transition-transform active:translate-y-px ' +
     // En `sm` la barra inferior no se dibuja, así que sus 4rem sobran.
@@ -59,11 +64,11 @@ export function AccionPrincipal({ etiqueta, Icono, visible = true, href, onClick
           donde tiene que quedar sin que cada página lo calcule. */}
       <div aria-hidden="true" className="h-20" />
       {href ? (
-        <Link href={href} className={clases}>
+        <Link href={href} data-accion-principal className={clases}>
           {contenido}
         </Link>
       ) : (
-        <button type="button" onClick={onClick} className={clases}>
+        <button type="button" data-accion-principal onClick={onClick} className={clases}>
           {contenido}
         </button>
       )}
