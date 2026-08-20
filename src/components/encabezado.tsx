@@ -94,15 +94,17 @@ export async function Encabezado() {
             </Link>
           )}
           {tienePerfil && <BotonAvisos sinVer={encabezado?.avisos_sin_ver ?? 0} />}
-          {/* Para quien no tiene sesión, y en `outline`: el relleno
-              terracota es de la acción principal de la pantalla (regla 2),
-              y entrar no lo es en ninguna. Va el último de la fila. */}
+          {/* Para quien no tiene sesión, y en relleno terracota por
+              decisión del responsable (20 de agosto de 2026).
+
+              ⚠ Es una excepción consciente a la regla 2, no un descuido:
+              en una pantalla que además tiene `AccionPrincipal` —la
+              portada, el directorio de quien ofrece— un visitante ve dos
+              rellenos terracota a la vez. Si algún día hay que elegir uno,
+              el de la píldora fija es la acción de la pantalla y este es
+              la puerta de la cuenta. Va el último de la fila. */}
           {!user && (
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={<Link href="/login" />}
-            >
+            <Button nativeButton={false} render={<Link href="/login" />}>
               Entrar
             </Button>
           )}
