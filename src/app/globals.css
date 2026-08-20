@@ -229,3 +229,37 @@ body:has([data-marco-flujo]) [data-barra-inferior] {
 body:has([data-marco-flujo]) {
   padding-bottom: 0;
 }
+
+/* --------------------------------------------------------------------
+   La hoja inferior de `HojaFiltros`, entrando desde abajo.
+
+   Solo `transform` y `opacity`, que van por GPU (regla 9). El
+   `@starting-style` y el `allow-discrete` son lo que hace falta para
+   animar un elemento que pasa de `display:none` a la capa superior: sin
+   ellos el navegador salta el estado inicial y la hoja aparece de golpe.
+
+   `prefers-reduced-motion` ya lo apaga todo más arriba, así que aquí no
+   hay que repetirlo.
+   -------------------------------------------------------------------- */
+
+[popover].hoja-inferior {
+  transition:
+    transform 0.22s ease-out,
+    opacity 0.22s ease-out,
+    overlay 0.22s allow-discrete,
+    display 0.22s allow-discrete;
+  transform: translateY(0);
+  opacity: 1;
+}
+
+[popover].hoja-inferior:not(:popover-open) {
+  transform: translateY(1rem);
+  opacity: 0;
+}
+
+@starting-style {
+  [popover].hoja-inferior:popover-open {
+    transform: translateY(1rem);
+    opacity: 0;
+  }
+}

@@ -5,7 +5,7 @@ import { listarMunicipios, mapaDeNombres } from '@/lib/municipios'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { SelectFiltro } from '@/components/select-filtro'
-import { FormularioFiltros } from '@/components/formulario-filtros'
+import { HojaFiltros } from '@/components/hoja-filtros'
 import { BotonReportar } from '@/components/boton-reportar'
 
 export const metadata = { title: 'Quién está ofreciendo' }
@@ -63,9 +63,22 @@ export default async function OfertadoresPage({
 
       {mostrarFiltros && (
         <>
-          <FormularioFiltros
+          <HojaFiltros
             action="/ofertadores"
-            className="mt-4 flex flex-col gap-2 rounded-lg border border-border bg-muted/40 p-3 sm:flex-row"
+            id="hoja-filtros-ofertadores"
+            titulo="Filtrar quién ofrece"
+            aplicados={
+              params.municipio
+                ? [
+                    {
+                      clave: 'municipio',
+                      etiqueta: nombreMunicipio.get(params.municipio) ?? 'Un municipio',
+                      href: '/ofertadores',
+                    },
+                  ]
+                : []
+            }
+            conteo={`${ordenados.length} ${ordenados.length === 1 ? 'persona' : 'personas'}`}
           >
             <SelectFiltro
               name="municipio"
@@ -79,15 +92,15 @@ export default async function OfertadoresPage({
                 detalle: m.departamento,
               }))}
             />
-          </FormularioFiltros>
 
-          <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
-            <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
-            <span>
-              La lista solo muestra los {municipios?.length ?? 0} municipios
-              donde ya hay alguien ofreciendo.
-            </span>
-          </p>
+            <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
+              <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
+              <span>
+                La lista solo muestra los {municipios?.length ?? 0} municipios
+                donde ya hay alguien ofreciendo.
+              </span>
+            </p>
+          </HojaFiltros>
         </>
       )}
 

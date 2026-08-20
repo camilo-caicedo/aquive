@@ -8,7 +8,7 @@ import { TarjetaProveedor } from '@/components/tarjeta-proveedor'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { SelectFiltro } from '@/components/select-filtro'
-import { FormularioFiltros } from '@/components/formulario-filtros'
+import { HojaFiltros, GrupoChips } from '@/components/hoja-filtros'
 import { PestanasServicios } from '@/components/pestanas-servicios'
 import type { MiProveedor, ModalidadServicio, ModoPrecio } from '@/lib/types'
 
@@ -102,6 +102,46 @@ export default async function ServiciosPage({
         .order('orden')
     : { data: null }
 
+  // El href de cada chip es la URL sin ESE filtro. Quitar el municipio se
+  // lleva también la zona: una comuna sin su ciudad no filtra nada, y
+  // dejarla colgada devolvía una lista vacía sin explicación.
+  const aplicados: Record<string, string | null> = {
+    oficio: params.oficio ?? null,
+    municipio,
+    zona,
+    modalidad,
+    modo,
+  }
+  function sinFiltro(quitar: string) {
+    const sp = new URLSearchParams()
+    for (const [k, v] of Object.entries(aplicados)) {
+      if (!v || k === quitar) continue
+      if (quitar === 'municipio' && k === 'zona') continue
+      sp.set(k, v)
+    }
+    const qs = sp.toString()
+    return qs ? `/servicios?${qs}` : '/servicios'
+  }
+
+  const nombreOficio = new Map((oficiosCatalogo ?? []).map((o) => [o.id, o.nombre]))
+  const nombreZona = new Map((zonas ?? []).map((z) => [z.id, z.nombre]))
+
+  const chipsAplicados = (
+    [
+      ['oficio', params.oficio ? nombreOficio.get(params.oficio) : null],
+      ['municipio', municipio ? nombreMunicipio.get(municipio) : null],
+      ['zona', zona ? nombreZona.get(zona) : null],
+      ['modalidad', MODALIDADES.find((m) => m.valor === modalidad)?.etiqueta ?? null],
+      ['modo', MODOS_PRECIO.find((m) => m.valor === modo)?.etiqueta ?? null],
+    ] as const
+  )
+    .filter(([, etiqueta]) => !!etiqueta)
+    .map(([clave, etiqueta]) => ({
+      clave,
+      etiqueta: etiqueta as string,
+      href: sinFiltro(clave),
+    }))
+
   // Los oficios de cada proveedor, con precio, en una sola consulta en
   // vez de una por tarjeta. Sale de la vista que aplica la regla S.
   const ids = (proveedores ?? []).map((p) => p.id)
@@ -179,74 +219,76 @@ export default async function ServiciosPage({
         </p>
       )}
 
-      <FormularioFiltros
+      <HojaFiltros
         action="/servicios"
-        className="mt-4 flex flex-col gap-2 rounded-lg border border-border bg-muted/40 p-3"
+        id="hoja-filtros-servicios"
+        titulo="Filtrar oficios"
+        aplicados={chipsAplicados}
+        conteo={`${proveedores?.length ?? 0} ${
+          proveedores?.length === 1 ? 'persona' : 'personas'
+        }`}
       >
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <SelectFiltro
-            name="oficio"
-            label="Filtrar por oficio"
-            placeholder="Todos los oficios"
-            valorInicial={params.oficio ?? ''}
-            conBusqueda
-            opciones={(oficiosCatalogo ?? []).map((o) => ({
-              valor: o.id,
-              etiqueta: o.nombre,
-              detalle: GRUPOS[o.grupo],
-            }))}
-          />
-          <SelectFiltro
-            name="municipio"
-            label="Filtrar por municipio"
-            placeholder="Todos los municipios"
-            valorInicial={municipio ?? ''}
-            conBusqueda
-            opciones={(municipiosLista ?? []).map((m) => ({
-              valor: m.codigo_dane,
-              etiqueta: m.nombre,
-              detalle: m.departamento,
-            }))}
-          />
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          {(zonas?.length ?? 0) > 0 && (
-            <SelectFiltro
-              name="zona"
-              label="Filtrar por zona"
-              placeholder="Toda la ciudad"
-              valorInicial={zona ?? ''}
-              opciones={(zonas ?? []).map((z) => ({
-                valor: z.id,
-                etiqueta: z.nombre,
-              }))}
-            />
-          )}
-          <SelectFiltro
-            name="modalidad"
-            label="Dónde atiende"
-            placeholder="En cualquier parte"
-            valorInicial={modalidad ?? ''}
-            opciones={MODALIDADES.map((m) => ({ valor: m.valor, etiqueta: m.etiqueta }))}
-          />
-          <SelectFiltro
-            name="modo"
-            label="Precio"
-            placeholder="Cualquier precio"
-            valorInicial={modo ?? ''}
-            opciones={MODOS_PRECIO.map((m) => ({ valor: m.valor, etiqueta: m.etiqueta }))}
-          />
-        </div>
-      </FormularioFiltros>
+        <SelectFiltro
+          name="oficio"
+          label="Filtrar por oficio"
+          placeholder="Todos los oficios"
+          valorInicial={params.oficio ?? ''}
+          conBusqueda
+          opciones={(oficiosCatalogo ?? []).map((o) => ({
+            valor: o.id,
+            etiqueta: o.nombre,
+            detalle: GRUPOS[o.grupo],
+          }))}
+        />
+        <SelectFiltro
+          name="municipio"
+          label="Filtrar por municipio"
+          placeholder="Todos los municipios"
+          valorInicial={municipio ?? ''}
+          conBusqueda
+          opciones={(municipiosLista ?? []).map((m) => ({
+            valor: m.codigo_dane,
+            etiqueta: m.nombre,
+            detalle: m.departamento,
+          }))}
+        />
 
-      {/* Si no se dice, el desplegable recortado parece un error. */}
-      <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
-        <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
-        <span>
-          Las listas de oficios y municipios solo muestran los que ya tienen a
-          alguien registrado.
-        </span>
-      </p>
+        {/* Si no se dice, el desplegable recortado parece un error. */}
+        <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
+          <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
+          <span>
+            Las listas de oficios y municipios solo muestran los que ya tienen a
+            alguien registrado.
+          </span>
+        </p>
+
+        {/* Las tres listas cortas pasan a chips: un toque en vez de abrir un
+            desplegable, elegir y cerrarlo. */}
+        {(zonas?.length ?? 0) > 0 && (
+          <GrupoChips
+            name="zona"
+            label="Dónde"
+            todos="Toda la ciudad"
+            valorInicial={zona ?? ''}
+            opciones={(zonas ?? []).map((z) => ({ valor: z.id, etiqueta: z.nombre }))}
+            nota="Solo las zonas donde ya hay alguien registrado."
+          />
+        )}
+        <GrupoChips
+          name="modalidad"
+          label="Cómo atiende"
+          todos="En cualquier parte"
+          valorInicial={modalidad ?? ''}
+          opciones={MODALIDADES.map((m) => ({ valor: m.valor, etiqueta: m.etiqueta }))}
+        />
+        <GrupoChips
+          name="modo"
+          label="Precio"
+          todos="Cualquier precio"
+          valorInicial={modo ?? ''}
+          opciones={MODOS_PRECIO.map((m) => ({ valor: m.valor, etiqueta: m.etiqueta }))}
+        />
+      </HojaFiltros>
 
       <p className="mt-4 text-sm text-muted-foreground">{AVISO_SERVICIOS}</p>
 

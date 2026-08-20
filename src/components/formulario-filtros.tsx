@@ -25,12 +25,19 @@ export function FormularioFiltros({
   children,
   className,
   etiqueta = 'Filtrar',
+  pie,
 }: {
   /** A dónde van los filtros. La ruta actual, sin query. */
   action?: string
   children: ReactNode
   className?: string
   etiqueta?: string
+  /**
+   * Reemplaza el botón de enviar por un pie propio. Lo usa `HojaFiltros`,
+   * que necesita «Quitar todo» y «Ver resultados» en la misma fila. Recibe
+   * `pendiente` porque el estado de la navegación vive aquí dentro.
+   */
+  pie?: (pendiente: boolean) => ReactNode
 }) {
   const router = useRouter()
   const [pendiente, iniciar] = useTransition()
@@ -60,9 +67,13 @@ export function FormularioFiltros({
       className={`${className ?? ''} ${pendiente ? 'opacity-60' : ''} transition-opacity`}
     >
       {children}
-      <Button type="submit" className="w-full sm:w-auto" disabled={pendiente}>
-        {pendiente ? 'Buscando…' : etiqueta}
-      </Button>
+      {pie ? (
+        pie(pendiente)
+      ) : (
+        <Button type="submit" className="w-full sm:w-auto" disabled={pendiente}>
+          {pendiente ? 'Buscando…' : etiqueta}
+        </Button>
+      )}
     </form>
   )
 }

@@ -2,7 +2,6 @@ import Link from 'next/link'
 import {
   PlusCircle,
   HandHeart,
-  TimerOff,
   SearchX,
   ShieldCheck,
   MessageSquare,
@@ -18,7 +17,7 @@ import type { Categoria } from '@/lib/types'
 import { CATEGORIAS, limitePorVencer } from '@/lib/catalogo'
 import { TarjetaSolicitud } from '@/components/tarjeta-solicitud'
 import { SelectFiltro } from '@/components/select-filtro'
-import { FormularioFiltros } from '@/components/formulario-filtros'
+import { HojaFiltros, GrupoChips } from '@/components/hoja-filtros'
 import { Button } from '@/components/ui/button'
 import { AVISO_TABLERO } from '@/lib/honestidad'
 import { CruceInverso } from './cruce-inverso'
@@ -109,12 +108,61 @@ export default async function InicioPage({
   if (params.antes) query = query.lt('creada_at', params.antes)
   if (params.urgentes) query = query.lt('expira_at', limitePorVencer())
 
-  const { data: solicitudes } = modoTengo ? { data: null } : await query
+  // El conteo que va al lado de los chips. Es una consulta aparte porque la
+  // lista viene paginada con cursor: contar sobre `query` diría cuántas
+  // quedan de esta página hacia atrás, no cuántas hay con estos filtros.
+  // `head: true` no trae ni una fila, solo el número.
+  let conteo = supabase
+    .from('solicitudes_publicas')
+    .select('*', { count: 'exact', head: true })
+  if (params.municipio) conteo = conteo.eq('municipio', params.municipio)
+  if (params.categoria) conteo = conteo.eq('categoria', params.categoria as Categoria)
+  if (params.urgentes) conteo = conteo.lt('expira_at', limitePorVencer())
+
+  const [{ data: solicitudes }, { count: totalSolicitudes }] = modoTengo
+    ? [{ data: null }, { count: null }]
+    : await Promise.all([query, conteo])
 
   const hayMas = (solicitudes?.length ?? 0) === POR_PAGINA
   const cursorSiguiente = hayMas ? solicitudes![solicitudes!.length - 1].creada_at : null
   const hayFiltro = !!(params.municipio || params.categoria || params.urgentes)
   const mostrarFiltros = (municipios?.length ?? 0) > 0 || hayFiltro
+
+  const nombreDeMunicipio = new Map(
+    (municipios ?? []).map((m) => [m.codigo_dane, m.nombre] as const)
+  )
+
+  const chipsAplicados = [
+    ...(params.municipio
+      ? [
+          {
+            clave: 'municipio',
+            etiqueta: nombreDeMunicipio.get(params.municipio) ?? 'Un municipio',
+            href: construirHref(params, { municipio: null, antes: null }),
+          },
+        ]
+      : []),
+    ...(params.categoria
+      ? [
+          {
+            clave: 'categoria',
+            etiqueta:
+              CATEGORIAS.find((c) => c.valor === params.categoria)?.etiqueta ??
+              'Una categoría',
+            href: construirHref(params, { categoria: null, antes: null }),
+          },
+        ]
+      : []),
+    ...(params.urgentes
+      ? [
+          {
+            clave: 'urgentes',
+            etiqueta: 'Por vencer',
+            href: construirHref(params, { urgentes: null, antes: null }),
+          },
+        ]
+      : []),
+  ]
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
@@ -308,34 +356,19 @@ export default async function InicioPage({
             a la gente que filtre la nada: tres avisos diciendo lo mismo. */}
         {mostrarFiltros && (
         <>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Link
-            href={construirHref(params, {
-              urgentes: params.urgentes ? null : '1',
-              antes: null,
-            })}
-            className={`inline-flex min-h-12 items-center gap-1.5 rounded-full border px-4 text-base transition-colors ${
-              params.urgentes
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border bg-card hover:bg-muted'
-            }`}
-          >
-            <TimerOff className="size-4" aria-hidden="true" />
-            Por vencer
-          </Link>
-          {hayFiltro && (
-            <Link
-              href="/"
-              scroll={false}
-              className="inline-flex min-h-12 items-center gap-1.5 rounded-full border border-border bg-card px-4 text-base transition-colors hover:bg-muted"
-            >
-              Quitar filtros
-            </Link>
-          )}
-        </div>
-
-        <FormularioFiltros className="mt-3 flex flex-col gap-2 rounded-xl border border-border bg-card p-3 sm:flex-row">
-          {params.urgentes && <input type="hidden" name="urgentes" value="1" />}
+        <HojaFiltros
+          action="/"
+          id="hoja-filtros-tablero"
+          titulo="Filtrar solicitudes"
+          aplicados={chipsAplicados}
+          conteo={
+            totalSolicitudes === null
+              ? null
+              : `${totalSolicitudes} ${
+                  totalSolicitudes === 1 ? 'solicitud abierta' : 'solicitudes abiertas'
+                }`
+          }
+        >
           <SelectFiltro
             name="municipio"
             label="Filtrar por municipio"
@@ -348,27 +381,39 @@ export default async function InicioPage({
               detalle: m.departamento,
             }))}
           />
-          <SelectFiltro
+
+          {/* Sin esto, quien no encuentra su municipio en la lista concluye
+              que la plataforma no lo cubre. La lista está recortada a los
+              que tienen algo publicado, y eso hay que decirlo. */}
+          <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
+            <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
+            <span>
+              La lista solo muestra los {municipios?.length ?? 0}{' '}
+              {municipios?.length === 1 ? 'municipio que tiene' : 'municipios que tienen'}{' '}
+              solicitudes abiertas ahora. Puedes publicar desde cualquier
+              municipio del país.
+            </span>
+          </p>
+
+          <GrupoChips
             name="categoria"
-            label="Filtrar por categoría"
-            placeholder="Todas las categorías"
+            label="Categoría"
+            todos="Todas"
             valorInicial={params.categoria ?? ''}
             opciones={CATEGORIAS.map((c) => ({ valor: c.valor, etiqueta: c.etiqueta }))}
           />
-        </FormularioFiltros>
 
-        {/* Sin esto, quien no encuentra su municipio en la lista concluye
-            que la plataforma no lo cubre. La lista está recortada a los
-            que tienen algo publicado, y eso hay que decirlo. */}
-        <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
-          <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
-          <span>
-            La lista solo muestra los {municipios?.length ?? 0}{' '}
-            {municipios?.length === 1 ? 'municipio que tiene' : 'municipios que tienen'}{' '}
-            solicitudes abiertas ahora. Puedes publicar desde cualquier
-            municipio del país.
-          </span>
-        </p>
+          {/* «Por vencer» era un enlace suelto encima del formulario, en
+              relleno terracota, compitiendo con la acción principal. Ahora
+              es un criterio más, y se aplica con el mismo botón. */}
+          <GrupoChips
+            name="urgentes"
+            label="Cuánto les queda"
+            todos="Todas"
+            valorInicial={params.urgentes ?? ''}
+            opciones={[{ valor: '1', etiqueta: 'Por vencer' }]}
+          />
+        </HojaFiltros>
         </>
         )}
 

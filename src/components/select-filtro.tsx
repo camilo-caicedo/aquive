@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useSyncExternalStore } from 'react'
+import { useContenedorHoja } from '@/components/contenedor-hoja'
 import {
   Combobox,
   ComboboxContent,
@@ -55,6 +56,9 @@ export function SelectFiltro({
   conBusqueda?: boolean
 }) {
   const hidratado = useSyncExternalStore(sinSuscripcion, enCliente, enServidor)
+  // Dentro de una hoja de filtros la lista se monta en la hoja y no en el
+  // `body`, o queda debajo de la capa superior del navegador.
+  const contenedor = useContenedorHoja()
   const [valor, setValor] = useState(valorInicial)
 
   // `min-w-0` para que dentro de un `flex-row` los controles encojan y la
@@ -110,7 +114,13 @@ export function SelectFiltro({
           >
             <ComboboxValue />
           </ComboboxTrigger>
-          <ComboboxContent>
+          {/* Al ancho del disparador y no al del contenido: el ancho
+              automático de shadcn deja la lista más angosta y descuadrada
+              respecto del campo, que dentro de la hoja se nota mucho. */}
+          <ComboboxContent
+            container={contenedor ?? undefined}
+            className="w-(--anchor-width) min-w-0"
+          >
             <ComboboxInput showTrigger={false} placeholder="Escribe para buscar" />
             <ComboboxEmpty>No encontramos ese lugar.</ComboboxEmpty>
             <ComboboxList>
@@ -142,7 +152,7 @@ export function SelectFiltro({
             {(v: string) => opciones.find((o) => o.valor === v)?.etiqueta ?? placeholder}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent container={contenedor ?? undefined}>
           <SelectItem value="">{placeholder}</SelectItem>
           {opciones.map((o) => (
             <SelectItem key={o.valor} value={o.valor}>
