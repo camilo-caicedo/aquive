@@ -457,3 +457,82 @@ begin
   raise notice 'Pruebas de la fase S2: OK';
 end;
 $$;
+
+-- =====================================================================
+-- Fase S3 — alta asistida y verificación
+--
+-- Sin sesión, `auth.uid()` es null. Eso hace de esta sesión el peor caso
+-- posible —un anónimo llamando a las RPC del equipo de la fundación— y
+-- por eso lo que se prueba aquí es exactamente lo que más importa: que
+-- nada de esto se pueda hacer sin ser quien dice ser.
+-- =====================================================================
+
+do $$
+declare
+  v_id    uuid;
+  v_n     integer;
+  v_fallo boolean;
+begin
+  insert into public.proveedores
+    (nombre_visible, tipo, telefono, municipio, acepto_publicacion,
+     autorizacion_version, token_hash, es_prueba)
+  values
+    ('PRUEBA S3', 'persona', '3000000010', '76001', true, 'prueba',
+     'hash-prueba-s3', true)
+  returning id into v_id;
+
+  -- ---- Nadie verifica un teléfono sin ser admin ni del equipo -------
+  v_fallo := false;
+  begin
+    perform public.verificar_telefono_proveedor(v_id, true);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo,
+    'Regla V rota: un anónimo pudo marcar un teléfono como verificado';
+
+  select count(*) into v_n from public.proveedores
+   where id = v_id and telefono_verificado;
+  assert v_n = 0, 'La ficha quedó verificada pese a que la llamada falló';
+
+  -- ---- Suspender es solo del administrador --------------------------
+  v_fallo := false;
+  begin
+    perform public.suspender_proveedor(v_id, true);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Un anónimo pudo suspender una ficha';
+
+  -- ---- Y verificar una ficha que no existe tampoco pasa -------------
+  v_fallo := false;
+  begin
+    perform public.verificar_telefono_proveedor(gen_random_uuid(), true);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'verificar_telefono_proveedor no se queja de una ficha inexistente';
+
+  -- ---- Dar de alta a nombre de una organización ajena ---------------
+  v_fallo := false;
+  begin
+    perform public.crear_proveedor_asistido(
+      gen_random_uuid(),
+      repeat('a', 64),
+      'PRUEBA intrusa', 'persona', '3000000011', '76001', null, null,
+      array['domicilio'],
+      '[{"oficio_id":"arreglos_ropa","modo":"normal"}]'::jsonb,
+      'prueba');
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo,
+    'Un anónimo pudo dar de alta un proveedor a nombre de una organización';
+
+  -- ---- Sin equipo no hay cola ---------------------------------------
+  assert public.proveedores_de_mi_organizacion() = '[]'::jsonb,
+    'proveedores_de_mi_organizacion devuelve algo sin sesión';
+  assert public.mi_organizacion_activa() is null,
+    'mi_organizacion_activa devuelve algo sin sesión';
+
+  delete from public.proveedores where es_prueba;
+
+  raise notice 'Pruebas de la fase S3: OK';
+end;
+$$;

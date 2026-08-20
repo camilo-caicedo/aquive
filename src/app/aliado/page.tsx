@@ -16,13 +16,14 @@ import { PanelEquipo } from './panel-equipo'
 import { PanelHilos } from './panel-hilos'
 import { PanelCoincidencias } from './panel-coincidencias'
 import { PanelSolicitudes } from './panel-solicitudes'
+import { PanelProveedores, type ProveedorDeOrganizacion } from './panel-proveedores'
 
 export const metadata: Metadata = {
   title: 'Mi organización',
   robots: { index: false, follow: false },
 }
 
-type Vista = 'conversaciones' | 'coincidencias' | 'equipo'
+type Vista = 'conversaciones' | 'coincidencias' | 'equipo' | 'proveedores'
 
 /**
  * Dos públicos en una sola ruta: el equipo de una fundación y quien
@@ -52,7 +53,9 @@ export default async function AliadoPage({
   const { data: esAliado } = await supabase.rpc('soy_aliado')
 
   const vista: Vista =
-    ver === 'coincidencias' || ver === 'equipo' ? ver : 'conversaciones'
+    ver === 'coincidencias' || ver === 'equipo' || ver === 'proveedores'
+      ? ver
+      : 'conversaciones'
 
   const [
     { data: hilosData },
@@ -104,6 +107,11 @@ export default async function AliadoPage({
                 href: '/aliado?ver=coincidencias',
                 etiqueta: 'Solicitudes por atender',
                 activa: vista === 'coincidencias',
+              },
+              {
+                href: '/aliado?ver=proveedores',
+                etiqueta: 'Servicios',
+                activa: vista === 'proveedores',
               },
               {
                 href: '/aliado?ver=equipo',
@@ -169,8 +177,59 @@ export default async function AliadoPage({
         </>
       )}
 
+      {vista === 'proveedores' && esAliado && <Proveedores />}
+
       {vista === 'equipo' && <Equipo organizaciones={organizaciones} miId={user.id} />}
     </main>
+  )
+}
+
+/**
+ * El directorio de servicios, desde el lado de la fundación: registrar a
+ * quien no tiene cuenta de Google y verificar teléfonos llamando.
+ *
+ * Sección aparte y consultas propias, como `Equipo`: son cuatro consultas
+ * que no tienen por qué hacerse cuando alguien entra a leer un mensaje.
+ */
+async function Proveedores() {
+  const supabase = await createClient()
+  const [{ data: lista }, { data: oficios }, { data: zonas }, municipios, origen] =
+    await Promise.all([
+      supabase.rpc('proveedores_de_mi_organizacion'),
+      supabase.from('catalogo_oficios').select('*').eq('activo', true).order('orden'),
+      supabase.from('zonas').select('*').eq('activa', true).order('orden'),
+      listarMunicipios(supabase),
+      origenDelSitio(),
+    ])
+
+  const { data: organizacionId } = await supabase.rpc('mi_organizacion_activa')
+
+  if (!organizacionId) {
+    return (
+      <p className="mt-6 text-base text-muted-foreground">
+        Tu ingreso al equipo todavía está por aprobar.
+      </p>
+    )
+  }
+
+  return (
+    <section>
+      <h2 className="font-heading mt-6 text-2xl">Directorio de servicios</h2>
+      <p className="mt-1 text-base text-muted-foreground">
+        Aquí se registra a quien vive de su trabajo y no tiene cuenta de
+        Google, y se verifican los teléfonos llamando. Es otra cosa que las
+        entregas: estas fichas se publican en internet y no se borran solas.
+      </p>
+
+      <PanelProveedores
+        organizacionId={organizacionId as string}
+        proveedores={(lista as unknown as ProveedorDeOrganizacion[]) ?? []}
+        municipios={municipios ?? []}
+        oficios={oficios ?? []}
+        zonas={zonas ?? []}
+        origen={origen}
+      />
+    </section>
   )
 }
 

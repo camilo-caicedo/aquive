@@ -95,11 +95,19 @@ export function FormularioProveedor({
   municipios,
   oficios,
   zonas,
+  token,
 }: {
   proveedor: MiProveedor | null
   municipios: MunicipioBasico[]
   oficios: Oficio[]
   zonas: Zona[]
+  /**
+   * Solo para quien no tiene cuenta y llegó por su enlace. Va en el
+   * cuerpo de la llamada, nunca en una query string (regla 6). Con él
+   * puede editar y borrar su ficha sin pasar por la organización que lo
+   * registró: es su puerta de habeas data, no un atajo.
+   */
+  token?: string
 }) {
   const router = useRouter()
 
@@ -191,6 +199,7 @@ export function FormularioProveedor({
       p_oficios: elegidos,
       p_acepto_publicacion: true,
       p_autorizacion_version: AUTORIZACION_PROVEEDOR_VERSION,
+      p_token: token ?? null,
     })
 
     if (rpcError) {
@@ -199,7 +208,7 @@ export function FormularioProveedor({
       return
     }
 
-    router.push('/servicios/soy-proveedor?guardado=1')
+    router.push(token ? `/servicios/mi-perfil/${token}` : '/servicios/soy-proveedor?guardado=1')
     router.refresh()
   }
 
@@ -209,7 +218,9 @@ export function FormularioProveedor({
     }
     setGuardando(true)
     const supabase = createClient()
-    const { error: rpcError } = await supabase.rpc('borrar_proveedor', {})
+    const { error: rpcError } = await supabase.rpc('borrar_proveedor', {
+      p_token: token ?? null,
+    })
     if (rpcError) {
       setError(rpcError.message)
       setGuardando(false)

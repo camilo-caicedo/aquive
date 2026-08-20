@@ -1905,6 +1905,38 @@ export interface Database {
         Args: { p_token?: string | null }
         Returns: undefined
       }
+      mi_organizacion_activa: {
+        Args: Record<string, never>
+        Returns: string | null
+      }
+      proveedores_de_mi_organizacion: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      crear_proveedor_asistido: {
+        Args: {
+          p_organizacion_id: string
+          p_token_hash: string
+          p_nombre_visible: string
+          p_tipo: TipoProveedor
+          p_telefono: string
+          p_municipio: string
+          p_zona_id: string | null
+          p_zona_texto: string | null
+          p_modalidad: ModalidadServicio[]
+          p_oficios: Json
+          p_autorizacion_version: string
+        }
+        Returns: string
+      }
+      verificar_telefono_proveedor: {
+        Args: { p_proveedor_id: string; p_verificado: boolean }
+        Returns: undefined
+      }
+      suspender_proveedor: {
+        Args: { p_proveedor_id: string; p_suspendido: boolean }
+        Returns: undefined
+      }
       crear_perfil: {
         Args: {
           p_nombre_visible: string
