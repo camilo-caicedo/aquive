@@ -239,7 +239,11 @@ export default async function InicioPage({
       </section>
 
       <section className="mt-8">
-        {/* Los dos modos del tablero. Son enlaces, no pestañas con estado:
+        {/* El activo va en papel elevado, no en relleno terracota: la
+            terracota es de la acción principal y de nada más (regla 2), y
+            aquí competía con «Necesito ayuda» a dos dedos de distancia.
+
+            Los dos modos del tablero. Son enlaces, no pestañas con estado:
             el modo vive en la URL, así que se puede compartir y funciona
             con el JavaScript apagado. */}
         <div className="flex flex-wrap gap-2" role="group" aria-label="Cómo mirar el tablero">
@@ -249,7 +253,7 @@ export default async function InicioPage({
             className={`inline-flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-full border px-4 text-base transition-colors sm:flex-initial ${
               modoTengo
                 ? 'border-border bg-card hover:bg-muted'
-                : 'border-primary bg-primary text-primary-foreground'
+                : 'border-border bg-card font-semibold text-foreground shadow-sm'
             }`}
           >
             Quién necesita ayuda
@@ -259,7 +263,7 @@ export default async function InicioPage({
             aria-current={modoTengo ? 'page' : undefined}
             className={`inline-flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-full border px-4 text-base transition-colors sm:flex-initial ${
               modoTengo
-                ? 'border-primary bg-primary text-primary-foreground'
+                ? 'border-border bg-card font-semibold text-foreground shadow-sm'
                 : 'border-border bg-card hover:bg-muted'
             }`}
           >
