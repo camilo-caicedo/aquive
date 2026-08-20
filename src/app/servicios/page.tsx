@@ -131,6 +131,14 @@ export default async function ServiciosPage({
           variant="outline"
           className="flex-1 sm:flex-initial"
           nativeButton={false}
+          render={<Link href="/servicios/solicitudes" />}
+        >
+          Quién está pidiendo
+        </Button>
+        <Button
+          variant="outline"
+          className="flex-1 sm:flex-initial"
+          nativeButton={false}
           render={<Link href="/servicios/soy-proveedor" />}
         >
           Ofrecer mi trabajo

@@ -733,3 +733,158 @@ begin
   raise notice 'Pruebas de la fase S4: OK';
 end;
 $$;
+
+-- =====================================================================
+-- Fase S5 — el lado de la demanda
+-- =====================================================================
+
+do $$
+declare
+  v_tok   text := 'token-de-prueba-s5-solicitud-no-usar-en-nada-real';
+  v_ptok  text := 'token-de-prueba-s5-proveedor-no-usar-en-nada-real';
+  v_sol   uuid;
+  v_cod   text;
+  v_prov  uuid;
+  v_leida jsonb;
+  v_n     integer;
+  v_fallo boolean;
+begin
+  -- ---- Regla 1: la nota no admite un teléfono -----------------------
+  v_fallo := false;
+  begin
+    perform public.crear_solicitud_servicio(
+      'arreglos_ropa', '76001', null, null, 'hoy', 'puedo_pagar',
+      'Llamame al 3001234567', v_tok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Regla 1 rota: la nota de la solicitud aceptó un teléfono';
+
+  -- ---- Ni un correo ---------------------------------------------------
+  v_fallo := false;
+  begin
+    perform public.crear_solicitud_servicio(
+      'arreglos_ropa', '76001', null, null, 'hoy', 'puedo_pagar',
+      'escribeme a juan@correo.com', v_tok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Regla 1 rota: la nota aceptó un correo';
+
+  -- ---- Zona de otro municipio ----------------------------------------
+  v_fallo := false;
+  begin
+    perform public.crear_solicitud_servicio(
+      'arreglos_ropa', '76109',
+      (select z.id from public.zonas z where z.municipio = '76001' limit 1),
+      null, 'hoy', 'puedo_pagar', null, v_tok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Se aceptó una comuna de Cali en otro municipio';
+
+  -- ---- Camino feliz ----------------------------------------------------
+  select s.solicitud_id, s.codigo into v_sol, v_cod
+  from public.crear_solicitud_servicio(
+    'arreglos_ropa', '76001', null, 'San Fernando', 'hoy', 'no_puedo_pagar',
+    'Son dos pantalones.', v_tok) s;
+
+  assert v_sol is not null, 'No se creó la solicitud';
+  assert char_length(v_cod) = 4, 'El código no tiene cuatro caracteres';
+
+  update public.solicitudes_servicio set es_prueba = true where id = v_sol;
+
+  -- El token no se guarda en claro en ninguna columna.
+  select count(*) into v_n from public.solicitudes_servicio s
+   where s.id = v_sol and s.token_hash = v_tok;
+  assert v_n = 0, 'El token quedó guardado en claro';
+
+  -- ---- Responder exige ficha publicada --------------------------------
+  v_fallo := false;
+  begin
+    perform public.responder_servicio(v_sol, 'Yo puedo hacerlo mañana', v_ptok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Alguien sin ficha pudo responder una solicitud';
+
+  -- Ahora sí, con ficha publicada.
+  insert into public.proveedores
+    (nombre_visible, tipo, telefono, municipio, acepto_publicacion,
+     autorizacion_version, token_hash, es_prueba)
+  values
+    ('PRUEBA S5', 'persona', '3000000030', '76001', true, 'prueba',
+     encode(extensions.digest(v_ptok, 'sha256'), 'hex'), true)
+  returning id into v_prov;
+
+  insert into public.proveedor_oficios (proveedor_id, oficio_id, modo)
+  values (v_prov, 'arreglos_ropa', 'normal');
+
+  -- ---- El mensaje también pasa por el filtro --------------------------
+  v_fallo := false;
+  begin
+    perform public.responder_servicio(v_sol, 'Escribeme al 3009999999', v_ptok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'El mensaje de respuesta aceptó un teléfono';
+
+  perform public.responder_servicio(v_sol, 'Puedo mañana en la mañana.', v_ptok);
+
+  -- ---- Una respuesta por par: la segunda actualiza, no duplica --------
+  perform public.responder_servicio(v_sol, 'Corrijo: puedo hoy en la tarde.', v_ptok);
+  select count(*) into v_n from public.respuestas_servicio
+   where solicitud_id = v_sol and proveedor_id = v_prov;
+  assert v_n = 1, 'El mismo proveedor dejó dos respuestas en la misma solicitud';
+
+  -- ---- Lo que ve quien pidió, con su token -----------------------------
+  v_leida := public.leer_solicitud_servicio(v_tok);
+  assert v_leida is not null, 'El token no abrió la solicitud';
+  assert jsonb_array_length(v_leida->'respuestas') = 1, 'No trajo la respuesta';
+  assert v_leida->'respuestas'->0->>'telefono' = '3000000030',
+    'La respuesta no trae el teléfono de quien ofreció';
+
+  -- Un token cualquiera no abre nada.
+  assert public.leer_solicitud_servicio('token-que-no-existe') is null,
+    'Un token inventado abrió una solicitud';
+
+  -- ---- Un proveedor suspendido desaparece de las respuestas -----------
+  update public.proveedores set suspendido = true where id = v_prov;
+  v_leida := public.leer_solicitud_servicio(v_tok);
+  assert jsonb_array_length(v_leida->'respuestas') = 0,
+    'La respuesta de un proveedor suspendido sigue mostrándose';
+  update public.proveedores set suspendido = false where id = v_prov;
+
+  -- ---- Renovar y cerrar -------------------------------------------------
+  perform public.gestionar_solicitud_servicio(v_tok, 'resolver');
+  select count(*) into v_n from public.solicitudes_servicio
+   where id = v_sol and estado = 'resuelta';
+  assert v_n = 1, 'No se marcó como resuelta';
+
+  -- Cerrada, ya no se puede responder.
+  v_fallo := false;
+  begin
+    perform public.responder_servicio(v_sol, 'Todavia puedo ayudarte', v_ptok);
+  exception when others then v_fallo := true;
+  end;
+  assert v_fallo, 'Se pudo responder una solicitud ya resuelta';
+
+  -- Y ya no sale en el tablero público.
+  select count(*) into v_n from public.solicitudes_servicio_publicas where id = v_sol;
+  assert v_n = 0, 'Una solicitud resuelta sigue en el tablero';
+
+  -- ---- Borrar deja la métrica anónima ------------------------------------
+  perform public.gestionar_solicitud_servicio(v_tok, 'borrar');
+  select count(*) into v_n from public.solicitudes_servicio where id = v_sol;
+  assert v_n = 0, 'gestionar_solicitud_servicio no borró';
+  select count(*) into v_n from public.metricas_servicio
+   where es_prueba and oficio = 'arreglos_ropa' and hubo_confirmacion;
+  assert v_n >= 1,
+    'Borrar a mano no dejó la métrica: se perdería la estadística de lo que sí funcionó';
+
+  -- Y la respuesta se fue en cascada.
+  select count(*) into v_n from public.respuestas_servicio where solicitud_id = v_sol;
+  assert v_n = 0, 'La respuesta sobrevivió al borrado de la solicitud';
+
+  delete from public.proveedores where es_prueba;
+  delete from public.solicitudes_servicio where es_prueba;
+  delete from public.metricas_servicio where es_prueba;
+
+  raise notice 'Pruebas de la fase S5: OK';
+end;
+$$;

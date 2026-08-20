@@ -1972,6 +1972,41 @@ export interface Database {
         Args: Record<string, never>
         Returns: Json
       }
+      // Sin grant a `anon`: solo la llama /api/servicios/solicitudes con la
+      // llave de servicio, para que nadie se salte el Turnstile.
+      crear_solicitud_servicio: {
+        Args: {
+          p_oficio_id: string
+          p_municipio: string
+          p_zona_id: string | null
+          p_zona_texto: string | null
+          p_urgencia: UrgenciaServicio
+          p_capacidad_pago: CapacidadPago
+          p_nota: string | null
+          p_token: string
+        }
+        Returns: { solicitud_id: string; codigo: string }[]
+      }
+      leer_solicitud_servicio: {
+        Args: { p_token: string }
+        Returns: Json
+      }
+      gestionar_solicitud_servicio: {
+        Args: { p_token: string; p_accion: 'renovar' | 'resolver' | 'borrar' }
+        Returns: Json
+      }
+      responder_servicio: {
+        Args: { p_solicitud_id: string; p_mensaje: string; p_token?: string | null }
+        Returns: undefined
+      }
+      solicitudes_de_servicio: {
+        Args: {
+          p_municipio?: string | null
+          p_oficio_id?: string | null
+          p_token?: string | null
+        }
+        Returns: Json
+      }
       crear_perfil: {
         Args: {
           p_nombre_visible: string
