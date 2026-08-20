@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, EyeOff } from 'lucide-react'
+import { Check, EyeOff, PhoneCall } from 'lucide-react'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -275,6 +275,23 @@ export function FormularioProveedor({
         Tu nombre, tu teléfono y lo que haces quedan públicos en internet. Tú
         acuerdas el precio con cada persona: AquíVe no cobra nada.
       </p>
+
+      {/* ⚠ Se dice ANTES de llenar el formulario, no después de guardar.
+          Desde el 20/08/2026 ninguna ficha se publica sin que alguien de la
+          fundación haya llamado, y alguien que llena diez campos y luego
+          descubre que no aparece se siente engañado con razón. */}
+      {!proveedor?.telefono_verificado && !proveedor?.suspendido && (
+        <div className="flex items-start gap-3 rounded-2xl bg-secondary p-4 text-secondary-foreground">
+          <PhoneCall className="size-5 shrink-0 translate-y-0.5" aria-hidden="true" />
+          <p className="text-base">
+            <span className="font-semibold">Tu ficha no se ve hasta que te
+            llamemos.</span>{' '}
+            Alguien de {RESPONSABLE_SERVICIOS} marca tu número y confirma que
+            contestas tú. Es lo único que comprobamos, y por eso lo hacemos
+            con todas las fichas antes de publicarlas.
+          </p>
+        </div>
+      )}
 
       {proveedor?.suspendido && (
         <Alert variant="warning">

@@ -84,8 +84,6 @@ export function Acompanamiento({
       p_token: token,
       p_organizacion_id: datos.organizacionId,
       p_nombre: datos.nombre.trim(),
-      p_documento_tipo: datos.documentoTipo,
-      p_documento: datos.documento.trim(),
       p_autorizacion_version: FECHA_LEGALES,
       p_telefono: datos.telefono.trim() || null,
     })

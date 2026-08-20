@@ -85,16 +85,16 @@ export default async function MisDatosPage({
       ) : (
         <>
           <section className="mt-6">
-            <h2 className="font-heading text-2xl">Tu identidad</h2>
+            <h2 className="font-heading text-2xl">Lo que guardamos de ti</h2>
             <p className="mt-1 text-base text-muted-foreground">
-              La guardamos cifrada porque {datos.organizacion ?? 'una fundación'}{' '}
-              acompaña tu entrega. Solo ellos la ven.
+              Tu nombre, cifrado, porque {datos.organizacion ?? 'una fundación'}{' '}
+              acompaña tu entrega y necesita saber a quién le entrega. Solo
+              ellos lo ven, y queda registrado cada vez que lo miran.
             </p>
             <div className="mt-2 rounded-2xl bg-card p-4 text-base shadow-sm">
-              <p>
-                {datos.identidad.documento_tipo} terminado en{' '}
-                {datos.identidad.documento_ultimos4}
-              </p>
+              {/* ⚠ Ya no hay documento que enseñar: la plataforma dejó de
+                  pedirlo y de guardarlo. La identidad la comprueba la
+                  fundación en persona. */}
               <p className="mt-1">
                 {datos.identidad.tiene_telefono
                   ? 'Nos diste un teléfono'

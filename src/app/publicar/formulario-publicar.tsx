@@ -277,8 +277,6 @@ export function FormularioPublicar({
           p_token: data.token,
           p_organizacion_id: datosAliado.organizacionId,
           p_nombre: datosAliado.nombre.trim(),
-          p_documento_tipo: datosAliado.documentoTipo,
-          p_documento: datosAliado.documento.trim(),
           p_autorizacion_version: FECHA_LEGALES,
           p_telefono: datosAliado.telefono.trim() || null,
         })

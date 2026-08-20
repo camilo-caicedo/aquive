@@ -2,24 +2,28 @@
 
 import Link from 'next/link'
 import { FECHA_LEGALES } from '@/lib/config'
-import { TIPOS_DOCUMENTO, validarDocumento, validarTelefono } from '@/lib/validacion'
+import { validarTelefono } from '@/lib/validacion'
 import {
   AVISO_ACOMPANAMIENTO_DATOS,
   AVISO_ACOMPANAMIENTO_SIN_VUELTA,
   type AliadoDelMunicipio,
 } from '@/lib/acompanamiento'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import type { TipoDocumento } from '@/lib/types'
-
-/** Lo que hace falta para activar el acompañamiento, en un solo objeto. */
+/**
+ * Lo que hace falta para activar el acompañamiento, en un solo objeto.
+ *
+ * ⚠ Ya no lleva documento. La plataforma dejó de pedir y de guardar
+ * números de cédula el 20 de agosto de 2026: la verificación de identidad
+ * la hace la fundación en persona, mirando el documento en su punto, y no
+ * queda ninguna copia por aquí. Lo que se guarda es lo que hace falta para
+ * coordinar una entrega —un nombre y, si la persona quiere, un teléfono—
+ * y sigue cifrado con llave del Vault. Ver v3-v1.
+ */
 export interface DatosAcompanamiento {
   organizacionId: string
   nombre: string
-  documentoTipo: TipoDocumento
-  documento: string
   telefono: string
   autorizo: boolean
 }
@@ -27,8 +31,6 @@ export interface DatosAcompanamiento {
 export const DATOS_VACIOS: DatosAcompanamiento = {
   organizacionId: '',
   nombre: '',
-  documentoTipo: 'CC',
-  documento: '',
   telefono: '',
   autorizo: false,
 }
@@ -41,8 +43,6 @@ export function datosCompletos(d: DatosAcompanamiento) {
   return (
     d.organizacionId !== '' &&
     d.nombre.trim().length >= 3 &&
-    d.documento.trim().length > 0 &&
-    validarDocumento(d.documentoTipo, d.documento) === null &&
     (d.telefono === '' || validarTelefono(d.telefono) === null) &&
     d.autorizo
   )
@@ -67,9 +67,6 @@ export function CamposAcompanamiento({
   onCambio: (d: DatosAcompanamiento) => void
 }) {
   const aliado = aliados.find((a) => a.id === datos.organizacionId) ?? null
-  const errorDocumento = datos.documento
-    ? validarDocumento(datos.documentoTipo, datos.documento)
-    : null
   const errorTelefono = datos.telefono ? validarTelefono(datos.telefono) : null
 
   const cambiar = <K extends keyof DatosAcompanamiento>(
@@ -143,41 +140,11 @@ export function CamposAcompanamiento({
         />
       </div>
 
-      <fieldset>
-        <legend className="mb-2 text-base font-medium">Tipo de documento</legend>
-        {/* Sin TI ni RC, y no es un olvido: esta plataforma no recibe
-            documentos de menores de edad (regla O). Un CHECK de la base los
-            rechaza aunque alguien los mande a mano. */}
-        <div className="grid grid-cols-2 gap-2">
-          {TIPOS_DOCUMENTO.map((t) => (
-            <Button
-              key={t.valor}
-              type="button"
-              variant={datos.documentoTipo === t.valor ? 'default' : 'outline'}
-              onClick={() => cambiar('documentoTipo', t.valor)}
-            >
-              {t.valor}
-            </Button>
-          ))}
-        </div>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {TIPOS_DOCUMENTO.find((t) => t.valor === datos.documentoTipo)?.etiqueta}
-        </p>
-      </fieldset>
-
-      <div>
-        <Label htmlFor="acomp-documento" className="mb-1">
-          Número de documento
-        </Label>
-        <Input
-          id="acomp-documento"
-          value={datos.documento}
-          onChange={(e) => cambiar('documento', e.target.value)}
-          maxLength={20}
-          inputMode="numeric"
-        />
-        {errorDocumento && <p className="mt-1 text-sm text-destructive">{errorDocumento}</p>}
-      </div>
+      {/* ⚠ Aquí había un tipo de documento y un número de cédula. Se
+          fueron el 20/08/2026: la fundación comprueba la identidad
+          mirando el documento en persona, que es lo que hacía de todos
+          modos, y la plataforma deja de custodiar el dato más regulado
+          que tenía. */}
 
       <div>
         <Label htmlFor="acomp-telefono" className="mb-1">
@@ -209,12 +176,13 @@ export function CamposAcompanamiento({
             className="mt-1 size-5 shrink-0"
           />
           <span>
-            Autorizo que {aliado.nombre} trate estos datos para coordinar la
-            entrega, según la{' '}
+            Autorizo que {aliado.nombre} trate mi nombre y mi teléfono
+            únicamente para coordinar esta entrega, según la{' '}
             <Link href="/privacidad" className="underline">
               política de privacidad
             </Link>{' '}
-            del {FECHA_LEGALES}.
+            del {FECHA_LEGALES}. Sé que se borran con la solicitud y que
+            puedo pedir que se borren antes.
           </span>
         </label>
       )}

@@ -123,14 +123,17 @@ Publicar una solicitud no exige esto y nunca lo va a exigir. Es una
 opción aparte, que se ofrece solo si hay una organización aliada
 trabajando en tu municipio, y que solo existe si tú la aceptas.
 
-Si la aceptas, guardamos tu nombre, tu tipo y número de documento y, si
-nos lo das, un teléfono. Van cifrados, en una tabla aparte, y no
-aparecen en ninguna página pública ni se le entregan a quien ofrece
-ayuda. La finalidad es una sola: que la fundación pueda verificar la
-entrega en su punto de acopio.
+Si la aceptas, guardamos **tu nombre y, si nos lo das, un teléfono.
+Nada más.** Van cifrados, en una tabla aparte, y no aparecen en ninguna
+página pública ni se le entregan a quien ofrece ayuda. La finalidad es una
+sola: que la fundación sepa a quién le está entregando.
 
-No recibimos documentos de menores de edad. Solo cédula de ciudadanía,
-cédula de extranjería, PEP o PPT.
+**No pedimos ni guardamos números de documento.** Si la fundación necesita
+comprobar tu identidad para entregarte algo, lo hace mirando tu cédula en
+persona, en su punto: no la teclea aquí y no queda ninguna copia en la
+plataforma.
+
+No recibimos documentos de nadie, y por tanto tampoco de menores de edad.
 
 Cada vez que alguien de la fundación consulta esos datos queda
 registrado quién fue, cuándo y con qué motivo. Puedes ver ese registro
@@ -262,8 +265,8 @@ Cuando la aceptas cambian tres cosas. La entrega ocurre en el punto de
 acopio de la fundación, no en la casa de nadie. La coordinación ocurre
 dentro de la plataforma, en una conversación donde están los tres —tú,
 quien ofrece y la fundación— y donde no se pueden intercambiar teléfonos
-ni correos. Y guardamos tu nombre, tu documento y un teléfono, cifrados,
-para que la fundación verifique la entrega.
+ni correos. Y guardamos tu nombre y, si lo das, un teléfono, cifrados,
+para que la fundación sepa a quién le entrega.
 
 En ese caso la fundación es responsable del tratamiento de esos datos y
 AquíVe actúa como encargado. La fundación responde por cómo los usa y por
@@ -347,9 +350,8 @@ Este es **otro** consentimiento y va aparte del de arriba: lo firma quien
 pide ayuda, no quien la ofrece, y lo que autoriza no es publicar sino
 entregar unos datos a un tercero.
 
-> Autorizo que [NOMBRE DE LA FUNDACIÓN] trate mi nombre, mi documento y mi
-> teléfono con la única finalidad de coordinar y verificar la entrega de los
-> insumos que pedí. Entiendo que estos datos **no se publican** en ninguna
+> Autorizo que [NOMBRE DE LA FUNDACIÓN] trate mi nombre y mi teléfono con
+> la única finalidad de coordinar la entrega de los insumos que pedí. Entiendo que estos datos **no se publican** en ninguna
 > parte, que no se le entregan a quien ofrece la ayuda, y que se borran
 > cuando se borre mi solicitud. He leído la política de privacidad.
 
@@ -367,7 +369,8 @@ la base en el RNBD a nombre de la fundación.
 El borrador del contrato está en `CONTRATO-TRANSMISION.md`, en esta misma
 carpeta, con su lista de qué mirar antes de firmarlo.
 
-**Sin datos de menores.** Solo CC, CE, PEP y PPT. TI y RC están prohibidos
+**Sin documentos, y por tanto sin datos de menores.** Desde el 20 de agosto
+de 2026 no se pide ni se guarda ningún número de documento. Lo anterior
 por un CHECK en la base, no por una validación de pantalla.
 
 ### 3c. Texto de autorización del proveedor de servicios

@@ -115,12 +115,14 @@ export default function PrivacidadPage() {
         hay una organización aliada trabajando en tu municipio, y que solo existe si tú la aceptas.
       </p>
       <p className="mt-3 text-base">
-        Si la aceptas, guardamos tu nombre, tu tipo y número de documento y, si nos lo das, un teléfono. Van
+        Si la aceptas, guardamos <strong>tu nombre y, si nos lo das, un teléfono. Nada más.</strong> Van
         cifrados, en una tabla aparte, y no aparecen en ninguna página pública ni se le entregan a quien ofrece
-        ayuda. La finalidad es una sola: que la fundación pueda verificar la entrega en su punto de acopio.
+        ayuda. La finalidad es una sola: que la fundación sepa a quién le está entregando.
       </p>
       <p className="mt-3 text-base">
-        No recibimos documentos de menores de edad. Solo cédula de ciudadanía, cédula de extranjería, PEP o PPT.
+        <strong>No pedimos ni guardamos números de documento.</strong> Si la fundación necesita comprobar tu
+        identidad para entregarte algo, lo hace mirando tu cédula en persona, en su punto: no la teclea aquí y
+        no queda ninguna copia en la plataforma.
       </p>
       <p className="mt-3 text-base">
         Cada vez que alguien de la fundación consulta esos datos queda registrado quién fue, cuándo y con qué
@@ -160,6 +162,19 @@ export default function PrivacidadPage() {
         Cuando alguien te responda vas a ver su nombre y su teléfono, y eres tú quien decide a quién
         escribir. La conversación ocurre por fuera de esta plataforma y nosotros no vemos nada de
         ella.
+      </p>
+
+      <h2 className="font-heading mt-6 text-2xl">Qué comprobamos antes de publicar una ficha</h2>
+      <p className="mt-3 text-base">
+        Una sola cosa: que el teléfono contesta. Alguien de {RESPONSABLE} marca el número que diste y confirma
+        que contestas tú. Hasta que eso pase, tu ficha no se ve en el directorio, aunque esté completa.
+      </p>
+      <p className="mt-3 text-base">
+        <strong>Eso no es una verificación de identidad</strong> y no debe leerse como una recomendación. No
+        comprobamos tu cédula, ni tu experiencia, ni tus antecedentes, ni la calidad de tu trabajo. Para algunos
+        oficios —cuidado de niños, cuidado de personas dependientes, transporte de pasajeros— pedimos además una
+        referencia de un cliente anterior, y tampoco eso es una verificación de identidad: una referencia la
+        puede dar un conocido.
       </p>
 
       <h2 className="font-heading mt-6 text-2xl">Si ofreces un servicio: tu ficha es pública y permanece.</h2>
@@ -206,6 +221,33 @@ export default function PrivacidadPage() {
         En la mayoría de los casos no hace falta que escribas: desde el enlace de tu solicitud, desde
         tu cuenta o desde el enlace de tu ficha de proveedor puedes ver todo lo que guardamos y
         borrarlo ahí mismo, sin pedirle permiso a nadie.
+      </p>
+
+      <h2 className="font-heading mt-6 text-2xl">Cómo borrar lo que guardamos de ti</h2>
+      <p className="mt-3 text-base">
+        Depende de qué sea, y en los tres casos lo puedes hacer tú sin pedirle permiso a nadie:
+      </p>
+      <ul className="mt-3 list-disc space-y-2 pl-5 text-base">
+        <li>
+          <strong>Tu solicitud de ayuda</strong> se borra sola a las 72 horas, con todo lo que lleva dentro. Si
+          quieres antes, entra con tu enlace y bórrala: desaparece en el momento.
+        </li>
+        <li>
+          <strong>Tu perfil de quien ofrece</strong> se borra desde «Lo mío», en los ajustes de tu cuenta.
+        </li>
+        <li>
+          <strong>Tu ficha del directorio de servicios</strong> se borra desde tu propia ficha, con el enlace
+          que te dimos al publicarla, y se va con las calificaciones que hayas recibido.
+        </li>
+      </ul>
+      <p className="mt-3 text-base">
+        Si diste tu nombre para que una fundación acompañe una entrega, puedes pedir que lo borren desde el
+        enlace de tu solicitud, en «ver qué datos tuyos guardamos», sin esperar a las 72 horas. Y si nada de
+        esto te sirve, escríbenos a {CORREO_CONTACTO}.
+      </p>
+      <p className="mt-3 text-base">
+        Lo único que no se borra es el registro de <em>quién miró</em> tus datos: quién fue, cuándo y con qué
+        motivo. Nunca qué vio. Sobrevive a propósito, porque es tu prueba de que alguien los consultó.
       </p>
 
       <h2 className="font-heading mt-6 text-2xl">La ayuda de emergencia es temporal.</h2>

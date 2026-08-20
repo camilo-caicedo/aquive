@@ -663,8 +663,6 @@ export interface MisDatos {
   expira_at: string
   organizacion: string | null
   identidad: {
-    documento_tipo: TipoDocumento
-    documento_ultimos4: string
     tiene_telefono: boolean
     autorizacion_version: string
     autorizacion_at: string
@@ -1976,8 +1974,6 @@ export interface Database {
           p_token: string
           p_organizacion_id: string
           p_nombre: string
-          p_documento_tipo: TipoDocumento
-          p_documento: string
           p_autorizacion_version: string
           p_telefono?: string | null
         }
