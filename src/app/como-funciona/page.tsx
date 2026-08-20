@@ -6,6 +6,9 @@ import {
   Stethoscope,
   Building2,
   TriangleAlert,
+  PlusCircle,
+  MessageSquare,
+  PhoneCall,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -104,6 +107,24 @@ const ROLES: Rol[] = [
   },
 ]
 
+const PASOS = [
+  {
+    Icono: PlusCircle,
+    titulo: 'Publicas qué necesitas',
+    texto: 'Eliges municipio, barrio y los artículos de una lista. Nada más.',
+  },
+  {
+    Icono: MessageSquare,
+    titulo: 'Alguien responde',
+    texto: 'Ves quién puede ayudarte y con qué, junto a su forma de contacto.',
+  },
+  {
+    Icono: PhoneCall,
+    titulo: 'Tú decides a quién escribir',
+    texto: 'Escribes por WhatsApp o llamas. La plataforma no participa.',
+  },
+]
+
 export default function ComoFuncionaPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
@@ -112,6 +133,26 @@ export default function ComoFuncionaPage() {
         Depende de a qué vengas. Abre lo tuyo.
       </p>
 
+
+      {/* El resumen de tres pasos que estaba en la portada. Vale para quien
+          pide, que es la mayoría; el instructivo por rol de abajo es para
+          los demás. */}
+      <ol className="lista-escalonada mt-6 grid gap-3 sm:grid-cols-3">
+        {PASOS.map(({ Icono, titulo, texto }, i) => (
+          <li
+            key={titulo}
+            className="animar-entrada rounded-xl border border-border bg-card p-4"
+          >
+            <span className="flex size-10 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+              <Icono className="size-5" aria-hidden="true" />
+            </span>
+            <h2 className="mt-3 text-base font-bold">
+              {i + 1}. {titulo}
+            </h2>
+            <p className="mt-1 text-base text-muted-foreground">{texto}</p>
+          </li>
+        ))}
+      </ol>
       <div className="mt-6 space-y-3">
         {ROLES.map(({ id, Icono, titulo, para, pasos, ojo, accion, abierto }) => (
           <details

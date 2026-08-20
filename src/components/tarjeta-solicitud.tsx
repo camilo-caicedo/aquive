@@ -1,10 +1,14 @@
 import Link from 'next/link'
-import { MapPin, MessageSquare, TimerOff, Check, HeartHandshake, Info } from 'lucide-react'
+import { MapPin, MessageSquare, Check, HeartHandshake, Info } from 'lucide-react'
 import type { Categoria, FlujoSolicitud, ItemResumen } from '@/lib/types'
-import { categoria, describirItem, horasParaVencer, HORAS_POR_VENCER } from '@/lib/catalogo'
-import { formatearHoras } from '@/lib/tiempo'
+import { categoria, describirItem } from '@/lib/catalogo'
 import { BadgeFrescura } from '@/components/badge-frescura'
 import { Button } from '@/components/ui/button'
+
+// Cuántos chips de ítem se ven antes de resumir en «+N». Tres caben en una
+// línea a 360 px; a partir de ahí la tarjeta se convierte en una lista de
+// compra y deja de poder mirarse de un vistazo.
+const CHIPS_VISIBLES = 3
 
 // Solo lo que la tarjeta usa, y no la fila entera de la vista: así sirve
 // igual para el tablero y para el cruce inverso, cuya RPC devuelve las
@@ -25,6 +29,29 @@ interface Solicitud {
   nota_admin?: string | null
 }
 
+/**
+ * Una solicitud en una lista: cinco datos y una acción (regla 7).
+ *
+ * Qué es —la categoría, como título—, dónde, cuándo, el estado y el botón.
+ * El resto vive en el detalle.
+ *
+ * Lo que salió de aquí y por qué:
+ *
+ * - El código en monoespaciado grande era lo primero que se leía, y a quien
+ *   mira el tablero no le dice nada: es la llave de quien pidió. Baja a
+ *   chip discreto y sigue estando entero en el detalle.
+ * - El tiempo se decía dos veces —`formatearHoras` abajo y `BadgeFrescura`
+ *   arriba— con dos redacciones distintas del mismo número.
+ * - «Se borra sola en N horas» se decía además del sello de frescura. Una
+ *   sola señal de tiempo.
+ * - El enlace «Cómo cuidarte antes de una entrega» se decía en cada
+ *   tarjeta: repetido veinte veces se vuelve textura y deja de leerse. Va
+ *   una vez encima de la lista y entero en `/responder`, que es donde se
+ *   decide (regla 5).
+ *
+ * Lo que se queda porque dice algo que nadie más dice: el sello de
+ * acompañamiento y la nota del administrador.
+ */
 export function TarjetaSolicitud({
   solicitud,
   coincidencias,
@@ -33,38 +60,28 @@ export function TarjetaSolicitud({
   coincidencias?: number
 }) {
   const { etiqueta, Icono } = categoria(solicitud.categoria)
-  const restantes = horasParaVencer(solicitud.expira_at)
-  const porVencer = restantes <= HORAS_POR_VENCER
+  const visibles = solicitud.items.slice(0, CHIPS_VISIBLES)
+  const ocultos = solicitud.items.length - visibles.length
 
   return (
     <li className="animar-entrada rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md sm:p-5">
       <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
             <Icono className="size-5" aria-hidden="true" />
           </span>
-          <div>
-            <span className="font-mono text-lg font-bold">{solicitud.codigo}</span>
-            <p className="text-sm text-muted-foreground">{etiqueta}</p>
+          <div className="min-w-0">
+            <p className="text-lg font-bold">{etiqueta}</p>
+            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <MapPin className="size-4 shrink-0" aria-hidden="true" />
+              <span className="truncate">
+                {solicitud.municipio_nombre} · {solicitud.barrio}
+              </span>
+            </p>
           </div>
         </div>
         <BadgeFrescura horas={solicitud.horas_sin_confirmar} />
       </div>
-
-      <p className="mt-3 flex items-center gap-1.5 text-base">
-        <MapPin className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-        {solicitud.municipio_nombre} — {solicitud.barrio}
-      </p>
-
-      {/* Sello discreto, no un distintivo de categoría: dice que hay una
-          fundación coordinando, y nada más. Ni cuál, ni de quién es la
-          solicitud. Va en salvia con icono y texto, nunca solo color. */}
-      {solicitud.flujo === 'acompanado' && (
-        <p className="mt-2 flex items-center gap-1.5 text-sm text-ok">
-          <HeartHandshake className="size-4 shrink-0" aria-hidden="true" />
-          Una fundación acompaña esta entrega
-        </p>
-      )}
 
       {coincidencias !== undefined && coincidencias > 0 && (
         <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-accent px-2.5 py-1.5 text-sm font-medium text-accent-foreground">
@@ -75,9 +92,16 @@ export function TarjetaSolicitud({
         </p>
       )}
 
-      {solicitud.items.length > 0 && (
-        <ul className="mt-3 flex flex-wrap gap-1.5">
-          {solicitud.items.map((it, i) => (
+      {/* Dos líneas y corta: la nota completa está en /responder. Cuatro
+          párrafos en una tarjeta empujan la siguiente solicitud fuera de
+          pantalla. */}
+      {solicitud.nota && (
+        <p className="mt-3 line-clamp-2 text-base text-muted-foreground">{solicitud.nota}</p>
+      )}
+
+      {visibles.length > 0 && (
+        <ul className="mt-3 flex flex-wrap items-center gap-1.5">
+          {visibles.map((it, i) => (
             <li
               key={i}
               className="rounded-full bg-muted px-3.5 py-1.5 text-sm text-foreground"
@@ -85,11 +109,20 @@ export function TarjetaSolicitud({
               {describirItem(it)}
             </li>
           ))}
+          {ocultos > 0 && (
+            <li className="px-1 text-sm text-muted-foreground">+{ocultos}</li>
+          )}
         </ul>
       )}
 
-      {solicitud.nota && (
-        <p className="mt-3 text-base text-muted-foreground">{solicitud.nota}</p>
+      {/* Sello discreto, no un distintivo de categoría: dice que hay una
+          fundación coordinando, y nada más. Ni cuál, ni de quién es la
+          solicitud. Va en salvia con icono y texto, nunca solo color. */}
+      {solicitud.flujo === 'acompanado' && (
+        <p className="mt-3 flex items-center gap-1.5 text-sm text-ok">
+          <HeartHandshake className="size-4 shrink-0" aria-hidden="true" />
+          Una fundación acompaña esta entrega
+        </p>
       )}
 
       {/* Esto lo escribe AquíVe, no quien pidió, así que se distingue del
@@ -103,44 +136,33 @@ export function TarjetaSolicitud({
         </p>
       )}
 
-      {porVencer && (
-        <p className="mt-3 flex items-center gap-1.5 rounded-lg bg-accent px-2.5 py-1.5 text-sm font-medium text-accent-foreground">
-          <TimerOff className="punto-urgente size-4 shrink-0" aria-hidden="true" />
-          {restantes <= 1
-            ? 'Se borra sola en menos de una hora'
-            : `Se borra sola en ${Math.round(restantes)} horas`}
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <p className="flex min-w-0 items-center gap-1.5 text-sm text-muted-foreground">
+          <MessageSquare className="size-4 shrink-0" aria-hidden="true" />
+          <span
+            className={solicitud.num_respuestas > 0 ? 'font-medium text-foreground' : undefined}
+          >
+            {solicitud.num_respuestas === 0
+              ? 'Sin respuestas'
+              : `${solicitud.num_respuestas} ${
+                  solicitud.num_respuestas === 1 ? 'respuesta' : 'respuestas'
+                }`}
+          </span>
+          <span aria-hidden="true">·</span>
+          {/* El código, en pequeño. Es la llave de quien pidió, no un dato
+              de quien mira, pero sirve para nombrar la solicitud por
+              teléfono. */}
+          <span className="truncate font-mono text-sm">{solicitud.codigo}</span>
         </p>
-      )}
-
-      <p className="mt-3 flex flex-wrap items-center gap-x-1.5 text-sm text-muted-foreground">
-        <span>{formatearHoras(solicitud.horas_sin_confirmar)}</span>
-        <span aria-hidden="true">·</span>
-        <MessageSquare className="size-4" aria-hidden="true" />
-        <span className={solicitud.num_respuestas > 0 ? 'font-medium text-foreground' : undefined}>
-          {solicitud.num_respuestas}{' '}
-          {solicitud.num_respuestas === 1 ? 'respuesta' : 'respuestas'}
-        </span>
-      </p>
-
-      <Button
-        variant="outline"
-        className="mt-3 w-full"
-        nativeButton={false}
-        render={<Link href={`/responder/${solicitud.codigo}`} />}
-      >
-        Puedo ayudar
-      </Button>
-
-      {/* Solo el enlace. La frase completa va una vez encima de la lista:
-          repetida en veinte tarjetas se vuelve textura y deja de leerse, y
-          además la mitad —"ni a quien responde"— le habla de sí mismo a
-          quien está mirando el tablero. El aviso que sí tiene que ir pegado
-          al botón es el de /responder, que es donde se decide. */}
-      <p className="mt-2 text-sm text-muted-foreground">
-        <Link href="/seguridad" className="underline">
-          Cómo cuidarte antes de una entrega
-        </Link>
-      </p>
+        <Button
+          variant="outline"
+          className="shrink-0"
+          nativeButton={false}
+          render={<Link href={`/responder/${solicitud.codigo}`} />}
+        >
+          Puedo ayudar
+        </Button>
+      </div>
     </li>
   )
 }

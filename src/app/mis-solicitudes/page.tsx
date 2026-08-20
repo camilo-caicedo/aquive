@@ -2,9 +2,10 @@ import Link from 'next/link'
 import { ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import type { EstadoEncabezado } from '@/lib/types'
+import { PestanasLoMio } from '@/components/pestanas-lo-mio'
 import { ListaLocal } from './lista-local'
 
-export const metadata = { title: 'Mis solicitudes' }
+export const metadata = { title: 'Lo mío' }
 
 // `/aliado` tiene dos públicos y por eso dos nombres. Para el equipo de una
 // fundación es su organización; para quien solo ofreció ayuda es el sitio
@@ -47,7 +48,13 @@ export default async function MisSolicitudesPage() {
 
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="font-heading text-3xl">Mis solicitudes</h1>
+      {/* El h1 repite la etiqueta de la barra (regla 8): quien tocó «Lo
+          mío» tiene que aterrizar en algo que se llame igual. */}
+      <h1 className="font-heading text-3xl">Lo mío</h1>
+
+      <PestanasLoMio activa="solicitudes" conSesion={!!user} />
+
+      <h2 className="font-heading mt-6 text-2xl">Mis solicitudes</h2>
       <p className="mt-2 text-base text-muted-foreground">
         Guardadas solo en este teléfono. Si cambias de teléfono o borras los
         datos del navegador, se pierden: no las tenemos guardadas en ningún
@@ -68,13 +75,7 @@ export default async function MisSolicitudesPage() {
             detalle="Las entregas que estás coordinando"
           />
         )}
-        {user ? (
-          <Fila
-            href="/registro"
-            etiqueta="Mi perfil"
-            detalle="Lo que ofreces, tus municipios y tus respuestas"
-          />
-        ) : (
+        {!user && (
           <Fila
             href="/login"
             etiqueta="Entrar para ofrecer ayuda"

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Info, Inbox, ShieldAlert } from 'lucide-react'
+import { Info, Inbox, ShieldAlert, Stethoscope } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { AVISO_SERVICIOS, NO_PAGUES_POR_ADELANTADO } from '@/lib/honestidad'
 import { listarMunicipios, mapaDeNombres } from '@/lib/municipios'
@@ -352,6 +352,31 @@ export default async function ServiciosPage({
         </Link>
         .
       </p>
+
+      {/* Puente al otro lado del sitio. Estaba en la portada, que se lo
+          quedaba entero para explicar dos cosas que no eran suyas; aquí es
+          donde de verdad se busca. Lo que importa de este texto es la
+          diferencia de vida útil, que es lo que sostiene la promesa de
+          borrado del tablero. */}
+      <section className="mt-8 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:p-5">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+          <Stethoscope className="size-6" aria-hidden="true" />
+        </span>
+        <div className="flex-1">
+          <h2 className="font-heading text-2xl">¿Necesitas un profesional?</h2>
+          <p className="mt-1 text-base text-muted-foreground">
+            Psicología, revisión de tu casa, atención médica, asesoría jurídica. Cada quien declara su matrícula; a algunos ya les revisamos que ese número exista en el registro, y esos aparecen de primeros.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          className="w-full sm:w-auto"
+          nativeButton={false}
+          render={<Link href="/servidores?ver=profesionales" />}
+        >
+          Ver profesionales
+        </Button>
+      </section>
     </main>
   )
 }

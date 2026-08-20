@@ -4,10 +4,7 @@ import {
   HandHeart,
   SearchX,
   ShieldCheck,
-  MessageSquare,
-  PhoneCall,
-  Stethoscope,
-  Briefcase,
+  ChevronDown,
   Info,
   PackageOpen,
   LogIn,
@@ -20,27 +17,10 @@ import { SelectFiltro } from '@/components/select-filtro'
 import { HojaFiltros, GrupoChips } from '@/components/hoja-filtros'
 import { Button } from '@/components/ui/button'
 import { AVISO_TABLERO } from '@/lib/honestidad'
+import { PlegableRecordado } from '@/components/plegable-recordado'
 import { CruceInverso } from './cruce-inverso'
 
 const POR_PAGINA = 20
-
-const PASOS = [
-  {
-    Icono: PlusCircle,
-    titulo: 'Publicas qué necesitas',
-    texto: 'Eliges municipio, barrio y los artículos de una lista. Nada más.',
-  },
-  {
-    Icono: MessageSquare,
-    titulo: 'Alguien responde',
-    texto: 'Ves quién puede ayudarte y con qué, junto a su forma de contacto.',
-  },
-  {
-    Icono: PhoneCall,
-    titulo: 'Tú decides a quién escribir',
-    texto: 'Escribes por WhatsApp o llamas. La plataforma no participa.',
-  },
-]
 
 function construirHref(
   actuales: { municipio?: string; categoria?: string; urgentes?: string },
@@ -205,109 +185,42 @@ export default async function InicioPage({
             Quiero ayudar
           </Button>
         </div>
-        <p className="mt-4 flex items-start gap-1.5 text-sm text-muted-foreground">
-          <ShieldCheck className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
-          El contacto ocurre por fuera de la plataforma. Nunca vemos tu
-          teléfono ni tus conversaciones.
-        </p>
-        {/* Quién entra con Google y para qué, dicho en la portada. Lo pide
-            la revisión de la marca OAuth —el revisor evalúa el cliente, no
-            la aplicación, y sin esto no hay dónde leer para qué sirve ese
-            botón—, pero está aquí porque de todos modos es lo que quiere
-            saber quien duda antes de tocarlo. Y es cierto: el callback usa
-            solo `user.id` y descarta el correo. */}
-        <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
-          <LogIn className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
-          Quien pide ayuda no necesita cuenta. Quien quiere ayudar entra con
-          su cuenta de Google para poder responder solicitudes y sostener su
-          perfil; de esa cuenta solo guardamos un identificador interno, y el
-          correo no se almacena.
-        </p>
-      </section>
-
-      {/* Los servicios profesionales no se piden por solicitud: viven en un
-          directorio aparte. Sin esta tarjeta no había forma de llegar desde
-          la portada, y nadie iba a adivinar que "Profesionales" era eso. */}
-      <section className="mt-8">
-        <div className="animar-entrada flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:p-5">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-            <Stethoscope className="size-6" aria-hidden="true" />
-          </span>
-          <div className="flex-1">
-            <h2 className="font-heading text-2xl">¿Necesitas un profesional?</h2>
-            <p className="mt-1 text-base text-muted-foreground">
-              Psicología, revisión de tu casa, atención médica, asesoría
-              jurídica. Cada quien declara su matrícula; a algunos ya les
-              revisamos que ese número exista en el registro, y esos aparecen
-              de primeros.
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            className="w-full sm:w-auto"
-            nativeButton={false}
-            render={<Link href="/servidores?ver=profesionales" />}
-          >
-            Ver profesionales
-          </Button>
-        </div>
-
-        {/* La otra mitad del sitio, y hay que decir en qué se diferencia:
-            aquí arriba todo se borra a las 72 horas y nadie deja datos;
-            abajo hay un directorio de personas que permanece. Si esa
-            diferencia no se entiende en la portada, la promesa de borrado
-            queda desmentida por la existencia del directorio. */}
-        <div className="animar-entrada mt-3 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:p-5">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-            <Briefcase className="size-6" aria-hidden="true" />
-          </span>
-          <div className="flex-1">
-            <h2 className="font-heading text-2xl">¿Necesitas contratar a alguien?</h2>
-            <p className="mt-1 text-base text-muted-foreground">
-              Comida, arreglos de ropa, trasteos, aseo, reparaciones. Gente que
-              vive de su trabajo y quiere que la encuentren: a diferencia de
-              las solicitudes de arriba, estas fichas no se borran solas. Tú
-              acuerdas el precio directamente con la persona.
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            className="w-full sm:w-auto"
-            nativeButton={false}
-            render={<Link href="/servicios" />}
-          >
-            Ver oficios
-          </Button>
-        </div>
-      </section>
-
-      <section className="mt-8">
-        <h2 className="font-heading text-2xl">Cómo funciona</h2>
-        <ol className="lista-escalonada mt-3 grid gap-3 sm:grid-cols-3">
-          {PASOS.map(({ Icono, titulo, texto }, i) => (
-            <li
-              key={titulo}
-              className="animar-entrada rounded-xl border border-border bg-card p-4"
-            >
-              <span className="flex size-10 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-                <Icono className="size-5" aria-hidden="true" />
-              </span>
-              <h3 className="mt-3 text-base font-bold">
-                {i + 1}. {titulo}
-              </h3>
-              <p className="mt-1 text-base text-muted-foreground">{texto}</p>
-            </li>
-          ))}
-        </ol>
-        {/* Los tres pasos de arriba son el resumen y valen para quien pide.
-            Quien viene a ofrecer, o de una fundación, tiene otro camino y
-            aquí no cabe: ese es el instructivo por rol. */}
-        <Link
-          href="/como-funciona"
-          className="mt-3 inline-flex min-h-12 items-center text-base underline"
+        {/* Los tres avisos que antes ocupaban media portada, plegados.
+            Abierto de entrada y servido siempre abierto: dentro va lo que
+            la revisión de la marca de Google lee para saber para qué es la
+            cuenta, así que no puede salir del HTML. Ver
+            `PlegableRecordado`. */}
+        <PlegableRecordado
+          id="portada-avisos"
+          className="group mt-4 border-t border-border/70 pt-3"
         >
-          Ver los pasos según lo que vengas a hacer
-        </Link>
+          <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2 text-base font-medium [&::-webkit-details-marker]:hidden">
+            <ChevronDown
+              className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+              aria-hidden="true"
+            />
+            Qué se borra, qué se queda y para qué es la cuenta
+          </summary>
+
+          <p className="mt-3 flex items-start gap-1.5 text-sm text-muted-foreground">
+            <ShieldCheck className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
+            El contacto ocurre por fuera de la plataforma. Nunca vemos tu
+            teléfono ni tus conversaciones.
+          </p>
+          {/* Quién entra con Google y para qué, dicho en la portada. Lo pide
+              la revisión de la marca OAuth —el revisor evalúa el cliente, no
+              la aplicación, y sin esto no hay dónde leer para qué sirve ese
+              botón—, pero está aquí porque de todos modos es lo que quiere
+              saber quien duda antes de tocarlo. Y es cierto: el callback usa
+              solo `user.id` y descarta el correo. */}
+          <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
+            <LogIn className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
+            Quien pide ayuda no necesita cuenta. Quien quiere ayudar entra con
+            su cuenta de Google para poder responder solicitudes y sostener su
+            perfil; de esa cuenta solo guardamos un identificador interno, y el
+            correo no se almacena.
+          </p>
+        </PlegableRecordado>
       </section>
 
       <section className="mt-8">

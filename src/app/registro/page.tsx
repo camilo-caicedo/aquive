@@ -7,7 +7,7 @@ import {
   type MiRespuesta,
   type OfrecimientoResumen,
 } from '@/lib/types'
-import { Pestanas } from '@/components/pestanas'
+import { PestanasLoMio } from '@/components/pestanas-lo-mio'
 import { Button } from '@/components/ui/button'
 import { FormularioRegistro } from './formulario-registro'
 import { AvisosOfertador } from './avisos-ofertador'
@@ -16,6 +16,8 @@ import { BorrarPerfil } from './borrar-perfil'
 import { MisRespuestas } from './mis-respuestas'
 
 type Vista = 'perfil' | 'respuestas' | 'ajustes'
+
+export const metadata = { title: 'Lo mío' }
 
 export default async function RegistroPage({
   searchParams,
@@ -82,34 +84,25 @@ export default async function RegistroPage({
 
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="font-heading text-3xl">
-        {perfil ? 'Mi perfil' : 'Crear mi perfil'}
-      </h1>
+      <h1 className="font-heading text-3xl">Lo mío</h1>
 
-      {/* La barra solo aparece con perfil ya creado: mientras se está
-          creando no hay respuestas ni nada que ajustar, y una barra con
-          opciones muertas es peor que ninguna barra. */}
-      {perfil && (
-        <div className="mt-4">
-          <Pestanas
-            etiqueta="Secciones de tu perfil"
-            pestanas={[
-              { href: '/registro', etiqueta: 'Mi perfil', activa: vista === 'perfil' },
-              {
-                href: '/registro?ver=respuestas',
-                etiqueta: 'Mis respuestas',
-                activa: vista === 'respuestas',
-                cuenta: respuestas.length,
-              },
-              {
-                href: '/registro?ver=ajustes',
-                etiqueta: 'Ajustes',
-                activa: vista === 'ajustes',
-              },
-            ]}
-          />
-        </div>
-      )}
+      <PestanasLoMio
+        activa={
+          vista === 'respuestas' ? 'respuestas' : vista === 'ajustes' ? 'ajustes' : 'perfil'
+        }
+        conSesion
+        respuestas={respuestas.length}
+      />
+
+      <h2 className="font-heading mt-6 text-2xl">
+        {vista === 'respuestas'
+          ? 'Mis respuestas'
+          : vista === 'ajustes'
+            ? 'Ajustes'
+            : perfil
+              ? 'Mi perfil'
+              : 'Crear mi perfil'}
+      </h2>
 
       {vista === 'respuestas' ? (
         <section className="mt-4">

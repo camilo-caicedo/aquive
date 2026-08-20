@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Info, Inbox } from 'lucide-react'
+import { Info, Inbox, Briefcase } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { ENTIDADES_MATRICULA } from '@/lib/config'
 import { enlaceWhatsapp } from '@/lib/contacto'
@@ -327,6 +327,31 @@ export default async function ServidoresPage({
         </AlertDescription>
       </Alert>
       )}
+
+      {/* Puente al otro lado del sitio. Estaba en la portada, que se lo
+          quedaba entero para explicar dos cosas que no eran suyas; aquí es
+          donde de verdad se busca. Lo que importa de este texto es la
+          diferencia de vida útil, que es lo que sostiene la promesa de
+          borrado del tablero. */}
+      <section className="mt-8 flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:p-5">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+          <Briefcase className="size-6" aria-hidden="true" />
+        </span>
+        <div className="flex-1">
+          <h2 className="font-heading text-2xl">¿Necesitas contratar a alguien?</h2>
+          <p className="mt-1 text-base text-muted-foreground">
+            Comida, arreglos de ropa, trasteos, aseo, reparaciones. Gente que vive de su trabajo y quiere que la encuentren: a diferencia de las solicitudes del tablero, estas fichas no se borran solas. Tú acuerdas el precio directamente con la persona.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          className="w-full sm:w-auto"
+          nativeButton={false}
+          render={<Link href="/servicios" />}
+        >
+          Ver oficios
+        </Button>
+      </section>
     </main>
   )
 }
