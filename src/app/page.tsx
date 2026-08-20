@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { AccionPrincipal } from '@/components/accion-principal'
-import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { Info, Inbox, ShieldAlert, Stethoscope, CircleAlert, Briefcase } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { AVISO_SERVICIOS, NO_PAGUES_POR_ADELANTADO } from '@/lib/honestidad'
@@ -181,7 +180,21 @@ export default async function InicioPage({
       <VueltaAlDestino />
       <HeroPortada />
 
-      <CabeceraPantalla titulo="Servicios">
+      {/* ⚠ Aquí NO va `CabeceraPantalla`. Ese componente se pega al
+          encabezado global con un margen negativo arriba, y en esta
+          pantalla el héroe va delante: el título se metía por debajo de la
+          tarjeta del héroe y quedaba tapado a media palabra.
+
+          Y tampoco haría falta: el `h1` de esta pantalla es el del héroe,
+          que la revisión de marca de Google exige que describa la
+          aplicación. Dos `h1` en una página además no es un detalle de
+          estilo. Desviación consciente de la regla 8 —el `h1` no repite la
+          etiqueta de la barra— y es la única pantalla donde pasa. */}
+      <section className="mt-8">
+        <h2 className="font-heading text-3xl leading-tight">Servicios</h2>
+        <p className="mt-1 text-base text-muted-foreground">
+          Gente que vive de su oficio y quiere que la encuentren.
+        </p>
         <PestanasServicios activa="oficios" />
         <HojaFiltros
           action="/"
@@ -272,7 +285,7 @@ export default async function InicioPage({
             </Link>
           )}
         </div>
-      </CabeceraPantalla>
+      </section>
 
       <p className="text-base text-muted-foreground">
         Gente que trabaja por su cuenta y negocios pequeños. Acuerdas el precio

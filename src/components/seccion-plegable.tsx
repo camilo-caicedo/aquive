@@ -24,6 +24,7 @@ import { ChevronDown } from 'lucide-react'
 export function SeccionPlegable({
   titulo,
   resumen,
+  resumenSiempre = false,
   sello,
   abierta,
   children,
@@ -32,6 +33,16 @@ export function SeccionPlegable({
   titulo: string
   /** Lo que se lee cuando está cerrada. Sin esto, plegar es esconder. */
   resumen?: ReactNode
+  /**
+   * Deja el resumen a la vista también con la sección abierta.
+   *
+   * ⚠ Solo cuando el resumen EXPLICA la sección —«duran 15 días»— y no
+   * cuando repite un valor que está dentro. En el formulario de perfil el
+   * resumen es el propio dato —el teléfono, los municipios—, y ahí verlo
+   * dos veces sobra; aquí dice cuánto vive cada lista, que sigue haciendo
+   * falta mientras se lee.
+   */
+  resumenSiempre?: boolean
   /** Estado en palabras: «Sin verificar», «Falta tu autorización». */
   sello?: ReactNode
   /** Abierta de entrada. La primera sin terminar, normalmente. */
@@ -46,9 +57,14 @@ export function SeccionPlegable({
         <span className="min-w-0 flex-1">
           <span className="block text-lg font-semibold">{titulo}</span>
           {/* El resumen se esconde al abrir: dentro ya está el dato de
-              verdad, y repetirlo arriba solo hace ruido. */}
+              verdad, y repetirlo arriba solo hace ruido. Salvo cuando lo
+              que dice es qué ES la sección — ver `resumenSiempre`. */}
           {resumen && (
-            <span className="block truncate text-base text-muted-foreground group-open:hidden">
+            <span
+              className={`block text-base text-muted-foreground ${
+                resumenSiempre ? '' : 'truncate group-open:hidden'
+              }`}
+            >
               {resumen}
             </span>
           )}

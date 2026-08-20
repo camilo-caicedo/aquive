@@ -57,21 +57,24 @@ export default async function MisSolicitudesPage() {
           servicios no tenían ninguna pantalla donde verse — el token se
           guardaba en este teléfono al publicar y ahí se quedaba.
 
-          La de insumos abierta de entrada: es la que caduca. */}
+          Servicios va primero: es el modulo que hoy recibe a la gente, y
+          sus solicitudes duran mas, asi que es la lista a la que se vuelve. */}
       <div className="mt-4 space-y-3">
-        <SeccionPlegable
-          titulo="Solicitudes de ayuda"
-          resumen="Insumos que pediste. Se borran solas a las 72 horas."
-          abierta
-        >
-          <ListaLocal />
-        </SeccionPlegable>
-
         <SeccionPlegable
           titulo="Solicitudes de servicios"
           resumen="Oficios que pediste en el directorio. Duran 15 días, renovables."
+          resumenSiempre
+          abierta
         >
           <ListaServicios />
+        </SeccionPlegable>
+
+        <SeccionPlegable
+          titulo="Solicitudes de ayuda"
+          resumen="Insumos que pediste. Se borran solas a las 72 horas."
+          resumenSiempre
+        >
+          <ListaLocal />
         </SeccionPlegable>
       </div>
 

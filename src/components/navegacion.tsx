@@ -122,11 +122,19 @@ const TAMBIEN: Record<string, string[]> = {
 // celda entera al entrar a una ficha de servicios o a /servidores: la
 // barra parecía de otra aplicación justo al dar el primer paso dentro del
 // módulo que ahora recibe a todo el mundo.
+// ⚠ Por segmentos y no por `startsWith` a secas. Con la comparación de
+// texto pelada, /solicitudes encendía TAMBIÉN «Lo mío», porque de esa celda
+// cuelga /solicitud —la solicitud propia— y una es prefijo de la otra. Lo
+// mismo pasaría el día que alguien añada /servicio junto a /servicios.
+function bajo(ruta: string, base: string) {
+  return ruta === base || ruta.startsWith(base + '/')
+}
+
 function estaActiva(ruta: string, href: string) {
   const propias = TAMBIEN[href] ?? []
-  if (href === '/') return ruta === '/' || propias.some((otra) => ruta.startsWith(otra))
-  if (ruta.startsWith(href)) return true
-  return propias.some((otra) => ruta.startsWith(otra))
+  if (href !== '/' && bajo(ruta, href)) return true
+  if (href === '/' && ruta === '/') return true
+  return propias.some((otra) => bajo(ruta, otra))
 }
 
 /**

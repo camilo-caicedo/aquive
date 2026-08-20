@@ -70,9 +70,11 @@ export function ListaServicios() {
         <li key={s.token}>
           <Link
             href={`/servicios/solicitud/${s.token}`}
-            className="flex min-h-16 items-center gap-3 rounded-2xl bg-card p-4 shadow-sm transition-colors hover:bg-muted"
+            // Apagado y no papel elevado: va dentro de un plegable, que ya
+            // es una tarjeta. Ver la nota de `lista-local`.
+            className="flex min-h-16 items-center gap-3 rounded-2xl bg-muted p-4 transition-colors hover:bg-secondary"
           >
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card text-primary">
               <Briefcase className="size-5" aria-hidden="true" />
             </span>
             <span className="min-w-0 flex-1">
