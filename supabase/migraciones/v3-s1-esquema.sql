@@ -158,7 +158,7 @@ create table if not exists public.proveedores (
   modalidad           text[] not null default '{}',   -- domicilio | local | remoto
   dias                text[] not null default '{}',   -- lun..dom
   franjas             text[] not null default '{}',   -- manana | tarde | noche
-  medios_pago         text[] not null default '{}',   -- efectivo | nequi | daviplata
+  medios_pago         text[] not null default '{}',   -- ver medios_pago_validos()
   descripcion         text check (char_length(descripcion) <= 300),
   acepto_publicacion  boolean not null default false,
   -- Qué texto exacto aceptó. Importa más aquí que en ningún otro sitio

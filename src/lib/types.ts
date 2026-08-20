@@ -104,7 +104,8 @@ export type UnidadPrecio =
 export type ModalidadServicio = 'domicilio' | 'local' | 'remoto'
 export type DiaSemana = 'lun' | 'mar' | 'mie' | 'jue' | 'vie' | 'sab' | 'dom'
 export type FranjaHoraria = 'manana' | 'tarde' | 'noche'
-export type MedioPago = 'efectivo' | 'nequi' | 'daviplata'
+/** Gemela de `medios_pago_validos()` en Postgres: si cambia una, la otra. */
+export type MedioPago = 'efectivo' | 'nequi' | 'daviplata' | 'bre_b'
 export type TipoZona = 'comuna' | 'corregimiento' | 'barrio'
 /**
  * Lo sembrado nace `aprobada`. Lo que escribe alguien al publicar entra

@@ -43,10 +43,18 @@ export const FRANJAS: { valor: FranjaHoraria; etiqueta: string }[] = [
   { valor: 'noche', etiqueta: 'Noche' },
 ]
 
+/**
+ * Gemela de `medios_pago_validos()` en Postgres. Si se agrega uno aquí,
+ * se agrega allá: aquí se dibuja y allá se rechaza.
+ *
+ * Bre-B es el sistema de pagos inmediatos del Banco de la República. Va
+ * de último porque es el más nuevo y todavía hay quien no lo tiene.
+ */
 export const MEDIOS_PAGO: { valor: MedioPago; etiqueta: string }[] = [
   { valor: 'efectivo', etiqueta: 'Efectivo' },
   { valor: 'nequi', etiqueta: 'Nequi' },
   { valor: 'daviplata', etiqueta: 'Daviplata' },
+  { valor: 'bre_b', etiqueta: 'Bre-B' },
 ]
 
 /**

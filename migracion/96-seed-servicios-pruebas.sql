@@ -153,7 +153,7 @@ begin
   values
     ('PRUEBA — Marta, almuerzos', 'microempresa', '000 000 0003', '76001', c13, 'El Vergel',
      array['local','domicilio'], array['lun','mar','mie','jue','vie'],
-     array['manana','tarde'], array['efectivo','nequi','daviplata'],
+     array['manana','tarde'], array['efectivo','nequi','daviplata','bre_b'],
      'Almuerzos caseros. Tengo precio solidario para quien está sin trabajo.',
      true, 'prueba', encode(extensions.digest(t_marta,'sha256'),'hex'),
      true, now(), true)
@@ -173,7 +173,7 @@ begin
   values
     ('PRUEBA — Jeison, celulares', 'persona', '000 000 0004', '76001', c2,
      array['local'], array['lun','mar','mie','jue','vie','sab'],
-     array['tarde'], array['efectivo','nequi'],
+     array['tarde'], array['efectivo','bre_b'],
      'Cambio de pantalla y batería. Reparo computadores portátiles.',
      true, 'prueba', encode(extensions.digest(t_jeison,'sha256'),'hex'), true)
   returning id into id_jeison;
