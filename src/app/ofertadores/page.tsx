@@ -8,6 +8,7 @@ import { SelectFiltro } from '@/components/select-filtro'
 import { HojaFiltros } from '@/components/hoja-filtros'
 import { BotonReportar } from '@/components/boton-reportar'
 import { AccionPrincipal } from '@/components/accion-principal'
+import { CintaMiSolicitud } from './cinta-mi-solicitud'
 
 export const metadata = { title: 'Quién está ofreciendo' }
 
@@ -49,17 +50,20 @@ export default async function OfertadoresPage({
     <main className="mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Quién ofrece" />
       <p className="mt-1 text-base text-muted-foreground">
-        Personas y negocios que ya dijeron con qué pueden ayudar. Mira si
-        alguien tiene lo que necesitas y publica tu solicitud: ellos la ven y
-        te responden.
+        Personas y negocios que ya dijeron con qué pueden ayudar.
       </p>
-      {/* Era un bloque de aviso y lo primero de la pantalla: quien entra a
-          mirar quién ofrece leía primero un párrafo diciéndole que no puede
-          hacer nada aquí. Es cierto, pero es una línea, no un aviso. */}
+      {/* Antes esta línea decía «desde aquí no se les escribe», y era
+          cierta: el contacto solo ocurría cuando alguien respondía una
+          solicitud. Con el cruce al revés dejó de serlo — quien ya publicó
+          puede llegar al contacto desde su propia solicitud, de a uno.
+          Lo que NO cambia es que el teléfono no vive en esta lista: sigue
+          detrás del token, y esta pantalla solo enseña el camino. */}
       <p className="mt-2 text-sm text-muted-foreground">
-        Desde aquí no se les escribe: publica lo que necesitas y quien pueda
-        ayudarte te responde con su contacto.
+        Si ya publicaste lo que necesitas, te marcamos quién tiene algo tuyo y
+        desde ahí puedes escribirle.
       </p>
+
+      <CintaMiSolicitud />
 
 
       {mostrarFiltros && (

@@ -4,7 +4,11 @@ import { Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { origenDelSitio } from '@/lib/origen'
 import { horasParaVencer, describirItem, categoria } from '@/lib/catalogo'
-import type { ConversacionDelSolicitante, SolicitudConRespuestas } from '@/lib/types'
+import type {
+  ConversacionDelSolicitante,
+  OfertadorQueCalza,
+  SolicitudConRespuestas,
+} from '@/lib/types'
 import type { AliadoDelMunicipio } from '@/lib/acompanamiento'
 import { Button } from '@/components/ui/button'
 import { Chat } from '@/components/chat'
@@ -17,6 +21,7 @@ import { ConfirmarRecepcion } from './confirmar-recepcion'
 import { PantallaConfirmacion } from './pantalla-confirmacion'
 import { GestionSolicitud } from './gestion-solicitud'
 import { ListaRespuestas } from './lista-respuestas'
+import { QuienTiene } from './quien-tiene'
 
 // El token portador va en la URL, así que esta página no se indexa nunca.
 // `robots.ts` ya pide lo mismo, pero un `Disallow` es una petición que
@@ -26,7 +31,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-type Vista = 'enlace' | 'respuestas' | 'coordinacion' | 'ajustes'
+type Vista = 'enlace' | 'respuestas' | 'quien-tiene' | 'coordinacion' | 'ajustes'
 
 export default async function SolicitudPage({
   params,
@@ -67,7 +72,7 @@ export default async function SolicitudPage({
   // arriba, visible siempre y no solo mientras no hubiera respuestas.
   const porDefecto: Vista = 'respuestas'
   const vista: Vista =
-    ver === 'respuestas' || ver === 'ajustes' || ver === 'enlace'
+    ver === 'respuestas' || ver === 'ajustes' || ver === 'enlace' || ver === 'quien-tiene'
       ? ver
       : ver === 'coordinacion' && acompanada
         ? 'coordinacion'
@@ -79,39 +84,55 @@ export default async function SolicitudPage({
   // respuestas: el ofrecimiento principal vive en el paso 4 de publicar, y
   // esto es la segunda oportunidad para quien dijo que no. Los hilos solo
   // existen si está acompañada.
-  const [{ data: aliadosData }, { data: hilosData }] = await Promise.all([
-    vista === 'respuestas' && !acompanada
+  const [{ data: aliadosData }, { data: hilosData }, { data: calzanData }] = await Promise.all([
+    (vista === 'respuestas' || vista === 'quien-tiene') && !acompanada
       ? supabase.rpc('aliados_del_municipio', { p_municipio: solicitud.municipio })
       : Promise.resolve({ data: null }),
     vista === 'coordinacion' && acompanada
       ? supabase.rpc('mis_conversaciones_token', { p_token: token })
       : Promise.resolve({ data: null }),
+    // El cruce al revés se pide SIEMPRE, aunque la pestaña activa sea otra:
+    // su número va en la pestaña. Con `p_limite = 1` se trae una fila y el
+    // total igual, porque `count(*) over ()` se calcula antes del `limit` —
+    // no hace falta traer la página entera para saber cuántos son.
+    supabase.rpc('ofertadores_que_calzan', {
+      p_token: token,
+      p_limite: vista === 'quien-tiene' ? 20 : 1,
+    }),
   ])
 
   const aliados = (aliadosData as unknown as AliadoDelMunicipio[] | null) ?? []
   const hilos = (hilosData as unknown as ConversacionDelSolicitante[]) ?? []
+  const calzan = (calzanData as unknown as OfertadorQueCalza[] | null) ?? []
+  const numCalzan = calzan.length > 0 ? calzan[0].total : 0
   const horasRestantes = Math.max(0, Math.round(horasParaVencer(solicitud.expira_at)))
 
-  const PESTANAS = [
-    {
-      href: `${base}?ver=respuestas`,
-      etiqueta: 'Respuestas',
-      activa: vista === 'respuestas',
-      cuenta: numRespuestas,
-    },
-    ...(acompanada
-      ? [
-          {
-            href: `${base}?ver=coordinacion`,
-            etiqueta: 'Coordinación',
-            activa: vista === 'coordinacion',
-          },
-        ]
-      : []),
-    {
-      href: `${base}?ver=ajustes`,
-      etiqueta: 'Ajustes',
-      activa: vista === 'ajustes',
+  const PESTANAS = [
+    {
+      href: `${base}?ver=respuestas`,
+      etiqueta: 'Respuestas',
+      activa: vista === 'respuestas',
+      cuenta: numRespuestas,
+    },
+    {
+      href: `${base}?ver=quien-tiene`,
+      etiqueta: 'Quién tiene',
+      activa: vista === 'quien-tiene',
+      cuenta: numCalzan,
+    },
+    ...(acompanada
+      ? [
+          {
+            href: `${base}?ver=coordinacion`,
+            etiqueta: 'Coordinación',
+            activa: vista === 'coordinacion',
+          },
+        ]
+      : []),
+    {
+      href: `${base}?ver=ajustes`,
+      etiqueta: 'Ajustes',
+      activa: vista === 'ajustes',
     },
   ]
 
@@ -188,6 +209,17 @@ export default async function SolicitudPage({
             organizacion={solicitud.organizacion}
           />
         </section>
+      )}
+
+      {vista === 'quien-tiene' && (
+        <QuienTiene
+          token={token}
+          filas={calzan}
+          acompanada={acompanada}
+          organizacion={solicitud.organizacion}
+          aliado={aliados[0]?.nombre ?? null}
+          yaTieneAvisos={solicitud.tiene_avisos}
+        />
       )}
 
       {vista === 'coordinacion' && (

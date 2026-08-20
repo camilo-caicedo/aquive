@@ -20,13 +20,17 @@ import { HandHeart, Stethoscope, PackageOpen, UserRound } from 'lucide-react'
 // suyo. /registro cuelga de aquí a través de TAMBIEN.
 const ENLACES = [
   { href: '/', etiqueta: 'Solicitudes', Icono: HandHeart },
+  // Segunda y pegada a «Solicitudes» desde que existe el cruce al revés:
+  // las dos pantallas se hablan —de una solicitud se llega a quién tiene, y
+  // de aquí se vuelve a la solicitud—, y separarlas con Servicios en medio
+  // ponía un módulo entero entre las dos mitades de un mismo movimiento.
+  { href: '/ofertadores', etiqueta: 'Quién ofrece', Icono: PackageOpen },
   // Un solo destino para las tres listas de «quién puede hacer algo por
   // mí»: oficios del rebusque, profesionales con matrícula y entidades.
   // Detrás son módulos distintos —y el primero tiene otro responsable del
   // tratamiento— pero para quien busca es la misma pregunta. Las tres se
   // reparten en `PestanasServicios`.
   { href: '/servicios', etiqueta: 'Servicios', Icono: Stethoscope },
-  { href: '/ofertadores', etiqueta: 'Quién ofrece', Icono: PackageOpen },
   { href: '/mis-solicitudes', etiqueta: 'Lo mío', Icono: UserRound },
 ]
 
@@ -43,7 +47,10 @@ const ENLACES = [
 // propias y las tres son «lo mío».
 const TAMBIEN: Record<string, string[]> = {
   '/servicios': ['/servidores'],
-  '/mis-solicitudes': ['/registro', '/aliado', '/mis-datos'],
+  // /solicitud/[token] es la pantalla de una solicitud propia: se llega
+  // desde «Lo mío» y se vuelve ahí. Sin esta línea, abrir la solicitud
+  // apagaba las cuatro celdas y la barra parecía de otra aplicación.
+  '/mis-solicitudes': ['/registro', '/aliado', '/mis-datos', '/solicitud'],
 }
 
 // Coincidencia exacta para la portada; por prefijo para el resto, para que

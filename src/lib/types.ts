@@ -249,6 +249,44 @@ export interface SolicitudQueCalza {
   coincidencias: number
 }
 
+// Un ítem del inventario de quien ofrece, visto desde una solicitud
+// concreta. Es `ItemOfrecido` más `calza`: si esta solicitud lo pide o
+// no. Sigue sin cantidad, por lo mismo que la ficha pública.
+export interface ItemOfrecidoCruce {
+  nombre: string
+  por_confirmar: boolean
+  calza: boolean
+}
+
+// Una fila de `ofertadores_que_calzan`: quién tiene algo de lo que pide
+// una solicitud. Es la ficha pública más el cruce.
+//
+// ⚠ Sin contacto a propósito. El teléfono lo devuelve `destapar_contacto`,
+// de a una persona y con tope — ver la migración v3-t1.
+export interface OfertadorQueCalza {
+  id: string
+  nombre_visible: string
+  municipios: string[]
+  descripcion: string | null
+  puede_trasladarse: boolean
+  items: ItemOfrecidoCruce[]
+  total_items: number
+  /** En cuántas de las cosas pedidas calza esta persona. */
+  coincidencias: number
+  /** Si esta solicitud ya destapó su contacto alguna vez. */
+  destapado: boolean
+  /** Cuántas personas calzan en total, antes de paginar. */
+  total: number
+}
+
+// Lo que devuelve `destapar_contacto`. Solo existe en memoria del cliente
+// que lo pidió: no se guarda en ninguna parte de este lado.
+export interface ContactoDestapado {
+  nombre: string
+  contacto: string
+  contacto_tipo: ContactoTipo
+}
+
 // Un municipio con solicitudes que calzan, tal como lo devuelve
 // `municipios_que_calzan`.
 export interface MunicipioQueCalza {
@@ -1526,6 +1564,20 @@ export interface Database {
           p_desde?: number
         }
         Returns: SolicitudQueCalza[]
+      }
+      // El cruce al revés, y la única puerta al teléfono de quien ofrece:
+      // lo autoriza el token portador de una solicitud viva, no la sesión.
+      ofertadores_que_calzan: {
+        Args: {
+          p_token: string
+          p_limite?: number
+          p_desde?: number
+        }
+        Returns: OfertadorQueCalza[]
+      }
+      destapar_contacto: {
+        Args: { p_token: string; p_perfil_id: string }
+        Returns: Json
       }
       municipios_que_calzan: {
         Args: { p_item_ids: string[] }

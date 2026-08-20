@@ -25,7 +25,8 @@
 --                                              que cuelga de ellos. Las crea
 --                                              migracion/97-seed-perfiles.sql
 --   solicitudes       es_prueba              → solicitud_items, respuestas,
---                                              push_suscripciones
+--                                              push_suscripciones,
+--                                              destapes_contacto
 --   perfiles          nombre_visible PRUEBA  → ofrecimientos, servidores,
 --                                              push_ofertadores, y también
 --                                              RESPUESTAS: si un perfil de
@@ -160,7 +161,8 @@ delete from public.accesos_identidad where es_prueba;
 -- código va copiado en texto— así que ningún CASCADE se las lleva.
 delete from public.entregas where es_prueba;
 
--- CASCADE: solicitud_items, respuestas, push_suscripciones.
+-- CASCADE: solicitud_items, respuestas, push_suscripciones,
+-- destapes_contacto.
 delete from public.solicitudes where es_prueba;
 
 -- ⚠ ANTES que `perfiles`, y el orden no es cosmético. `miembros_organizacion`
