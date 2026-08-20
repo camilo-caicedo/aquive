@@ -26,6 +26,11 @@ type Criterio = (typeof CRITERIOS)[number]['clave']
 
 export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: string }) {
   const [codigo, setCodigo] = useState('')
+  // Normalizado igual que en la base: sin espacios y en mayúsculas. Lo que
+  // se escribe a mano viene de un papel, y ahí caben guiones y espacios.
+  const codigoLimpio = codigo.replace(/[^a-zA-Z0-9]/g, '').toUpperCase()
+  const codigoCompleto = codigoLimpio.length === 8
+  const codigoEmpezado = codigoLimpio.length > 0
   const [notas, setNotas] = useState<Record<Criterio, number | null>>({
     cumplimiento: null,
     trato: null,
@@ -116,9 +121,20 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
           // carácter, y así se distingue lo que se lleva escrito.
           className="mt-1 font-mono text-lg tracking-widest uppercase"
         />
-        <p className="mt-1 text-sm text-muted-foreground">
-          Ocho letras y números. Da lo mismo si lo escribes con espacios o en
-          minúsculas.
+        {/* Se dice al escribir cuántos faltan. Antes el botón se quedaba
+            apagado sin explicar por qué, y desde un papel mal fotocopiado
+            eso es un callejón sin salida.
+
+            Lo que no se puede es decir de quién es el código antes de
+            enviarlo: no hay ninguna función que lo resuelva sin gastarlo, y
+            una consulta abierta por código sería una forma de sondear
+            códigos ajenos. */}
+        <p aria-live="polite" className="mt-1 text-sm text-muted-foreground">
+          {!codigoEmpezado
+            ? 'Ocho letras y números. Da lo mismo si lo escribes con espacios o en minúsculas.'
+            : codigoCompleto
+              ? 'Listo. Al enviar se confirma el servicio de quien te dio este código.'
+              : `Llevas ${codigoLimpio.length} de 8.`}
         </p>
       </div>
 
@@ -177,9 +193,13 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
         </Alert>
       )}
 
-      <Button className="w-full" onClick={enviar} disabled={!completo || enviando}>
-        {enviando ? 'Enviando…' : 'Enviar calificación'}
-      </Button>
+      {/* Fijo abajo: las tres preguntas más el código no caben en una
+          pantalla, y el botón quedaba al final de un rollo. */}
+      <div className="sticky bottom-0 -mx-4 border-t border-border bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
+        <Button className="w-full" onClick={enviar} disabled={!completo || enviando}>
+          {enviando ? 'Enviando…' : 'Enviar calificación'}
+        </Button>
+      </div>
     </div>
   )
 }

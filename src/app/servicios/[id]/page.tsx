@@ -1,8 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { CalendarDays, MapPin, Wallet } from 'lucide-react'
+import { CalendarDays, MapPin, Wallet, ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { enlaceWhatsapp } from '@/lib/contacto'
 import {
   DESLINDE_CALIDAD,
   NO_PAGUES_POR_ADELANTADO,
@@ -19,10 +18,9 @@ import {
   zonaLegible,
 } from '@/lib/servicios'
 import { InsigniasProveedor } from '@/components/insignias-proveedor'
+import { BarraContacto } from '@/components/barra-contacto'
 import { CriteriosResena } from '@/components/criterios-resena'
 import { BotonReportar } from '@/components/boton-reportar'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
 import type { FichaProveedor } from '@/lib/types'
 
 export const metadata = { title: 'Ficha del proveedor' }
@@ -61,6 +59,10 @@ export default async function FichaPage({
       <h1 className="font-heading mt-3 text-3xl">{ficha.nombre_visible}</h1>
 
       <div className="mt-3">
+        {/* La explicación va pegada a las insignias, que es donde nace la
+            duda. Al final de la página, a tres pantallas de aquí, no la
+            leía quien acababa de ver un sello y se preguntaba qué
+            significa. */}
         <InsigniasProveedor
           telefonoVerificado={ficha.telefono_verificado}
           referenciasConfirmadas={ficha.referencias_confirmadas}
@@ -132,42 +134,27 @@ export default async function FichaPage({
             </div>
           </div>
         )}
+      <details className="group mt-4 rounded-xl bg-card p-4 shadow-sm">
+        <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 text-base font-medium [&::-webkit-details-marker]:hidden">
+          Qué comprobamos y qué no
+          <ChevronDown
+            className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+            aria-hidden="true"
+          />
+        </summary>
+        <p className="mt-2 text-base text-muted-foreground">{SOBRE_LAS_INSIGNIAS}</p>
+        <p className="mt-2 text-base text-muted-foreground">{DESLINDE_CALIDAD}</p>
+      </details>
       </dl>
 
-      {/* El aviso va pegado al botón, no al final de la página: en un
-          teléfono el final de la página queda a varias pantallas de aquí.
-          Mismo criterio que /servidores. */}
-      <div className="mt-6 rounded-lg border border-border p-4">
+      {/* Los textos largos se quedan aquí, donde hay sitio para leerlos;
+          la línea corta y los dos botones van en la barra fija de abajo,
+          que es donde se decide (regla 5). */}
+      <div className="mt-6 rounded-xl bg-card p-4 shadow-sm">
         <p className="text-sm text-muted-foreground">{NO_PAGUES_POR_ADELANTADO}</p>
         {aDomicilio && (
           <p className="mt-2 text-sm text-muted-foreground">{SEGURIDAD_DOMICILIO}</p>
         )}
-        <Button
-          className="mt-3 w-full"
-          nativeButton={false}
-          render={
-            <a
-              href={enlaceWhatsapp(ficha.telefono)}
-              target="_blank"
-              rel="noopener noreferrer"
-            />
-          }
-        >
-          Escribir por WhatsApp
-        </Button>
-        <Button
-          variant="outline"
-          className="mt-2 w-full"
-          nativeButton={false}
-          render={<a href={`tel:${ficha.telefono}`} />}
-        >
-          Llamar al {ficha.telefono}
-        </Button>
-        <p className="mt-3 text-sm text-muted-foreground">
-          <Link href="/seguridad" className="underline">
-            Cómo cuidarte
-          </Link>
-        </p>
       </div>
 
       <h2 className="font-heading mt-8 text-2xl">Qué dice quien lo contrató</h2>
@@ -229,15 +216,11 @@ export default async function FichaPage({
         </Link>
       </p>
 
-      <Alert className="mt-6">
-        <AlertDescription>
-          {SOBRE_LAS_INSIGNIAS} {DESLINDE_CALIDAD}
-        </AlertDescription>
-      </Alert>
-
       <div className="mt-4">
         <BotonReportar tipoObjeto="proveedor" objetoId={ficha.id} />
       </div>
+
+      <BarraContacto telefono={ficha.telefono} />
     </main>
   )
 }

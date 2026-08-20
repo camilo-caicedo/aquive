@@ -35,6 +35,7 @@ import type {
   UnidadPrecio,
 } from '@/lib/types'
 import { Button } from '@/components/ui/button'
+import { SeccionPlegable } from '@/components/seccion-plegable'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -243,7 +244,8 @@ export function FormularioProveedor({
   const municipioElegido = municipios.find((m) => m.codigo_dane === municipio)
 
   return (
-    <div className="mt-6 space-y-6">
+
+    <div className="mt-6 space-y-3">
       {proveedor?.suspendido && (
         <Alert variant="warning">
           <AlertDescription>
@@ -253,8 +255,10 @@ export function FormularioProveedor({
         </Alert>
       )}
 
-      {/* Explica por qué un oficio elegido no se ve todavía. Sin esto, la
-          regla S parece que la ficha está rota. */}
+      {/* Cinta accionable, no un aviso: dice qué oficio falta, POR QUÉ no
+          aparece y lleva al campo que lo desbloquea. Antes era un párrafo
+          que explicaba la regla S y dejaba a la persona sin saber qué
+          tocar. */}
       {proveedor?.oficios.some((o) => !o.publicado) && (
         <Alert variant="warning">
           <AlertDescription>
@@ -271,379 +275,424 @@ export function FormularioProveedor({
         </Alert>
       )}
 
-      <div>
-        <Label htmlFor="nombre">Cómo quieres que te llamen</Label>
-        <Input
-          id="nombre"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-          maxLength={60}
-          placeholder="María, Taller El Buen Corte…"
-          className="mt-1"
-        />
-      </div>
-
-      <fieldset>
-        <legend className="mb-2 text-base font-medium">¿Cómo trabajas?</legend>
-        <div className="flex flex-wrap gap-2">
-          {TIPOS_PROVEEDOR.map((t) => (
-            <Chip key={t.valor} activo={tipo === t.valor} onClick={() => setTipo(t.valor)}>
-              {t.etiqueta}
-            </Chip>
-          ))}
+      {/* Cuatro secciones plegables con su resumen (regla 6). Antes era un
+          rollo de seiscientas líneas donde el precio de un oficio quedaba a
+          cuatro pantallas del teléfono al que se le va a llamar. */}
+      <SeccionPlegable
+        titulo="Quién eres"
+        resumen={nombre.trim() || 'Falta tu nombre'}
+        sello={nombre.trim() ? undefined : 'Falta'}
+        abierta={!proveedor}
+      >
+        <div>
+          <Label htmlFor="nombre">Cómo quieres que te llamen</Label>
+          <Input
+            id="nombre"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            maxLength={60}
+            placeholder="María, Taller El Buen Corte…"
+            className="mt-1"
+          />
         </div>
-      </fieldset>
 
-      <div>
-        <Label htmlFor="telefono">Teléfono donde te contactan</Label>
-        <Input
-          id="telefono"
-          type="tel"
-          inputMode="tel"
-          value={telefono}
-          onChange={(e) => setTelefono(e.target.value)}
-          maxLength={20}
-          placeholder="300 123 4567"
-          className="mt-1"
-        />
-        <p className="mt-1 text-sm text-muted-foreground">
-          Este número queda público. Si lo cambias, la verificación se cae y
-          hay que volver a hacerla.
-        </p>
-      </div>
-
-      <div>
-        <Label>Municipio donde trabajas</Label>
-        <Combobox
-          items={municipios}
-          value={municipioElegido ?? null}
-          onValueChange={(m: MunicipioBasico | null) => {
-            setMunicipio(m?.codigo_dane ?? '')
-            setZonaId('')
-          }}
-          itemToStringLabel={nombreConDepartamento}
-          isItemEqualToValue={(a: MunicipioBasico, b: MunicipioBasico) =>
-            a.codigo_dane === b.codigo_dane
-          }
-        >
-          <ComboboxTrigger
-            aria-label="Municipio donde trabajas"
-            className="mt-1 bg-background"
-          >
-            <ComboboxValue placeholder="Elige tu municipio" />
-          </ComboboxTrigger>
-          <ComboboxContent>
-            <ComboboxInput showTrigger={false} placeholder="Escribe para buscar" />
-            <ComboboxEmpty>No encontramos ese lugar.</ComboboxEmpty>
-            <ComboboxList>
-              {(m: MunicipioBasico) => (
-                <ComboboxItem key={m.codigo_dane} value={m}>
-                  <span className="flex min-w-0 flex-col">
-                    <span>{m.nombre}</span>
-                    <span className="text-sm text-muted-foreground">{m.departamento}</span>
-                  </span>
-                </ComboboxItem>
-              )}
-            </ComboboxList>
-          </ComboboxContent>
-        </Combobox>
-      </div>
-
-      {municipio !== '' && (
         <fieldset>
-          <legend className="text-base font-medium">¿En qué parte?</legend>
-
-          {/* Las dos, no una u otra: en Cali lo natural es decir la
-              comuna Y el barrio. Con una basta, pero con ninguna no. */}
-          {zonasDelMunicipio.length > 0 && (
-            <div className="mt-2">
-              <Label>Comuna o corregimiento</Label>
-              <Select value={zonaId} onValueChange={(v) => setZonaId(v ?? '')}>
-                <SelectTrigger aria-label="Comuna o corregimiento" className="mt-1 bg-background">
-                  <SelectValue placeholder="Sin especificar">
-                    {(v: string) =>
-                      zonasDelMunicipio.find((z) => z.id === v)?.nombre ?? 'Sin especificar'
-                    }
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Sin especificar</SelectItem>
-                  {zonasDelMunicipio.map((z) => (
-                    <SelectItem key={z.id} value={z.id}>
-                      {z.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="mt-3">
-            <Label htmlFor="zona">{etiquetaZona}</Label>
-            <Input
-              id="zona"
-              value={zonaTexto}
-              onChange={(e) => setZonaTexto(e.target.value)}
-              maxLength={60}
-              placeholder={
-                zonasDelMunicipio.length > 0 ? 'San Fernando, El Poblado…' : 'Tu barrio o vereda'
-              }
-              className="mt-1"
-            />
-            <p className="mt-1 text-sm text-muted-foreground">
-              {zonasDelMunicipio.length > 0
-                ? 'El barrio, no la dirección. Nadie necesita saber tu casa para llamarte.'
-                : 'El barrio o la vereda, no la dirección. Lo que escribas lo revisa la fundación y después queda en la lista para los demás de tu municipio.'}
-            </p>
-            {errorZona && <p className="mt-1 text-sm text-destructive">{errorZona}</p>}
+          <legend className="mb-2 text-base font-medium">¿Cómo trabajas?</legend>
+          <div className="flex flex-wrap gap-2">
+            {TIPOS_PROVEEDOR.map((t) => (
+              <Chip key={t.valor} activo={tipo === t.valor} onClick={() => setTipo(t.valor)}>
+                {t.etiqueta}
+              </Chip>
+            ))}
           </div>
-
-          {!hayUbicacion && (
-            <p className="mt-2 text-sm text-muted-foreground">
-              Hace falta al menos una de las dos.
-            </p>
-          )}
         </fieldset>
-      )}
+      </SeccionPlegable>
 
-      <fieldset>
-        <legend className="mb-2 text-base font-medium">¿Dónde atiendes?</legend>
-        <div className="flex flex-wrap gap-2">
-          {MODALIDADES.map((m) => (
-            <Chip
-              key={m.valor}
-              activo={modalidad.includes(m.valor)}
-              onClick={() => setModalidad((p) => alternar(p, m.valor))}
-            >
-              {m.etiqueta}
-            </Chip>
-          ))}
-        </div>
-      </fieldset>
+      <SeccionPlegable
+        titulo="Qué haces y cuánto cobras"
+        resumen={
+          elegidos.length === 0
+            ? 'Sin oficios todavía'
+            : `${elegidos.length} ${elegidos.length === 1 ? 'oficio' : 'oficios'}`
+        }
+        sello={elegidos.length === 0 ? 'Falta' : undefined}
+      >
+        <fieldset>
+          <legend className="text-base font-medium">
+            ¿Qué haces? <span className="font-normal text-muted-foreground">(máximo {TOPE_OFICIOS})</span>
+          </legend>
 
-      <fieldset>
-        <legend className="mb-2 text-base font-medium">
-          ¿Qué días? <span className="font-normal text-muted-foreground">(opcional)</span>
-        </legend>
-        <div className="flex flex-wrap gap-2">
-          {DIAS.map((d) => (
-            <Chip
-              key={d.valor}
-              activo={dias.includes(d.valor)}
-              onClick={() => setDias((p) => alternar(p, d.valor))}
-            >
-              <span className="sr-only">{d.etiqueta}</span>
-              <span aria-hidden="true">{d.corta}</span>
-            </Chip>
-          ))}
-        </div>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {FRANJAS.map((f) => (
-            <Chip
-              key={f.valor}
-              activo={franjas.includes(f.valor)}
-              onClick={() => setFranjas((p) => alternar(p, f.valor))}
-            >
-              {f.etiqueta}
-            </Chip>
-          ))}
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend className="mb-2 text-base font-medium">
-          ¿Cómo te pagan?{' '}
-          <span className="font-normal text-muted-foreground">(opcional)</span>
-        </legend>
-        <div className="flex flex-wrap gap-2">
-          {MEDIOS_PAGO.map((m) => (
-            <Chip
-              key={m.valor}
-              activo={mediosPago.includes(m.valor)}
-              onClick={() => setMediosPago((p) => alternar(p, m.valor))}
-            >
-              {m.etiqueta}
-            </Chip>
-          ))}
-        </div>
-        <p className="mt-2 text-sm text-muted-foreground">
-          El pago lo arreglas tú con cada persona. AquíVe no recibe dinero ni
-          cobra comisión.
-        </p>
-      </fieldset>
-
-      <fieldset>
-        <legend className="text-base font-medium">
-          ¿Qué haces? <span className="font-normal text-muted-foreground">(máximo {TOPE_OFICIOS})</span>
-        </legend>
-
-        <div className="mt-2 space-y-4">
-          {Object.entries(GRUPOS).map(([grupo, etiqueta]) => {
-            const delGrupo = oficios.filter((o) => o.grupo === grupo)
-            if (delGrupo.length === 0) return null
-            return (
-              <div key={grupo}>
-                <p className="text-sm font-medium text-muted-foreground">{etiqueta}</p>
-                <div className="mt-1.5 flex flex-wrap gap-2">
-                  {delGrupo.map((o) => (
-                    <Chip
-                      key={o.id}
-                      activo={elegidos.some((e) => e.oficio_id === o.id)}
-                      onClick={() => alternarOficio(o.id)}
-                    >
-                      {o.nombre}
-                    </Chip>
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        {elegidos.length > 0 && (
-          <ul className="mt-4 space-y-3">
-            {elegidos.map((e) => {
-              const oficio = nombreOficio.get(e.oficio_id)
-              const cobra = e.modo === 'solidario' || e.modo === 'normal'
+          <div className="mt-2 space-y-4">
+            {Object.entries(GRUPOS).map(([grupo, etiqueta]) => {
+              const delGrupo = oficios.filter((o) => o.grupo === grupo)
+              if (delGrupo.length === 0) return null
               return (
-                <li key={e.oficio_id} className="rounded-lg border border-border p-3">
-                  <p className="text-base font-medium">{oficio?.nombre ?? e.oficio_id}</p>
-
-                  {oficio?.riesgo === 'alto' && (
-                    <p className="mt-1 text-sm text-accent-foreground">
-                      Para este oficio hace falta que verifiquemos tu teléfono y
-                      que confirmes una referencia. Hasta entonces no aparece en
-                      el directorio.
-                    </p>
-                  )}
-
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {MODOS_PRECIO.map((m) => (
+                <div key={grupo}>
+                  <p className="text-sm font-medium text-muted-foreground">{etiqueta}</p>
+                  <div className="mt-1.5 flex flex-wrap gap-2">
+                    {delGrupo.map((o) => (
                       <Chip
-                        key={m.valor}
-                        activo={e.modo === m.valor}
-                        onClick={() =>
-                          cambiarOficio(e.oficio_id, {
-                            modo: m.valor as ModoPrecio,
-                            // Cambiar a gratis o aporte limpia el precio: si
-                            // se dejara puesto, el CHECK de la base rechaza
-                            // el guardado con un mensaje que nadie entiende.
-                            ...(m.valor === 'gratis' || m.valor === 'aporte'
-                              ? { precio_desde: null, unidad: null }
-                              : {}),
-                          })
-                        }
+                        key={o.id}
+                        activo={elegidos.some((e) => e.oficio_id === o.id)}
+                        onClick={() => alternarOficio(o.id)}
                       >
-                        {m.etiqueta}
+                        {o.nombre}
                       </Chip>
                     ))}
                   </div>
-
-                  {cobra && (
-                    <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-                      <Input
-                        type="number"
-                        inputMode="numeric"
-                        min={0}
-                        step={1000}
-                        value={e.precio_desde ?? ''}
-                        onChange={(ev) =>
-                          cambiarOficio(e.oficio_id, {
-                            precio_desde:
-                              ev.target.value === '' ? null : Number(ev.target.value),
-                          })
-                        }
-                        placeholder="Desde cuánto (opcional)"
-                        aria-label={`Precio desde, ${oficio?.nombre ?? ''}`}
-                        className="min-w-0 flex-1"
-                      />
-                      <Select
-                        value={e.unidad ?? ''}
-                        onValueChange={(v) =>
-                          cambiarOficio(e.oficio_id, { unidad: (v || null) as UnidadPrecio | null })
-                        }
-                      >
-                        <SelectTrigger
-                          aria-label={`Unidad, ${oficio?.nombre ?? ''}`}
-                          className="min-w-0 flex-1 bg-background"
-                        >
-                          <SelectValue placeholder="¿De qué?">
-                            {(v: string) =>
-                              UNIDADES.find((u) => u.valor === v)?.etiqueta ?? '¿De qué?'
-                            }
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {UNIDADES.map((u) => (
-                            <SelectItem key={u.valor} value={u.valor}>
-                              {u.etiqueta}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-                </li>
+                </div>
               )
             })}
-          </ul>
-        )}
-      </fieldset>
+          </div>
 
-      <div>
-        <Label htmlFor="descripcion">
-          Algo más que quieras decir{' '}
-          <span className="font-normal text-muted-foreground">(opcional)</span>
-        </Label>
-        <Textarea
-          id="descripcion"
-          value={descripcion}
-          onChange={(e) => setDescripcion(e.target.value)}
-          maxLength={300}
-          rows={3}
-          placeholder="Llevo quince años cosiendo. Trabajo rápido y entrego a tiempo."
-          className="mt-1"
-        />
-        <p className="mt-1 text-sm text-muted-foreground">
-          {descripcion.length}/300. No pongas otro teléfono ni tu dirección: el
-          número de arriba ya sale en tu ficha.
-        </p>
-        {errorDescripcion && (
-          <p className="mt-1 text-sm text-destructive">{errorDescripcion}</p>
-        )}
-      </div>
+          {elegidos.length > 0 && (
+            <ul className="mt-4 space-y-3">
+              {elegidos.map((e) => {
+                const oficio = nombreOficio.get(e.oficio_id)
+                const cobra = e.modo === 'solidario' || e.modo === 'normal'
+                return (
+                  <li key={e.oficio_id} className="rounded-lg border border-border p-3">
+                    <p className="text-base font-medium">{oficio?.nombre ?? e.oficio_id}</p>
 
-      {/* El texto de autorización, entero y sin enlace que haya que abrir.
-          Es la prueba del consentimiento informado y se guarda su versión:
-          si cambia aquí, se mueve AUTORIZACION_PROVEEDOR_VERSION. */}
-      <div className="rounded-lg border border-border p-4">
-        <label className="flex items-start gap-3 text-base">
-          <input
-            type="checkbox"
-            checked={autorizo}
-            onChange={(e) => setAutorizo(e.target.checked)}
-            className="mt-1 size-5 shrink-0"
+                    {oficio?.riesgo === 'alto' && (
+                      <p className="mt-1 text-sm text-accent-foreground">
+                        Para este oficio hace falta que verifiquemos tu teléfono y
+                        que confirmes una referencia. Hasta entonces no aparece en
+                        el directorio.
+                      </p>
+                    )}
+
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {MODOS_PRECIO.map((m) => (
+                        <Chip
+                          key={m.valor}
+                          activo={e.modo === m.valor}
+                          onClick={() =>
+                            cambiarOficio(e.oficio_id, {
+                              modo: m.valor as ModoPrecio,
+                              // Cambiar a gratis o aporte limpia el precio: si
+                              // se dejara puesto, el CHECK de la base rechaza
+                              // el guardado con un mensaje que nadie entiende.
+                              ...(m.valor === 'gratis' || m.valor === 'aporte'
+                                ? { precio_desde: null, unidad: null }
+                                : {}),
+                            })
+                          }
+                        >
+                          {m.etiqueta}
+                        </Chip>
+                      ))}
+                    </div>
+
+                    {cobra && (
+                      <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                        <Input
+                          type="number"
+                          inputMode="numeric"
+                          min={0}
+                          step={1000}
+                          value={e.precio_desde ?? ''}
+                          onChange={(ev) =>
+                            cambiarOficio(e.oficio_id, {
+                              precio_desde:
+                                ev.target.value === '' ? null : Number(ev.target.value),
+                            })
+                          }
+                          placeholder="Desde cuánto (opcional)"
+                          aria-label={`Precio desde, ${oficio?.nombre ?? ''}`}
+                          className="min-w-0 flex-1"
+                        />
+                        <Select
+                          value={e.unidad ?? ''}
+                          onValueChange={(v) =>
+                            cambiarOficio(e.oficio_id, { unidad: (v || null) as UnidadPrecio | null })
+                          }
+                        >
+                          <SelectTrigger
+                            aria-label={`Unidad, ${oficio?.nombre ?? ''}`}
+                            className="min-w-0 flex-1 bg-background"
+                          >
+                            <SelectValue placeholder="¿De qué?">
+                              {(v: string) =>
+                                UNIDADES.find((u) => u.valor === v)?.etiqueta ?? '¿De qué?'
+                              }
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {UNIDADES.map((u) => (
+                              <SelectItem key={u.valor} value={u.valor}>
+                                {u.etiqueta}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </fieldset>
+
+        <div>
+          <Label htmlFor="descripcion">
+            Algo más que quieras decir{' '}
+            <span className="font-normal text-muted-foreground">(opcional)</span>
+          </Label>
+          <Textarea
+            id="descripcion"
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
+            maxLength={300}
+            rows={3}
+            placeholder="Llevo quince años cosiendo. Trabajo rápido y entrego a tiempo."
+            className="mt-1"
           />
-          <span>
-            Autorizo a {RESPONSABLE_SERVICIOS}, NIT {NIT_RESPONSABLE_SERVICIOS},
-            responsable del directorio de servicios de AquíVe, a tratar los
-            datos que estoy entregando —mi nombre visible, mi teléfono, si soy
-            persona o negocio, mis oficios con su precio, mi municipio y zona,
-            mis horarios, mis medios de pago y mi descripción— para publicarlos
-            de forma <strong>pública</strong> en internet y que quien necesite
-            mi trabajo pueda encontrarme.
-            <br />
-            <br />
-            Entiendo que esta información será visible para cualquiera, que{' '}
-            <strong>mi ficha no se borra sola</strong> y permanece hasta que yo
-            la borre, y que puedo borrarla cuando quiera. He leído el{' '}
-            <Link href="/privacidad" className="underline">
-              aviso de privacidad
-            </Link>
-            .
-          </span>
-        </label>
-      </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {descripcion.length}/300. No pongas otro teléfono ni tu dirección: el
+            número de arriba ya sale en tu ficha.
+          </p>
+          {errorDescripcion && (
+            <p className="mt-1 text-sm text-destructive">{errorDescripcion}</p>
+          )}
+        </div>
+      </SeccionPlegable>
+
+      <SeccionPlegable
+        titulo="Dónde y cuándo atiendes"
+        resumen={municipio === '' ? 'Falta el municipio' : (municipioElegido ? nombreConDepartamento(municipioElegido) : municipio)}
+        sello={municipio === '' ? 'Falta' : undefined}
+      >
+        <div>
+          <Label>Municipio donde trabajas</Label>
+          <Combobox
+            items={municipios}
+            value={municipioElegido ?? null}
+            onValueChange={(m: MunicipioBasico | null) => {
+              setMunicipio(m?.codigo_dane ?? '')
+              setZonaId('')
+            }}
+            itemToStringLabel={nombreConDepartamento}
+            isItemEqualToValue={(a: MunicipioBasico, b: MunicipioBasico) =>
+              a.codigo_dane === b.codigo_dane
+            }
+          >
+            <ComboboxTrigger
+              aria-label="Municipio donde trabajas"
+              className="mt-1 bg-background"
+            >
+              <ComboboxValue placeholder="Elige tu municipio" />
+            </ComboboxTrigger>
+            <ComboboxContent>
+              <ComboboxInput showTrigger={false} placeholder="Escribe para buscar" />
+              <ComboboxEmpty>No encontramos ese lugar.</ComboboxEmpty>
+              <ComboboxList>
+                {(m: MunicipioBasico) => (
+                  <ComboboxItem key={m.codigo_dane} value={m}>
+                    <span className="flex min-w-0 flex-col">
+                      <span>{m.nombre}</span>
+                      <span className="text-sm text-muted-foreground">{m.departamento}</span>
+                    </span>
+                  </ComboboxItem>
+                )}
+              </ComboboxList>
+            </ComboboxContent>
+          </Combobox>
+        </div>
+
+        {municipio !== '' && (
+          <fieldset>
+            <legend className="text-base font-medium">¿En qué parte?</legend>
+
+            {/* Las dos, no una u otra: en Cali lo natural es decir la
+                comuna Y el barrio. Con una basta, pero con ninguna no. */}
+            {zonasDelMunicipio.length > 0 && (
+              <div className="mt-2">
+                <Label>Comuna o corregimiento</Label>
+                <Select value={zonaId} onValueChange={(v) => setZonaId(v ?? '')}>
+                  <SelectTrigger aria-label="Comuna o corregimiento" className="mt-1 bg-background">
+                    <SelectValue placeholder="Sin especificar">
+                      {(v: string) =>
+                        zonasDelMunicipio.find((z) => z.id === v)?.nombre ?? 'Sin especificar'
+                      }
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Sin especificar</SelectItem>
+                    {zonasDelMunicipio.map((z) => (
+                      <SelectItem key={z.id} value={z.id}>
+                        {z.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="mt-3">
+              <Label htmlFor="zona">{etiquetaZona}</Label>
+              <Input
+                id="zona"
+                value={zonaTexto}
+                onChange={(e) => setZonaTexto(e.target.value)}
+                maxLength={60}
+                placeholder={
+                  zonasDelMunicipio.length > 0 ? 'San Fernando, El Poblado…' : 'Tu barrio o vereda'
+                }
+                className="mt-1"
+              />
+              <p className="mt-1 text-sm text-muted-foreground">
+                {zonasDelMunicipio.length > 0
+                  ? 'El barrio, no la dirección. Nadie necesita saber tu casa para llamarte.'
+                  : 'El barrio o la vereda, no la dirección. Lo que escribas lo revisa la fundación y después queda en la lista para los demás de tu municipio.'}
+              </p>
+              {errorZona && <p className="mt-1 text-sm text-destructive">{errorZona}</p>}
+            </div>
+
+            {!hayUbicacion && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Hace falta al menos una de las dos.
+              </p>
+            )}
+          </fieldset>
+        )}
+
+        <fieldset>
+          <legend className="mb-2 text-base font-medium">¿Dónde atiendes?</legend>
+          <div className="flex flex-wrap gap-2">
+            {MODALIDADES.map((m) => (
+              <Chip
+                key={m.valor}
+                activo={modalidad.includes(m.valor)}
+                onClick={() => setModalidad((p) => alternar(p, m.valor))}
+              >
+                {m.etiqueta}
+              </Chip>
+            ))}
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend className="mb-2 text-base font-medium">
+            ¿Qué días? <span className="font-normal text-muted-foreground">(opcional)</span>
+          </legend>
+          <div className="flex flex-wrap gap-2">
+            {DIAS.map((d) => (
+              <Chip
+                key={d.valor}
+                activo={dias.includes(d.valor)}
+                onClick={() => setDias((p) => alternar(p, d.valor))}
+              >
+                <span className="sr-only">{d.etiqueta}</span>
+                <span aria-hidden="true">{d.corta}</span>
+              </Chip>
+            ))}
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {FRANJAS.map((f) => (
+              <Chip
+                key={f.valor}
+                activo={franjas.includes(f.valor)}
+                onClick={() => setFranjas((p) => alternar(p, f.valor))}
+              >
+                {f.etiqueta}
+              </Chip>
+            ))}
+          </div>
+        </fieldset>
+      </SeccionPlegable>
+
+      <SeccionPlegable
+        titulo="Teléfono y pago"
+        resumen={telefono.trim() || 'Falta tu teléfono'}
+        sello={
+          telefono.trim()
+            ? proveedor?.telefono_verificado
+              ? undefined
+              : 'Sin verificar'
+            : 'Falta'
+        }
+      >
+        <div>
+          <Label htmlFor="telefono">Teléfono donde te contactan</Label>
+          <Input
+            id="telefono"
+            type="tel"
+            inputMode="tel"
+            value={telefono}
+            onChange={(e) => setTelefono(e.target.value)}
+            maxLength={20}
+            placeholder="300 123 4567"
+            className="mt-1"
+          />
+          <p className="mt-1 text-sm text-muted-foreground">
+            Este número queda público. Si lo cambias, la verificación se cae y
+            hay que volver a hacerla.
+          </p>
+        </div>
+
+        <fieldset>
+          <legend className="mb-2 text-base font-medium">
+            ¿Cómo te pagan?{' '}
+            <span className="font-normal text-muted-foreground">(opcional)</span>
+          </legend>
+          <div className="flex flex-wrap gap-2">
+            {MEDIOS_PAGO.map((m) => (
+              <Chip
+                key={m.valor}
+                activo={mediosPago.includes(m.valor)}
+                onClick={() => setMediosPago((p) => alternar(p, m.valor))}
+              >
+                {m.etiqueta}
+              </Chip>
+            ))}
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            El pago lo arreglas tú con cada persona. AquíVe no recibe dinero ni
+            cobra comisión.
+          </p>
+        </fieldset>
+      </SeccionPlegable>
+
+      <SeccionPlegable
+        titulo="Permiso de publicación"
+        resumen={autorizo ? 'Aceptado' : 'Falta tu autorización'}
+        sello={autorizo ? undefined : 'Falta'}
+        abierta={!autorizo}
+      >
+        {/* El texto de autorización, entero y sin enlace que haya que abrir.
+            Es la prueba del consentimiento informado y se guarda su versión:
+            si cambia aquí, se mueve AUTORIZACION_PROVEEDOR_VERSION. */}
+        <div className="rounded-lg border border-border p-4">
+          <label className="flex items-start gap-3 text-base">
+            <input
+              type="checkbox"
+              checked={autorizo}
+              onChange={(e) => setAutorizo(e.target.checked)}
+              className="mt-1 size-5 shrink-0"
+            />
+            <span>
+              Autorizo a {RESPONSABLE_SERVICIOS}, NIT {NIT_RESPONSABLE_SERVICIOS},
+              responsable del directorio de servicios de AquíVe, a tratar los
+              datos que estoy entregando —mi nombre visible, mi teléfono, si soy
+              persona o negocio, mis oficios con su precio, mi municipio y zona,
+              mis horarios, mis medios de pago y mi descripción— para publicarlos
+              de forma <strong>pública</strong> en internet y que quien necesite
+              mi trabajo pueda encontrarme.
+              <br />
+              <br />
+              Entiendo que esta información será visible para cualquiera, que{' '}
+              <strong>mi ficha no se borra sola</strong> y permanece hasta que yo
+              la borre, y que puedo borrarla cuando quiera. He leído el{' '}
+              <Link href="/privacidad" className="underline">
+                aviso de privacidad
+              </Link>
+              .
+            </span>
+          </label>
+        </div>
+      </SeccionPlegable>
 
       {error && (
         <Alert variant="destructive">

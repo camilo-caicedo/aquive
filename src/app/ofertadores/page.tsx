@@ -2,11 +2,11 @@ import Link from 'next/link'
 import { Info, Inbox, MapPin, PlusCircle, PackageOpen, Truck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios, mapaDeNombres } from '@/lib/municipios'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { SelectFiltro } from '@/components/select-filtro'
 import { HojaFiltros } from '@/components/hoja-filtros'
 import { BotonReportar } from '@/components/boton-reportar'
+import { AccionPrincipal } from '@/components/accion-principal'
 
 export const metadata = { title: 'Quién está ofreciendo' }
 
@@ -52,14 +52,14 @@ export default async function OfertadoresPage({
         alguien tiene lo que necesitas y publica tu solicitud: ellos la ven y
         te responden.
       </p>
+      {/* Era un bloque de aviso y lo primero de la pantalla: quien entra a
+          mirar quién ofrece leía primero un párrafo diciéndole que no puede
+          hacer nada aquí. Es cierto, pero es una línea, no un aviso. */}
+      <p className="mt-2 text-sm text-muted-foreground">
+        Desde aquí no se les escribe: publica lo que necesitas y quien pueda
+        ayudarte te responde con su contacto.
+      </p>
 
-      <Alert variant="warning" className="mt-4">
-        <AlertDescription>
-          Desde aquí no se les escribe directamente. Publica lo que necesitas
-          —sin dar tus datos— y quien pueda ayudarte te responde con su
-          contacto. Así tú decides a quién le escribes.
-        </AlertDescription>
-      </Alert>
 
       {mostrarFiltros && (
         <>
@@ -209,6 +209,7 @@ export default async function OfertadoresPage({
           Publicar mi solicitud
         </Button>
       </div>
+      <AccionPrincipal etiqueta="Necesito ayuda" Icono={PlusCircle} href="/publicar" />
     </main>
   )
 }

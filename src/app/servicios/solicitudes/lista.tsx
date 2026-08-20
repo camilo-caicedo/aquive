@@ -9,6 +9,7 @@ import { CAPACIDADES_PAGO, URGENCIAS, zonaLegible } from '@/lib/servicios'
 import type { CapacidadPago, UrgenciaServicio } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+import { HojaAccion } from '@/components/hoja-accion'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 export interface SolicitudDeServicio {
@@ -108,13 +109,46 @@ export function ListaSolicitudesServicio({
                 Ya respondiste. Esa persona tiene tu teléfono y decide si te
                 escribe.
               </p>
-            ) : !puedeResponder ? null : abierta === s.id ? (
-              <div className="mt-3 space-y-2">
+            ) : !puedeResponder ? null : (
+              // El formulario se abría dentro de la tarjeta y empujaba el
+              // resto de la lista hacia abajo: la solicitud que estabas
+              // leyendo se iba bajo el dedo justo al ir a escribir. Ahora
+              // va en una hoja inferior, encima de la lista, que se queda
+              // quieta.
+              <HojaAccion
+                id={`responder-${s.id}`}
+                titulo="Yo puedo hacerlo"
+                disparador={(props) => (
+                  <Button
+                    {...props}
+                    variant="outline"
+                    className="mt-3"
+                    onClick={() => {
+                      setAbierta(s.id)
+                      setError(null)
+                    }}
+                  >
+                    Yo puedo hacerlo
+                  </Button>
+                )}
+                pie={() => (
+                  <Button
+                    className="w-full"
+                    onClick={() => responder(s.id)}
+                    disabled={enviando || mensaje.trim().length < 10 || !!errorMensaje}
+                  >
+                    {enviando ? 'Enviando…' : 'Enviar respuesta'}
+                  </Button>
+                )}
+              >
+                <p className="text-base text-muted-foreground">
+                  {s.oficio_nombre}
+                </p>
                 <Textarea
                   value={mensaje}
                   onChange={(e) => setMensaje(e.target.value)}
                   maxLength={200}
-                  rows={3}
+                  rows={4}
                   aria-label={`Tu mensaje para la solicitud ${s.codigo}`}
                   placeholder="Puedo hacerlo mañana en la mañana. Cobro 20.000 por prenda."
                 />
@@ -123,35 +157,12 @@ export function ListaSolicitudesServicio({
                   muestra al lado de tu respuesta.
                 </p>
                 {errorMensaje && <p className="text-sm text-destructive">{errorMensaje}</p>}
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    onClick={() => responder(s.id)}
-                    disabled={enviando || mensaje.trim().length < 10 || !!errorMensaje}
-                  >
-                    {enviando ? 'Enviando…' : 'Enviar respuesta'}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setAbierta(null)
-                      setMensaje('')
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <Button
-                variant="outline"
-                className="mt-3"
-                onClick={() => {
-                  setAbierta(s.id)
-                  setError(null)
-                }}
-              >
-                Yo puedo hacerlo
-              </Button>
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+              </HojaAccion>
             )}
 
             {error && abierta === s.id && (

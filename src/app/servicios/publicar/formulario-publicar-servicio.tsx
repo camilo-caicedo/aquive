@@ -164,19 +164,22 @@ export function FormularioPublicarServicio({
 
   return (
     <div className="mt-6">
-      <ol className="mb-6 flex gap-2 text-sm" aria-label="Progreso">
-        {[1, 2, 3].map((n) => (
-          <li
-            key={n}
-            className={`flex-1 rounded-full py-1 text-center ${
-              n === paso
-                ? 'bg-primary font-semibold text-primary-foreground'
-                : n < paso
-                  ? 'bg-accent text-accent-foreground'
-                  : 'bg-muted text-muted-foreground'
-            }`}
-          >
-            Paso {n}
+      {/* Con nombre y no numerados: «Paso 2 de 3» no dice de qué es el 2. */}
+      <ol className="riel mb-6 flex gap-1.5 overflow-x-auto text-sm" aria-label="Progreso">
+        {['Qué', 'Dónde y cuándo', 'Publicar'].map((nombre, i) => (
+          <li key={nombre} className="min-w-0 flex-1">
+            <span
+              aria-current={i + 1 === paso ? 'step' : undefined}
+              className={`block truncate border-t-2 pt-1.5 ${
+                i + 1 === paso
+                  ? 'border-primary font-semibold text-foreground'
+                  : i + 1 < paso
+                    ? 'border-ok text-muted-foreground'
+                    : 'border-border text-muted-foreground'
+              }`}
+            >
+              {nombre}
+            </span>
           </li>
         ))}
       </ol>
@@ -201,7 +204,7 @@ export function FormularioPublicarServicio({
                           onClick={() => setOficioId(o.id)}
                           className={`inline-flex min-h-12 items-center rounded-full border px-4 text-base transition-colors ${
                             oficioId === o.id
-                              ? 'border-primary bg-primary text-primary-foreground'
+                              ? 'border-primary bg-secondary font-semibold text-secondary-foreground'
                               : 'border-border bg-card hover:bg-muted'
                           }`}
                         >
@@ -328,7 +331,7 @@ export function FormularioPublicarServicio({
                   onClick={() => setUrgencia(u.valor)}
                   className={`inline-flex min-h-12 items-center rounded-full border px-4 text-base transition-colors ${
                     urgencia === u.valor
-                      ? 'border-primary bg-primary text-primary-foreground'
+                      ? 'border-primary bg-secondary font-semibold text-secondary-foreground'
                       : 'border-border bg-card hover:bg-muted'
                   }`}
                 >
@@ -339,7 +342,14 @@ export function FormularioPublicarServicio({
           </fieldset>
 
           <fieldset>
-            <legend className="mb-2 text-base font-medium">¿Puedes pagar?</legend>
+            <legend className="text-base font-medium">¿Puedes pagar?</legend>
+            {/* La razón va antes de las opciones. Detrás de ellas, quien
+                dudaba ya había elegido: sin esto parece un filtro para
+                descartar a alguien, y es lo contrario. */}
+            <p className="mt-1 mb-2 text-sm text-muted-foreground">
+              Sirve para mostrarte primero a quien trabaja gratis o por aporte
+              voluntario. No se usa para nada más y nadie puede buscar por esto.
+            </p>
             <div className="flex flex-col gap-2">
               {CAPACIDADES_PAGO.map((c) => (
                 <button
@@ -349,7 +359,7 @@ export function FormularioPublicarServicio({
                   onClick={() => setPago(c.valor)}
                   className={`inline-flex min-h-12 items-center rounded-full border px-4 text-left text-base transition-colors ${
                     pago === c.valor
-                      ? 'border-primary bg-primary text-primary-foreground'
+                      ? 'border-primary bg-secondary font-semibold text-secondary-foreground'
                       : 'border-border bg-card hover:bg-muted'
                   }`}
                 >
@@ -357,12 +367,6 @@ export function FormularioPublicarServicio({
                 </button>
               ))}
             </div>
-            {/* Se dice por qué se pregunta. Sin esto parece un filtro para
-                descartar a alguien, y es lo contrario. */}
-            <p className="mt-2 text-sm text-muted-foreground">
-              Sirve para mostrarte primero a quien trabaja gratis o por aporte
-              voluntario. No se usa para nada más y nadie puede buscar por esto.
-            </p>
           </fieldset>
 
           <div className="flex gap-2">

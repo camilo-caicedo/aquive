@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { SOBRE_LAS_RESENAS } from '@/lib/honestidad'
+import { MarcoFlujo } from '@/components/marco-flujo'
 import { FormularioConfirmar } from './formulario-confirmar'
 
 export const metadata = { title: 'Calificar un servicio' }
@@ -16,8 +17,7 @@ export default function ConfirmarPage() {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ''
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="font-heading text-3xl">Calificar un servicio</h1>
+    <MarcoFlujo titulo="Calificar con código" volver="/servicios">
       <p className="mt-2 text-base text-muted-foreground">
         Si te hicieron un trabajo, quien te lo hizo te dio un código de ocho
         letras y números. Escríbelo aquí para calificarlo.
@@ -38,6 +38,6 @@ export default function ConfirmarPage() {
         . Y si alguien te pidió plata a cambio de una buena calificación, o te
         amenazó con una mala, repórtalo desde su ficha.
       </p>
-    </main>
+    </MarcoFlujo>
   )
 }
