@@ -52,7 +52,10 @@ export function TarjetaProveedor({
           >
             {proveedor.nombre_visible}
           </Link>
-          <p className="mt-0.5 text-base text-muted-foreground">{donde}</p>
+          {/* Dos líneas y corta: con zona, municipio, departamento y las
+              tres modalidades, esto llegaba a cinco renglones y empujaba los
+              precios —que es a lo que se viene— fuera de la tarjeta. */}
+          <p className="mt-0.5 line-clamp-2 text-base text-muted-foreground">{donde}</p>
         </div>
         {/* El sello de teléfono verificado va arriba a la derecha, en la
             línea del nombre: es lo primero que se mira al comparar dos

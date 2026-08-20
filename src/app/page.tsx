@@ -11,7 +11,6 @@ import {
   Timer,
   X,
   Info,
-  PackageOpen,
   LogIn,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
@@ -253,30 +252,40 @@ export default async function InicioPage({
             Los dos modos del tablero. Son enlaces, no pestañas con estado:
             el modo vive en la URL, así que se puede compartir y funciona
             con el JavaScript apagado. */}
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Cómo mirar el tablero">
-          <Link
-            href="/"
-            aria-current={modoTengo ? undefined : 'page'}
-            className={`inline-flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-full border px-4 text-base transition-colors sm:flex-initial ${
-              modoTengo
-                ? 'border-border bg-card hover:bg-muted'
-                : 'border-border bg-card font-semibold text-foreground shadow-sm'
-            }`}
-          >
-            Quién necesita ayuda
-          </Link>
-          <Link
-            href="/?modo=tengo"
-            aria-current={modoTengo ? 'page' : undefined}
-            className={`inline-flex min-h-12 flex-1 items-center justify-center gap-1.5 rounded-full border px-4 text-base transition-colors sm:flex-initial ${
-              modoTengo
-                ? 'border-border bg-card font-semibold text-foreground shadow-sm'
-                : 'border-border bg-card hover:bg-muted'
-            }`}
-          >
-            <PackageOpen className="size-4 shrink-0" aria-hidden="true" />
-            ¿Quién necesita lo que tengo?
-          </Link>
+        {/* Un control segmentado de verdad —riel arena, la activa en papel
+            elevado— y no dos píldoras sueltas con borde: así se lee como
+            «elige uno» y usa la misma piel que las pestañas del resto del
+            sitio. Siguen siendo enlaces, no estado de cliente: el modo vive
+            en la URL, se comparte y funciona sin JavaScript. */}
+        <div
+          role="group"
+          aria-label="Cómo mirar el tablero"
+          className="riel -mx-1 overflow-x-auto px-1"
+        >
+          <div className="inline-flex w-full min-w-fit items-center gap-1 rounded-full bg-secondary p-1.5">
+            <Link
+              href="/"
+              aria-current={modoTengo ? undefined : 'page'}
+              className={`inline-flex min-h-12 flex-1 items-center justify-center rounded-full px-5 text-base whitespace-nowrap transition-colors ${
+                modoTengo
+                  ? 'text-muted-foreground hover:text-foreground'
+                  : 'bg-card font-semibold text-foreground shadow-sm'
+              }`}
+            >
+              Quién necesita
+            </Link>
+            <Link
+              href="/?modo=tengo"
+              aria-current={modoTengo ? 'page' : undefined}
+              className={`inline-flex min-h-12 flex-1 items-center justify-center rounded-full px-5 text-base whitespace-nowrap transition-colors ${
+                modoTengo
+                  ? 'bg-card font-semibold text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Lo que puedo dar
+            </Link>
+          </div>
         </div>
 
         {modoTengo ? (
