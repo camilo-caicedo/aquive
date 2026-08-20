@@ -97,6 +97,34 @@ function FormularioOrganizacion({
 
   return (
     <div className="space-y-4 rounded-2xl bg-card p-4 shadow-sm">
+      {/* ⚠ La lista de comprobación va DENTRO del flujo de crear y no
+          arriba de la pantalla. Sirve en el momento de crear una, y ahí lo
+          que hace falta es poder ir tachando; como párrafo de la pestaña
+          se leía una vez, el primer día, y nunca más. La verificación
+          ocurre afuera —en el RUES, por teléfono— así que no hay cola. */}
+      {organizacion === null && (
+        <ul className="space-y-2 rounded-lg border border-dashed border-border p-3">
+          <li className="text-sm font-medium">Antes de crearla, revisa</li>
+          {[
+            'El certificado del RUES y el NIT',
+            'Que la persona de contacto exista y responda',
+            'Que su sitio no sea una página de donaciones de un tercero',
+          ].map((linea) => (
+            <li key={linea} className="flex items-start gap-2 text-sm text-muted-foreground">
+              <span
+                aria-hidden="true"
+                className="mt-0.5 size-4 shrink-0 rounded border border-border"
+              />
+              {linea}
+            </li>
+          ))}
+          <li className="text-sm text-muted-foreground">
+            Crearla no le da acceso a nadie: eso lo hace la invitación de
+            coordinador, que se genera después.
+          </li>
+        </ul>
+      )}
+
       <div>
         <Label htmlFor="org-nombre" className="mb-1">
           Nombre

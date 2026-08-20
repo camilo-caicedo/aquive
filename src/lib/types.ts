@@ -287,6 +287,68 @@ export interface ContactoDestapado {
   contacto_tipo: ContactoTipo
 }
 
+// Los contadores del índice de administración, tal como los devuelve
+// `panel_admin_indice`. Todos en una consulta: el índice dibuja diez
+// filas con su número, y encadenar diez consultas para eso sería peor que
+// las pestañas que reemplaza.
+export interface IndiceAdmin {
+  matriculas: number
+  telefonos: number
+  hilos_sin_fundacion: number
+  reportes: number
+  sugerencias: number
+  items_activos: number
+  entidades: number
+  entidades_retiradas: number
+  solicitudes_abiertas: number
+  solicitudes_sin_respuestas: number
+  resenas_ocultas: number
+  zonas_pendientes: number
+  fichas_suspendidas: number
+  organizaciones: number
+  organizaciones_inactivas: number
+}
+
+// Un reporte con lo reportado dentro, de `reportes_con_contenido`.
+//
+// ⚠ Sin nada de quién lo escribió. Se modera un texto; suspender una
+// cuenta es otra acción y tiene su propia pantalla.
+export interface ReporteConContenido {
+  id: string
+  motivo: MotivoReporte
+  tipo_objeto: TipoObjetoReporte
+  objeto_id: string
+  /** Lo que escribió quien reportó. */
+  nota: string | null
+  creado_at: string
+  /** Si el objeto sigue existiendo. Si no, solo se puede descartar. */
+  existe: boolean
+  /** El texto que se denunció. Nulo si ese objeto no tiene ninguno. */
+  contenido: string | null
+  /** El nombre de lo reportado, cuando tiene uno. */
+  titulo: string | null
+  contexto: { codigo: string; lugar: string } | null
+  /** Los ítems, solo para una solicitud: la PII también se cuela ahí. */
+  items: string[] | null
+}
+
+// Una fila de la bitácora unificada (`bitacora_accesos`).
+//
+// ⚠ Dice quién leyó, cuándo y con qué motivo. NUNCA qué leyó: aquí no hay
+// ni un nombre, ni un documento, ni un teléfono. `lector` viene ya
+// recortado a ocho caracteres desde la base.
+export interface AccesoBitacora {
+  tipo: 'identidad' | 'referencia'
+  rol: 'admin' | 'aliado'
+  lector: string
+  /** La organización del lector, si es un aliado. */
+  organizacion: string | null
+  motivo: string
+  cuando: string
+  /** El dato que registra ya se borró; el rastro se queda. */
+  huerfano: boolean
+}
+
 // Un municipio con solicitudes que calzan, tal como lo devuelve
 // `municipios_que_calzan`.
 export interface MunicipioQueCalza {
@@ -1577,6 +1639,22 @@ export interface Database {
       }
       destapar_contacto: {
         Args: { p_token: string; p_perfil_id: string }
+        Returns: Json
+      }
+      // Los contadores del índice de /admin, en una sola llamada.
+      panel_admin_indice: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      // La cola de reportes CON lo reportado: decidir entre descartar y
+      // borrar para siempre sin ver el contenido es firmar a ciegas.
+      reportes_con_contenido: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      // La bitácora de las dos tablas de accesos, en una sola lista.
+      bitacora_accesos: {
+        Args: Record<string, never>
         Returns: Json
       }
       municipios_que_calzan: {

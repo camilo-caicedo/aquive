@@ -46,3 +46,23 @@ export const ENTIDADES_MATRICULA = [
   { valor: 'SIRNA', etiqueta: 'SIRNA — Derecho' },
   { valor: 'OTRA', etiqueta: 'Otra entidad' },
 ] as const
+
+/**
+ * Dónde se consulta cada matrícula.
+ *
+ * Verificar es ir a mirar si ese número aparece en el registro de la
+ * entidad, y hasta ahora eso había que buscarlo a mano cada vez.
+ *
+ * ⚠ Van los dominios raíz y no los enlaces profundos de cada buscador: un
+ * enlace profundo a un trámite de una entidad pública se muere solo, y un
+ * enlace roto en una cola de verificación es peor que ninguno — hace
+ * pensar que el registro no existe. OTRA no está aquí porque no tiene
+ * registro consultable, y esa ausencia es la que decide la cola.
+ */
+export const REGISTROS_MATRICULA: Record<string, string> = {
+  COPNIA: 'https://www.copnia.gov.co',
+  CPNAA: 'https://www.cpnaa.gov.co',
+  COLPSIC: 'https://www.colpsic.org.co',
+  ReTHUS: 'https://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx',
+  SIRNA: 'https://sirna.ramajudicial.gov.co',
+}

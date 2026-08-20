@@ -5,7 +5,7 @@ import { Marca } from '@/components/marca'
 import { Button } from '@/components/ui/button'
 import { BarraInferior, Navegacion } from '@/components/navegacion'
 import { BotonAvisos } from '@/components/boton-avisos'
-import type { EstadoEncabezado } from '@/lib/types'
+import type { EstadoEncabezado, IndiceAdmin } from '@/lib/types'
 
 export async function Encabezado() {
   const supabase = await createClient()
@@ -30,6 +30,18 @@ export async function Encabezado() {
     : [null, null, null]
 
   const esAdmin = !!admin?.data
+
+  // El escudo lleva cuántas personas están esperando, no cuánto trabajo
+  // hay: son las cuatro colas del primer grupo del índice. Se paga una
+  // consulta más, pero solo la paga quien es administrador —una persona—,
+  // y sin el número el escudo obliga a entrar para saber si hay algo.
+  const { data: indiceData } = esAdmin
+    ? await supabase.rpc('panel_admin_indice')
+    : { data: null }
+  const indice = indiceData as unknown as IndiceAdmin | null
+  const pendientes = indice
+    ? indice.matriculas + indice.telefonos + indice.hilos_sin_fundacion + indice.reportes
+    : 0
   // La campana solo tiene sentido con perfil: los avisos son de hilos y
   // solicitudes donde participa una cuenta, y sin perfil no hay cuenta.
   const tienePerfil = !!perfil?.data
@@ -62,11 +74,23 @@ export async function Encabezado() {
           {esAdmin && (
             <Link
               href="/admin"
-              aria-label="Moderación"
-              title="Moderación"
-              className="flex size-12 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              aria-label={
+                pendientes === 0
+                  ? 'Administración'
+                  : `Administración · ${pendientes} por atender`
+              }
+              title="Administración"
+              className="relative flex size-12 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <ShieldCheck className="size-5" aria-hidden="true" />
+              {pendientes > 0 && (
+                <span
+                  aria-hidden="true"
+                  className="absolute top-1 right-1 flex min-w-5 items-center justify-center rounded-full bg-primary px-1 text-sm font-bold text-primary-foreground"
+                >
+                  {pendientes}
+                </span>
+              )}
             </Link>
           )}
           {tienePerfil && <BotonAvisos sinVer={encabezado?.avisos_sin_ver ?? 0} />}
