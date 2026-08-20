@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { MarcoFlujo } from '@/components/marco-flujo'
 import { FormularioUnirse } from './formulario-unirse'
 
 // Una sola ruta atrapatodo en vez de dos páginas: el código de invitación
@@ -37,9 +38,8 @@ export default async function UnirsePage({
   if (!nombre) notFound()
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="font-heading text-3xl leading-tight">{nombre}</h1>
-      <p className="mt-2 text-base text-muted-foreground">
+    <MarcoFlujo titulo={`Unirse a ${nombre}`} volver="/">
+      <p className=" text-base text-muted-foreground">
         Te estás uniendo al equipo de esta organización en AquíVe. Es para
         quienes trabajan ahí: si solo quieres ofrecer insumos, no necesitas
         esto.
@@ -72,6 +72,6 @@ export default async function UnirsePage({
         codigo={codigo ?? null}
         haySesion={!!usuario.user}
       />
-    </main>
+    </MarcoFlujo>
   )
 }

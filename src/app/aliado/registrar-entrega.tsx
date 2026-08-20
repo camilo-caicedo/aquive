@@ -6,6 +6,7 @@ import { Check } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { HojaDatoSensible } from '@/components/hoja-dato-sensible'
 import type { ItemPendiente, Planilla } from '@/lib/types'
 
 /**
@@ -66,24 +67,22 @@ export function RegistrarEntrega({
     router.refresh()
   }
 
-  async function pedirPlanilla() {
-    setEnviando(true)
-    setError(null)
+  // ⚠ El motivo lo escribe la persona en ese momento. Estaba fijo en el
+  // código —'Planilla de la entrega en el acopio'— así que la bitácora
+  // decía siempre lo mismo y no distinguía un acceso de otro: dejaba de
+  // ser evidencia. La firma de la RPC no cambia, solo lo que se le pasa.
+  async function pedirPlanilla(motivoEscrito: string) {
     const supabase = createClient()
     const { data, error: rpcError } = await supabase.rpc('exportar_planilla', {
       p_conversacion_id: conversacionId,
-      p_motivo: 'Planilla de la entrega en el acopio',
+      p_motivo: motivoEscrito,
     })
 
-    if (rpcError) {
-      setError(rpcError.message)
-      setEnviando(false)
-      return
-    }
+    if (rpcError) return rpcError.message
 
     setPlanilla(data as unknown as Planilla)
     setMotivo(true)
-    setEnviando(false)
+    return null
   }
 
   return (
@@ -106,14 +105,27 @@ export function RegistrarEntrega({
               const activo = marcados.includes(p.id)
               return (
                 <li key={p.id}>
-                  <Button
-                    variant={activo ? 'default' : 'outline'}
-                    className="w-full justify-start text-left"
+                  {/* Fila alta con un círculo de marca a la izquierda: esto
+                      se usa de pie, con la caja enfrente y a veces con
+                      guantes. Un botón de alto normal se falla. */}
+                  <button
+                    type="button"
+                    aria-pressed={activo}
                     onClick={() => alternar(p.id)}
+                    className={`flex min-h-16 w-full items-center gap-3 rounded-xl px-3 text-left text-base transition-colors ${
+                      activo ? 'bg-secondary font-semibold text-secondary-foreground' : 'bg-card'
+                    }`}
                   >
-                    {activo && <Check className="size-5 shrink-0" aria-hidden="true" />}
+                    <span
+                      aria-hidden="true"
+                      className={`flex size-8 shrink-0 items-center justify-center rounded-full border-2 ${
+                        activo ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
+                      }`}
+                    >
+                      {activo && <Check className="size-5" />}
+                    </span>
                     {p.cantidad} {p.unidad} de {p.nombre}
-                  </Button>
+                  </button>
                 </li>
               )
             })}
@@ -124,7 +136,9 @@ export function RegistrarEntrega({
             disabled={enviando || marcados.length === 0}
             onClick={registrar}
           >
-            {enviando ? 'Guardando…' : `Registrar ${marcados.length}`}
+            {enviando
+              ? 'Guardando…'
+              : `Registrar ${marcados.length} ${marcados.length === 1 ? 'cosa' : 'cosas'}`}
           </Button>
         </>
       )}
@@ -134,16 +148,14 @@ export function RegistrarEntrega({
           la fundación. Cada vez que se pide queda registrado quién la vio
           y por qué. */}
       <div className="mt-4 border-t border-border pt-3">
-        <Button variant="outline" className="w-full" disabled={enviando} onClick={pedirPlanilla}>
-          Ver la planilla para firmar
-        </Button>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Lleva datos personales de quien pidió. Queda registrado que la
-          consultaste, y la custodia es de la fundación.
-        </p>
-      </div>
-
-      {planilla && motivo && (
+        <HojaDatoSensible
+          id={`planilla-${conversacionId}`}
+          titulo="Planilla para firmar"
+          etiquetaBoton="Ver la planilla para firmar"
+          explicacion="Lleva el nombre, el documento y el teléfono de quien pidió. La custodia es de la fundación, no de AquíVe."
+          alAbrir={pedirPlanilla}
+        >
+          {planilla && motivo && (
         <div className="mt-3 rounded-lg border border-primary/25 bg-accent p-3 text-accent-foreground">
           <p className="text-base font-medium">{planilla.nombre}</p>
           <p className="text-base">
@@ -164,7 +176,9 @@ export function RegistrarEntrega({
             {planilla.autorizacion_version}).
           </p>
         </div>
-      )}
+          )}
+        </HojaDatoSensible>
+      </div>
 
       {error && (
         <Alert variant="destructive" className="mt-2">

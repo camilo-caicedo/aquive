@@ -492,7 +492,9 @@ export default async function AdminPage({
       )}
 
       {vista === 'aliados' && flujo2 && (
-        <section className="mt-8">
+        <section className="mt-6">
+          {/* Primero, no al final: si hay hilos sin fundación hay dos
+              personas esperando a que alguien decida. */}
           <h2 className="font-heading text-2xl">Acompañamiento</h2>
           <Alert className="mt-3">
             <AlertDescription>

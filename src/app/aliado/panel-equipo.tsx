@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { enlaceInvitacion } from '@/lib/organizaciones'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { HojaGestion, FilaPermiso } from '@/components/hoja-gestion'
 import type { AccionMiembro, InvitacionResumen, MiembroEquipo } from '@/lib/types'
 
 function fecha(iso: string) {
@@ -31,6 +32,7 @@ function Invitacion({
 }) {
   const [copiado, setCopiado] = useState(false)
   const [enviando, setEnviando] = useState(false)
+  const [verQr, setVerQr] = useState(false)
   const enlace = enlaceInvitacion(origen, slug, invitacion.codigo)
 
   // Mismo QR que la pantalla de confirmación de una solicitud: se genera
@@ -60,27 +62,44 @@ function Invitacion({
   }
 
   return (
-    <li className="rounded-lg border border-border p-4">
+    // Una fila, no una tarjeta con el QR desplegado. Cada invitación viva
+    // pintaba un QR de 160 px más la URL entera más tres botones: con tres
+    // invitaciones abiertas había que bajar tres pantallas para llegar al
+    // equipo, que es a lo que se entra.
+    <li className="rounded-2xl bg-card p-4 shadow-sm">
       <p className="text-base font-medium">
         {invitacion.rol_otorgado === 'coordinador' ? 'Coordinador' : 'Miembro'} ·{' '}
         {invitacion.usos}/{invitacion.usos_max} usos · vence el{' '}
         {fecha(invitacion.expira_at)}
       </p>
 
-      <div className="mt-2 rounded-lg border border-border p-3 text-sm break-all">
-        {enlace}
-      </div>
+      {/* El aviso va pegado a la invitación de pared, que es la que lo
+          necesita: un QR de 25 usos pegado en un muro lo escanea cualquiera
+          que pase. */}
+      {invitacion.usos_max > 1 && (
+        <p className="mt-1 text-sm text-muted-foreground">
+          Este es de pared: piensa quién más pasa por ahí antes de pegarlo.
+        </p>
+      )}
 
-      {/* eslint-disable-next-line @next/next/no-img-element -- data URI generada en cliente, no aplica optimización de next/image */}
-      <img
-        src={qrDataUrl}
-        alt={`Código QR para unirse como ${invitacion.rol_otorgado}`}
-        className="mx-auto mt-3 h-40 w-40"
-        width={160}
-        height={160}
-      />
+      {verQr && (
+        <>
+          <div className="mt-2 rounded-lg bg-muted p-3 text-sm break-all">{enlace}</div>
+          {/* eslint-disable-next-line @next/next/no-img-element -- data URI generada en cliente, no aplica optimización de next/image */}
+          <img
+            src={qrDataUrl}
+            alt={`Código QR para unirse como ${invitacion.rol_otorgado}`}
+            className="mx-auto mt-3 h-40 w-40"
+            width={160}
+            height={160}
+          />
+        </>
+      )}
 
-      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button variant="outline" onClick={() => setVerQr((v) => !v)}>
+          {verQr ? 'Ocultar el QR' : 'Ver el QR'}
+        </Button>
         <Button variant="outline" onClick={copiar}>
           {copiado ? 'Copiado' : 'Copiar enlace'}
         </Button>
@@ -182,83 +201,105 @@ function Miembro({
         {esYo && ' · eres tú'}
       </p>
 
-      {esYo ? null : miembro.estado === 'pendiente' ? (
-        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <Button disabled={enviando} onClick={() => accion('aprobar')}>
-            Aprobar
-          </Button>
-          <Button variant="destructive" disabled={enviando} onClick={() => accion('rechazar')}>
-            Rechazar
-          </Button>
-        </div>
-      ) : (
-        <>
-          {miembro.estado === 'activo' && (
-            <div className="mt-3 space-y-2">
-              {/* El permiso de ver identidades va aparte y con su propia
-                  advertencia: es lo que deja ver cédulas. Nunca se concede
-                  al entrar ni al aprobar — siempre aquí, a mano. */}
-              <Button
-                variant={miembro.puede_ver_identidad ? 'default' : 'outline'}
-                className="w-full"
-                disabled={enviando}
-                onClick={() => permiso('puede_ver_identidad', !miembro.puede_ver_identidad)}
-              >
-                {miembro.puede_ver_identidad
-                  ? 'Quitar: ver identidades'
-                  : 'Dar permiso de ver identidades'}
-              </Button>
-              <Button
-                variant={miembro.puede_moderar ? 'default' : 'outline'}
-                className="w-full"
-                disabled={enviando}
-                onClick={() => permiso('puede_moderar', !miembro.puede_moderar)}
-              >
-                {miembro.puede_moderar ? 'Quitar: moderar' : 'Dar permiso de moderar'}
-              </Button>
-            </div>
-          )}
-
-          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {miembro.estado === 'activo' ? (
-              <>
+      {esYo ? null : (
+        <div className="mt-3">
+          <HojaGestion
+            id={`gestionar-${miembro.perfil_id}`}
+            titulo={miembro.nombre_visible}
+            resumen={`${etiquetaEstado} · ${
+              miembro.rol === 'coordinador' ? 'Coordinador' : 'Miembro'
+            }`}
+            permisos={
+              miembro.estado === 'activo' ? (
+                <>
+                  {/* Interruptores, no botones: un botón que dice «Dar
+                      permiso» y otro que dice «Quitar» son la misma cosa
+                      dicha de dos formas, y quien mira rápido no sabe cuál
+                      es el estado actual. */}
+                  <FilaPermiso
+                    etiqueta="Ver identidades"
+                    explicacion="Puede abrir los datos de quien pide ayuda para coordinar una entrega."
+                    advertencia="Abre nombres, documentos y teléfonos de personas reales. Cada lectura queda en la bitácora con su nombre, la hora y el motivo."
+                    activo={miembro.puede_ver_identidad}
+                    disabled={enviando}
+                    onChange={(v) => permiso('puede_ver_identidad', v)}
+                  />
+                  <FilaPermiso
+                    etiqueta="Moderar"
+                    explicacion="Puede retirar mensajes de las conversaciones de la organización."
+                    activo={miembro.puede_moderar}
+                    disabled={enviando}
+                    onChange={(v) => permiso('puede_moderar', v)}
+                  />
+                </>
+              ) : undefined
+            }
+            papeles={
+              miembro.estado === 'pendiente' ? (
+                <Button className="w-full" disabled={enviando} onClick={() => accion('aprobar')}>
+                  Aprobar
+                </Button>
+              ) : miembro.estado === 'activo' ? (
                 <Button
                   variant="outline"
+                  className="w-full"
                   disabled={enviando}
                   onClick={() => accion(miembro.rol === 'coordinador' ? 'degradar' : 'ascender')}
                 >
                   {miembro.rol === 'coordinador' ? 'Quitar coordinación' : 'Hacer coordinador'}
                 </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={enviando}
+                  onClick={() => accion('activar')}
+                >
+                  Volver a incluir
+                </Button>
+              )
+            }
+            destructivo={
+              miembro.estado === 'pendiente' ? (
                 <Button
                   variant="destructive"
+                  className="w-full"
+                  disabled={enviando}
+                  onClick={() => accion('rechazar')}
+                >
+                  Rechazar
+                </Button>
+              ) : miembro.estado === 'activo' ? (
+                <Button
+                  variant="destructive"
+                  className="w-full"
                   disabled={enviando}
                   onClick={() => accion('desactivar')}
                 >
                   Sacar del equipo
                 </Button>
-              </>
-            ) : (
-              <>
-                <Button variant="outline" disabled={enviando} onClick={() => accion('activar')}>
-                  Volver a incluir
+              ) : confirmando ? (
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                  disabled={enviando}
+                  onClick={() => accion('sacar')}
+                >
+                  {enviando ? 'Borrando…' : 'Sí, borrar de la lista'}
                 </Button>
-                {confirmando ? (
-                  <Button variant="destructive" disabled={enviando} onClick={() => accion('sacar')}>
-                    {enviando ? 'Borrando…' : 'Sí, borrar'}
-                  </Button>
-                ) : (
-                  <Button
-                    variant="destructive"
-                    disabled={enviando}
-                    onClick={() => setConfirmando(true)}
-                  >
-                    Borrar de la lista
-                  </Button>
-                )}
-              </>
-            )}
-          </div>
-        </>
+              ) : (
+                <Button
+                  variant="destructive"
+                  className="w-full"
+                  disabled={enviando}
+                  onClick={() => setConfirmando(true)}
+                >
+                  Borrar de la lista
+                </Button>
+              )
+            }
+          />
+        </div>
       )}
 
       {error && (

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react'
 import { Send } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { validarMensaje } from '@/lib/validacion'
-import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import type {
@@ -144,12 +143,13 @@ export function Chat({
   }
 
   return (
-    // `overflow-hidden` y no esquinas redondeadas en la cabecera: el bloque
-    // del acopio tiene fondo propio y, sin esto, lo pinta cuadrado encima
-    // del borde redondeado del contenedor.
-    <div className="overflow-hidden rounded-xl border border-border">
+    // Sin caja ni desplazamiento propio. Antes había tres desplazamientos
+    // anidados —el hilo dentro de la tarjeta dentro de la página— y en un
+    // teléfono el dedo no sabía cuál iba a mover. Ahora el hilo se desplaza
+    // con la página y el redactor va fijo abajo.
+    <div>
       {acopio && (
-        <div className="border-b border-border bg-secondary p-3">
+        <div className="sticky top-14 z-30 -mx-4 border-b border-border bg-secondary px-4 py-2 sm:top-16">
           <p className="text-base font-medium">{acopio.nombre}</p>
           {acopio.direccion && (
             <p className="text-sm text-muted-foreground">
@@ -160,23 +160,42 @@ export function Chat({
         </div>
       )}
 
-      <ul className="max-h-96 space-y-3 overflow-y-auto p-3">
+      {/* Al principio del hilo y no bajo el redactor, donde competía con
+          el botón de enviar. Se lee una vez, al entrar, que es cuando
+          sirve. */}
+      <p className="mt-3 text-sm text-muted-foreground">
+        Esta conversación se borra cuando se borre la solicitud. No la uses
+        para guardar nada que necesites después.
+      </p>
+
+      <ul className="mt-3 space-y-1">
         {mensajes.length === 0 && (
           <li className="py-6 text-center text-base text-muted-foreground">
             Todavía no hay mensajes.
           </li>
         )}
-        {mensajes.map((m) => (
-          <li key={m.id} className={m.rol === miRol ? 'text-right' : undefined}>
-            <p className="text-sm text-muted-foreground">
-              {ETIQUETA_ROL[m.rol]}
-              {m.nombre ? ` · ${m.nombre}` : ''}
-            </p>
+        {mensajes.map((m, i) => {
+          // La etiqueta del papel sale cuando cambia de emisor, no en cada
+          // burbuja: repetida en quince mensajes seguidos es ruido y hace
+          // que el hilo se lea como un formulario.
+          const anterior = mensajes[i - 1]
+          const mismoEmisor = anterior && anterior.rol === m.rol && anterior.nombre === m.nombre
+          const mio = m.rol === miRol
+          return (
+          <li key={m.id} className={mio ? 'text-right' : undefined}>
+            {!mismoEmisor && (
+              <p className={`mt-3 text-sm text-muted-foreground`}>
+                {ETIQUETA_ROL[m.rol]}
+                {m.nombre ? ` · ${m.nombre}` : ''}
+              </p>
+            )}
             <p
-              className={`mt-1 inline-block max-w-[85%] rounded-xl px-3 py-2 text-left text-base ${
-                m.rol === miRol
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-foreground'
+              className={`mt-1 inline-block max-w-[85%] px-3 py-2 text-left text-base ${
+                m.oculto
+                  ? 'rounded-xl border border-dashed border-border text-muted-foreground'
+                  : mio
+                    ? 'rounded-xl rounded-br-sm bg-primary text-primary-foreground'
+                    : 'rounded-xl rounded-bl-sm bg-secondary text-secondary-foreground'
               }`}
             >
               {/* Moderar oculta, no borra, y el hueco se ve: si un mensaje
@@ -188,11 +207,12 @@ export function Chat({
               )}
             </p>
           </li>
-        ))}
+          )
+        })}
         <div ref={finRef} />
       </ul>
 
-      <div className="border-t border-border p-3">
+      <div className="sticky bottom-0 -mx-4 mt-4 border-t border-border bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
         {esperando ? (
           <p className="text-base text-muted-foreground">
             Nadie de la fundación se ha hecho cargo todavía. En cuanto
@@ -204,36 +224,37 @@ export function Chat({
           </p>
         ) : (
           <>
-            <Textarea
-              value={cuerpo}
-              onChange={(e) => setCuerpo(e.target.value)}
-              maxLength={1000}
-              rows={2}
-              placeholder="Escribe aquí"
-              aria-label="Mensaje"
-            />
+            <div className="flex items-end gap-2">
+              <Textarea
+                value={cuerpo}
+                onChange={(e) => setCuerpo(e.target.value)}
+                maxLength={1000}
+                rows={2}
+                placeholder="Escribe aquí"
+                aria-label="Mensaje"
+                className="flex-1"
+              />
+              {/* Icono al lado y no un botón de ancho completo debajo: el
+                  redactor va fijo, y una fila de más le come dos líneas de
+                  hilo en cada pantalla. */}
+              <button
+                type="button"
+                disabled={enviando || cuerpo.trim().length === 0}
+                onClick={enviar}
+                aria-label={enviando ? 'Enviando' : 'Enviar mensaje'}
+                className="flex size-[3.25rem] shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-40"
+              >
+                <Send className="size-5" aria-hidden="true" />
+              </button>
+            </div>
             {error && (
               <Alert variant="destructive" className="mt-2">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            <Button
-              className="mt-2 w-full"
-              disabled={enviando || cuerpo.trim().length === 0}
-              onClick={enviar}
-            >
-              <Send className="size-5" aria-hidden="true" />
-              {enviando ? 'Enviando…' : 'Enviar'}
-            </Button>
           </>
         )}
 
-        {/* Se dice en el chat, no en una página de ayuda: es donde alguien
-            estaría a punto de usarlo como archivo. */}
-        <p className="mt-2 text-sm text-muted-foreground">
-          Esta conversación se borra cuando se borre la solicitud. No la uses
-          para guardar nada que necesites después.
-        </p>
       </div>
     </div>
   )
