@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Clock, MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { contienePII } from '@/lib/validacion'
 import { CAPACIDADES_PAGO, URGENCIAS, zonaLegible } from '@/lib/servicios'
@@ -76,26 +75,40 @@ export function ListaSolicitudesServicio({
       {solicitudes.map((s) => {
         const zona = zonaLegible(s.zona_nombre, s.zona_texto)
         return (
-          <li key={s.id} className="rounded-lg border border-border p-4 sm:p-5">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <span className="text-lg font-bold">{s.oficio_nombre}</span>
-              <span className="font-mono text-sm text-muted-foreground">{s.codigo}</span>
+          <li key={s.id} className="rounded-2xl bg-card p-4 shadow-sm">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="min-w-0 text-lg font-bold">{s.oficio_nombre}</span>
+              <span className="shrink-0 font-mono text-sm text-muted-foreground">
+                {s.codigo}
+              </span>
             </div>
 
-            <p className="mt-1 flex items-start gap-1.5 text-sm text-muted-foreground">
-              <MapPin className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
-              <span>{[zona, nombreMunicipio[s.municipio]].filter(Boolean).join(' · ')}</span>
+            <p className="mt-0.5 text-base text-muted-foreground">
+              {[zona, nombreMunicipio[s.municipio]].filter(Boolean).join(' · ')}
             </p>
 
-            <p className="mt-1 flex items-start gap-1.5 text-sm text-muted-foreground">
-              <Clock className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
-              <span>
-                {etiquetaUrgencia(s.urgencia)} · {etiquetaPago(s.capacidad_pago)}
-              </span>
-            </p>
+            {/* Urgencia y capacidad de pago, como chips: son dos datos que
+                se comparan entre solicitudes, y en una línea de texto con
+                un reloj delante no se distinguían del resto. */}
+            <ul className="mt-3 flex flex-wrap gap-2">
+              <li className="rounded-full bg-accent px-3.5 py-1.5 text-sm text-accent-foreground">
+                {etiquetaUrgencia(s.urgencia)}
+              </li>
+              <li className="rounded-full bg-muted px-3.5 py-1.5 text-sm text-foreground">
+                {etiquetaPago(s.capacidad_pago)}
+              </li>
+            </ul>
 
             {s.nota && <p className="mt-3 text-base">{s.nota}</p>}
 
+            <div className="mt-4 flex items-center justify-between gap-3">
+              <p className="min-w-0 text-base text-muted-foreground">
+                {s.num_respuestas === 0
+                  ? 'Nadie ha respondido'
+                  : s.num_respuestas === 1
+                    ? '1 persona respondió'
+                    : `${s.num_respuestas} personas respondieron`}
+              </p>
             {s.ya_respondi ? (
               <p className="mt-3 text-base text-ok">
                 Ya respondiste. Esa persona tiene tu teléfono y decide si te
@@ -114,7 +127,7 @@ export function ListaSolicitudesServicio({
                   <Button
                     {...props}
                     variant="outline"
-                    className="mt-3"
+                    className="shrink-0 border-primary text-primary"
                     onClick={() => {
                       setAbierta(s.id)
                       setError(null)
@@ -156,6 +169,7 @@ export function ListaSolicitudesServicio({
                 )}
               </HojaAccion>
             )}
+            </div>
 
             {error && abierta === s.id && (
               <Alert variant="destructive" className="mt-3">

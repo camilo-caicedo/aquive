@@ -6,7 +6,8 @@ import { GRUPOS } from '@/lib/servicios'
 import { ListaSolicitudesServicio, type SolicitudDeServicio } from './lista'
 import { PestanasServicios } from '@/components/pestanas-servicios'
 import { SelectFiltro } from '@/components/select-filtro'
-import { FormularioFiltros } from '@/components/formulario-filtros'
+import { HojaFiltros } from '@/components/hoja-filtros'
+import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { Button } from '@/components/ui/button'
 import type { MiProveedor } from '@/lib/types'
 
@@ -51,63 +52,103 @@ export default async function SolicitudesDeServicioPage({
     .map((c) => ({ codigo: c, nombre: nombreMunicipio.get(c) ?? c }))
     .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
 
+  const chipsAplicados = [
+    ...(params.oficio
+      ? [
+          {
+            clave: 'oficio',
+            etiqueta: (oficios ?? []).find((o) => o.id === params.oficio)?.nombre ?? 'Un oficio',
+            href: municipio
+              ? `/servicios/solicitudes?municipio=${municipio}`
+              : '/servicios/solicitudes',
+          },
+        ]
+      : []),
+    ...(municipio
+      ? [
+          {
+            clave: 'municipio',
+            etiqueta: nombreMunicipio.get(municipio) ?? 'Un municipio',
+            href: params.oficio
+              ? `/servicios/solicitudes?oficio=${params.oficio}`
+              : '/servicios/solicitudes',
+          },
+        ]
+      : []),
+  ]
+
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="font-heading text-3xl">Quién necesita un servicio</h1>
-      <p className="mt-1 text-base text-muted-foreground">
-        Lo que la gente está pidiendo. Si respondes, esa persona ve tu nombre y
-        tu teléfono y decide si te escribe.
+      {/* Es una vista más de Servicios, no una pantalla aparte: el mismo
+          título, el mismo segmentado, y un chip que dice cuál de las dos
+          listas se está mirando. Antes tenía título propio, dos botones y
+          el formulario de filtros desplegado, así que parecía otro sitio. */}
+      <CabeceraPantalla titulo="Servicios">
+        <PestanasServicios activa="oficios" />
+
+        <HojaFiltros
+          action="/servicios/solicitudes"
+          id="hoja-filtros-pidiendo"
+          titulo="Filtrar lo que piden"
+          aplicados={chipsAplicados}
+          chipsExtra={
+          // Interruptor, no una pestaña más: encendido lleva de vuelta al
+          // directorio. Sin esto, entrar aquí era un callejón —el segmentado
+          // de arriba solo cambia de lista, no de vista— y no quedaba forma
+          // de volver a ver proveedores.
+            <Link
+              href="/servicios"
+              aria-pressed="true"
+              className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-primary bg-accent px-4 text-base font-medium text-accent-foreground"
+            >
+              <Inbox className="size-4" aria-hidden="true" />
+              Quién está pidiendo
+            </Link>
+          }
+        >
+          <SelectFiltro
+            name="oficio"
+            label="Filtrar por oficio"
+            placeholder="Todos los oficios"
+            valorInicial={params.oficio ?? ''}
+            conBusqueda
+            opciones={(oficios ?? []).map((o) => ({
+              valor: o.id,
+              etiqueta: o.nombre,
+              detalle: GRUPOS[o.grupo],
+            }))}
+          />
+          <SelectFiltro
+            name="municipio"
+            label="Filtrar por municipio"
+            placeholder="Todos los municipios"
+            valorInicial={municipio ?? ''}
+            conBusqueda
+            opciones={municipiosConSolicitudes.map((m) => ({
+              valor: m.codigo,
+              etiqueta: m.nombre,
+            }))}
+          />
+        </HojaFiltros>
+      </CabeceraPantalla>
+
+      {/* Lo que hay que saber antes de responder, en una línea: el teléfono
+          no se ve hasta que respondes, y después decide quien pidió. */}
+      <p className="flex items-start gap-1.5 text-base text-muted-foreground">
+        <Info className="size-5 shrink-0 translate-y-0.5" aria-hidden="true" />
+        <span>
+          Quien pide no ve tu teléfono hasta que respondes. Después decide si te
+          escribe.
+        </span>
       </p>
 
-      <PestanasServicios activa="oficios" />
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        <Button
-          variant="outline"
-          className="flex-1 sm:flex-initial"
-          nativeButton={false}
-          render={<Link href="/servicios" />}
-        >
-          Ver el directorio
-        </Button>
-        <Button
-          variant="outline"
-          className="flex-1 sm:flex-initial"
-          nativeButton={false}
-          render={<Link href="/servicios/publicar" />}
-        >
-          Necesito un servicio
-        </Button>
-      </div>
-
-      <FormularioFiltros
-        action="/servicios/solicitudes"
-        className="mt-4 flex flex-col gap-2 rounded-lg border border-border bg-muted/40 p-3 sm:flex-row"
-      >
-        <SelectFiltro
-          name="oficio"
-          label="Filtrar por oficio"
-          placeholder="Todos los oficios"
-          valorInicial={params.oficio ?? ''}
-          conBusqueda
-          opciones={(oficios ?? []).map((o) => ({
-            valor: o.id,
-            etiqueta: o.nombre,
-            detalle: GRUPOS[o.grupo],
-          }))}
-        />
-        <SelectFiltro
-          name="municipio"
-          label="Filtrar por municipio"
-          placeholder="Todos los municipios"
-          valorInicial={municipio ?? ''}
-          conBusqueda
-          opciones={municipiosConSolicitudes.map((m) => ({
-            valor: m.codigo,
-            etiqueta: m.nombre,
-          }))}
-        />
-      </FormularioFiltros>
+      <p className="mt-3 text-base text-muted-foreground">
+        <span className="font-semibold text-foreground">
+          {solicitudes.length}{' '}
+          {solicitudes.length === 1 ? 'persona busca' : 'personas buscan'}
+        </span>{' '}
+        algo que tú haces
+      </p>
 
       {!proveedor && (
         <p className="mt-4 flex items-start gap-1.5 text-sm text-muted-foreground">

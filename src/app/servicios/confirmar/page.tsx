@@ -18,15 +18,9 @@ export default function ConfirmarPage() {
 
   return (
     <MarcoFlujo titulo="Calificar un trabajo" volver="/servicios">
-      <p className="mt-2 text-base text-muted-foreground">
-        Si te hicieron un trabajo, quien te lo hizo te dio un código de ocho
-        letras y números. Escríbelo aquí para calificarlo.
-      </p>
-      <p className="mt-2 text-base text-muted-foreground">
-        No necesitas cuenta y no te pedimos ningún dato. Cada código sirve una
-        sola vez.
-      </p>
-
+      {/* Sin introducción: quien llega aquí ya tiene el papel en la mano.
+          Lo que hacía falta decir —que no pide cuenta y que el código sirve
+          una vez— se dice bajo el campo y al final, no antes de él. */}
       <FormularioConfirmar turnstileSiteKey={siteKey} />
 
       <p className="mt-8 text-sm text-muted-foreground">{SOBRE_LAS_RESENAS}</p>

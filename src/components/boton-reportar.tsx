@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Flag } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { SI_ALGO_SALE_MAL } from '@/lib/honestidad'
 import type { TipoObjetoReporte, MotivoReporte } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { HojaAccion } from '@/components/hoja-accion'
@@ -65,7 +64,7 @@ export function BotonReportar({
   return (
     <HojaAccion
       id={`reportar-${objetoId}`}
-      titulo="Reportar"
+      titulo="¿Qué problema hay?"
       disparador={(props) => (
         <button
           {...props}
@@ -76,17 +75,35 @@ export function BotonReportar({
         </button>
       )}
       pie={(cerrar) => (
-        <Button className="w-full" disabled={enviando} onClick={() => reportar(cerrar)}>
-          {enviando ? 'Enviando…' : 'Enviar reporte'}
-        </Button>
+        <div className="flex items-center gap-3">
+          {/* Cancelar en texto, a la izquierda: reportar a alguien no puede
+              ser algo que se toque sin querer, pero salir tampoco puede
+              costar buscar la equis. */}
+          <button
+            type="button"
+            onClick={cerrar}
+            className="inline-flex min-h-12 shrink-0 items-center rounded-full px-3 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            Cancelar
+          </button>
+          <Button className="flex-1" disabled={enviando} onClick={() => reportar(cerrar)}>
+            <Flag className="size-5" aria-hidden="true" />
+            {enviando ? 'Enviando…' : 'Reportar'}
+          </Button>
+        </div>
       )}
     >
-      {/* Qué pasa después, antes de elegir el motivo. */}
-      <p className="text-base text-muted-foreground">{SI_ALGO_SALE_MAL}</p>
+      {/* Qué pasa después, antes de elegir el motivo. El texto entero de
+          `SI_ALGO_SALE_MAL` vive en /seguridad; aquí va lo que hace falta
+          saber para tocar el botón, y el 123, que es lo único urgente. */}
+      <p className="text-base text-muted-foreground">
+        Lo revisa una persona. Puede borrar el contenido o suspender la cuenta.
+        Si hay riesgo para alguien ahora mismo, eso no es un reporte: es el 123.
+      </p>
 
       <fieldset>
-        <legend className="text-base font-medium">¿Qué problema hay?</legend>
-        <div className="mt-2 flex flex-col gap-2">
+        <legend className="sr-only">¿Qué problema hay?</legend>
+        <div className="flex flex-col gap-2">
           {MOTIVOS.map((m) => (
             <label key={m.valor} className="cursor-pointer">
               <input

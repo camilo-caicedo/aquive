@@ -202,7 +202,20 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
       >
         <div className="sticky top-0 z-10 border-b border-border bg-background px-4 pt-2">
           <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-border sm:hidden" />
-          <p className="py-2 font-semibold">Avisos</p>
+          <div className="flex items-center justify-between gap-3 py-2">
+            <p className="font-heading text-2xl">Avisos</p>
+            <button
+              type="button"
+              popoverTarget="panel-avisos"
+              popoverTargetAction="hide"
+              aria-label="Cerrar"
+              className="-mr-2 flex size-12 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <span aria-hidden="true" className="text-2xl leading-none">
+                ×
+              </span>
+            </button>
+          </div>
         </div>
 
         {/* Si están apagados, esto es lo primero y lleva la razón, no solo
@@ -252,16 +265,22 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
               return (
                 <li key={aviso.tipo + aviso.fecha + i}>
                   {nuevoDia && (
-                    <p className="bg-muted px-4 py-1.5 text-sm font-medium text-muted-foreground">
+                    <p className="px-4 pt-4 pb-1 text-sm font-semibold tracking-wide text-muted-foreground uppercase">
                       {dia}
                     </p>
                   )}
                   <Link
                     href={aviso.href}
                     onClick={() => panel.current?.hidePopover()}
-                    className="flex min-h-16 items-center gap-3 border-b border-border px-4 py-3 hover:bg-muted"
+                    className={`mx-2 flex min-h-16 items-center gap-3 rounded-xl px-2 py-3 ${
+                      i < nuevos ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'
+                    }`}
                   >
-                    <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
+                    <span
+                      className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${
+                        i < nuevos ? 'bg-background text-primary' : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
                       <Icono className="size-4" aria-hidden="true" />
                     </span>
                     <span className="min-w-0 flex-1">

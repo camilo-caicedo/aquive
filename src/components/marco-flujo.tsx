@@ -20,6 +20,8 @@ import { ArrowLeft } from 'lucide-react'
  */
 export function MarcoFlujo({
   titulo,
+  subtitulo,
+  sello,
   volver,
   pasos,
   pasoActual = 0,
@@ -27,6 +29,10 @@ export function MarcoFlujo({
   children,
 }: {
   titulo: string
+  /** Una línea de contexto bajo el título: «M9Q · Ana ofrece · tú coordinas». */
+  subtitulo?: ReactNode
+  /** Estado en palabras, a la derecha del título: «Acordada». */
+  sello?: ReactNode
   /** A dónde vuelve. Sin esto no se dibuja el botón. */
   volver?: string
   /** Los pasos, con nombre. «Paso 3 de 5» no dice de qué. */
@@ -43,7 +49,7 @@ export function MarcoFlujo({
           contenido del paso empieza después. */}
       <div className="border-b border-border">
         <div className="mx-auto max-w-lg px-4 pt-2 pb-3">
-          <div className="flex items-center gap-1">
+          <div className="flex items-start gap-1">
             {volver && (
               <Link
                 href={volver}
@@ -53,7 +59,13 @@ export function MarcoFlujo({
                 <ArrowLeft className="size-6" aria-hidden="true" />
               </Link>
             )}
-            <h1 className="font-heading text-2xl">{titulo}</h1>
+            <div className="min-w-0 flex-1 py-2.5">
+              <h1 className="font-heading text-2xl leading-tight">{titulo}</h1>
+              {subtitulo && (
+                <p className="mt-0.5 text-base text-muted-foreground">{subtitulo}</p>
+              )}
+            </div>
+            {sello && <span className="mt-2.5 shrink-0">{sello}</span>}
           </div>
 
           {pasos && pasos.length > 0 && (

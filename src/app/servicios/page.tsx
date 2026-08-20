@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { AccionPrincipal } from '@/components/accion-principal'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
-import { Info, Inbox, ShieldAlert, Stethoscope, CircleAlert } from 'lucide-react'
+import { Info, Inbox, ShieldAlert, Stethoscope, CircleAlert, Briefcase } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { AVISO_SERVICIOS, NO_PAGUES_POR_ADELANTADO } from '@/lib/honestidad'
 import { listarMunicipios, mapaDeNombres } from '@/lib/municipios'
@@ -235,6 +235,28 @@ export default async function ServiciosPage({
             opciones={MODOS_PRECIO.map((m) => ({ valor: m.valor, etiqueta: m.etiqueta }))}
           />
         </HojaFiltros>
+
+        {/* La otra vista del módulo, como interruptor. Era un enlace de
+            texto perdido entre tres botones. */}
+        <div className="riel -mx-4 mt-2 flex gap-2 overflow-x-auto px-4">
+          <Link
+            href="/servicios/solicitudes"
+            aria-pressed="false"
+            className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
+          >
+            <Inbox className="size-4" aria-hidden="true" />
+            Quién está pidiendo
+          </Link>
+          {!miFicha && (
+            <Link
+              href="/servicios/soy-proveedor"
+              className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
+            >
+              <Briefcase className="size-4" aria-hidden="true" />
+              Ofrecer mi trabajo
+            </Link>
+          )}
+        </div>
       </CabeceraPantalla>
 
       <p className="text-base text-muted-foreground">
@@ -243,20 +265,7 @@ export default async function ServiciosPage({
         cobra nada.
       </p>
 
-      {/* Enlaces, no tres botones del mismo peso. «Necesito un servicio»
-          es ahora la píldora flotante y «Mi ficha» tiene su propia cinta
-          abajo: dejarlos aquí en relleno terracota eran tres acciones
-          principales en la misma pantalla. */}
-      <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-base">
-        <Link href="/servicios/solicitudes" className="underline underline-offset-4">
-          Quién está pidiendo
-        </Link>
-        {!miFicha && (
-          <Link href="/servicios/soy-proveedor" className="underline underline-offset-4">
-            Ofrecer mi trabajo
-          </Link>
-        )}
-      </p>
+
 
       {/* Dónde está lo suyo, dicho apenas entra. Sin esto, quien ya
           publicó su ficha no tenía forma de saber si aparece ni por dónde

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { LogIn } from 'lucide-react'
+import { Bookmark } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 /**
@@ -26,8 +26,8 @@ export function PuertaCerrada({
   titulo: string
   /** Por qué hace falta cuenta. Nunca «por seguridad». */
   porque: string
-  /** Qué se guarda de donde estaba. */
-  seConserva?: string
+  /** Qué se guarda de donde estaba. Ya redactado, con lo que se reconoce. */
+  seConserva?: React.ReactNode
   /** A dónde vuelve al terminar. Viaja como `?volver=`, y se valida. */
   destino?: string
   href?: string
@@ -38,12 +38,20 @@ export function PuertaCerrada({
 
   return (
     <div className="rounded-2xl bg-card p-4 shadow-sm">
-      <h2 className="font-heading text-2xl">{titulo}</h2>
+      <h2 className="text-lg font-semibold">{titulo}</h2>
       <p className="mt-2 text-base text-muted-foreground">{porque}</p>
-      {seConserva && <p className="mt-2 text-base text-ok">{seConserva}</p>}
+
+      {/* Lo que se conserva, en su propia caja y con icono de marcador: es
+          la diferencia entre «entra» y «entra, que no pierdes lo que ibas a
+          hacer», y es lo único que quita el miedo a tocar el botón. */}
+      {seConserva && (
+        <p className="mt-3 flex items-start gap-2 rounded-xl bg-muted p-3 text-base">
+          <Bookmark className="size-5 shrink-0 translate-y-0.5 text-muted-foreground" aria-hidden="true" />
+          <span>{seConserva}</span>
+        </p>
+      )}
 
       <Button className="mt-4 w-full" nativeButton={false} render={<Link href={url} />}>
-        <LogIn className="size-5" aria-hidden="true" />
         {etiqueta}
       </Button>
 
@@ -52,9 +60,10 @@ export function PuertaCerrada({
       )}
 
       {/* La salida. Quien viene a pedir ayuda no necesita nada de esto. */}
-      <p className="mt-4 border-t border-border pt-3 text-base">
-        <Link href="/publicar" className="underline">
-          Vengo a pedir ayuda, no a ofrecer
+      <p className="mt-3 text-base text-muted-foreground">
+        ¿Solo querías mirar?{' '}
+        <Link href="/" className="underline">
+          Volver al tablero
         </Link>
       </p>
     </div>

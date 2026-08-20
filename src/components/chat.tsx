@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Send } from 'lucide-react'
+import { Send, Package } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { validarMensaje } from '@/lib/validacion'
 import { Textarea } from '@/components/ui/textarea'
@@ -149,23 +149,22 @@ export function Chat({
     // con la página y el redactor va fijo abajo.
     <div>
       {acopio && (
-        <div className="sticky top-14 z-30 -mx-4 border-b border-border bg-secondary px-4 py-2 sm:top-16">
-          <p className="text-base font-medium">{acopio.nombre}</p>
-          {acopio.direccion && (
-            <p className="text-sm text-muted-foreground">
-              Acopio: {acopio.direccion}
-              {acopio.horario && ` · ${acopio.horario}`}
-            </p>
-          )}
+        <div className="sticky top-14 z-30 -mx-4 flex items-center gap-2 border-b border-border bg-secondary px-4 py-2 text-secondary-foreground sm:top-16">
+          <Package className="size-4 shrink-0" aria-hidden="true" />
+          <p className="min-w-0 truncate text-base">
+            {acopio.nombre}
+            {acopio.direccion ? ` · ${acopio.direccion}` : ''}
+            {acopio.horario ? ` · ${acopio.horario}` : ''}
+          </p>
         </div>
       )}
 
       {/* Al principio del hilo y no bajo el redactor, donde competía con
           el botón de enviar. Se lee una vez, al entrar, que es cuando
           sirve. */}
-      <p className="mt-3 text-sm text-muted-foreground">
-        Esta conversación se borra cuando se borre la solicitud. No la uses
-        para guardar nada que necesites después.
+      <p className="mt-4 text-center text-sm text-muted-foreground">
+        Esta conversación se borra junto con la solicitud, a las 72 horas. No la
+        uses para guardar nada que necesites después.
       </p>
 
       <ul className="mt-3 space-y-1">
@@ -195,7 +194,7 @@ export function Chat({
                   ? 'rounded-xl border border-dashed border-border text-muted-foreground'
                   : mio
                     ? 'rounded-xl rounded-br-sm bg-primary text-primary-foreground'
-                    : 'rounded-xl rounded-bl-sm bg-secondary text-secondary-foreground'
+                    : 'rounded-xl rounded-bl-sm bg-muted text-foreground'
               }`}
             >
               {/* Moderar oculta, no borra, y el hueco se ve: si un mensaje

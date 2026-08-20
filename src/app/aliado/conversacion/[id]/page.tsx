@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { MarcoFlujo } from '@/components/marco-flujo'
 import { Chat } from '@/components/chat'
+import { ETIQUETA_ESTADO } from '@/components/fila-bandeja'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import type { ConversacionDetalle } from '@/lib/types'
 import { RegistrarEntrega } from '../../registrar-entrega'
@@ -51,8 +52,32 @@ export default async function ConversacionPage({
 
   const hilo = data as unknown as ConversacionDetalle
 
+  // Quién es quién, dicho una vez arriba y no repetido en cada burbuja.
+  const quien = [
+    hilo.mi_rol === 'aliado' ? 'tú coordinas' : null,
+    hilo.mi_rol === 'ofertador' ? 'tú ofreces' : null,
+    hilo.mi_rol === 'solicitante' ? 'tú pediste' : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
   return (
-    <MarcoFlujo titulo={hilo.codigo} volver="/aliado?hilos=1">
+    <MarcoFlujo
+      titulo={hilo.codigo}
+      subtitulo={quien || null}
+      sello={
+        <span
+          className={`rounded-full px-3 py-1 text-sm font-medium ${
+            hilo.estado === 'abierta' || hilo.estado === 'acordada' || hilo.estado === 'entregada'
+              ? 'bg-ok-suave text-ok'
+              : 'bg-accent text-accent-foreground'
+          }`}
+        >
+          {ETIQUETA_ESTADO[hilo.estado]}
+        </span>
+      }
+      volver="/aliado?hilos=1"
+    >
       <Chat
         conversacionId={hilo.id}
         estado={hilo.estado}

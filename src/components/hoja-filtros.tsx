@@ -108,6 +108,7 @@ export function HojaFiltros({
   id,
   titulo,
   aplicados,
+  chipsExtra,
   conteo,
   children,
 }: {
@@ -118,6 +119,13 @@ export function HojaFiltros({
   /** Encabezado de la hoja: «Filtrar solicitudes». */
   titulo: string
   aplicados: ChipAplicado[]
+  /**
+   * Chips de la pantalla que no son filtros: cambiar de vista, por ejemplo.
+   * Van en la MISMA fila que «Filtros» porque para quien mira son lo mismo
+   * —maneras de acotar lo que ve—, y porque una segunda fila de píldoras
+   * sería una tercera capa de navegación (regla 3).
+   */
+  chipsExtra?: ReactNode
   /** El conteo de resultados, ya redactado por la página. */
   conteo?: ReactNode
   children: ReactNode
@@ -182,6 +190,7 @@ export function HojaFiltros({
             <X className="size-4 shrink-0" aria-hidden="true" />
           </Link>
         ))}
+        {chipsExtra}
       </div>
       {conteo && (
         <p aria-live="polite" className="mt-3 text-base text-muted-foreground">

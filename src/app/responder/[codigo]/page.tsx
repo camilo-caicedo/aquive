@@ -55,8 +55,16 @@ export default async function ResponderPage({
       <MarcoFlujo titulo="Ofrecer ayuda" volver="/">
         <PuertaCerrada
           titulo="Para responder hace falta una cuenta"
-          porque="Quien pidió esto va a ver tu nombre y tu contacto, así que tiene que haber alguien detrás de la respuesta. De tu cuenta de Google solo guardamos un identificador interno."
-          seConserva="Guardamos a qué solicitud ibas: al entrar vuelves justo aquí."
+          porque="Quien pidió esto va a ver tu nombre y tu contacto, así que hace falta una cuenta. Son dos minutos y se puede borrar en cualquier momento."
+          seConserva={
+            <>
+              Guardamos a dónde ibas:{' '}
+              <strong className="font-semibold">
+                {categoria(solicitud.categoria).etiqueta} · {solicitud.barrio}
+              </strong>
+              . Al entrar vuelves aquí.
+            </>
+          }
           destino={`/responder/${codigo.toUpperCase()}`}
         />
       </MarcoFlujo>
@@ -73,9 +81,17 @@ export default async function ResponderPage({
     return (
       <MarcoFlujo titulo="Ofrecer ayuda" volver="/">
         <PuertaCerrada
-          titulo="Falta tu perfil"
-          porque="Quien pidió esto necesita saber a quién le está escribiendo: tu nombre visible y una forma de contacto. Son tres campos."
-          seConserva="Guardamos a qué solicitud ibas: al terminar vuelves justo aquí."
+          titulo="Para responder necesitas un perfil"
+          porque="Quien pidió va a ver tu nombre y tu contacto, así que hace falta una cuenta. Son dos minutos y se puede borrar en cualquier momento."
+          seConserva={
+            <>
+              Guardamos a dónde ibas:{' '}
+              <strong className="font-semibold">
+                {categoria(solicitud.categoria).etiqueta} · {solicitud.barrio}
+              </strong>
+              . Al terminar vuelves aquí.
+            </>
+          }
           destino={`/responder/${codigo.toUpperCase()}`}
           href="/registro"
           etiqueta="Crear mi perfil"

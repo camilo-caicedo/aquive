@@ -81,7 +81,9 @@ export default async function FichaPage({
         </div>
       </details>
 
-      {ficha.descripcion && <p className="mt-4 text-base">{ficha.descripcion}</p>}
+      {ficha.descripcion && (
+        <p className="mt-4 text-base text-muted-foreground">{ficha.descripcion}</p>
+      )}
 
       <h2 className="font-heading mt-6 text-2xl">Qué hace</h2>
       <ul className="mt-3 space-y-2">
@@ -103,7 +105,7 @@ export default async function FichaPage({
           <MapPin className="size-5 shrink-0 translate-y-0.5 text-muted-foreground" aria-hidden="true" />
           <div>
             <dt className="sr-only">Dónde atiende</dt>
-            <dd className="text-base">
+            <dd className="text-base text-muted-foreground">
               {[zona, municipio?.nombre].filter(Boolean).join(' · ')}
               {municipio?.departamento ? `, ${municipio.departamento}` : ''}
             </dd>
@@ -118,7 +120,7 @@ export default async function FichaPage({
             <CalendarDays className="size-5 shrink-0 translate-y-0.5 text-muted-foreground" aria-hidden="true" />
             <div>
               <dt className="sr-only">Cuándo atiende</dt>
-              <dd className="text-base">
+              <dd className="text-base text-muted-foreground">
                 {[dias, ficha.franjas.map(etiquetaFranja).join(', ')]
                   .filter(Boolean)
                   .join(' · ')}
@@ -132,7 +134,7 @@ export default async function FichaPage({
             <Wallet className="size-5 shrink-0 translate-y-0.5 text-muted-foreground" aria-hidden="true" />
             <div>
               <dt className="sr-only">Cómo recibe el pago</dt>
-              <dd className="text-base">
+              <dd className="text-base text-muted-foreground">
                 {ficha.medios_pago.map(etiquetaMedioPago).join(', ')}
               </dd>
               {/* Se dice aquí y no solo en los términos: es donde alguien

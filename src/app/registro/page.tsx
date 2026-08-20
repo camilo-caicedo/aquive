@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { LogOut, Trash2 } from 'lucide-react'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { VueltaAlDestino } from '@/app/auth/vuelta'
 import { redirect } from 'next/navigation'
@@ -159,38 +160,55 @@ export default async function RegistroPage({
           {/* Salir y borrar eran dos secciones seguidas con el mismo peso, y
               una de ellas borra la cuenta entera. Cerrar sesión es una fila
               normal —sales en este teléfono, tu perfil sigue publicado— y
-              borrar queda aparte, con la consecuencia escrita. */}
-          <section className="rounded-2xl bg-card p-4 shadow-sm">
-            <h2 className="text-lg font-semibold">Cerrar sesión</h2>
-            <p className="mt-1 text-base text-muted-foreground">
-              Sales en este teléfono. Tu perfil sigue publicado y puedes volver
-              a entrar cuando quieras.
-            </p>
-            <div className="mt-3">
-              <CerrarSesion />
+              borrar queda aparte, en rojo, con la consecuencia escrita. */}
+          <section className="flex items-center gap-3 rounded-2xl bg-card p-4 shadow-sm">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+              <LogOut className="size-5" aria-hidden="true" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base font-medium">Cerrar sesión</h2>
+              <p className="text-sm text-muted-foreground">
+                Sales en este teléfono. Tu perfil sigue publicado.
+              </p>
             </div>
+            <CerrarSesion />
           </section>
 
-          <section className="rounded-2xl border border-destructive/30 p-4">
-            <h2 className="text-lg font-semibold">Borrar mi perfil y mi cuenta</h2>
-            <p className="mt-1 text-base text-muted-foreground">
-              Se borra tu perfil, tu matrícula si la declaraste, todas tus
-              respuestas, tu cuenta y el identificador de Google que
-              guardábamos. No se puede deshacer.
+          <section className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4">
+            <div className="flex items-start gap-3">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                <Trash2 className="size-5" aria-hidden="true" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-base font-medium text-destructive">
+                  Borrar mi cuenta y mis datos
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Inmediato y no se puede deshacer.
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-3 text-base">
+              Se borra tu perfil, tu matrícula y todas las respuestas que hayas
+              enviado. También tu cuenta: no queda nada tuyo, ni el
+              identificador de Google. Si alguien estaba esperando tu respuesta,
+              dejará de verla.
             </p>
-            {/* Lo que hoy no se decía en ningún lado, y es la pregunta que
-                de verdad se hace quien tiene las dos cosas. */}
-            <p className="mt-2 text-base text-muted-foreground">
-              Tu ficha del directorio de servicios no se va con esto: son dos
-              cosas distintas y se borran por separado, desde{' '}
-              <Link href="/servicios/soy-proveedor" className="underline">
-                Mi ficha
-              </Link>
-              .
-            </p>
+
             <div className="mt-3">
               <BorrarPerfil tienePerfil={!!perfil} />
             </div>
+
+            {/* Lo que hoy no se decía en ningún lado, y es la pregunta que
+                de verdad se hace quien tiene las dos cosas. */}
+            <p className="mt-3 text-sm text-muted-foreground">
+              Tu ficha del directorio de servicios se borra aparte: son dos
+              cosas distintas.{' '}
+              <Link href="/servicios/soy-proveedor" className="underline">
+                Mi ficha
+              </Link>
+            </p>
           </section>
         </div>
       )}

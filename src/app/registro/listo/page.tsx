@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { PackageOpen, HandHeart } from 'lucide-react'
+import { PackageOpen, HandHeart, Check, BellRing, ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { MarcoFlujo } from '@/components/marco-flujo'
 import { AvisosOfertador } from '../avisos-ofertador'
@@ -38,60 +38,76 @@ export default async function ListoPage() {
   if (!perfil) redirect('/registro')
 
   return (
-    <MarcoFlujo titulo="Tu perfil quedó publicado" volver="/registro">
-      <p className="text-base text-muted-foreground">
-        Ya apareces en la lista de quién ofrece. Falta una cosa para que
-        sirva de verdad.
+    <MarcoFlujo titulo="Listo" volver="/registro">
+      <span
+        aria-hidden="true"
+        className="flex size-14 items-center justify-center rounded-full bg-ok-suave text-ok"
+      >
+        <Check className="size-7" />
+      </span>
+
+      <h2 className="font-heading mt-4 text-3xl leading-tight">
+        Tu perfil quedó publicado
+      </h2>
+      <p className="mt-2 text-base text-muted-foreground">
+        Ya apareces en «Quién ofrece» y puedes responder solicitudes.
       </p>
 
-      <div className="mt-4 rounded-2xl bg-card p-4 shadow-sm">
-        <h2 className="font-heading text-2xl">Que te avisemos</h2>
-        <p className="mt-1 text-base text-muted-foreground">
-          Sin avisos tendrías que entrar a mirar el tablero cada rato para
-          enterarte de que alguien de tus municipios pidió ayuda. Con ellos te
-          llega solo.
+      {/* La única acción de la pantalla, con la razón antes del botón. */}
+      <div className="mt-6 rounded-2xl border border-primary/40 bg-accent p-4 text-accent-foreground">
+        <p className="flex items-center gap-2 text-lg font-semibold">
+          <BellRing className="size-5 shrink-0" aria-hidden="true" />
+          Falta lo que hace que sirva
+        </p>
+        <p className="mt-1 text-base">
+          Que te avisemos cuando alguien de tus municipios pida algo. Sin esto
+          tendrías que entrar a mirar el tablero cada rato.
         </p>
         <div className="mt-3">
           <AvisosOfertador municipios={perfil.municipios.length} />
         </div>
+        <p className="mt-2 text-sm">
+          Es por teléfono. Puedes apagarlos cuando quieras desde la campana.
+        </p>
       </div>
 
-      <h2 className="font-heading mt-8 text-2xl">Lo que sigue</h2>
+      <h2 className="mt-8 text-lg font-semibold">Lo que sigue</h2>
       <ul className="mt-3 space-y-2">
-        <li>
-          <Link
-            href="/registro"
-            className="flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 shadow-sm transition-colors hover:bg-muted"
-          >
-            <PackageOpen className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-            <span>
-              <span className="block text-base font-medium">Contar qué tienes</span>
-              <span className="block text-sm text-muted-foreground">
-                Opcional. Sirve para que te encuentren por lo que puedes dar.
+        {[
+          {
+            href: '/registro',
+            Icono: PackageOpen,
+            titulo: 'Cuéntanos qué tienes',
+            detalle: 'Así apareces en las coincidencias. Opcional.',
+          },
+          {
+            href: '/',
+            Icono: HandHeart,
+            titulo: 'Ver quién necesita ayuda',
+            detalle: 'En tus municipios y en el resto del país.',
+          },
+        ].map((f) => (
+          <li key={f.href}>
+            <Link
+              href={f.href}
+              className="flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 shadow-sm transition-colors hover:bg-muted"
+            >
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                <f.Icono className="size-5" aria-hidden="true" />
               </span>
-            </span>
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/"
-            className="flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 shadow-sm transition-colors hover:bg-muted"
-          >
-            <HandHeart className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-            <span>
-              <span className="block text-base font-medium">
-                Ver quién necesita ayuda
+              <span className="min-w-0 flex-1">
+                <span className="block text-base font-medium">{f.titulo}</span>
+                <span className="block text-sm text-muted-foreground">{f.detalle}</span>
               </span>
-              <span className="block text-sm text-muted-foreground">
-                En tus municipios y en el resto del país.
-              </span>
-            </span>
-          </Link>
-        </li>
+              <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+            </Link>
+          </li>
+        ))}
       </ul>
 
       <p className="mt-6 text-base text-muted-foreground">
-        Tu perfil vive en «Lo mío», el cuarto botón de la barra de abajo.
+        Tu perfil vive en <strong className="font-semibold">Lo mío</strong>, en la
+        barra de abajo. Ahí lo editas, cierras sesión o borras tu cuenta.
       </p>
     </MarcoFlujo>
   )

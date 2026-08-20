@@ -111,15 +111,29 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
         <Input
           id="codigo"
           value={codigo}
-          onChange={(e) => setCodigo(e.target.value)}
-          maxLength={20}
+          // ⚠ El tope son OCHO caracteres útiles, no veinte de `maxLength`:
+          // se limpia y se corta al escribir, así que pegar un enlace entero
+          // o seguir tecleando no pasa del octavo. Se vuelve a componer con
+          // un espacio en medio —«ABCD 2345»— porque es como está impreso en
+          // el papel del que se copia.
+          onChange={(e) => {
+            const limpio = e.target.value
+              .replace(/[^a-zA-Z0-9]/g, '')
+              .toUpperCase()
+              .slice(0, 8)
+            setCodigo(limpio.length > 4 ? `${limpio.slice(0, 4)} ${limpio.slice(4)}` : limpio)
+          }}
+          inputMode="text"
           autoCapitalize="characters"
           autoComplete="off"
           spellCheck={false}
           placeholder="ABCD 2345"
           // Monoespaciada y grande: se copia de un papel, carácter por
           // carácter, y así se distingue lo que se lleva escrito.
-          className="mt-1 h-16 text-center font-mono text-2xl tracking-[0.3em] uppercase"
+          // Grande y monoespaciada porque se copia de un papel carácter por
+          // carácter; alineada a la izquierda y no centrada, para que al
+          // escribir el cursor no salte de sitio en cada letra.
+          className="mt-1 h-16 border-primary/40 px-5 font-mono text-2xl tracking-[0.2em] uppercase"
         />
         {/* Se dice al escribir cuántos faltan. Antes el botón se quedaba
             apagado sin explicar por qué, y desde un papel mal fotocopiado
@@ -131,7 +145,7 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
             códigos ajenos. */}
         <p aria-live="polite" className="mt-1 text-sm text-muted-foreground">
           {!codigoEmpezado
-            ? 'Ocho letras y números. Da lo mismo si lo escribes con espacios o en minúsculas.'
+            ? 'Ocho letras y números. No necesitas cuenta, y cada código sirve una sola vez.'
             : codigoCompleto
               ? 'Listo. Al enviar se confirma el servicio de quien te dio este código.'
               : `Llevas ${codigoLimpio.length} de 8.`}
@@ -163,7 +177,7 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
 
       <div>
         <Label htmlFor="comentario">
-          ¿Quieres decir algo más?{' '}
+          ¿Algo más?{' '}
           <span className="font-normal text-muted-foreground">(opcional)</span>
         </Label>
         <Textarea
