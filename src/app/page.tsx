@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { VueltaAlDestino } from '@/app/auth/vuelta'
 import {
   PlusCircle,
   HandHeart,
@@ -149,6 +150,7 @@ export default async function InicioPage({
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
+      <VueltaAlDestino />
       <section className="animar-entrada rounded-2xl border border-border bg-secondary p-5 sm:p-8">
         {/* El nombre va en el encabezado principal, no solo en la barra de
             arriba. Google rechazó la verificación de la marca dos veces por

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { VueltaAlDestino } from '@/app/auth/vuelta'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
@@ -22,11 +23,10 @@ export const metadata = { title: 'Lo mío' }
 export default async function RegistroPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ver?: string; nuevo?: string }>
+  searchParams: Promise<{ ver?: string }>
 }) {
-  const { ver, nuevo } = await searchParams
+  const { ver } = await searchParams
   const vista: Vista = ver === 'ajustes' || ver === 'respuestas' ? ver : 'perfil'
-  const recienCreado = nuevo === '1'
 
   const supabase = await createClient()
   const {
@@ -84,6 +84,7 @@ export default async function RegistroPage({
 
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
+      <VueltaAlDestino />
       <h1 className="font-heading text-3xl">Lo mío</h1>
 
       <PestanasLoMio
@@ -149,35 +150,46 @@ export default async function RegistroPage({
               perfil guardado no hay municipios y no hay nada que activar. */}
           {perfil && (
             <section>
-              {/* Recién guardado el perfil se dice para qué sirve esto antes
-                  de pedirlo. Es el momento en que la persona acaba de decir
-                  que quiere ayudar, y sin avisos no se entera de ninguna
-                  solicitud: tendría que entrar al tablero por su cuenta. */}
-              {recienCreado && (
-                <div className="mb-3 rounded-xl border border-primary/30 bg-accent p-4">
-                  <p className="text-base font-medium text-accent-foreground">
-                    Tu perfil quedó guardado
-                  </p>
-                  <p className="mt-1 text-base text-accent-foreground/80">
-                    Falta lo que hace que sirva: que te avisemos cuando alguien
-                    de tus municipios pida ayuda. Si no, tendrías que entrar a
-                    mirar el tablero cada rato.
-                  </p>
-                </div>
-              )}
               <h2 className="font-heading text-2xl">Avisos</h2>
               <AvisosOfertador municipios={perfil.municipios.length} />
             </section>
           )}
 
-          <section>
-            <h2 className="font-heading text-2xl">Sesión</h2>
-            <CerrarSesion />
+          {/* Salir y borrar eran dos secciones seguidas con el mismo peso, y
+              una de ellas borra la cuenta entera. Cerrar sesión es una fila
+              normal —sales en este teléfono, tu perfil sigue publicado— y
+              borrar queda aparte, con la consecuencia escrita. */}
+          <section className="rounded-2xl bg-card p-4 shadow-sm">
+            <h2 className="text-lg font-semibold">Cerrar sesión</h2>
+            <p className="mt-1 text-base text-muted-foreground">
+              Sales en este teléfono. Tu perfil sigue publicado y puedes volver
+              a entrar cuando quieras.
+            </p>
+            <div className="mt-3">
+              <CerrarSesion />
+            </div>
           </section>
 
-          <section>
-            <h2 className="font-heading text-2xl">Borrar mi perfil</h2>
-            <BorrarPerfil tienePerfil={!!perfil} />
+          <section className="rounded-2xl border border-destructive/30 p-4">
+            <h2 className="text-lg font-semibold">Borrar mi perfil y mi cuenta</h2>
+            <p className="mt-1 text-base text-muted-foreground">
+              Se borra tu perfil, tu matrícula si la declaraste, todas tus
+              respuestas, tu cuenta y el identificador de Google que
+              guardábamos. No se puede deshacer.
+            </p>
+            {/* Lo que hoy no se decía en ningún lado, y es la pregunta que
+                de verdad se hace quien tiene las dos cosas. */}
+            <p className="mt-2 text-base text-muted-foreground">
+              Tu ficha del directorio de servicios no se va con esto: son dos
+              cosas distintas y se borran por separado, desde{' '}
+              <Link href="/servicios/soy-proveedor" className="underline">
+                Mi ficha
+              </Link>
+              .
+            </p>
+            <div className="mt-3">
+              <BorrarPerfil tienePerfil={!!perfil} />
+            </div>
           </section>
         </div>
       )}

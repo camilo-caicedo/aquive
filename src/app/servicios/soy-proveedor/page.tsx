@@ -1,4 +1,5 @@
-import Link from 'next/link'
+import { MarcoFlujo } from '@/components/marco-flujo'
+import { PuertaCerrada } from '@/components/puerta-cerrada'
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
 import { RESPONSABLE_SERVICIOS } from '@/lib/config'
@@ -8,8 +9,6 @@ import {
   PanelServiciosProveedor,
   type MisServicios,
 } from '@/components/panel-servicios-proveedor'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
 import type { MiProveedor } from '@/lib/types'
 
 export const metadata = { title: 'Ofrecer mi trabajo' }
@@ -20,30 +19,21 @@ export default async function SoyProveedorPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Esta pantalla ya explicaba por qué hace falta cuenta y ya nombraba la
+  // tercera puerta —el alta asistida—, que es lo que el módulo necesita
+  // para no dejar fuera a quien no tiene Google. Lo que le faltaba es
+  // volver: al entrar caía en la portada y había que buscar esto otra vez.
   if (!user) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-6">
-        <h1 className="font-heading text-3xl">Ofrecer mi trabajo</h1>
-        <p className="mt-3 text-base">
-          Para publicar tu ficha en el directorio necesitas entrar con una
-          cuenta de Google. Es la forma de que solo tú puedas cambiarla o
-          borrarla.
-        </p>
-        <Button className="mt-4" nativeButton={false} render={<Link href="/login" />}>
-          Entrar con Google
-        </Button>
-        {/* El §8 del documento fuente existe justamente por quien no tiene
-            cuenta. Decirle «no se puede» y dejarlo ahí sería excluir a la
-            población que el módulo quiere incluir. */}
-        <Alert className="mt-6">
-          <AlertDescription>
-            ¿No tienes cuenta de Google o no quieres crear una? Una
-            organización aliada puede registrarte y darte un enlace propio
-            para que manejes tu ficha. Pregunta en el punto de {RESPONSABLE_SERVICIOS} más
-            cercano.
-          </AlertDescription>
-        </Alert>
-      </main>
+      <MarcoFlujo titulo="Ofrecer mi trabajo" volver="/servicios">
+        <PuertaCerrada
+          titulo="Para publicar tu ficha hace falta una cuenta"
+          porque="Tu ficha lleva tu nombre y tu teléfono, y se queda publicada hasta que tú la borres: tiene que poder volver a ella solo quien la creó."
+          seConserva="Al entrar vuelves justo aquí."
+          destino="/servicios/soy-proveedor"
+          alternativa={`¿No tienes cuenta de Google o no quieres crear una? Una organización aliada puede registrarte y darte un enlace propio para que manejes tu ficha. Pregunta en el punto de ${RESPONSABLE_SERVICIOS} más cercano.`}
+        />
+      </MarcoFlujo>
     )
   }
 

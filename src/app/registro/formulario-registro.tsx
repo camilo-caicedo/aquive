@@ -126,6 +126,13 @@ export function FormularioRegistro({
   const [errorInventario, setErrorInventario] = useState<string | null>(null)
   const [autorizo, setAutorizo] = useState(false)
   const [guardando, setGuardando] = useState(false)
+  // ⚠ Un solo archivo para las dos cosas, con una prop derivada y no un
+  // componente aparte: sin perfil es un asistente de tres pasos; con
+  // perfil, las secciones plegables de siempre. El estado no cambia de
+  // forma y `crear_perfil` se sigue llamando UNA vez con todo — lo que
+  // cambia es qué se le exige a la persona tener listo a la vez.
+  const asistente = !perfil
+  const [paso, setPaso] = useState<1 | 2 | 3>(1)
   const [error, setError] = useState<string | null>(null)
 
   const municipiosElegidos = municipios.filter((m) => seleccionados.includes(m.codigo_dane))
@@ -300,7 +307,7 @@ export function FormularioRegistro({
     // y menos se rechazan. Antes caía en el tablero y los avisos se quedaban
     // en una pestaña que nadie abría: de cinco perfiles en producción, uno
     // solo los tenía activos, y por eso las solicitudes se represaban.
-    router.push('/registro?ver=ajustes&nuevo=1')
+    router.push('/registro/listo')
     router.refresh()
   }
 
@@ -318,6 +325,7 @@ export function FormularioRegistro({
         </Alert>
       )}
 
+      {(!asistente || paso === 1) && (
       <SeccionPlegable
         titulo="Qué ofreces"
         resumen={resumenTipo}
@@ -371,6 +379,10 @@ export function FormularioRegistro({
         </div>
       </SeccionPlegable>
 
+      )}
+
+      {(!asistente || paso === 2) && (
+        <>
       <SeccionPlegable
         titulo="Cómo te contactan"
         resumen={contacto.trim() || 'Sin número todavía'}
@@ -619,6 +631,10 @@ export function FormularioRegistro({
         </SeccionPlegable>
       )}
 
+        </>
+      )}
+
+      {!asistente && (
       <SeccionPlegable
         titulo="Qué tengo para dar"
         resumen={resumenInventario}
@@ -769,11 +785,27 @@ export function FormularioRegistro({
           <p className="mt-1 text-sm text-muted-foreground">{descripcion.length}/300</p>
         </div>
       </SeccionPlegable>
+      )}
 
-      {/* El consentimiento es su propia sección, y no una casilla perdida
-          al final: es lo que autoriza a publicar, tiene su fecha y es la
-          prueba de qué texto aceptó cada quien. Bloquea la publicación, no
-          la edición — se puede corregir el teléfono sin volver a firmar. */}
+      {(!asistente || paso === 3) && (
+        <>
+      {/* Lo que va a quedar público, dicho ANTES de publicar. Hoy la
+          gente lo descubre después de guardar. */}
+      {asistente && (
+        <div className="rounded-2xl bg-secondary p-4">
+          <h3 className="text-lg font-semibold">Esto es lo que va a quedar público</h3>
+          <ul className="mt-2 space-y-0.5 text-base text-secondary-foreground">
+            <li>{nombre.trim() || 'Tu nombre visible'}</li>
+            <li>{tipo === 'servidor' ? 'Servicios profesionales' : 'Insumos'}</li>
+            <li>{resumenMunicipios}</li>
+            <li>{contacto.trim() || 'Tu forma de contacto'}</li>
+          </ul>
+          <p className="mt-2 text-sm text-secondary-foreground">
+            Y esto no: tu correo, que no se guarda en ninguna parte.
+          </p>
+        </div>
+      )}
+
       <SeccionPlegable
         titulo="Permiso de publicación"
         resumen={autorizo ? `Aceptado el ${hoy}` : 'Falta tu autorización'}
@@ -811,11 +843,38 @@ export function FormularioRegistro({
             : 'Sin esto no se publica nada. Puedes editar el resto igual.'}
         </p>
       </SeccionPlegable>
+        </>
+      )}
 
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
+      )}
+
+      {asistente && (
+        <div className="flex gap-2">
+          {paso > 1 && (
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={() => setPaso((n) => (n === 3 ? 2 : 1))}
+            >
+              Atrás
+            </Button>
+          )}
+          {paso < 3 && (
+            <Button
+              type="button"
+              className="flex-1"
+              disabled={paso === 1 ? !seccionQueOfreces : !seccionContacto || !seccionDonde}
+              onClick={() => setPaso((n) => (n === 1 ? 2 : 3))}
+            >
+              Continuar
+            </Button>
+          )}
+        </div>
       )}
 
       {/* La acción principal de la pantalla, en la píldora fija sobre la
@@ -826,7 +885,7 @@ export function FormularioRegistro({
         etiqueta={guardando ? 'Guardando…' : perfil ? 'Guardar cambios' : 'Publicar mi perfil'}
         Icono={Check}
         onClick={guardar}
-        visible={puedeGuardar || guardando}
+        visible={(puedeGuardar || guardando) && (!asistente || paso === 3)}
       />
     </div>
   )

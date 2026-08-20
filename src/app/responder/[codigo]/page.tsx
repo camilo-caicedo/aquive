@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import { MessageSquare } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { formatearHoras } from '@/lib/tiempo'
@@ -8,6 +7,7 @@ import { AVISO_RESPONDER } from '@/lib/honestidad'
 import { BadgeFrescura } from '@/components/badge-frescura'
 import { BotonReportar } from '@/components/boton-reportar'
 import { MarcoFlujo } from '@/components/marco-flujo'
+import { PuertaCerrada } from '@/components/puerta-cerrada'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import type { ContactoSolicitante, HiloResumen } from '@/lib/types'
@@ -46,7 +46,22 @@ export default async function ResponderPage({
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) redirect('/login')
+  // ⚠ Ya no rebota mudo. Quien tocó «Puedo ayudar» en una solicitud
+  // concreta perdía a dónde iba: volvía a la portada y tenía que buscar el
+  // código otra vez. El destino se guarda en `sessionStorage` al salir
+  // hacia Google —nunca en la URL, ver `src/lib/destino.ts`— y vuelve aquí.
+  if (!user) {
+    return (
+      <MarcoFlujo titulo="Puedo ayudar" volver="/">
+        <PuertaCerrada
+          titulo="Para responder hace falta una cuenta"
+          porque="Quien pidió esto va a ver tu nombre y tu contacto, así que tiene que haber alguien detrás de la respuesta. De tu cuenta de Google solo guardamos un identificador interno."
+          seConserva="Guardamos a qué solicitud ibas: al entrar vuelves justo aquí."
+          destino={`/responder/${codigo.toUpperCase()}`}
+        />
+      </MarcoFlujo>
+    )
+  }
 
   const { data: perfil } = await supabase
     .from('perfiles')
@@ -54,7 +69,20 @@ export default async function ResponderPage({
     .eq('id', user.id)
     .maybeSingle()
 
-  if (!perfil) redirect('/registro')
+  if (!perfil) {
+    return (
+      <MarcoFlujo titulo="Puedo ayudar" volver="/">
+        <PuertaCerrada
+          titulo="Falta tu perfil"
+          porque="Quien pidió esto necesita saber a quién le está escribiendo: tu nombre visible y una forma de contacto. Son tres campos."
+          seConserva="Guardamos a qué solicitud ibas: al terminar vuelves justo aquí."
+          destino={`/responder/${codigo.toUpperCase()}`}
+          href="/registro"
+          etiqueta="Crear mi perfil"
+        />
+      </MarcoFlujo>
+    )
+  }
 
   // Si ya hay conversacion abierta sobre esta solicitud, esta pantalla no
   // tiene que pedir otra vez lo mismo: tiene que llevar al hilo. Se busca
