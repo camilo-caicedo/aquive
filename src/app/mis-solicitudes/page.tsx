@@ -4,20 +4,10 @@ import { AccionPrincipal } from '@/components/accion-principal'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { ChevronRight, Smartphone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import type { EstadoEncabezado } from '@/lib/types'
 import { PestanasLoMio } from '@/components/pestanas-lo-mio'
 import { ListaLocal } from './lista-local'
 
 export const metadata = { title: 'Lo mío' }
-
-// `/aliado` tiene dos públicos y por eso dos nombres. Para el equipo de una
-// fundación es su organización; para quien solo ofreció ayuda es el sitio
-// donde están sus conversaciones, y llamárselo «Mi organización» sería
-// mentirle. Quien no tenga ninguna de las dos cosas no ve la fila.
-const ETIQUETA_COORDINACION: Record<string, string> = {
-  organizacion: 'Mi organización',
-  coordinacion: 'Coordinación',
-}
 
 function Fila({ href, etiqueta, detalle }: { href: string; etiqueta: string; detalle: string }) {
   return (
@@ -40,14 +30,6 @@ export default async function MisSolicitudesPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // La misma consulta que ya hace el encabezado. Se pide aquí porque la
-  // celda «Lo mío» reemplazó a la quinta celda de la barra, que era la
-  // única puerta a /aliado: sin esto, quien coordina se queda sin panel
-  // salvo que se sepa la URL de memoria.
-  const { data: estado } = user
-    ? await supabase.rpc('estado_encabezado')
-    : { data: null }
-  const coordinacion = (estado as EstadoEncabezado | null)?.coordinacion ?? null
 
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
@@ -69,19 +51,10 @@ export default async function MisSolicitudesPage() {
       </div>
       <ListaLocal />
 
-      {/* Lo demás que es «mío» y no cabe en la barra: el perfil de quien
-          ofrece, y el panel de coordinación cuando aplica. En la fase 3
-          esto se convierte en las pestañas de «Lo mío»; por ahora son dos
-          filas, que es lo que hace falta para que ninguna pantalla quede
-          sin puerta. */}
+      {/* La fila hacia /aliado se fue: desde que hay celda propia en la
+          barra, tenerla también aquí eran dos puertas al mismo cuarto —lo
+          mismo que le pasaba a «Mi perfil» en el encabezado—. */}
       <nav aria-label="Lo mío" className="mt-8 flex flex-col gap-2">
-        {coordinacion && ETIQUETA_COORDINACION[coordinacion] && (
-          <Fila
-            href="/aliado"
-            etiqueta={ETIQUETA_COORDINACION[coordinacion]}
-            detalle="Las entregas que estás coordinando"
-          />
-        )}
         {!user && (
           <Fila
             href="/login"

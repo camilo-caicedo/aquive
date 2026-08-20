@@ -20,14 +20,17 @@ export async function Encabezado() {
     ? await Promise.all([
         supabase.from('administradores').select('user_id').eq('user_id', user.id).maybeSingle(),
         supabase.from('perfiles').select('id').eq('id', user.id).maybeSingle(),
-        // Queda por los avisos sin ver, que son lo que pinta la campana.
-        // El `coordinacion` de esta misma consulta ya no decide ninguna
-        // celda de la barra —la barra tiene cuatro y no cambia por rol—;
-        // ahora lo consume «Lo mío», que es donde vive la puerta a
-        // /aliado. Ver `src/app/mis-solicitudes/page.tsx`.
+        // Dos cosas salen de aquí: los avisos sin ver, que pintan la
+        // campana, y `coordinacion`, que decide si la barra lleva la
+        // quinta celda —«Entregas»— para quien tiene algo que coordinar.
         supabase.rpc('estado_encabezado'),
       ])
     : [null, null, null]
+
+  // Quien tiene algo que coordinar ve una celda más en la barra. El valor
+  // ya venía en esta misma consulta: antes bajaba a «Lo mío» y ahora
+  // vuelve a decidir una celda, esta vez con nombre de contenido.
+  const hayCoordinacion = !!(estado?.data as EstadoEncabezado | null)?.coordinacion
 
   const esAdmin = !!admin?.data
 
@@ -111,10 +114,10 @@ export async function Encabezado() {
         </div>
       </div>
 
-      <Navegacion />
+      <Navegacion coordinacion={hayCoordinacion} />
     </header>
 
-    <BarraInferior />
+    <BarraInferior coordinacion={hayCoordinacion} />
     </>
   )
 }
