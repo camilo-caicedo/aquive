@@ -17,7 +17,7 @@ export default function ConfirmarPage() {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ''
 
   return (
-    <MarcoFlujo titulo="Calificar con código" volver="/servicios">
+    <MarcoFlujo titulo="Calificar un trabajo" volver="/servicios">
       <p className="mt-2 text-base text-muted-foreground">
         Si te hicieron un trabajo, quien te lo hizo te dio un código de ocho
         letras y números. Escríbelo aquí para calificarlo.

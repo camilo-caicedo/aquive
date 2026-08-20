@@ -9,7 +9,10 @@ const EMERGENCIAS = [
 
 export function PieDePagina() {
   return (
-    <footer className="mt-12 border-t border-border bg-secondary">
+    // El mismo gancho que la barra inferior: en una pantalla de flujo no
+    // se dibuja. Las líneas de emergencia al final de un formulario a medio
+    // llenar no son una salida, son ruido debajo del campo que se escribe.
+    <footer data-pie-de-pagina className="mt-12 border-t border-border bg-secondary">
       <div className="mx-auto max-w-3xl px-4 py-8">
         <h2 className="font-heading text-lg">Líneas de emergencia</h2>
         <ul className="mt-2 flex flex-wrap gap-2">

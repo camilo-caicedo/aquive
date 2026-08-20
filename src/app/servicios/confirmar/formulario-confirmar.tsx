@@ -107,7 +107,7 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
   return (
     <div className="mt-6 space-y-6">
       <div>
-        <Label htmlFor="codigo">El código</Label>
+        <Label htmlFor="codigo">El código que te dieron</Label>
         <Input
           id="codigo"
           value={codigo}
@@ -119,7 +119,7 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
           placeholder="ABCD 2345"
           // Monoespaciada y grande: se copia de un papel, carácter por
           // carácter, y así se distingue lo que se lleva escrito.
-          className="mt-1 font-mono text-lg tracking-widest uppercase"
+          className="mt-1 h-16 text-center font-mono text-2xl tracking-[0.3em] uppercase"
         />
         {/* Se dice al escribir cuántos faltan. Antes el botón se quedaba
             apagado sin explicar por qué, y desde un papel mal fotocopiado
@@ -148,10 +148,10 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
                 type="button"
                 aria-pressed={notas[c.clave] === n.valor}
                 onClick={() => setNotas((p) => ({ ...p, [c.clave]: n.valor }))}
-                className={`inline-flex min-h-12 flex-1 items-center justify-center rounded-full border px-4 text-base transition-colors ${
+                className={`inline-flex min-h-14 flex-1 items-center justify-center rounded-full px-3 text-base transition-colors ${
                   notas[c.clave] === n.valor
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-border bg-card hover:bg-muted'
+                    ? 'bg-primary font-semibold text-primary-foreground'
+                    : 'bg-card shadow-sm hover:bg-muted'
                 }`}
               >
                 {n.etiqueta}

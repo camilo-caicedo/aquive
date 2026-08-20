@@ -66,16 +66,10 @@ export default async function SoyProveedorPage() {
   )
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="font-heading text-3xl">
-        {proveedor ? 'Mi ficha' : 'Ofrecer mi trabajo'}
-      </h1>
-      <p className="mt-1 text-base text-muted-foreground">
-        Tu nombre, tu teléfono y lo que haces quedan públicos en internet para
-        que la gente pueda buscarte y llamarte. Tú acuerdas el precio y el
-        trabajo con cada persona: AquíVe no cobra nada ni participa.
-      </p>
-
+    // Sin <main> ni h1: el título, la vuelta y la barra de acción los pone
+    // el MarcoFlujo que monta el formulario, que es quien sabe si ya hay
+    // ficha. Dos «Mi ficha» seguidos era lo que se veía antes.
+    <>
       <FormularioProveedor
         proveedor={proveedor}
         municipios={municipios ?? []}
@@ -87,17 +81,17 @@ export default async function SoyProveedorPage() {
           pedirla antes obligaría a guardar el dato de un tercero para algo
           que todavía puede no publicarse. */}
       {proveedor && (
-        <>
-          <div className="mt-10">
+        <div className="mx-auto max-w-lg px-4 pb-28">
+          <div className="mt-6">
             <CamposReferencia referencias={referencias} oficios={oficios ?? []} />
           </div>
           {misServicios && (
-            <div className="mt-10">
+            <div className="mt-6">
               <PanelServiciosProveedor datos={misServicios} oficios={misOficios} />
             </div>
           )}
-        </>
+        </div>
       )}
-    </main>
+    </>
   )
 }

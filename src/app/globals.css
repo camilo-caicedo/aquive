@@ -226,7 +226,8 @@
    un hueco muerto debajo de la barra de acción del flujo.
    -------------------------------------------------------------------- */
 
-body:has([data-marco-flujo]) [data-barra-inferior] {
+body:has([data-marco-flujo]) [data-barra-inferior],
+body:has([data-marco-flujo]) [data-pie-de-pagina] {
   display: none;
 }
 

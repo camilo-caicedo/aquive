@@ -79,7 +79,20 @@ export default async function OfertadoresPage({
                   ]
                 : []
             }
-            conteo={`${ordenados.length} ${ordenados.length === 1 ? 'persona' : 'personas'}`}
+            conteo={
+              <>
+                <span className="font-semibold text-foreground">
+                  {ordenados.length}{' '}
+                  {ordenados.length === 1 ? 'persona o negocio' : 'personas y negocios'}
+                </span>
+                {params.municipio && (
+                  <span className="font-normal">
+                    {' '}
+                    en {nombreMunicipio.get(params.municipio) ?? 'ese municipio'}
+                  </span>
+                )}
+              </>
+            }
           >
             <SelectFiltro
               name="municipio"
@@ -133,10 +146,10 @@ export default async function OfertadoresPage({
           {ordenados.map((o) => (
             <li
               key={o.id}
-              className="animar-entrada rounded-xl border border-border bg-card p-4 sm:p-5"
+              className="animar-entrada rounded-2xl bg-card p-4 shadow-sm"
             >
               <div className="flex items-start gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
                   <PackageOpen className="size-5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0 flex-1">

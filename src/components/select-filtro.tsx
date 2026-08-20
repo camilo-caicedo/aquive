@@ -114,13 +114,7 @@ export function SelectFiltro({
           >
             <ComboboxValue />
           </ComboboxTrigger>
-          {/* Al ancho del disparador y no al del contenido: el ancho
-              automático de shadcn deja la lista más angosta y descuadrada
-              respecto del campo, que dentro de la hoja se nota mucho. */}
-          <ComboboxContent
-            container={contenedor ?? undefined}
-            className="w-(--anchor-width) min-w-0"
-          >
+          <ComboboxContent container={contenedor ?? undefined}>
             <ComboboxInput showTrigger={false} placeholder="Escribe para buscar" />
             <ComboboxEmpty>No encontramos ese lugar.</ComboboxEmpty>
             <ComboboxList>

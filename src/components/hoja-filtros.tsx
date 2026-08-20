@@ -184,7 +184,7 @@ export function HojaFiltros({
         ))}
       </div>
       {conteo && (
-        <p aria-live="polite" className="mt-3 text-base font-semibold text-foreground">
+        <p aria-live="polite" className="mt-3 text-base text-muted-foreground">
           {conteo}
         </p>
       )}

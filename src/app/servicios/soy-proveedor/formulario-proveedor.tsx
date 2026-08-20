@@ -1,5 +1,7 @@
 'use client'
 
+import { Check, EyeOff } from 'lucide-react'
+
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -35,6 +37,7 @@ import type {
   UnidadPrecio,
 } from '@/lib/types'
 import { Button } from '@/components/ui/button'
+import { MarcoFlujo } from '@/components/marco-flujo'
 import { SeccionPlegable } from '@/components/seccion-plegable'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -244,8 +247,35 @@ export function FormularioProveedor({
   const municipioElegido = municipios.find((m) => m.codigo_dane === municipio)
 
   return (
+    // El marco lo monta el formulario porque la barra de acción depende de
+    // si ya hay ficha: sin ella no hay nada público que ver.
+    <MarcoFlujo
+      titulo="Mi ficha"
+      volver="/servicios"
+      accion={
+        <div className="flex gap-2">
+          {proveedor && (
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href={`/servicios/${proveedor.id}`} />}
+            >
+              Ver pública
+            </Button>
+          )}
+          <Button className="flex-1" onClick={guardar} disabled={!puedeGuardar}>
+            <Check className="size-5" aria-hidden="true" />
+            {guardando ? 'Guardando…' : proveedor ? 'Guardar' : 'Publicar mi ficha'}
+          </Button>
+        </div>
+      }
+    >
+    <div className="space-y-3">
+      <p className="text-base text-muted-foreground">
+        Tu nombre, tu teléfono y lo que haces quedan públicos en internet. Tú
+        acuerdas el precio con cada persona: AquíVe no cobra nada.
+      </p>
 
-    <div className="mt-6 space-y-3">
       {proveedor?.suspendido && (
         <Alert variant="warning">
           <AlertDescription>
@@ -255,24 +285,32 @@ export function FormularioProveedor({
         </Alert>
       )}
 
-      {/* Cinta accionable, no un aviso: dice qué oficio falta, POR QUÉ no
-          aparece y lleva al campo que lo desbloquea. Antes era un párrafo
-          que explicaba la regla S y dejaba a la persona sin saber qué
-          tocar. */}
+      {/* Cinta accionable, no un aviso: dice QUÉ oficio falta, por qué no
+          aparece y lleva a arreglarlo. Un párrafo que explica la regla S y
+          deja a la persona sin saber qué tocar no sirve de nada. */}
       {proveedor?.oficios.some((o) => !o.publicado) && (
-        <Alert variant="warning">
-          <AlertDescription>
-            Algunos de tus oficios —
-            {proveedor.oficios
-              .filter((o) => !o.publicado)
-              .map((o) => o.nombre)
-              .join(', ')}
-            — todavía no aparecen en el directorio. Por el cuidado de personas
-            y el transporte de pasajeros pasa a alguien un teléfono
-            verificado y una referencia de un cliente anterior. Cuando{' '}
-            {RESPONSABLE_SERVICIOS} confirme las dos cosas, aparecen solos.
-          </AlertDescription>
-        </Alert>
+        <div className="flex items-start gap-3 rounded-2xl border border-primary/30 bg-accent p-4 text-accent-foreground">
+          <EyeOff className="size-5 shrink-0 translate-y-0.5" aria-hidden="true" />
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-semibold">
+              {proveedor.oficios.filter((o) => !o.publicado).length === 1
+                ? 'Un oficio no aparece'
+                : `${proveedor.oficios.filter((o) => !o.publicado).length} oficios no aparecen`}
+            </p>
+            <p className="mt-0.5 text-base">
+              «{proveedor.oficios.filter((o) => !o.publicado)[0].nombre}»
+              {proveedor.telefono_verificado
+                ? ' necesita una referencia confirmada.'
+                : ' necesita que verifiquemos tu teléfono.'}
+            </p>
+          </div>
+          <a
+            href="#telefono"
+            className="inline-flex min-h-12 shrink-0 items-center rounded-full bg-background px-4 text-base font-medium"
+          >
+            Arreglar
+          </a>
+        </div>
       )}
 
       {/* Cuatro secciones plegables con su resumen (regla 6). Antes era un
@@ -700,20 +738,14 @@ export function FormularioProveedor({
         </Alert>
       )}
 
-      <Button className="w-full" onClick={guardar} disabled={!puedeGuardar}>
-        {guardando ? 'Guardando…' : proveedor ? 'Guardar cambios' : 'Publicar mi ficha'}
-      </Button>
-
+      {/* Borrar se queda dentro, al final y solo con ficha ya creada: no
+          es una acción de esta pantalla, es su salida. */}
       {proveedor && (
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={borrar}
-          disabled={guardando}
-        >
+        <Button variant="outline" className="w-full" onClick={borrar} disabled={guardando}>
           Borrar mi ficha
         </Button>
       )}
     </div>
+    </MarcoFlujo>
   )
 }

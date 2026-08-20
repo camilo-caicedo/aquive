@@ -679,6 +679,45 @@ export function FormularioPublicar({
 
       {paso === 3 && (
         <div className="space-y-4">
+          {/* Lo que se va a publicar, antes de nada: es la respuesta a
+              «¿esto es lo que pedí?», y con tres pasos atrás es lo que
+              evita volver a mirar. */}
+          <div className="rounded-2xl bg-card p-4 shadow-sm">
+            <p className="text-lg font-bold">Vas a publicar</p>
+            <p className="mt-1 text-base text-muted-foreground">
+              {[
+                categoria ? categoriaInfo(categoria).etiqueta : null,
+                municipios.find((m) => m.codigo_dane === municipio)?.nombre,
+                barrio.trim() || null,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+            {seleccionados.length > 0 && (
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {seleccionados.map((s, i) => (
+                  <li
+                    key={i}
+                    className="rounded-full bg-muted px-3.5 py-1.5 text-sm text-foreground"
+                  >
+                    {'item_id' in s
+                      ? `${s.cantidad || 1} ${
+                          items.find((it) => it.id === s.item_id)?.nombre ?? ''
+                        }`
+                      : `${s.cantidad || 1} ${s.sugerencia}`}
+                  </li>
+                ))}
+              </ul>
+            )}
+            <button
+              type="button"
+              onClick={() => setPaso(2)}
+              className="mt-2 inline-flex min-h-12 items-center text-base text-primary underline underline-offset-4"
+            >
+              Cambiar
+            </button>
+          </div>
+
           <div>
             <Label htmlFor="nota" className="mb-1">
               Nota opcional (máx. 140 caracteres)
@@ -716,7 +755,6 @@ export function FormularioPublicar({
             </span>
           </label>
 
-          {turnstileSiteKey && <TurnstileWidget siteKey={turnstileSiteKey} onToken={setTurnstileToken} />}
 
           {/* El contacto y el acompañamiento dejan de ser pasos: eran dos
               pantallas enteras que la mayoría atravesaba sin tocar nada, y
@@ -861,6 +899,13 @@ export function FormularioPublicar({
               </div>
             )}
             </SeccionPlegable>
+          )}
+
+          {/* Al final: es una comprobación de que no eres un robot, no una
+              decisión tuya, y en medio partía en dos las tres cosas que sí
+              lo son. */}
+          {turnstileSiteKey && (
+            <TurnstileWidget siteKey={turnstileSiteKey} onToken={setTurnstileToken} />
           )}
 
           {error && (

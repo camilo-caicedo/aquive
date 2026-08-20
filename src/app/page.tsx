@@ -310,11 +310,17 @@ export default async function InicioPage({
           titulo="Filtrar solicitudes"
           aplicados={chipsAplicados}
           conteo={
-            totalSolicitudes === null
-              ? null
-              : `${totalSolicitudes} ${
-                  totalSolicitudes === 1 ? 'solicitud abierta' : 'solicitudes abiertas'
-                }`
+            totalSolicitudes === null ? null : (
+              <>
+                <span className="font-semibold text-foreground">
+                  {totalSolicitudes}{' '}
+                  {totalSolicitudes === 1 ? 'solicitud abierta' : 'solicitudes abiertas'}
+                </span>
+                {params.municipio && (
+                  <span> en {nombreDeMunicipio.get(params.municipio) ?? 'ese municipio'}</span>
+                )}
+              </>
+            )
           }
         >
           <SelectFiltro

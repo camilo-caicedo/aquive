@@ -94,15 +94,7 @@ export function ListaSolicitudesServicio({
               </span>
             </p>
 
-            {s.nota && <p className="mt-2 text-base">{s.nota}</p>}
-
-            <p className="mt-2 text-sm text-muted-foreground">
-              {s.num_respuestas === 0
-                ? 'Nadie ha respondido'
-                : s.num_respuestas === 1
-                  ? '1 persona respondió'
-                  : `${s.num_respuestas} personas respondieron`}
-            </p>
+            {s.nota && <p className="mt-3 text-base">{s.nota}</p>}
 
             {s.ya_respondi ? (
               <p className="mt-3 text-base text-ok">

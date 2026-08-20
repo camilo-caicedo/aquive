@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { CalendarDays, MapPin, Wallet, ChevronDown } from 'lucide-react'
+import { CalendarDays, MapPin, Wallet, ChevronDown, Info } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import {
   DESLINDE_CALIDAD,
@@ -19,6 +19,7 @@ import {
 } from '@/lib/servicios'
 import { InsigniasProveedor } from '@/components/insignias-proveedor'
 import { BarraContacto } from '@/components/barra-contacto'
+import { MarcoFlujo } from '@/components/marco-flujo'
 import { CriteriosResena } from '@/components/criterios-resena'
 import { BotonReportar } from '@/components/boton-reportar'
 import type { FichaProveedor } from '@/lib/types'
@@ -51,14 +52,8 @@ export default async function FichaPage({
   const aDomicilio = ficha.modalidad.includes('domicilio')
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
-      <Link href="/servicios" className="text-base underline underline-offset-4">
-        ← Volver al directorio
-      </Link>
-
-      <h1 className="font-heading mt-3 text-3xl">{ficha.nombre_visible}</h1>
-
-      <div className="mt-3">
+    <MarcoFlujo titulo={ficha.nombre_visible} volver="/servicios">
+      <div>
         {/* La explicación va pegada a las insignias, que es donde nace la
             duda. Al final de la página, a tres pantallas de aquí, no la
             leía quien acababa de ver un sello y se preguntaba qué
@@ -70,6 +65,21 @@ export default async function FichaPage({
           serviciosConfirmados={ficha.servicios_confirmados}
         />
       </div>
+
+      <details className="group mt-4 rounded-2xl bg-card shadow-sm">
+        <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 px-4 text-base font-medium [&::-webkit-details-marker]:hidden">
+          <Info className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <span className="flex-1">Qué comprobamos y qué no</span>
+          <ChevronDown
+            className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+            aria-hidden="true"
+          />
+        </summary>
+        <div className="space-y-2 px-4 pb-4">
+          <p className="text-base text-muted-foreground">{SOBRE_LAS_INSIGNIAS}</p>
+          <p className="text-base text-muted-foreground">{DESLINDE_CALIDAD}</p>
+        </div>
+      </details>
 
       {ficha.descripcion && <p className="mt-4 text-base">{ficha.descripcion}</p>}
 
@@ -134,17 +144,6 @@ export default async function FichaPage({
             </div>
           </div>
         )}
-      <details className="group mt-4 rounded-xl bg-card p-4 shadow-sm">
-        <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2 text-base font-medium [&::-webkit-details-marker]:hidden">
-          Qué comprobamos y qué no
-          <ChevronDown
-            className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
-            aria-hidden="true"
-          />
-        </summary>
-        <p className="mt-2 text-base text-muted-foreground">{SOBRE_LAS_INSIGNIAS}</p>
-        <p className="mt-2 text-base text-muted-foreground">{DESLINDE_CALIDAD}</p>
-      </details>
       </dl>
 
       {/* Los textos largos se quedan aquí, donde hay sitio para leerlos;
@@ -221,6 +220,6 @@ export default async function FichaPage({
       </div>
 
       <BarraContacto telefono={ficha.telefono} />
-    </main>
+    </MarcoFlujo>
   )
 }
