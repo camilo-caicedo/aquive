@@ -5,6 +5,7 @@ import { Marca } from '@/components/marca'
 import { Button } from '@/components/ui/button'
 import { BarraInferior, Navegacion, type Coordinacion } from '@/components/navegacion'
 import { BotonAvisos } from '@/components/boton-avisos'
+import { BotonInstalar } from '@/components/boton-instalar'
 import type { EstadoEncabezado, IndiceAdmin } from '@/lib/types'
 
 export async function Encabezado() {
@@ -98,6 +99,11 @@ export async function Encabezado() {
               )}
             </Link>
           )}
+          {/* Antes de la campana y de «Entrar»: se toca una vez en la
+              vida y no puede quedar delante de lo que se toca a diario.
+              Se dibuja solo cuando el navegador dice que se puede
+              instalar; en iPhone no aparece nunca. */}
+          <BotonInstalar />
           {tienePerfil && <BotonAvisos sinVer={encabezado?.avisos_sin_ver ?? 0} />}
           {/* Para quien no tiene sesión, y en relleno terracota por
               decisión del responsable (20 de agosto de 2026).

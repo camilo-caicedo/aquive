@@ -71,7 +71,7 @@ export async function CruceInverso({
     for (const id of cambios.tengo ?? seleccion) sp.append('tengo', id)
     const d = 'desde' in cambios ? cambios.desde : null
     if (d) sp.set('desde', String(d))
-    return `/?${sp.toString()}`
+    return `/solicitudes?${sp.toString()}`
   }
 
   // `mis_ofrecimientos` exige sesión y lanza excepción sin ella: sin este
@@ -165,7 +165,7 @@ export async function CruceInverso({
 
           {municipiosCalzan.length > 0 && (
             <FormularioFiltros
-              action="/"
+              action="/solicitudes"
               className="mt-3 flex flex-col gap-2 rounded-xl border border-border bg-card p-3 sm:flex-row"
             >
               <input type="hidden" name="modo" value="tengo" />

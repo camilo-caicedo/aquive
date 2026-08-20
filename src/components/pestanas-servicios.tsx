@@ -15,7 +15,7 @@ import { Pestanas } from '@/components/pestanas'
  * vieran distinto.
  */
 const RUTAS = {
-  oficios: '/servicios',
+  oficios: '/',
   profesionales: '/servidores?ver=profesionales',
   entidades: '/servidores',
 } as const

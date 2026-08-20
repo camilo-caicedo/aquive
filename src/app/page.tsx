@@ -1,486 +1,429 @@
 import Link from 'next/link'
+import { Plus } from 'lucide-react'
 import { AccionPrincipal } from '@/components/accion-principal'
-import { VueltaAlDestino } from '@/app/auth/vuelta'
-import {
-  Plus,
-  PlusCircle,
-  HandHeart,
-  SearchX,
-  ShieldCheck,
-  ShieldAlert,
-  ChevronDown,
-  Timer,
-  X,
-  Info,
-  LogIn,
-} from 'lucide-react'
+import { CabeceraPantalla } from '@/components/cabecera-pantalla'
+import { Info, Inbox, ShieldAlert, Stethoscope, CircleAlert, Briefcase } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import type { Categoria } from '@/lib/types'
-import { CATEGORIAS, limitePorVencer } from '@/lib/catalogo'
-import { TarjetaSolicitud } from '@/components/tarjeta-solicitud'
+import { AVISO_SERVICIOS, NO_PAGUES_POR_ADELANTADO } from '@/lib/honestidad'
+import { listarMunicipios, mapaDeNombres } from '@/lib/municipios'
+import { GRUPOS, MODALIDADES, MODOS_PRECIO } from '@/lib/servicios'
+import { TarjetaProveedor } from '@/components/tarjeta-proveedor'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import { SelectFiltro } from '@/components/select-filtro'
 import { HojaFiltros, GrupoChips } from '@/components/hoja-filtros'
-import { Button } from '@/components/ui/button'
-import { AVISO_TABLERO_CORTO } from '@/lib/honestidad'
-import { PlegableRecordado } from '@/components/plegable-recordado'
-import { Estado } from '@/components/estado'
-import { CruceInverso } from './cruce-inverso'
+import { PestanasServicios } from '@/components/pestanas-servicios'
+import { HeroPortada } from '@/components/hero-portada'
+import { VueltaAlDestino } from '@/app/auth/vuelta'
+import type { MiProveedor, ModalidadServicio, ModoPrecio } from '@/lib/types'
 
-const POR_PAGINA = 20
-
-function construirHref(
-  actuales: { municipio?: string; categoria?: string; urgentes?: string },
-  cambios: Record<string, string | null>
-) {
-  const sp = new URLSearchParams()
-  if (actuales.municipio) sp.set('municipio', actuales.municipio)
-  if (actuales.categoria) sp.set('categoria', actuales.categoria)
-  if (actuales.urgentes) sp.set('urgentes', actuales.urgentes)
-  for (const [k, v] of Object.entries(cambios)) {
-    if (v === null) sp.delete(k)
-    else sp.set(k, v)
-  }
-  const qs = sp.toString()
-  return qs ? `/?${qs}` : '/'
-}
-
+/**
+ * La portada: el directorio del rebusque.
+ *
+ * ⚠ Antes aquí estaba el tablero de solicitudes de la emergencia, que se
+ * mudó a /solicitudes. El cambio es de enfoque y lo decidió el
+ * responsable: pasó tiempo desde el sismo del 10 de agosto de 2026 y lo
+ * que queda vivo es la reactivación económica. El módulo de emergencia
+ * sigue entero y sigue siendo temporal — lo que cambia es cuál de los dos
+ * recibe a quien llega.
+ *
+ * El héroe NO se fue con el tablero: la revisión de marca de Google exige
+ * que la portada describa para qué sirve la aplicación. Vive en
+ * `HeroPortada` y su texto tiene que seguir coincidiendo palabra por
+ * palabra con `metadata.description` del layout.
+ *
+ * Los filtros viven en la URL y no en estado de cliente, igual que en
+ * /servidores: así el enlace de «modistas en la comuna 3» se puede pegar
+ * en un grupo de WhatsApp, que es como esto se va a difundir de verdad.
+ */
 export default async function InicioPage({
   searchParams,
 }: {
   searchParams: Promise<{
+    oficio?: string
     municipio?: string
-    categoria?: string
-    antes?: string
-    urgentes?: string
+    zona?: string
+    modalidad?: string
     modo?: string
-    // Repetido en la URL: `?tengo=agua&tengo=arroz`. Vive ahí y no solo en
-    // el estado del selector para que el enlace se pueda compartir y para
-    // que los resultados los arme el servidor.
-    tengo?: string | string[]
-    desde?: string
   }>
 }) {
   const params = await searchParams
   const supabase = await createClient()
 
-  const modoTengo = params.modo === 'tengo'
-  const seleccionCruda =
-    params.tengo === undefined ? [] : Array.isArray(params.tengo) ? params.tengo : [params.tengo]
-
-  // Acotado aquí y no solo en la base: `?desde=1e10` pasa el `> 0`, el cast
-  // a integer de Postgres revienta, y la pantalla acaba diciendo "nadie está
-  // pidiendo eso" cuando en realidad la consulta falló. Un error no puede
-  // disfrazarse de respuesta legítima.
-  const desdeCrudo = Number.parseInt(params.desde ?? '', 10)
-  const desdeSeguro =
-    Number.isFinite(desdeCrudo) && desdeCrudo > 0 ? Math.min(desdeCrudo, 10000) : 0
-
-  // Solo municipios con solicitudes abiertas: filtrar por uno vacío no
-  // sirve de nada, y mandar los 1.122 del país en cada carga pesaba más
-  // que el resto de la página. En el segundo modo no se consulta nada de
-  // esto: los datos los trae `CruceInverso` con su propio criterio.
-  const { data: municipios } = modoTengo
-    ? { data: null }
-    : await supabase.from('municipios_con_solicitudes').select('*').order('nombre')
+  // Mismo cuidado que en /servidores: el municipio se valida antes de
+  // llegar a un filtro de PostgREST. Cinco dígitos y nada más.
+  const municipio =
+    params.municipio && /^[0-9]{5}$/.test(params.municipio) ? params.municipio : null
+  const zona =
+    params.zona &&
+    /^[0-9a-f-]{36}$/.test(params.zona)
+      ? params.zona
+      : null
+  const modalidad = MODALIDADES.some((m) => m.valor === params.modalidad)
+    ? (params.modalidad as ModalidadServicio)
+    : null
+  const modo = MODOS_PRECIO.some((m) => m.valor === params.modo)
+    ? (params.modo as ModoPrecio)
+    : null
 
   let query = supabase
-    .from('solicitudes_publicas')
+    .from('proveedores_publicos')
     .select('*')
-    .order('creada_at', { ascending: false })
-    .limit(POR_PAGINA)
+    // Verificados primero. Es el único dato comprobado que hay, y no es
+    // una recomendación: la ficha lo explica.
+    .order('telefono_verificado', { ascending: false })
+    .order('servicios_confirmados', { ascending: false })
+    .order('nombre_visible')
 
-  if (params.municipio) query = query.eq('municipio', params.municipio)
-  if (params.categoria) query = query.eq('categoria', params.categoria as Categoria)
-  if (params.antes) query = query.lt('creada_at', params.antes)
-  if (params.urgentes) query = query.lt('expira_at', limitePorVencer())
+  if (params.oficio) query = query.contains('oficios', [params.oficio])
+  if (municipio) query = query.eq('municipio', municipio)
+  if (zona) query = query.eq('zona_id', zona)
+  if (modalidad) query = query.contains('modalidad', [modalidad])
+  if (modo) query = query.contains('modos', [modo])
 
-  // El conteo que va al lado de los chips. Es una consulta aparte porque la
-  // lista viene paginada con cursor: contar sobre `query` diría cuántas
-  // quedan de esta página hacia atrás, no cuántas hay con estos filtros.
-  // `head: true` no trae ni una fila, solo el número.
-  let conteo = supabase
-    .from('solicitudes_publicas')
-    .select('*', { count: 'exact', head: true })
-  if (params.municipio) conteo = conteo.eq('municipio', params.municipio)
-  if (params.categoria) conteo = conteo.eq('categoria', params.categoria as Categoria)
-  if (params.urgentes) conteo = conteo.lt('expira_at', limitePorVencer())
+  const [
+    { data: proveedores },
+    { data: oficiosCatalogo },
+    { data: municipiosLista },
+    todos,
+    { data: mio },
+  ] = await Promise.all([
+    query,
+    supabase.from('oficios_con_proveedores').select('*').order('orden'),
+    supabase.from('municipios_con_proveedores').select('*').order('nombre'),
+    listarMunicipios(supabase),
+    // Sin sesión devuelve null y no cuesta nada. Con sesión es lo que
+    // convierte «Ofrecer mi trabajo» en «Mi ficha»: quien ya la publicó
+    // no tenía por dónde volver a ella, y el botón le seguía ofreciendo
+    // crear una que ya existe.
+    supabase.rpc('mi_proveedor', {}),
+  ])
 
-  const [{ data: solicitudes }, { count: totalSolicitudes }] = modoTengo
-    ? [{ data: null }, { count: null }]
-    : await Promise.all([query, conteo])
+  const miFicha = (mio as MiProveedor | null) ?? null
+  const misOficiosEscondidos =
+    miFicha?.oficios.filter((o) => !o.publicado).length ?? 0
 
-  const hayMas = (solicitudes?.length ?? 0) === POR_PAGINA
-  const cursorSiguiente = hayMas ? solicitudes![solicitudes!.length - 1].creada_at : null
-  const hayFiltro = !!(params.municipio || params.categoria || params.urgentes)
-  const mostrarFiltros = (municipios?.length ?? 0) > 0 || hayFiltro
+  const nombreMunicipio = mapaDeNombres(todos ?? [])
 
-  const nombreDeMunicipio = new Map(
-    (municipios ?? []).map((m) => [m.codigo_dane, m.nombre] as const)
+  // Las zonas solo se ofrecen cuando ya se filtró por municipio: un
+  // desplegable con las comunas de Cali mezcladas con los barrios de otra
+  // ciudad no significa nada.
+  const { data: zonas } = municipio
+    ? await supabase
+        .from('zonas')
+        .select('*')
+        .eq('municipio', municipio)
+        .eq('activa', true)
+        .order('orden')
+    : { data: null }
+
+  // El href de cada chip es la URL sin ESE filtro. Quitar el municipio se
+  // lleva también la zona: una comuna sin su ciudad no filtra nada, y
+  // dejarla colgada devolvía una lista vacía sin explicación.
+  const aplicados: Record<string, string | null> = {
+    oficio: params.oficio ?? null,
+    municipio,
+    zona,
+    modalidad,
+    modo,
+  }
+  function sinFiltro(quitar: string) {
+    const sp = new URLSearchParams()
+    for (const [k, v] of Object.entries(aplicados)) {
+      if (!v || k === quitar) continue
+      if (quitar === 'municipio' && k === 'zona') continue
+      sp.set(k, v)
+    }
+    const qs = sp.toString()
+    return qs ? `/?${qs}` : '/'
+  }
+
+  const nombreOficio = new Map((oficiosCatalogo ?? []).map((o) => [o.id, o.nombre]))
+  const nombreZona = new Map((zonas ?? []).map((z) => [z.id, z.nombre]))
+
+  const chipsAplicados = (
+    [
+      ['oficio', params.oficio ? nombreOficio.get(params.oficio) : null],
+      ['municipio', municipio ? nombreMunicipio.get(municipio) : null],
+      ['zona', zona ? nombreZona.get(zona) : null],
+      ['modalidad', MODALIDADES.find((m) => m.valor === modalidad)?.etiqueta ?? null],
+      ['modo', MODOS_PRECIO.find((m) => m.valor === modo)?.etiqueta ?? null],
+    ] as const
   )
+    .filter(([, etiqueta]) => !!etiqueta)
+    .map(([clave, etiqueta]) => ({
+      clave,
+      etiqueta: etiqueta as string,
+      href: sinFiltro(clave),
+    }))
 
-  const chipsAplicados = [
-    ...(params.municipio
-      ? [
-          {
-            clave: 'municipio',
-            etiqueta: nombreDeMunicipio.get(params.municipio) ?? 'Un municipio',
-            href: construirHref(params, { municipio: null, antes: null }),
-          },
-        ]
-      : []),
-    ...(params.categoria
-      ? [
-          {
-            clave: 'categoria',
-            etiqueta:
-              CATEGORIAS.find((c) => c.valor === params.categoria)?.etiqueta ??
-              'Una categoría',
-            href: construirHref(params, { categoria: null, antes: null }),
-          },
-        ]
-      : []),
-    ...(params.urgentes
-      ? [
-          {
-            clave: 'urgentes',
-            etiqueta: 'Por vencer',
-            href: construirHref(params, { urgentes: null, antes: null }),
-          },
-        ]
-      : []),
-  ]
+  // Los oficios de cada proveedor, con precio, en una sola consulta en
+  // vez de una por tarjeta. Sale de la vista que aplica la regla S.
+  const ids = (proveedores ?? []).map((p) => p.id)
+  const { data: oficiosProveedor } = ids.length
+    ? await supabase
+        .from('proveedor_oficios_publicos')
+        .select('*')
+        .in('proveedor_id', ids)
+    : { data: null }
+
+  const porProveedor = new Map<string, NonNullable<typeof oficiosProveedor>>()
+  for (const o of oficiosProveedor ?? []) {
+    const lista = porProveedor.get(o.proveedor_id) ?? []
+    lista.push(o)
+    porProveedor.set(o.proveedor_id, lista)
+  }
+
+  const hayFiltro = !!(params.oficio || municipio || zona || modalidad || modo)
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-6">
+    <main className="mx-auto max-w-2xl px-4 py-6">
       <VueltaAlDestino />
-      <section className="animar-entrada rounded-2xl border border-border bg-secondary p-5 sm:p-8">
-        {/* El nombre va en el encabezado principal, no solo en la barra de
-            arriba. Google rechazó la verificación de la marca dos veces por
-            esto: su revisor compara el nombre de la pantalla de
-            consentimiento con el de la portada, y «Pide lo que necesitas»
-            no contenía ninguno. */}
-        <h1 className="font-heading text-3xl leading-tight sm:text-4xl">
-          AquíVe: pide lo que necesitas, sin dar tus datos.
-        </h1>
-        {/* Y qué ES esto, dicho de frente. Lo pide la misma revisión —una
-            portada tiene que describir para qué sirve la aplicación— pero
-            hace falta igual: alguien que llega por un volante pegado en un
-            albergue no tiene de dónde deducirlo. */}
-        <p className="mt-3 max-w-prose text-base">
-          AquíVe es una plataforma gratuita que conecta, en Colombia, a quien
-          necesita algo con quien puede darlo: insumos que alguien entrega sin
-          cobrar, servicios de profesionales con matrícula, y el trabajo de
-          gente que vive de su oficio.
-        </p>
-        <p className="mt-2 max-w-prose text-base text-muted-foreground">
-          Pedir no exige cuenta. No pedimos tu nombre, tu teléfono ni tu
-          dirección: solo el barrio y qué necesitas.
-        </p>
-        <div className="mt-5 flex flex-col gap-2 sm:flex-row">
-          <Button
-            variant="outline"
-            className="w-full sm:w-auto"
-            nativeButton={false}
-            render={<Link href="/publicar" />}
-          >
-            <PlusCircle className="size-5" aria-hidden="true" />
-            Necesito ayuda
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full sm:w-auto"
-            nativeButton={false}
-            render={<Link href="/login" />}
-          >
-            <HandHeart className="size-5" aria-hidden="true" />
-            Quiero ayudar
-          </Button>
-        </div>
-        {/* Los tres avisos que antes ocupaban media portada, plegados.
-            Abierto de entrada y servido siempre abierto: dentro va lo que
-            la revisión de la marca de Google lee para saber para qué es la
-            cuenta, así que no puede salir del HTML. Ver
-            `PlegableRecordado`. */}
-        <PlegableRecordado
-          id="portada-avisos"
-          className="group mt-4 rounded-2xl border border-border bg-card p-4"
-        >
-          {/* El escudo a la izquierda y el galón a la derecha, no los dos
-              del mismo lado: el escudo dice de qué habla esto y el galón
-              dice que se abre, y juntos se leían como un solo control. */}
-          <summary className="flex min-h-12 cursor-pointer list-none items-start gap-2.5 text-base font-medium [&::-webkit-details-marker]:hidden">
-            <ShieldCheck
-              className="size-5 shrink-0 translate-y-0.5 text-primary"
-              aria-hidden="true"
-            />
-            <span className="min-w-0 flex-1">
-              Qué se borra, qué se queda y para qué es la cuenta
-            </span>
-            <ChevronDown
-              className="size-5 shrink-0 translate-y-0.5 text-muted-foreground transition-transform group-open:rotate-180"
-              aria-hidden="true"
-            />
-          </summary>
+      <HeroPortada />
 
-          {/* ⚠ Antes la portada decía «todo se borra solo a las 72 horas»,
-              y desde que existe el directorio de servicios eso ya no es
-              cierto de todo. Si la diferencia no se entiende aquí, la
-              existencia del directorio desmiente la promesa de borrado. */}
-          <p className="mt-3 flex items-start gap-1.5 text-sm text-muted-foreground">
-            <Timer className="size-4 shrink-0 translate-y-0.5 text-primary" aria-hidden="true" />
-            Las solicitudes de insumos se borran solas a las 72 horas, con todo
-            lo que llevan dentro. El directorio de servicios es lo contrario:
-            esas fichas se quedan mientras la persona quiera, y las borra
-            cuando quiera.
-          </p>
-          <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
-            <ShieldCheck className="size-4 shrink-0 translate-y-0.5 text-primary" aria-hidden="true" />
-            El contacto ocurre por fuera de la plataforma. Nunca vemos tu
-            teléfono ni tus conversaciones.
-          </p>
-          {/* Quién entra con Google y para qué, dicho en la portada. Lo pide
-              la revisión de la marca OAuth —el revisor evalúa el cliente, no
-              la aplicación, y sin esto no hay dónde leer para qué sirve ese
-              botón—, pero está aquí porque de todos modos es lo que quiere
-              saber quien duda antes de tocarlo. Y es cierto: el callback usa
-              solo `user.id` y descarta el correo. */}
-          <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
-            <LogIn className="size-4 shrink-0 translate-y-0.5 text-primary" aria-hidden="true" />
-            Quien pide ayuda no necesita cuenta. Quien quiere ayudar entra con
-            su cuenta de Google para poder responder solicitudes y sostener su
-            perfil; de esa cuenta solo guardamos un identificador interno, y el
-            correo no se almacena.
-          </p>
-
-          {/* Las dos salidas, al pie de lo que explican. Estaban solo en el
-              pie de página, a una portada entera de distancia de la única
-              pantalla donde alguien se hace estas preguntas. */}
-          <p className="mt-3 text-sm">
-            <Link href="/como-funciona" className="text-primary underline underline-offset-4">
-              Cómo funciona
-            </Link>
-            {' · '}
-            <Link href="/privacidad" className="text-primary underline underline-offset-4">
-              Aviso de privacidad
-            </Link>
-          </p>
-        </PlegableRecordado>
-      </section>
-
-      <section className="mt-8">
-        {/* El activo va en papel elevado, no en relleno terracota: la
-            terracota es de la acción principal y de nada más (regla 2), y
-            aquí competía con «Necesito ayuda» a dos dedos de distancia.
-
-            Los dos modos del tablero. Son enlaces, no pestañas con estado:
-            el modo vive en la URL, así que se puede compartir y funciona
-            con el JavaScript apagado. */}
-        {/* Un control segmentado de verdad —riel arena, la activa en papel
-            elevado— y no dos píldoras sueltas con borde: así se lee como
-            «elige uno» y usa la misma piel que las pestañas del resto del
-            sitio. Siguen siendo enlaces, no estado de cliente: el modo vive
-            en la URL, se comparte y funciona sin JavaScript. */}
-        <div
-          role="group"
-          aria-label="Cómo mirar el tablero"
-          className="riel -mx-1 overflow-x-auto px-1"
-        >
-          <div className="inline-flex w-full min-w-fit items-center gap-1 rounded-full bg-secondary p-1.5">
-            <Link
-              href="/"
-              aria-current={modoTengo ? undefined : 'page'}
-              className={`inline-flex min-h-12 flex-1 items-center justify-center rounded-full px-5 text-base whitespace-nowrap transition-colors ${
-                modoTengo
-                  ? 'text-muted-foreground hover:text-foreground'
-                  : 'bg-card font-semibold text-foreground shadow-sm'
-              }`}
-            >
-              Quién necesita
-            </Link>
-            <Link
-              href="/?modo=tengo"
-              aria-current={modoTengo ? 'page' : undefined}
-              className={`inline-flex min-h-12 flex-1 items-center justify-center rounded-full px-5 text-base whitespace-nowrap transition-colors ${
-                modoTengo
-                  ? 'bg-card font-semibold text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Lo que puedo dar
-            </Link>
-          </div>
-        </div>
-
-        {modoTengo ? (
-          <div className="mt-4">
-            <CruceInverso
-              seleccionCruda={seleccionCruda}
-              municipio={params.municipio ?? null}
-              desde={desdeSeguro}
-            />
-          </div>
-        ) : (
-        <>
-        <h2 className="font-heading mt-4 text-2xl">Solicitudes abiertas</h2>
-
-        {/* Con el tablero vacío y sin filtros, mostrar filtros sería pedirle
-            a la gente que filtre la nada: tres avisos diciendo lo mismo. */}
-        {mostrarFiltros && (
-        <>
+      <CabeceraPantalla titulo="Servicios">
+        <PestanasServicios activa="oficios" />
         <HojaFiltros
           action="/"
-          id="hoja-filtros-tablero"
-          titulo="Filtrar solicitudes"
+          id="hoja-filtros-servicios"
+          titulo="Filtrar oficios"
           aplicados={chipsAplicados}
-          conteo={
-            totalSolicitudes === null ? null : (
-              <>
-                <span className="font-semibold text-foreground">
-                  {totalSolicitudes}{' '}
-                  {totalSolicitudes === 1 ? 'solicitud abierta' : 'solicitudes abiertas'}
-                </span>
-                {params.municipio && (
-                  <span> en {nombreDeMunicipio.get(params.municipio) ?? 'ese municipio'}</span>
-                )}
-              </>
-            )
-          }
         >
+          <SelectFiltro
+            name="oficio"
+            label="Filtrar por oficio"
+            placeholder="Todos los oficios"
+            valorInicial={params.oficio ?? ''}
+            conBusqueda
+            opciones={(oficiosCatalogo ?? []).map((o) => ({
+              valor: o.id,
+              etiqueta: o.nombre,
+              detalle: GRUPOS[o.grupo],
+            }))}
+          />
           <SelectFiltro
             name="municipio"
             label="Filtrar por municipio"
             placeholder="Todos los municipios"
-            valorInicial={params.municipio ?? ''}
+            valorInicial={municipio ?? ''}
             conBusqueda
-            opciones={(municipios ?? []).map((m) => ({
+            opciones={(municipiosLista ?? []).map((m) => ({
               valor: m.codigo_dane,
               etiqueta: m.nombre,
               detalle: m.departamento,
             }))}
           />
 
-          {/* Sin esto, quien no encuentra su municipio en la lista concluye
-              que la plataforma no lo cubre. La lista está recortada a los
-              que tienen algo publicado, y eso hay que decirlo. */}
+          {/* Si no se dice, el desplegable recortado parece un error. */}
           <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
             <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
             <span>
-              La lista solo muestra los {municipios?.length ?? 0}{' '}
-              {municipios?.length === 1 ? 'municipio que tiene' : 'municipios que tienen'}{' '}
-              solicitudes abiertas ahora. Puedes publicar desde cualquier
-              municipio del país.
+              Las listas de oficios y municipios solo muestran los que ya tienen a
+              alguien registrado.
             </span>
           </p>
 
+          {/* Las tres listas cortas pasan a chips: un toque en vez de abrir un
+              desplegable, elegir y cerrarlo. */}
+          {(zonas?.length ?? 0) > 0 && (
+            <GrupoChips
+              name="zona"
+              label="Dónde"
+              todos="Toda la ciudad"
+              valorInicial={zona ?? ''}
+              opciones={(zonas ?? []).map((z) => ({ valor: z.id, etiqueta: z.nombre }))}
+              nota="Solo las zonas donde ya hay alguien registrado."
+            />
+          )}
           <GrupoChips
-            name="categoria"
-            label="Categoría"
-            todos="Todas"
-            valorInicial={params.categoria ?? ''}
-            opciones={CATEGORIAS.map((c) => ({ valor: c.valor, etiqueta: c.etiqueta }))}
+            name="modalidad"
+            label="Cómo atiende"
+            todos="En cualquier parte"
+            valorInicial={modalidad ?? ''}
+            opciones={MODALIDADES.map((m) => ({ valor: m.valor, etiqueta: m.etiqueta }))}
           />
-
-          {/* «Por vencer» era un enlace suelto encima del formulario, en
-              relleno terracota, compitiendo con la acción principal. Ahora
-              es un criterio más, y se aplica con el mismo botón. */}
           <GrupoChips
-            name="urgentes"
-            label="Cuánto les queda"
-            todos="Todas"
-            valorInicial={params.urgentes ?? ''}
-            opciones={[{ valor: '1', etiqueta: 'Por vencer' }]}
+            name="modo"
+            label="Precio"
+            todos="Cualquier precio"
+            valorInicial={modo ?? ''}
+            opciones={MODOS_PRECIO.map((m) => ({ valor: m.valor, etiqueta: m.etiqueta }))}
           />
         </HojaFiltros>
-        </>
-        )}
 
-        {!solicitudes || solicitudes.length === 0 ? (
-          <div className="mt-6">
-            <Estado
-              Icono={SearchX}
-              titulo={
-                hayFiltro
-                  ? 'No hay solicitudes con estos filtros'
-                  : 'Todavía no hay solicitudes abiertas'
-              }
-              detalle={
-                hayFiltro
-                  ? 'Quita uno y vuelve a mirar.'
-                  : 'En ningún municipio del país. Puedes publicar la primera.'
-              }
-              accion={
-                hayFiltro ? (
-                  // Enseña QUÉ chip quitar, no un «ver todas» genérico:
-                  // con tres filtros puestos, lo que hace falta saber es
-                  // cuál sobra.
-                  <>
-                    {chipsAplicados.map((c) => (
-                      <Link
-                        key={c.clave}
-                        href={c.href}
-                        scroll={false}
-                        className="inline-flex min-h-12 items-center gap-2 rounded-full border border-border bg-card px-4 text-base transition-colors hover:bg-muted"
-                      >
-                        Quitar {c.etiqueta}
-                        <X className="size-4 shrink-0" aria-hidden="true" />
-                      </Link>
-                    ))}
-                  </>
-                ) : (
-                  <Button nativeButton={false} render={<Link href="/publicar" />}>
-                    <PlusCircle className="size-5" aria-hidden="true" />
-                    Publicar la primera
-                  </Button>
-                )
-              }
-            />
-          </div>
-        ) : (
-          <>
-            {/* Regla 5: arriba una línea corta con su enlace, no el
-                párrafo entero. Antes esto era texto suelto que decía que no
-                verificamos a nadie y ahí se acababa — cierto, y sin ninguna
-                salida: quien lo leía y se preocupaba no tenía a dónde ir.
-                El texto íntegro sigue pegado a la decisión, en cada
-                respuesta. */}
-            <p className="mt-4 flex items-start gap-1.5 text-sm text-muted-foreground">
-              <ShieldAlert className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
-              <span>
-                {AVISO_TABLERO_CORTO}{' '}
-                <Link href="/seguridad" className="underline underline-offset-4">
-                  Cómo cuidarte
-                </Link>
-              </span>
-            </p>
-            <ul className="lista-escalonada mt-3 space-y-3">
-              {solicitudes.map((s) => (
-                <TarjetaSolicitud key={s.codigo} solicitud={s} />
-              ))}
-            </ul>
-          </>
-        )}
+        {/* La otra vista del módulo, como interruptor. Era un enlace de
+            texto perdido entre tres botones. */}
+        <div className="riel -mx-4 mt-2 flex gap-2 overflow-x-auto px-4">
+          <Link
+            href="/servicios/solicitudes"
+            aria-pressed="false"
+            className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
+          >
+            <Inbox className="size-4" aria-hidden="true" />
+            Quién está pidiendo
+          </Link>
+          {!miFicha && (
+            <Link
+              href="/servicios/soy-proveedor"
+              className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
+            >
+              <Briefcase className="size-4" aria-hidden="true" />
+              Ofrecer mi trabajo
+            </Link>
+          )}
+        </div>
+      </CabeceraPantalla>
 
-        {hayMas && cursorSiguiente && (
-          <div className="mt-6 text-center">
+      <p className="text-base text-muted-foreground">
+        Gente que trabaja por su cuenta y negocios pequeños. Acuerdas el precio
+        y el trabajo directamente con la persona: la plataforma no participa ni
+        cobra nada.
+      </p>
+
+
+
+      {/* Dónde está lo suyo, dicho apenas entra. Sin esto, quien ya
+          publicó su ficha no tenía forma de saber si aparece ni por dónde
+          volver a ella: el botón le seguía ofreciendo crear una. */}
+      {/* Cinta accionable, no una nota gris al final de tres botones: dice
+          qué pasa y lleva a arreglarlo de un toque. Quien ya publicó su
+          ficha no tenía forma de saber si aparece ni por dónde volver. */}
+      {miFicha && (
+        <div
+          className={`mt-4 flex items-center gap-3 rounded-2xl px-4 py-3 ${
+            miFicha.suspendido || misOficiosEscondidos > 0
+              ? 'border border-primary/30 bg-accent text-accent-foreground'
+              : 'bg-card shadow-sm'
+          }`}
+        >
+          {(miFicha.suspendido || misOficiosEscondidos > 0) && (
+            <CircleAlert className="size-5 shrink-0" aria-hidden="true" />
+          )}
+          <p className="min-w-0 flex-1 text-base">
+            {miFicha.suspendido
+              ? 'Tu ficha está suspendida y no aparece en el directorio.'
+              : misOficiosEscondidos > 0
+                ? `${
+                    misOficiosEscondidos === 1
+                      ? 'Uno de tus oficios no aparece'
+                      : `${misOficiosEscondidos} de tus oficios no aparecen`
+                  } todavía.`
+                : 'Tu ficha está publicada.'}
+          </p>
+          <Button
+            variant="outline"
+            className="shrink-0"
+            nativeButton={false}
+            render={<Link href="/servicios/soy-proveedor" />}
+          >
+            {miFicha.suspendido || misOficiosEscondidos > 0 ? 'Revisar' : 'Ver y editar'}
+          </Button>
+        </div>
+      )}
+
+
+      <p className="mt-4 text-sm text-muted-foreground">{AVISO_SERVICIOS}</p>
+
+      {/* La única puerta a /servicios/confirmar. El código no viaja en
+          ningún enlace ni en ningún QR: esto solo lleva al formulario donde
+          se escribe a mano. Va ENCIMA de la lista porque quien llega con un
+          papel en la mano no baja veinte fichas para encontrar dónde
+          meterlo. */}
+      <p className="mt-4 text-base text-muted-foreground">
+        ¿Te hicieron un trabajo y te dieron un código?{' '}
+        <Link href="/servicios/confirmar" className="underline">
+          Califícalo aquí
+        </Link>
+      </p>
+
+      <p className="mt-4 text-base font-semibold">
+        {proveedores?.length ?? 0}{' '}
+        {proveedores?.length === 1 ? 'persona' : 'personas'}
+        {hayFiltro && (
+          <span className="font-normal text-muted-foreground"> con estos filtros</span>
+        )}
+      </p>
+
+      {!proveedores || proveedores.length === 0 ? (
+        <div className="mt-6 rounded-lg border border-dashed border-border p-8 text-center">
+          <Inbox className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
+          <p className="mt-2 text-base text-muted-foreground">
+            {hayFiltro
+              ? 'Nadie coincide con estos filtros todavía.'
+              : 'Todavía no hay nadie en el directorio. Si trabajas por tu cuenta, puedes ser el primero.'}
+          </p>
+          {hayFiltro ? (
             <Button
               variant="outline"
+              className="mt-4"
               nativeButton={false}
-              render={<Link href={construirHref(params, { antes: cursorSiguiente })} scroll={false} />}
+              render={<Link href="/" />}
             >
-              Ver más solicitudes
+              Ver todos
             </Button>
-          </div>
-        )}
-        </>
-        )}
-      </section>
-      {/* La acción principal de la portada. Los dos botones del héroe
-          bajan a arena para que la única terracota rellena de la pantalla
-          sea ésta (regla 2): el héroe se va con el desplazamiento y la
-          píldora se queda donde llega el pulgar. */}
-      {!modoTengo && (
-        <AccionPrincipal etiqueta="Necesito ayuda" Icono={Plus} href="/publicar" />
+          ) : (
+            <Button
+              className="mt-4"
+              nativeButton={false}
+              render={<Link href="/servicios/soy-proveedor" />}
+            >
+              Ofrecer mi trabajo
+            </Button>
+          )}
+        </div>
+      ) : (
+        <ul className="mt-6 space-y-3">
+          {proveedores.map((p) => (
+            <TarjetaProveedor
+              key={p.id}
+              proveedor={p}
+              nombreMunicipio={nombreMunicipio.get(p.municipio)}
+              oficios={porProveedor.get(p.id) ?? []}
+            />
+          ))}
+        </ul>
       )}
+
+      <Alert className="mt-6">
+        <ShieldAlert className="size-4" aria-hidden="true" />
+        <AlertDescription>
+          {NO_PAGUES_POR_ADELANTADO}{' '}
+          <Link href="/seguridad" className="underline">
+            Cómo cuidarte
+          </Link>
+        </AlertDescription>
+      </Alert>
+
+
+      {/* Puente al otro lado del sitio. Estaba en la portada, que se lo
+          quedaba entero para explicar dos cosas que no eran suyas; aquí es
+          donde de verdad se busca. Lo que importa de este texto es la
+          diferencia de vida útil, que es lo que sostiene la promesa de
+          borrado del tablero. */}
+      <section className="mt-8 flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:p-5">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+          <Stethoscope className="size-6" aria-hidden="true" />
+        </span>
+        <div className="flex-1">
+          <h2 className="font-heading text-2xl">¿Necesitas un profesional?</h2>
+          <p className="mt-1 text-base text-muted-foreground">
+            Psicología, revisión de tu casa, atención médica, asesoría jurídica. Cada quien declara su matrícula; a algunos ya les revisamos que ese número exista en el registro, y esos aparecen de primeros.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          className="w-full sm:w-auto"
+          nativeButton={false}
+          render={<Link href="/servidores?ver=profesionales" />}
+        >
+          Ver profesionales
+        </Button>
+      </section>
+      <AccionPrincipal
+        etiqueta="Necesito un servicio"
+        Icono={Plus}
+        href="/servicios/publicar"
+      />
     </main>
   )
 }

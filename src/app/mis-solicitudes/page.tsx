@@ -5,7 +5,9 @@ import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { ChevronRight, Smartphone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { PestanasLoMio } from '@/components/pestanas-lo-mio'
+import { SeccionPlegable } from '@/components/seccion-plegable'
 import { ListaLocal } from './lista-local'
+import { ListaServicios } from './lista-servicios'
 
 export const metadata = { title: 'Lo mío' }
 
@@ -49,7 +51,29 @@ export default async function MisSolicitudesPage() {
           los datos del navegador, se pierden: guarda el enlace de cada una.
         </p>
       </div>
-      <ListaLocal />
+      {/* Dos módulos, dos listas, y por eso dos plegables: las de insumos
+          viven 72 horas y las de servicios 15 días renovables, así que no
+          son la misma cosa aunque las dos sean «lo que pedí». Las de
+          servicios no tenían ninguna pantalla donde verse — el token se
+          guardaba en este teléfono al publicar y ahí se quedaba.
+
+          La de insumos abierta de entrada: es la que caduca. */}
+      <div className="mt-4 space-y-3">
+        <SeccionPlegable
+          titulo="Solicitudes de ayuda"
+          resumen="Insumos que pediste. Se borran solas a las 72 horas."
+          abierta
+        >
+          <ListaLocal />
+        </SeccionPlegable>
+
+        <SeccionPlegable
+          titulo="Solicitudes de servicios"
+          resumen="Oficios que pediste en el directorio. Duran 15 días, renovables."
+        >
+          <ListaServicios />
+        </SeccionPlegable>
+      </div>
 
       {/* La fila hacia /aliado se fue: desde que hay celda propia en la
           barra, tenerla también aquí eran dos puertas al mismo cuarto —lo

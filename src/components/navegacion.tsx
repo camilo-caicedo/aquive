@@ -40,18 +40,23 @@ import {
 // cuenta —que es el rol central de este sitio— se quedaría fuera de lo
 // suyo. /registro cuelga de aquí a través de TAMBIEN.
 const ENLACES = [
-  { href: '/', etiqueta: 'Solicitudes', Icono: HandHeart },
-  // Segunda y pegada a «Solicitudes» desde que existe el cruce al revés:
-  // las dos pantallas se hablan —de una solicitud se llega a quién tiene, y
-  // de aquí se vuelve a la solicitud—, y separarlas con Servicios en medio
-  // ponía un módulo entero entre las dos mitades de un mismo movimiento.
-  { href: '/ofertadores', etiqueta: 'Quién ofrece', Icono: PackageOpen },
+  // ⚠ Servicios es la portada desde el 20 de agosto de 2026, por decisión
+  // del responsable: pasó tiempo desde el sismo y lo que queda vivo es la
+  // reactivación económica. El módulo de emergencia no se retira —sigue
+  // entero en /solicitudes— pero deja de ser lo primero que se ve.
+  //
   // Un solo destino para las tres listas de «quién puede hacer algo por
   // mí»: oficios del rebusque, profesionales con matrícula y entidades.
   // Detrás son módulos distintos —y el primero tiene otro responsable del
   // tratamiento— pero para quien busca es la misma pregunta. Las tres se
   // reparten en `PestanasServicios`.
-  { href: '/servicios', etiqueta: 'Servicios', Icono: Stethoscope },
+  { href: '/', etiqueta: 'Servicios', Icono: Stethoscope },
+  { href: '/solicitudes', etiqueta: 'Solicitudes', Icono: HandHeart },
+  // Pegada a «Solicitudes» desde que existe el cruce al revés: las dos
+  // pantallas se hablan —de una solicitud se llega a quién tiene, y de
+  // aquí se vuelve a la solicitud—, y separarlas ponía un módulo entero
+  // entre las dos mitades de un mismo movimiento.
+  { href: '/ofertadores', etiqueta: 'Quién ofrece', Icono: PackageOpen },
   { href: '/mis-solicitudes', etiqueta: 'Lo mío', Icono: UserRound },
 ]
 
@@ -90,7 +95,13 @@ function celdas(coordinacion: Coordinacion) {
 // pantalla de habeas data viven en rutas propias y las dos son «lo mío».
 // /aliado ya no cuelga de aquí: tiene celda propia cuando corresponde.
 const TAMBIEN: Record<string, string[]> = {
-  '/servicios': ['/servidores'],
+  // La portada es el directorio, así que las otras dos listas de la misma
+  // pregunta cuelgan de ella, y también la puerta vieja /servicios y todo
+  // lo que hay debajo: publicar una ficha, una ficha concreta, la demanda.
+  '/': ['/servicios', '/servidores'],
+  // Publicar y responder son los dos extremos de una solicitud, y
+  // /solicitud/[token] no: esa es la propia, y vive en «Lo mío».
+  '/solicitudes': ['/publicar', '/responder'],
   // /solicitud/[token] es la pantalla de una solicitud propia: se llega
   // desde «Lo mío» y se vuelve ahí. Sin esta línea, abrir la solicitud
   // apagaba las cuatro celdas y la barra parecía de otra aplicación.
@@ -98,11 +109,18 @@ const TAMBIEN: Record<string, string[]> = {
 }
 
 // Coincidencia exacta para la portada; por prefijo para el resto, para que
-// /responder/ABCD siga marcando "Solicitudes".
+// /responder/ABCD siga marcando «Solicitudes».
+//
+// ⚠ La portada mira TAMBIEN igual que las demás. Antes cortocircuitaba con
+// `return ruta === '/'`, y desde que el directorio vive ahí eso apagaba la
+// celda entera al entrar a una ficha de servicios o a /servidores: la
+// barra parecía de otra aplicación justo al dar el primer paso dentro del
+// módulo que ahora recibe a todo el mundo.
 function estaActiva(ruta: string, href: string) {
-  if (href === '/') return ruta === '/'
+  const propias = TAMBIEN[href] ?? []
+  if (href === '/') return ruta === '/' || propias.some((otra) => ruta.startsWith(otra))
   if (ruta.startsWith(href)) return true
-  return (TAMBIEN[href] ?? []).some((otra) => ruta.startsWith(otra))
+  return propias.some((otra) => ruta.startsWith(otra))
 }
 
 /**
