@@ -48,21 +48,41 @@ export const ENTIDADES_MATRICULA = [
 ] as const
 
 /**
- * Dónde se consulta cada matrícula.
+ * El buscador de cada registro, para verificar una matrícula.
  *
  * Verificar es ir a mirar si ese número aparece en el registro de la
  * entidad, y hasta ahora eso había que buscarlo a mano cada vez.
  *
- * ⚠ Van los dominios raíz y no los enlaces profundos de cada buscador: un
- * enlace profundo a un trámite de una entidad pública se muere solo, y un
- * enlace roto en una cola de verificación es peor que ninguno — hace
- * pensar que el registro no existe. OTRA no está aquí porque no tiene
- * registro consultable, y esa ausencia es la que decide la cola.
+ * ⚠ Son enlaces profundos, comprobados uno por uno contra la fuente
+ * oficial el 20 de agosto de 2026. Un enlace profundo a un trámite de una
+ * entidad pública se muere solo, así que si alguno deja de abrir, el
+ * arreglo es volver a buscarlo desde la raíz del dominio y cambiarlo aquí
+ * — nunca dejar el enlace roto, que hace pensar que el registro no existe.
+ *
+ * Dos de los cinco no llevan al formulario sino a la página que lo
+ * explica, y es a propósito:
+ *
+ *   · CPNAA — el buscador vive en su oficina virtual detrás de un inicio
+ *     de sesión, así que mandar ahí sería mandar a una pantalla de
+ *     contraseña. Esta página dice con qué se puede consultar —cédula,
+ *     pasaporte o número de matrícula— y lleva al sitio correcto.
+ *   · SIRNA — la Rama Judicial no publica una URL directa al formulario;
+ *     esta es la que ella misma enlaza desde el Registro Nacional de
+ *     Abogados.
+ *
+ * COLPSIC va sin `www`: el subdominio con `www` responde con un
+ * certificado que no corresponde a ese nombre y el navegador lo bloquea.
+ *
+ * OTRA no está aquí porque no tiene registro consultable, y esa ausencia
+ * es la que decide la cola: sin registro no se puede verificar.
  */
 export const REGISTROS_MATRICULA: Record<string, string> = {
-  COPNIA: 'https://www.copnia.gov.co',
-  CPNAA: 'https://www.cpnaa.gov.co',
-  COLPSIC: 'https://www.colpsic.org.co',
-  ReTHUS: 'https://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx',
-  SIRNA: 'https://sirna.ramajudicial.gov.co',
+  COPNIA:
+    'https://www.copnia.gov.co/atencion-al-ciudadano/consultas-en-linea/verifique-el-numero-de-matricula-profesional',
+  CPNAA:
+    'https://www.cpnaa.gov.co/consulta-del-registro-de-arquitectos-y-profesionales-auxiliares-de-la-arquitectura/',
+  COLPSIC: 'https://sara.colpsic.org.co/publico/verificacion-tarjetas',
+  ReTHUS:
+    'https://web.sispro.gov.co/THS/Cliente/ConsultasPublicas/ConsultaPublicaDeTHxIdentificacion.aspx',
+  SIRNA: 'https://sirna.ramajudicial.gov.co/Paginas/Inicio.aspx',
 }
