@@ -1,7 +1,19 @@
 // Aparece en el texto de autorización que firma cada ofertador y servidor
 // (docs/legal/PLANTILLAS.md sección 3) y en las páginas legales, así que
 // tiene efecto legal. Debe coincidir con lo que diga PLANTILLAS.md.
-export const RESPONSABLE = 'Juan Camilo Caicedo Sepulveda'
+//
+// ⚠ 20/08/2026: deja de ser una persona natural. Hasta ahora había DOS
+// responsables a la vez —la persona para la ayuda de emergencia y la
+// fundación para el directorio de servicios— y ese reparto se colapsa en
+// uno solo. Decisión del responsable, tomada sin abogado de por medio: lo
+// que había que quitar de la aplicación era el nombre y la cédula de una
+// persona natural expuestos en tres pantallas.
+//
+// Lo que esto NO resuelve, y sigue pendiente en papel: el contrato entre
+// las dos partes, la inscripción de las bases en el RNBD a nombre de la
+// fundación, y qué pasa con las autorizaciones que se firmaron con el
+// nombre anterior. Ver el inventario del traspaso.
+export const RESPONSABLE = 'Fundación Nodo Social'
 export const CORREO_CONTACTO = 'soporte@aquive.co'
 // Se mueve cada vez que cambia un texto legal, y no antes: es lo que se
 // guarda en `identidades.autorizacion_version` y por tanto la prueba de
@@ -27,8 +39,14 @@ export const RESPONSABLE_SERVICIOS = 'Fundación Nodo Social'
 // TODO PLAN-V3 §7: pedir el NIT del certificado del RUES y el correo de
 // habeas data que la fundación vaya a atender. Hasta entonces el aviso de
 // privacidad de Servicios está incompleto y no se puede publicar.
-export const NIT_RESPONSABLE_SERVICIOS = '[PENDIENTE]'
-export const CORREO_HABEAS_DATA_SERVICIOS = '[PENDIENTE]'
+// Vacío mientras no llegue: las pantallas que lo usan no dibujan la línea
+// del NIT si no hay número. Es mejor no decirlo que decir «[PENDIENTE]»
+// dentro de un aviso de privacidad, que era lo que salía impreso.
+export const NIT_RESPONSABLE_SERVICIOS = ''
+// Un solo canal de habeas data mientras la fundación no abra el suyo. Este
+// buzón existe y se atiende; el de antes era un marcador de posición que
+// se estaba publicando tal cual.
+export const CORREO_HABEAS_DATA_SERVICIOS = CORREO_CONTACTO
 
 // Lo que firma un proveedor al publicar su ficha, y lo que declara haber
 // obtenido de la persona que da como referencia. Se guardan en

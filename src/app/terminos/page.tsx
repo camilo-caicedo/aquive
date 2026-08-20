@@ -23,13 +23,13 @@ export default function TerminosPage() {
         artículos se necesitan y a otras personas ofrecerlos; nació para el sismo del 10 de agosto de
         2026 y dejará de operar cuando deje de ser útil. El directorio de servicios permite a quien
         vive de un oficio publicar su ficha, y a quien necesita ese oficio encontrarlo; no tiene fecha
-        de cierre. Es un proyecto personal, gratuito y sin ánimo de lucro, operado por {RESPONSABLE} a
-        título individual. No hay empresa ni organización detrás.
+        de cierre. Es un proyecto gratuito y sin ánimo de lucro, operado por {RESPONSABLE}. La
+        plataforma no cobra nada a nadie ni recibe dinero de nadie.
       </p>
 
       <h2 className="font-heading mt-6 text-2xl">2. Qué NO es.</h2>
       <p className="mt-3 text-base">
-        No somos una entidad de socorro, ni una ONG, ni una autoridad. No entregamos ayuda, no transportamos, no
+        No somos una entidad de socorro ni una autoridad. No entregamos ayuda, no transportamos, no
         almacenamos ni distribuimos nada. No reemplazamos a la UNGRD, la Cruz Roja, la Defensa Civil ni a tu
         alcaldía. Para emergencias: 123.
       </p>
@@ -125,7 +125,7 @@ export default function TerminosPage() {
 
       <h2 className="font-heading mt-6 text-2xl">8. Servicio &quot;tal como está&quot;.</h2>
       <p className="mt-3 text-base">
-        Gratuito, sin garantía de disponibilidad, mantenido por una sola persona en su tiempo libre, y puede
+        Gratuito, sin garantía de disponibilidad, mantenido con recursos limitados, y puede
         suspenderse o cerrarse en cualquier momento sin previo aviso. En la medida permitida por la ley, el
         operador no responde por daños derivados del uso o de la imposibilidad de uso.
       </p>
@@ -149,8 +149,8 @@ export default function TerminosPage() {
       <h2 className="font-heading mt-6 text-2xl">12. El directorio de servicios.</h2>
       <p className="mt-3 text-base">
         Es una parte aparte de este sitio, con otra finalidad: que quien vive de su trabajo pueda ser
-        encontrado después del sismo. La responsable del tratamiento de esos datos es{' '}
-        {RESPONSABLE_SERVICIOS} y AquíVe actúa como encargado. Todo lo demás de estos términos sigue
+        encontrado después del sismo. La responsable del tratamiento de esos datos es la misma que
+        la del resto del sitio, {RESPONSABLE_SERVICIOS}. Todo lo demás de estos términos sigue
         aplicando.
       </p>
       <p className="mt-3 text-base">

@@ -4,7 +4,6 @@ import {
   FECHA_LEGALES,
   RESPONSABLE_SERVICIOS,
   NIT_RESPONSABLE_SERVICIOS,
-  CORREO_HABEAS_DATA_SERVICIOS,
 } from '@/lib/config'
 
 // Dos regímenes de datos, y hay que verlos como dos desde la primera
@@ -33,19 +32,24 @@ export default function PrivacidadPage() {
       </div>
 
       <h2 className="font-heading mt-6 text-2xl">Quién es responsable</h2>
+      {/* ⚠ Un solo responsable. Hasta el 20/08/2026 aquí había dos bloques
+          —la persona natural para la emergencia, la fundación para el
+          directorio— y con ellos el nombre completo de una persona en una
+          página pública. La línea del NIT no se dibuja si no hay número:
+          mejor no decirlo que imprimir «[PENDIENTE]» en un aviso de
+          privacidad. */}
       <p className="mt-3 text-base">
-        De la ayuda de emergencia: {RESPONSABLE}, persona natural, Cali, Colombia. Correo de
-        contacto: {CORREO_CONTACTO}.
+        {/* Una sola interpolación: partirla en dos deja un espacio de JSX
+            antes de la coma —«Fundación Nodo Social , entidad»—. */}
+        {`${RESPONSABLE}${
+          NIT_RESPONSABLE_SERVICIOS ? `, NIT ${NIT_RESPONSABLE_SERVICIOS}` : ''
+        }, entidad sin ánimo de lucro, Cali, Colombia.`}{' '}
+        Correo de contacto: {CORREO_CONTACTO}.
       </p>
       <p className="mt-3 text-base">
-        Es un proyecto personal y sin ánimo de lucro, hecho por una sola persona: primero para
-        apoyar a los afectados por el sismo del 10 de agosto de 2026, y después para que quien vive
-        de un oficio pueda darse a conocer. No hay ninguna empresa detrás.
-      </p>
-      <p className="mt-3 text-base">
-        Del módulo de servicios: {RESPONSABLE_SERVICIOS}, NIT {NIT_RESPONSABLE_SERVICIOS}. Correo
-        para ejercer tus derechos sobre esos datos: {CORREO_HABEAS_DATA_SERVICIOS}. Ahí la fundación
-        decide para qué se usan los datos y nosotros solo los guardamos por encargo suyo.
+        Es un proyecto sin ánimo de lucro: primero para apoyar a los afectados por el sismo del 10
+        de agosto de 2026, y después para que quien vive de un oficio pueda darse a conocer. La
+        plataforma no cobra nada a nadie ni recibe dinero de nadie.
       </p>
       <p className="mt-3 text-base">
         Hay además fundaciones que trabajan <strong>con</strong> la plataforma en la ayuda de
@@ -194,9 +198,8 @@ export default function PrivacidadPage() {
       <h2 className="font-heading mt-6 text-2xl">Tus derechos</h2>
       <p className="mt-3 text-base">
         Conforme a la Ley 1581 de 2012 puedes conocer, actualizar, rectificar y suprimir tus datos, y revocar la
-        autorización. Para la ayuda de emergencia escríbenos a {CORREO_CONTACTO}; para el directorio
-        de servicios, a {CORREO_HABEAS_DATA_SERVICIOS}. Una consulta se responde en 10 días hábiles y
-        un reclamo en 15, que son los plazos de los artículos 14 y 15.
+        autorización. Escríbenos a {CORREO_CONTACTO}, sea cual sea la parte del sitio. Una consulta
+        se responde en 10 días hábiles y un reclamo en 15, que son los plazos de los artículos 14 y 15.
       </p>
       <p className="mt-3 text-base">
         En la mayoría de los casos no hace falta que escribas: desde el enlace de tu solicitud, desde

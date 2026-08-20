@@ -10,6 +10,18 @@ Reemplaza todo lo que está en `[CORCHETES]`.
 
 ## Tu situación: persona natural
 
+> **⚠ Esta sección quedó atrás el 20 de agosto de 2026.** La plataforma
+> pasó a declarar a Fundación Nodo Social como responsable del tratamiento,
+> así que el análisis de abajo —escrito para una persona natural— ya no
+> describe la situación. Se conserva porque su razonamiento sobre el RNBD
+> hay que rehacerlo al revés: el Decreto 090 de 2018 deja fuera a las
+> personas naturales, **no** a las entidades sin ánimo de lucro por encima
+> del umbral de activos. Es la fundación quien tiene que inscribir las
+> bases, y eso sigue sin hacerse.
+>
+> Tampoco existe todavía el contrato entre las dos partes, ni está resuelto
+> qué pasa con las autorizaciones firmadas con el nombre anterior.
+
 Operas a título personal, sin vincular ninguna sociedad. Tres
 consecuencias:
 
@@ -56,13 +68,13 @@ ese en todos los documentos.
 Última actualización: 20/08/2026
 
 **Quién es responsable**
-Juan Camilo Caicedo Sepulveda, persona natural, Cali, Colombia.
+Fundación Nodo Social, entidad sin ánimo de lucro, Cali, Colombia.
 Correo de contacto: soporte@aquive.co.
 
-Este es un proyecto personal y sin ánimo de lucro, hecho por una sola
-persona: primero para apoyar a los afectados por el sismo del 10 de agosto
-de 2026, y después para que quien vive de un oficio pueda darse a conocer.
-No hay ninguna empresa ni entidad detrás de la plataforma.
+Este es un proyecto sin ánimo de lucro: primero para apoyar a los
+afectados por el sismo del 10 de agosto de 2026, y después para que quien
+vive de un oficio pueda darse a conocer. La plataforma no cobra nada a
+nadie ni recibe dinero de nadie.
 
 Hay fundaciones que trabajan **con** la plataforma —aparecen por su
 nombre y solo si tú las escoges— pero ninguna la opera ni responde por
@@ -199,8 +211,8 @@ personas ofrecerlos; nació para el sismo del 10 de agosto de 2026 y dejará
 de operar cuando deje de ser útil. El directorio de servicios permite a
 quien vive de un oficio publicar su ficha, y a quien necesita ese oficio
 encontrarlo; no tiene fecha de cierre. Es un proyecto personal, gratuito y
-sin ánimo de lucro, operado por Juan Camilo Caicedo Sepulveda a título
-individual. No hay empresa ni organización detrás.
+sin ánimo de lucro, operado por Fundación Nodo Social. La plataforma no
+cobra nada a nadie ni recibe dinero de nadie.
 
 **2. Qué NO es.** No somos una entidad de socorro, ni una ONG, ni una
 autoridad. No entregamos ayuda, no transportamos, no almacenamos ni
@@ -311,7 +323,7 @@ explicación previa, especialmente si hay riesgo para alguien.
 
 ## 3. Texto de autorización (checkbox al registrarse)
 
-> Autorizo a Juan Camilo Caicedo Sepulveda, responsable de esta plataforma, a
+> Autorizo a Fundación Nodo Social, responsable de esta plataforma, a
 > tratar los datos que estoy entregando —nombre visible, municipios, forma de contacto, descripción,
 > los insumos que diga tener y, si aplica, profesión y matrícula— con la finalidad de publicarlos de
 > forma **pública** en esta plataforma para que personas afectadas puedan

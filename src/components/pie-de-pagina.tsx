@@ -35,20 +35,22 @@ export function PieDePagina() {
 
         {/* ⚠ Este párrafo declara quién opera esto y hasta cuándo, así que
             se cambia con el aviso de privacidad y los términos, nunca solo.
-            Decía que el proyecto ENTERO era temporal y para el sismo, y eso
-            dejó de ser cierto: el directorio de servicios nació de mediano
-            plazo. Lo que sigue siendo temporal es la ayuda de emergencia, y
-            ahí se dice con las mismas palabras que usa /privacidad.
 
-            Lo que NO cambió, y no puede cambiar sin mirar de nuevo la
-            responsabilidad civil: que lo opera una persona natural, que no
-            es una entidad de socorro y que no entrega nada. */}
+            Dos frases se cayeron el 20/08/2026, cuando la fundación pasó a
+            ser la responsable: «proyecto personal, operado por una sola
+            persona» y «no somos una ONG». La segunda era literalmente falsa
+            —Nodo Social es una fundación— y era además la que sostenía el
+            deslinde. Lo que hace ese trabajo ahora es la frase que queda:
+            no entregamos ayuda, solo conectamos.
+
+            Lo que NO cambió: que no reemplaza a las autoridades, que no
+            entrega nada, y que la ayuda de emergencia es temporal. */}
         <p className="mt-4 text-base text-muted-foreground">
-          AquíVe es un proyecto personal y gratuito, operado por una sola
-          persona. No somos una entidad de socorro ni una ONG, y no
-          entregamos ayuda: solo conectamos. La ayuda de emergencia nació
-          para el sismo del 10 de agosto de 2026 y dejará de operar cuando
-          deje de ser útil.
+          AquíVe es una plataforma gratuita y sin ánimo de lucro, operada por
+          Fundación Nodo Social. No entregamos ayuda ni la transportamos:
+          solo conectamos a quien la necesita con quien puede darla. La ayuda
+          de emergencia nació para el sismo del 10 de agosto de 2026 y dejará
+          de operar cuando deje de ser útil.
         </p>
 
         <nav aria-label="Documentos legales" className="mt-4">
