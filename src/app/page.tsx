@@ -264,17 +264,11 @@ export default async function InicioPage({
           />
         </HojaFiltros>
 
-        {/* La otra vista del módulo, como interruptor. Era un enlace de
-            texto perdido entre tres botones. */}
+        {/* ⚠ Aquí había también un «Quién está pidiendo». Se fue: esa lista
+            es ahora un destino propio de la barra —«Solicitudes»— y tenerla
+            además aquí eran dos puertas al mismo cuarto. Queda solo lo que
+            no está en la barra: publicar la ficha propia. */}
         <div className="riel -mx-4 mt-2 flex gap-2 overflow-x-auto px-4">
-          <Link
-            href="/servicios/solicitudes"
-            aria-pressed="false"
-            className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
-          >
-            <Inbox className="size-4" aria-hidden="true" />
-            Quién está pidiendo
-          </Link>
           {!miFicha && (
             <Link
               href="/servicios/soy-proveedor"
