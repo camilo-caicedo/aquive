@@ -446,6 +446,72 @@ pantalla. La fuente es el proyecto de diseño «AquíVe identidad visual».
 - **Botones y chips en píldora** (`rounded-full`). Los altos no cambian: el
   mínimo táctil de 48 px de abajo manda sobre cualquier cosa estética.
 
+## Sistema de diseño · las once reglas
+
+Desde el 20 de agosto de 2026, y por decisión del responsable. Están escritas
+para poder decir «esto no cumple la regla 3» en una revisión, no para adornar.
+Se apoyan en lo que ya manda este archivo —48 px táctiles, 16 px de texto, un
+solo tema claro, solo tokens— y añaden lo que faltaba. **Una pantalla nueva
+nace cumpliéndolas.**
+
+**1 · Primer pantallazo.** En los primeros 640 px de alto tiene que caber el
+título, la navegación de la pantalla y *un dato real*. Máximo dos bloques de
+explicación antes del contenido; el resto se va a una pantalla propia o a un
+plegable.
+
+**2 · Una sola terracota por pantalla.** El relleno `--primary` se reserva para
+la acción principal. Pestañas activas, filtros aplicados y estados usan arena,
+papel o el sello salvia. Si hay dos rellenos terracota compitiendo, uno de los
+dos no es la acción principal.
+
+**3 · Dos capas de navegación como máximo.** La barra inferior (dónde estoy en
+la app) y un segmentado (qué lista veo). Nada más. Un tercer grupo de píldoras
+significa que la pantalla está haciendo dos trabajos y hay que partirla.
+
+**4 · Los filtros no ocupan el cuerpo.** Un chip «Filtros» con el número
+aplicado, los filtros activos como chips con equis, y el conteo de resultados
+al lado. Los controles viven en una hoja inferior que cierra con «Ver N
+resultados». El estado sigue en la URL, así que el enlace se comparte igual.
+
+**5 · Un aviso corto arriba, el completo en la decisión.** Sobre una lista va
+una línea con enlace a «Cómo cuidarte». El texto íntegro de `honestidad.ts` va
+pegado al botón que abre WhatsApp o envía una respuesta. Nunca dos avisos
+consecutivos, nunca el mismo aviso dos veces en una pantalla.
+
+**6 · Formularios por secciones, guardado por sección.** Más de tres campos,
+secciones plegables con resumen cuando están cerradas. Cada una guarda lo suyo.
+El consentimiento es su propia sección con su fecha, y bloquea la publicación,
+no la edición.
+
+**7 · Tarjeta de lista: cinco datos.** Qué es, dónde, cuándo, estado y una
+acción. El resto —código, notas largas, avisos, sellos secundarios— vive en el
+detalle. Máximo tres chips visibles y un «+N».
+
+**8 · Nombres por lo que hay, no por quién lo hace.** Los destinos se nombran
+con el contenido; los roles no se nombran nunca en la barra. Una etiqueta de
+navegación no pasa de dos palabras y el `h1` de la pantalla repite esa palabra
+exacta.
+
+**9 · Accesibilidad que ya se cumple, escrita.** 48 px de objetivo con 8 px de
+separación mínima; el estado nunca depende solo del color (sello, texto o icono
+además); foco visible con anillo terracota; `aria-current` en la celda activa; y
+solo se animan opacidad y transform, como ya hace `globals.css`.
+
+**10 · Destino o flujo, nunca las dos cosas.** Una pantalla de destino lleva la
+marca arriba y la barra inferior: se entra a mirar y se puede salir a cualquier
+parte. Una pantalla de flujo —publicar, responder— lleva volver y título arriba,
+no lleva barra inferior, y su acción es una barra fija abajo. Mantener la barra
+dentro de un formulario ofrece cuatro salidas a medio llenar y le roba 64 px al
+campo que se está escribiendo. Lo sostiene `MarcoFlujo` con una regla `:has()`
+en `globals.css`, no la interfaz de cada pantalla.
+
+**11 · El dato sensible se destapa de uno en uno, y se ve que quedó
+registrado.** Ninguna lista trae nombres, teléfonos ni documentos de terceros.
+Se abren uno por uno, con motivo escrito por la persona en ese momento, y la
+pantalla dice después —no en letra pequeña— que la lectura quedó en la bitácora
+y que al recargar desaparece de la pantalla. Vale para `leer_referencia`,
+`exportar_planilla` y cualquier lectura de identidad que se agregue.
+
 ## Accesibilidad
 
 Público objetivo: personas en albergues, muchas mayores, con estrés agudo,

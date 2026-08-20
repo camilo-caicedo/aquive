@@ -207,3 +207,25 @@
     scroll-behavior: auto !important;
   }
 }
+/* --------------------------------------------------------------------
+   Regla 10 del sistema de diseño: destino o flujo, nunca las dos cosas.
+
+   Mientras hay un `MarcoFlujo` montado, la barra inferior no se dibuja.
+   Va en CSS y no en JavaScript para que ya sea correcto en la primera
+   pintada del servidor: con estado de cliente, la barra aparecía un
+   cuadro y se iba.
+
+   Fuera de `@layer` a propósito. Tailwind v4 mete sus utilidades en capas,
+   y lo que no está en ninguna capa gana: es lo que deja neutralizar el
+   `pb-[calc(4rem+env(safe-area-inset-bottom))]` que `layout.tsx` le pone
+   al `body` para reservarle sitio a la barra. Sin la segunda regla queda
+   un hueco muerto debajo de la barra de acción del flujo.
+   -------------------------------------------------------------------- */
+
+body:has([data-marco-flujo]) [data-barra-inferior] {
+  display: none;
+}
+
+body:has([data-marco-flujo]) {
+  padding-bottom: 0;
+}

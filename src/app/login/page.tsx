@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { MarcoFlujo } from '@/components/marco-flujo'
 import { BotonGoogle } from './boton-google'
 
 export default async function LoginPage({
@@ -17,19 +18,28 @@ export default async function LoginPage({
   if (user) redirect('/registro')
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-6">
-      <h1 className="font-heading text-3xl">Entrar para ofrecer ayuda</h1>
-      <p className="mt-2 text-base text-muted-foreground">
+    <MarcoFlujo
+      titulo="Entrar para ofrecer ayuda"
+      volver="/"
+      accion={
+        <>
+          {/* Pegado al botón y no arriba (regla 5): lo que hay que saber
+              antes de entregarle la cuenta de Google a un sitio se lee en
+              el momento de entregarla, no tres párrafos antes. */}
+          <Alert variant="warning" className="mb-3">
+            <AlertDescription>
+              No guardamos tu correo. De tu cuenta de Google solo conservamos un
+              identificador interno.
+            </AlertDescription>
+          </Alert>
+          <BotonGoogle />
+        </>
+      }
+    >
+      <p className="text-base text-muted-foreground">
         Solo necesitan cuenta quienes ofrecen insumos o servicios. Si necesitas
         ayuda, publica tu solicitud sin cuenta y sin dar tus datos.
       </p>
-
-      <Alert variant="warning" className="mt-4">
-        <AlertDescription>
-          No guardamos tu correo. De tu cuenta de Google solo conservamos un
-          identificador interno.
-        </AlertDescription>
-      </Alert>
 
       {error && (
         <Alert variant="destructive" className="mt-4">
@@ -39,15 +49,11 @@ export default async function LoginPage({
         </Alert>
       )}
 
-      <div className="mt-6">
-        <BotonGoogle />
-      </div>
-
       <p className="mt-6 text-base">
         <a href="/publicar" className="underline">
           Necesito ayuda, quiero publicar una solicitud
         </a>
       </p>
-    </main>
+    </MarcoFlujo>
   )
 }

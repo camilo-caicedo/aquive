@@ -20,13 +20,11 @@ export async function Encabezado() {
     ? await Promise.all([
         supabase.from('administradores').select('user_id').eq('user_id', user.id).maybeSingle(),
         supabase.from('perfiles').select('id').eq('id', user.id).maybeSingle(),
-        // Una sola consulta decide si se dibuja la pestaña de /aliado, cómo
-        // se llama, y cuántos avisos hay sin ver. Empezó preguntando por
-        // `tipo = 'aliado'` para ahorrarla, y la primera coordinadora de
-        // verdad no encontró su panel; después salía solo para el equipo de
-        // una fundación, y quien solo ofrece se quedó sin puerta a sus
-        // conversaciones. Una consulta más por carga es más barata que una
-        // persona que no encuentra dónde trabajar.
+        // Queda por los avisos sin ver, que son lo que pinta la campana.
+        // El `coordinacion` de esta misma consulta ya no decide ninguna
+        // celda de la barra —la barra tiene cuatro y no cambia por rol—;
+        // ahora lo consume «Lo mío», que es donde vive la puerta a
+        // /aliado. Ver `src/app/mis-solicitudes/page.tsx`.
         supabase.rpc('estado_encabezado'),
       ])
     : [null, null, null]
@@ -36,8 +34,6 @@ export async function Encabezado() {
   // solicitudes donde participa una cuenta, y sin perfil no hay cuenta.
   const tienePerfil = !!perfil?.data
   const encabezado = (estado?.data as EstadoEncabezado | null) ?? null
-
-  const coordinacion = encabezado?.coordinacion ?? null
 
   return (
     // Fragmento y no un solo `<header>`: la barra del teléfono es hermana
@@ -56,12 +52,13 @@ export async function Encabezado() {
           <span className="font-heading text-2xl leading-none">AquíVe</span>
         </Link>
 
+        {/* Arriba solo queda la identidad y lo de la cuenta. «Mi perfil»
+            se fue: era un destino, y los destinos están abajo —estaba en
+            el encabezado y en la barra a la vez, dos puertas al mismo
+            cuarto compitiendo por el sitio más caro de la pantalla—.
+            Moderación se queda porque no es un destino del producto sino
+            una herramienta de administrador. */}
         <div className="flex shrink-0 items-center gap-2">
-          {/* Moderación vive aquí y no entre las secciones: es una
-              herramienta de administrador, no un destino del producto, y
-              la tenía una sola persona ocupando un sitio de navegación que
-              en un teléfono cuesta caro. Arriba están las cosas de la
-              cuenta —avisos, moderación, perfil—; abajo, a dónde se va. */}
           {esAdmin && (
             <Link
               href="/admin"
@@ -73,21 +70,25 @@ export async function Encabezado() {
             </Link>
           )}
           {tienePerfil && <BotonAvisos sinVer={encabezado?.avisos_sin_ver ?? 0} />}
-          <Button
-            size="sm"
-            className="h-11 px-3"
-            nativeButton={false}
-            render={<Link href={user ? '/registro' : '/login'} />}
-          >
-            {user ? 'Mi perfil' : 'Quiero ayudar'}
-          </Button>
+          {/* Para quien no tiene sesión, y en `outline`: el relleno
+              terracota es de la acción principal de la pantalla (regla 2),
+              y entrar no lo es en ninguna. Va el último de la fila. */}
+          {!user && (
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/login" />}
+            >
+              Entrar
+            </Button>
+          )}
         </div>
       </div>
 
-      <Navegacion menuCoordinacion={coordinacion} />
+      <Navegacion />
     </header>
 
-    <BarraInferior menuCoordinacion={coordinacion} />
+    <BarraInferior />
     </>
   )
 }

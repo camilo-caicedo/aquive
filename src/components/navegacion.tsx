@@ -2,44 +2,48 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { HandHeart, Stethoscope, ListChecks, PackageOpen, Building2 } from 'lucide-react'
+import { HandHeart, Stethoscope, PackageOpen, UserRound } from 'lucide-react'
 
+// Cuatro destinos y siempre los mismos. Los tres primeros son «qué hay»;
+// el cuarto es «lo mío», que absorbe las dos bandejas personales, el
+// perfil, la ficha de servicios y la coordinación cuando aplica.
+//
+// Antes la barra crecía a cinco celdas para quien coordinaba, así que
+// cambiaba de forma según quién mirara: la misma app tenía dos mapas y
+// nadie podía decirle a otro «está en la cuarta celda». Los roles ya no se
+// nombran aquí (regla 8); «Coordinación» es ahora una fila dentro de «Lo
+// mío».
+//
+// «Lo mío» apunta a /mis-solicitudes y no a /registro a propósito:
+// /registro rebota a /login sin sesión, y quien publicó una solicitud sin
+// cuenta —que es el rol central de este sitio— se quedaría fuera de lo
+// suyo. /registro cuelga de aquí a través de TAMBIEN.
 const ENLACES = [
   { href: '/', etiqueta: 'Solicitudes', Icono: HandHeart },
-  { href: '/ofertadores', etiqueta: 'Quién ofrece', Icono: PackageOpen },
   // Un solo destino para las tres listas de «quién puede hacer algo por
   // mí»: oficios del rebusque, profesionales con matrícula y entidades.
   // Detrás son módulos distintos —y el primero tiene otro responsable del
-  // tratamiento— pero para quien busca es la misma pregunta, y aquí abajo
-  // solo caben cinco celdas. Las tres se reparten en `PestanasServicios`.
+  // tratamiento— pero para quien busca es la misma pregunta. Las tres se
+  // reparten en `PestanasServicios`.
   { href: '/servicios', etiqueta: 'Servicios', Icono: Stethoscope },
-  { href: '/mis-solicitudes', etiqueta: 'Mis solicitudes', Icono: ListChecks },
+  { href: '/ofertadores', etiqueta: 'Quién ofrece', Icono: PackageOpen },
+  { href: '/mis-solicitudes', etiqueta: 'Lo mío', Icono: UserRound },
 ]
 
-// `/aliado` tiene dos públicos y por eso dos nombres. Para el equipo de una
-// fundación es su organización; para quien solo ofreció ayuda es el sitio
-// donde están sus conversaciones, y llamárselo «Mi organización» sería
-// mentirle. Quien no tenga ninguna de las dos cosas no ve la pestaña.
-const ETIQUETA_COORDINACION: Record<string, string> = {
-  organizacion: 'Mi organización',
-  coordinacion: 'Coordinación',
-}
-
-// La barra de abajo es más angosta que el encabezado y no le caben los dos
-// nombres largos. No es otro destino: es el mismo, dicho en una palabra.
-const ETIQUETA_CORTA: Record<string, string> = {
-  '/ofertadores': 'Ofrecen',
-  '/mis-solicitudes': 'Mis solicitudes',
-  '/aliado': 'Coordinar',
-}
-
-// Rutas que marcan una pestaña sin colgar de ella. Hoy solo una: las tres
-// listas de servicios están repartidas en dos rutas —/servicios para los
-// oficios, /servidores para profesionales y entidades— y las dos tienen
-// que dejar la misma celda encendida. Sin esto, tocar «Profesionales»
-// apaga la navegación entera y parece que uno se salió del sitio.
+// Rutas que marcan una celda sin colgar de ella.
+//
+// Las tres listas de servicios están repartidas en dos rutas —/servicios
+// para los oficios, /servidores para profesionales y entidades— y las dos
+// tienen que dejar la misma celda encendida. Sin esto, tocar
+// «Profesionales» apaga la navegación entera y parece que uno se salió del
+// sitio.
+//
+// Lo mismo con «Lo mío», que es un destino y no una ruta: el perfil, el
+// panel de coordinación y la pantalla de habeas data viven en rutas
+// propias y las tres son «lo mío».
 const TAMBIEN: Record<string, string[]> = {
   '/servicios': ['/servidores'],
+  '/mis-solicitudes': ['/registro', '/aliado', '/mis-datos'],
 }
 
 // Coincidencia exacta para la portada; por prefijo para el resto, para que
@@ -48,13 +52,6 @@ function estaActiva(ruta: string, href: string) {
   if (href === '/') return ruta === '/'
   if (ruta.startsWith(href)) return true
   return (TAMBIEN[href] ?? []).some((otra) => ruta.startsWith(otra))
-}
-
-function enlaces(menuCoordinacion: string | null) {
-  const etiqueta = menuCoordinacion ? ETIQUETA_COORDINACION[menuCoordinacion] : undefined
-  return etiqueta
-    ? [...ENLACES, { href: '/aliado', etiqueta, Icono: Building2 }]
-    : ENLACES
 }
 
 /**
@@ -67,13 +64,13 @@ function enlaces(menuCoordinacion: string | null) {
  * Solo para pantallas medianas y grandes. En un teléfono la navegación es
  * `BarraInferior`, aquí abajo.
  */
-export function Navegacion({ menuCoordinacion }: { menuCoordinacion: string | null }) {
+export function Navegacion() {
   const ruta = usePathname()
 
   return (
     <nav aria-label="Secciones" className="mx-auto hidden max-w-3xl px-4 sm:block">
       <ul className="flex gap-1">
-        {enlaces(menuCoordinacion).map(({ href, etiqueta, Icono }) => {
+        {ENLACES.map(({ href, etiqueta, Icono }) => {
           const activa = estaActiva(ruta, href)
           return (
             <li key={href}>
@@ -113,29 +110,34 @@ export function Navegacion({ menuCoordinacion }: { menuCoordinacion: string | nu
  * como se usa esto, de pie y con prisa—. De paso le devuelve 62 px de alto
  * al contenido, que en una pantalla de 640 es una línea y media de texto.
  *
- * Cinco destinos como máximo. El sexto, moderación, no está aquí ni en la
- * fila de arriba: es una herramienta de administrador, no un destino del
- * producto, y vive junto a la campana en el encabezado.
+ * Cuatro destinos fijos. Moderación no está aquí ni en la fila de arriba:
+ * es una herramienta de administrador, no un destino del producto, y vive
+ * junto a la campana en el encabezado.
  *
  * ⚠ Va en el layout, FUERA del encabezado. El encabezado tiene
  * `backdrop-blur`, y `backdrop-filter` convierte al elemento en bloque
  * contenedor de sus descendientes `fixed`: dentro de él, esta barra se
  * anclaría al encabezado en vez de a la ventana.
+ *
+ * ⚠ `data-barra-inferior` no es decorativo: es el gancho de la regla de
+ * `globals.css` que la esconde mientras hay un `MarcoFlujo` montado (regla
+ * 10 del sistema de diseño). Sin el atributo, un formulario de pantalla
+ * completa vuelve a ofrecer cuatro salidas a medio llenar.
  */
-export function BarraInferior({ menuCoordinacion }: { menuCoordinacion: string | null }) {
+export function BarraInferior() {
   const ruta = usePathname()
-  const items = enlaces(menuCoordinacion)
 
   return (
     <nav
       aria-label="Secciones"
+      data-barra-inferior
       // `env(safe-area-inset-bottom)` por el indicador de inicio del
       // iPhone: sin esto la última fila de etiquetas queda debajo de la
       // barra negra.
       className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-sm pb-[env(safe-area-inset-bottom)] sm:hidden"
     >
-      <ul className="grid" style={{ gridTemplateColumns: `repeat(${items.length}, 1fr)` }}>
-        {items.map(({ href, etiqueta, Icono }) => {
+      <ul className="grid grid-cols-4">
+        {ENLACES.map(({ href, etiqueta, Icono }) => {
           const activa = estaActiva(ruta, href)
           return (
             <li key={href}>
@@ -150,16 +152,18 @@ export function BarraInferior({ menuCoordinacion }: { menuCoordinacion: string |
                     : 'border-transparent text-muted-foreground'
                 }`}
               >
-                <Icono className="size-5 shrink-0" aria-hidden="true" />
-                {/* Caja de dos líneas siempre, aunque la etiqueta ocupe
-                    una: así los iconos quedan a la misma altura en toda la
-                    barra en vez de subir y bajar celda a celda. */}
+                <Icono className="size-[1.375rem] shrink-0" aria-hidden="true" />
+                {/* Antes esto era una caja de dos líneas fija, para que los
+                    iconos no subieran y bajaran celda a celda cuando una
+                    etiqueta envolvía. Con cuatro destinos ninguna etiqueta
+                    pasa de dos palabras cortas, así que basta con prohibir
+                    el salto de línea: el mismo arreglo, sin el hueco. */}
                 <span
-                  className={`flex min-h-[2.1em] items-center text-center text-[0.6875rem] leading-[1.05] ${
+                  className={`text-center text-[0.71875rem] leading-[1.05] whitespace-nowrap ${
                     activa ? 'font-semibold' : ''
                   }`}
                 >
-                  {ETIQUETA_CORTA[href] ?? etiqueta}
+                  {etiqueta}
                 </span>
               </Link>
             </li>

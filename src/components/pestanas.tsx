@@ -20,7 +20,7 @@ export interface Pestana {
  * ⚠ Antes eran píldoras con borde, iguales a los botones `outline` que
  * suelen ir justo debajo, y en /servicios no se distinguía qué era
  * navegación y qué era una acción. Ahora es un control segmentado —una
- * sola pieza con fondo apagado, y la activa levantada en blanco—, que se
+ * sola pieza con fondo apagado, y la activa levantada en papel—, que se
  * lee como «un grupo donde eliges uno» y no como «tres botones sueltos».
  * Es la forma del componente Tabs de shadcn sobre Base UI.
  *
@@ -47,23 +47,33 @@ export function Pestanas({
             <Link
               href={p.href}
               aria-current={p.activa ? 'page' : undefined}
-              // La activa va en primario, no en el papel del fondo: sobre
-              // el papel cálido de este sitio, un blanco sobre beige casi
-              // no se distingue —y menos con el sol de frente, que es
-              // donde de verdad se usa esto—. El contraste es de color y
-              // de peso, no solo de tono.
+              // ⚠ La activa iba en relleno primario, y por una razón que
+              // sigue siendo cierta: sobre el papel cálido de este sitio
+              // un papel elevado casi no se distingue del riel, y menos
+              // con el sol de frente, que es donde de verdad se usa esto.
+              //
+              // Aun así baja a papel, porque la terracota es de la acción
+              // principal y de nada más (regla 2): con las dos cosas
+              // iguales, la pestaña activa y el botón de publicar se leían
+              // igual. Lo que compensa el contraste que se pierde es el
+              // borde —que el papel pelado no tenía—, más la sombra y el
+              // peso de la letra: tres señales en vez de una, y ninguna
+              // depende solo del tono.
               className={`inline-flex min-h-12 w-full items-center justify-center gap-1.5 rounded-lg px-3 text-base whitespace-nowrap transition-colors ${
                 p.activa
-                  ? 'bg-primary font-medium text-primary-foreground'
+                  ? 'border border-border bg-card font-semibold text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {p.etiqueta}
               {p.cuenta !== undefined && p.cuenta > 0 && (
                 <span
+                  // En la activa va arena y no un blanco translúcido: el
+                  // de antes se apoyaba en el relleno terracota, y sobre
+                  // papel desaparece.
                   className={`rounded-full px-2 text-sm ${
                     p.activa
-                      ? 'bg-primary-foreground/20'
+                      ? 'bg-secondary text-secondary-foreground'
                       : 'bg-background text-muted-foreground'
                   }`}
                 >
