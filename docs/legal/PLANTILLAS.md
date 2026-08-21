@@ -65,12 +65,12 @@ ese en todos los documentos.
 
 **Cómo tratamos la información en AquíVe**
 
-Última actualización: 20/08/2026
+Última actualización: 21/08/2026
 
 **Quién es responsable**
-Nodo Social, entidad sin ánimo de lucro, Cali, Colombia.
-[Falta la razón social completa y el NIT del certificado del RUES.]
-Correo de contacto: soporte@aquive.co.
+Fundación Nodo Social, NIT 901678605, entidad sin ánimo de lucro, Cali,
+Colombia.
+Correo de contacto: gerencia@nodosocial.org.
 
 Este es un proyecto sin ánimo de lucro: primero para apoyar a los
 afectados por el sismo del 10 de agosto de 2026, y después para que quien
@@ -159,7 +159,7 @@ por fuera de esta plataforma y nosotros no vemos nada de eso.
 **Tus derechos**
 Conforme a la Ley 1581 de 2012 puedes conocer, actualizar, rectificar y
 suprimir tus datos, y revocar la autorización. Escríbenos a
-soporte@aquive.co: una consulta la respondemos en 10 días hábiles y un
+gerencia@nodosocial.org: una consulta la respondemos en 10 días hábiles y un
 reclamo en 15, que son los plazos de los artículos 14 y 15.
 
 Si tu solicitud tiene acompañamiento, no hace falta que escribas: desde
@@ -207,7 +207,7 @@ deje de operar, eliminaremos sus bases de datos.
 
 **Términos de uso de AquíVe**
 
-Última actualización: 20/08/2026
+Última actualización: 21/08/2026
 
 **1. Qué es esto.** Un tablón de anuncios gratuito, con dos partes. La
 ayuda de emergencia permite publicar qué artículos se necesitan y a otras
@@ -215,7 +215,7 @@ personas ofrecerlos; nació para el sismo del 10 de agosto de 2026 y dejará
 de operar cuando deje de ser útil. El directorio de servicios permite a
 quien vive de un oficio publicar su ficha, y a quien necesita ese oficio
 encontrarlo; no tiene fecha de cierre. Es un proyecto personal, gratuito y
-sin ánimo de lucro, operado por Nodo Social. La plataforma no
+sin ánimo de lucro, operado por Fundación Nodo Social, NIT 901678605. La plataforma no
 cobra nada a nadie ni recibe dinero de nadie.
 
 **2. Qué NO es.** No somos una entidad de socorro, ni una ONG, ni una
@@ -322,7 +322,7 @@ explicación previa, especialmente si hay riesgo para alguien.
 
 **10. Ley aplicable.** Leyes de la República de Colombia.
 
-**11. Contacto.** soporte@aquive.co
+**11. Contacto.** gerencia@nodosocial.org
 ---
 
 ## 3. Texto de autorización (checkbox al registrarse)

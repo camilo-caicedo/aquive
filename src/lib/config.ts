@@ -14,7 +14,12 @@
 // fundación, y qué pasa con las autorizaciones que se firmaron con el
 // nombre anterior. Ver el inventario del traspaso.
 export const RESPONSABLE = 'Nodo Social'
-export const CORREO_CONTACTO = 'soporte@aquive.co'
+// El buzon de la fundacion, que es la responsable. Sustituye a
+// soporte@aquive.co, que era el del proyecto cuando lo operaba una
+// persona: el articulo 12 de la Ley 1581 pide la direccion del
+// RESPONSABLE, y apuntar a otro buzon dejaba el aviso senalando a quien ya
+// no responde.
+export const CORREO_CONTACTO = 'gerencia@nodosocial.org'
 // Se mueve cada vez que cambia un texto legal, y no antes: es lo que se
 // guarda en `identidades.autorizacion_version` y por tanto la prueba de
 // QUÉ versión aceptó cada persona. Si el texto cambia y la fecha no, esa
@@ -26,7 +31,7 @@ export const CORREO_CONTACTO = 'soporte@aquive.co'
 // 19/08/2026: entra el módulo de Servicios. Cambian el aviso de privacidad
 // (dos regímenes), los términos §3 (antes decían que nunca habría
 // reputación) y §12 (alcance ampliado dentro de /servicios).
-export const FECHA_LEGALES = '20 de agosto de 2026'
+export const FECHA_LEGALES = '21 de agosto de 2026'
 
 // El módulo de Servicios tiene OTRO responsable del tratamiento. Aquí la
 // fundación decide para qué se usan los datos y AquíVe solo los guarda:
@@ -43,22 +48,21 @@ export const RESPONSABLE_SERVICIOS = RESPONSABLE
 // TODO PLAN-V3 §7: pedir el NIT del certificado del RUES y el correo de
 // habeas data que la fundación vaya a atender. Hasta entonces el aviso de
 // privacidad de Servicios está incompleto y no se puede publicar.
-// TODO: los dos datos que faltan para que el aviso de privacidad
-// identifique al responsable como exige el artículo 12 de la Ley 1581.
-// Salen del certificado de existencia y representación legal del RUES.
+// Los datos con los que el aviso de privacidad identifica al responsable,
+// como exige el artículo 12 de la Ley 1581. Llegaron el 21 de agosto de
+// 2026.
 //
-// Vacíos, no «[PENDIENTE]»: las pantallas que los usan no dibujan la línea
-// si no hay valor, y mejor no decirlo que imprimir un marcador de posición
-// dentro de un aviso de privacidad, que era lo que estaba pasando.
-//
-// Mientras tanto se publica el nombre corto —Nodo Social— y el correo de
-// contacto, que es lo mínimo con lo que ese artículo se cumple: pide
-// identificación y una dirección física O electrónica.
-export const RAZON_SOCIAL_RESPONSABLE = ''
-export const NIT_RESPONSABLE_SERVICIOS = ''
-// Un solo canal de habeas data mientras la fundación no abra el suyo. Este
-// buzón existe y se atiende; el de antes era un marcador de posición que
-// se estaba publicando tal cual.
+// La razón social se usa en la línea de identificación legal; `RESPONSABLE`
+// —el nombre corto— se sigue usando en la prosa, donde «Alguien de
+// Fundación Nodo Social marca tu número» se lee peor que «Alguien de Nodo
+// Social». Las pantallas que imprimen el NIT siguen sin dibujar la línea si
+// algún día se vacía.
+export const RAZON_SOCIAL_RESPONSABLE = 'Fundación Nodo Social'
+export const NIT_RESPONSABLE_SERVICIOS = '901678605'
+// Un solo canal de habeas data para todo el sitio, y es el de la
+// fundación: quien ejerce un derecho tiene que llegarle al responsable, no
+// a un buzón intermedio. La constante sobrevive porque hay pantallas del
+// módulo de servicios que la nombran, no porque queden dos canales.
 export const CORREO_HABEAS_DATA_SERVICIOS = CORREO_CONTACTO
 
 // Lo que firma un proveedor al publicar su ficha, y lo que declara haber
