@@ -1,6 +1,6 @@
 import { Pestanas } from '@/components/pestanas'
 
-export type VistaLoMio = 'solicitudes' | 'perfil' | 'respuestas' | 'ajustes'
+export type VistaLoMio = 'solicitudes' | 'ficha' | 'perfil' | 'respuestas' | 'ajustes'
 
 /**
  * Las pestañas de «Lo mío», el cuarto destino de la barra.
@@ -45,6 +45,15 @@ export function PestanasLoMio({
             cuenta: respuestas,
           },
           { href: '/registro', etiqueta: 'Mi perfil', activa: activa === 'perfil' },
+          // La ficha del directorio de servicios. Vive en otra ruta y con
+          // otra vida útil que el perfil de la emergencia, pero para quien
+          // la tiene es «lo mío» igual, y estaba escondida detrás de una
+          // tarjeta al final del perfil.
+          {
+            href: '/servicios/soy-proveedor',
+            etiqueta: 'Mi ficha',
+            activa: activa === 'ficha',
+          },
           {
             href: '/registro?ver=ajustes',
             etiqueta: 'Ajustes',

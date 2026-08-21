@@ -1,4 +1,6 @@
 import { MarcoFlujo } from '@/components/marco-flujo'
+import { CabeceraPantalla } from '@/components/cabecera-pantalla'
+import { PestanasLoMio } from '@/components/pestanas-lo-mio'
 import { PuertaCerrada } from '@/components/puerta-cerrada'
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
@@ -11,7 +13,7 @@ import {
 } from '@/components/panel-servicios-proveedor'
 import type { MiProveedor } from '@/lib/types'
 
-export const metadata = { title: 'Ofrecer mi trabajo' }
+export const metadata = { title: 'Mi ficha' }
 
 export default async function SoyProveedorPage() {
   const supabase = await createClient()
@@ -65,11 +67,28 @@ export default async function SoyProveedorPage() {
     proveedor?.oficios.some((p) => p.oficio_id === o.id)
   )
 
+  // Sin ficha todavía: es un flujo y lo envuelve el propio formulario con
+  // su MarcoFlujo. Sin <main> ni h1 aquí, o se verían dos títulos.
+  if (!proveedor) {
+    return (
+      <FormularioProveedor
+        proveedor={null}
+        municipios={municipios ?? []}
+        oficios={oficios ?? []}
+        zonas={zonas ?? []}
+      />
+    )
+  }
+
+  // Con ficha, esto es la pestaña «Mi ficha» de «Lo mío»: un destino, con
+  // su cromo. Antes se llegaba por una tarjeta al final de «Mi perfil», que
+  // es donde nadie la buscaba.
   return (
-    // Sin <main> ni h1: el título, la vuelta y la barra de acción los pone
-    // el MarcoFlujo que monta el formulario, que es quien sabe si ya hay
-    // ficha. Dos «Mi ficha» seguidos era lo que se veía antes.
-    <>
+    <main className="mx-auto max-w-lg px-4 py-6">
+      <CabeceraPantalla titulo="Lo mío">
+        <PestanasLoMio activa="ficha" conSesion />
+      </CabeceraPantalla>
+
       <FormularioProveedor
         proveedor={proveedor}
         municipios={municipios ?? []}
@@ -77,21 +96,17 @@ export default async function SoyProveedorPage() {
         zonas={zonas ?? []}
       />
 
-      {/* Solo cuando ya existe la ficha: una referencia cuelga de ella, y
-          pedirla antes obligaría a guardar el dato de un tercero para algo
-          que todavía puede no publicarse. */}
-      {proveedor && (
-        <div className="mx-auto max-w-lg px-4 pb-28">
-          <div className="mt-6">
-            <CamposReferencia referencias={referencias} oficios={oficios ?? []} />
-          </div>
-          {misServicios && (
-            <div className="mt-6">
-              <PanelServiciosProveedor datos={misServicios} oficios={misOficios} />
-            </div>
-          )}
+      {/* Una referencia cuelga de la ficha, así que solo existe cuando la
+          ficha existe: pedirla antes obligaría a guardar el dato de un
+          tercero para algo que todavía puede no publicarse. */}
+      <div className="mt-6">
+        <CamposReferencia referencias={referencias} oficios={oficios ?? []} />
+      </div>
+      {misServicios && (
+        <div className="mt-6">
+          <PanelServiciosProveedor datos={misServicios} oficios={misOficios} />
         </div>
       )}
-    </>
+    </main>
   )
 }

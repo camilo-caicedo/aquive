@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, EyeOff, PhoneCall } from 'lucide-react'
+import { Check, Eye, EyeOff, PhoneCall } from 'lucide-react'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -38,6 +38,7 @@ import type {
 } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { MarcoFlujo } from '@/components/marco-flujo'
+import { AccionPrincipal } from '@/components/accion-principal'
 import { SeccionPlegable } from '@/components/seccion-plegable'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -246,35 +247,33 @@ export function FormularioProveedor({
 
   const municipioElegido = municipios.find((m) => m.codigo_dane === municipio)
 
-  return (
-    // El marco lo monta el formulario porque la barra de acción depende de
-    // si ya hay ficha: sin ella no hay nada público que ver.
-    <MarcoFlujo
-      titulo="Mi ficha"
-      volver="/servicios"
-      accion={
-        <div className="flex gap-2">
-          {proveedor && (
-            <Button
-              variant="outline"
-              nativeButton={false}
-              render={<Link href={`/servicios/${proveedor.id}`} />}
-            >
-              Ver pública
-            </Button>
-          )}
-          <Button className="flex-1" onClick={guardar} disabled={!puedeGuardar}>
-            <Check className="size-5" aria-hidden="true" />
-            {guardando ? 'Guardando…' : proveedor ? 'Guardar' : 'Publicar mi ficha'}
-          </Button>
-        </div>
-      }
-    >
+  // ⚠ Un caparazón u otro según el momento, igual que hace el formulario
+  // de perfil. Publicar la ficha por primera vez es un flujo —seis
+  // secciones, y no se sale a medio llenar—, así que va en `MarcoFlujo`,
+  // que esconde la barra inferior (regla 10). Con la ficha ya creada esto
+  // es la pestaña «Mi ficha» de «Lo mío», que es un destino: lleva las
+  // pestañas y la barra, y la acción baja a la píldora fija.
+  const cuerpo = (
     <div className="space-y-3">
       <p className="text-base text-muted-foreground">
         Tu nombre, tu teléfono y lo que haces quedan públicos en internet. Tú
         acuerdas el precio con cada persona: AquíVe no cobra nada.
       </p>
+
+      {/* Estaba en la barra de acción, al lado de «Guardar». Ahí sobraba:
+          la barra tiene sitio para una decisión y la de esta pantalla es
+          guardar. Aquí es lo que es — una salida a mirar cómo te ven. */}
+      {proveedor && (
+        <Button
+          variant="outline"
+          className="w-full"
+          nativeButton={false}
+          render={<Link href={`/servicios/${proveedor.id}`} />}
+        >
+          <Eye className="size-5" aria-hidden="true" />
+          Ver mi ficha como la ven los demás
+        </Button>
+      )}
 
       {/* ⚠ Se dice ANTES de llenar el formulario, no después de guardar.
           Desde el 20/08/2026 ninguna ficha se publica sin que alguien de la
@@ -763,6 +762,34 @@ export function FormularioProveedor({
         </Button>
       )}
     </div>
+  )
+
+  if (proveedor) {
+    return (
+      <>
+        {cuerpo}
+        <AccionPrincipal
+          etiqueta={guardando ? 'Guardando…' : 'Guardar'}
+          Icono={Check}
+          onClick={guardar}
+          visible={puedeGuardar || guardando}
+        />
+      </>
+    )
+  }
+
+  return (
+    <MarcoFlujo
+      titulo="Mi ficha"
+      volver="/"
+      accion={
+        <Button className="w-full" onClick={guardar} disabled={!puedeGuardar}>
+          <Check className="size-5" aria-hidden="true" />
+          {guardando ? 'Guardando…' : 'Publicar mi ficha'}
+        </Button>
+      }
+    >
+      {cuerpo}
     </MarcoFlujo>
   )
 }

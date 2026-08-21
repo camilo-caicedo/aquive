@@ -111,7 +111,14 @@ const TAMBIEN: Record<string, string[]> = {
   // /solicitud/[token] es la pantalla de una solicitud propia: se llega
   // desde «Lo mío» y se vuelve ahí. Sin esta línea, abrir la solicitud
   // apagaba las cuatro celdas y la barra parecía de otra aplicación.
-  '/mis-solicitudes': ['/registro', '/mis-datos', '/solicitud'],
+  // `/servicios/soy-proveedor` es la pestaña «Mi ficha», aunque su ruta
+  // cuelgue del módulo de servicios: quien la abre viene a mirar lo suyo.
+  '/mis-solicitudes': [
+    '/registro',
+    '/mis-datos',
+    '/solicitud',
+    '/servicios/soy-proveedor',
+  ],
 }
 
 // Coincidencia exacta para la portada; por prefijo para el resto, para que
@@ -130,11 +137,36 @@ function bajo(ruta: string, base: string) {
   return ruta === base || ruta.startsWith(base + '/')
 }
 
-function estaActiva(ruta: string, href: string) {
-  const propias = TAMBIEN[href] ?? []
-  if (href !== '/' && bajo(ruta, href)) return true
-  if (href === '/' && ruta === '/') return true
-  return propias.some((otra) => bajo(ruta, otra))
+/**
+ * Cuánto de específica es la coincidencia de esta celda con la ruta, o -1
+ * si no coincide.
+ *
+ * ⚠ Gana la MÁS LARGA, y eso no es refinamiento: hay rutas que caen bajo
+ * dos celdas a la vez. `/servicios/soy-proveedor` está debajo de
+ * `/servicios`, que cuelga de la portada, y a la vez es la pestaña «Mi
+ * ficha» de «Lo mío». Con un `some` que devuelve al primero que dice que
+ * sí, se encendían las dos celdas.
+ */
+function cuanCalza(ruta: string, href: string) {
+  const bases = [...(TAMBIEN[href] ?? []), ...(href === '/' ? [] : [href])]
+  let mejor = href === '/' && ruta === '/' ? 1 : -1
+  for (const base of bases) {
+    if (bajo(ruta, base) && base.length > mejor) mejor = base.length
+  }
+  return mejor
+}
+
+function celdaActiva(ruta: string, lista: readonly { href: string }[]) {
+  let ganadora: string | null = null
+  let mejor = -1
+  for (const c of lista) {
+    const cuanto = cuanCalza(ruta, c.href)
+    if (cuanto > mejor) {
+      mejor = cuanto
+      ganadora = c.href
+    }
+  }
+  return ganadora
 }
 
 /**
@@ -149,12 +181,13 @@ function estaActiva(ruta: string, href: string) {
  */
 export function Navegacion({ coordinacion = null }: { coordinacion?: Coordinacion }) {
   const ruta = usePathname()
+  const cual = celdaActiva(ruta, celdas(coordinacion))
 
   return (
     <nav aria-label="Secciones" className="mx-auto hidden max-w-3xl px-4 sm:block">
       <ul className="flex gap-1">
         {celdas(coordinacion).map(({ href, etiqueta, Icono }) => {
-          const activa = estaActiva(ruta, href)
+          const activa = href === cual
           return (
             <li key={href}>
               <Link
@@ -210,6 +243,7 @@ export function Navegacion({ coordinacion = null }: { coordinacion?: Coordinacio
 export function BarraInferior({ coordinacion = null }: { coordinacion?: Coordinacion }) {
   const ruta = usePathname()
   const lista = celdas(coordinacion)
+  const cual = celdaActiva(ruta, lista)
 
   return (
     <nav
@@ -222,7 +256,7 @@ export function BarraInferior({ coordinacion = null }: { coordinacion?: Coordina
     >
       <ul className={lista.length === 5 ? 'grid grid-cols-5' : 'grid grid-cols-4'}>
         {lista.map(({ href, etiqueta, Icono }) => {
-          const activa = estaActiva(ruta, href)
+          const activa = href === cual
           return (
             <li key={href}>
               <Link
