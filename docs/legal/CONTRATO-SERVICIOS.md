@@ -412,4 +412,5 @@ existen en `CONTRATO-TRANSMISION.md`.
       alguien.** Un canal que nadie abre es peor que no tenerlo.
 - [ ] **Uso comercial del alojamiento.** Con una fundación con personal
       asalariado de por medio, el argumento de «uso no comercial» del plan
-      gratuito se debilita. Ver `PLAN-V2.md` §13.8 y preguntar al proveedor.
+      gratuito se debilita. Ver `docs/PENDIENTES-LEGALES.md`, «Zona gris sin
+      resolver», y preguntar al proveedor.

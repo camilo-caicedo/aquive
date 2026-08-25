@@ -579,7 +579,7 @@ acumulación, y arrastra responsabilidad hacia el responsable del proyecto.
 ### Antes de dar de alta la PRIMERA organización real
 
 Nada del flujo acompañado puede llegar a producción sin esto. La lista es
-la de `PLAN-V2.md` §12; aquí está el estado real de cada punto.
+la de `docs/PENDIENTES-LEGALES.md`; aquí está el estado real de cada punto.
 
 - [ ] **Contrato de transmisión firmado** por las dos partes. Borrador en
       `CONTRATO-TRANSMISION.md`. Va **antes** de crear la fila en
@@ -600,12 +600,12 @@ la de `PLAN-V2.md` §12; aquí está el estado real de cada punto.
       texto de autorización nombra a la fundación, no a la persona natural.
 - [ ] **Consulta a soporte de Vercel** sobre si una fundación coordinando
       entregas rompe la prohibición de uso comercial del plan Hobby. Ver
-      `PLAN-V2.md` §13.8.
+      `docs/PENDIENTES-LEGALES.md`, «Zona gris sin resolver».
 - [ ] **Revisión de abogado** de este documento y del contrato, juntos.
 
 ### Antes de publicar el PRIMER proveedor real de /servicios
 
-La lista es la de `PLAN-V3.md` §7. Ninguno de estos puntos es código, y el
+La lista es la de `docs/PENDIENTES-LEGALES.md`. Ninguno de estos puntos es código, y el
 módulo se decidió sin interruptor de despliegue: el orden de trabajo es lo
 único que los protege.
 
@@ -626,7 +626,7 @@ módulo se decidió sin interruptor de despliegue: el orden de trabajo es lo
 - [x] **Aviso de privacidad en dos regímenes**, sin diluir la promesa de la
       ayuda de emergencia.
 - [ ] **Consulta a soporte de Vercel** rehecha, ahora con una fundación con
-      posible personal asalariado de por medio. `PLAN-V2.md` §13.8.
+      posible personal asalariado de por medio. `docs/PENDIENTES-LEGALES.md`, «Zona gris sin resolver».
 
 ### Al mover cualquier texto legal
 

@@ -44,8 +44,8 @@ Sin librerías de PDF: Chrome ya sabe imprimir y no hace falta traer nada.
 ## Ojo antes de repartirla
 
 La guía dice que hay un **contrato de transmisión de datos firmado**. Todavía
-no lo está: es lo que falta de `PLAN-V2.md` §12, junto con el registro en el
-RNBD. El borrador está en `docs/legal/CONTRATO-TRANSMISION.md`.
+no lo está: es lo que falta en `docs/PENDIENTES-LEGALES.md`, junto con el
+registro en el RNBD. El borrador está en `docs/legal/CONTRATO-TRANSMISION.md`.
 
 Y el contenido sale del código tal como está hoy. Si cambia el flujo del
 aliado —las pestañas, los permisos, quién puede registrar una entrega— hay

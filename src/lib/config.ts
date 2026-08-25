@@ -39,13 +39,14 @@ export const FECHA_LEGALES = '21 de agosto de 2026'
 // tener un directorio de personas con nombre y teléfono permanentes.
 //
 // Nada de /servicios se despliega hasta que exista el contrato de encargo
-// firmado y el registro en el RNBD a nombre de la fundación (PLAN-V3 §7).
+// firmado y el registro en el RNBD a nombre de la fundación.
+// Ver docs/PENDIENTES-LEGALES.md.
 // Mismo responsable que el resto del sitio desde el 20/08/2026. La
 // constante sobrevive porque hay pantallas donde nombrar a la organización
 // se lee mejor que decir «el responsable» —«pregunta en el punto de Nodo
 // Social más cercano»—, no porque quede algún reparto.
 export const RESPONSABLE_SERVICIOS = RESPONSABLE
-// TODO PLAN-V3 §7: pedir el NIT del certificado del RUES y el correo de
+// TODO (ver docs/PENDIENTES-LEGALES.md): pedir el NIT del certificado del RUES y el correo de
 // habeas data que la fundación vaya a atender. Hasta entonces el aviso de
 // privacidad de Servicios está incompleto y no se puede publicar.
 // Los datos con los que el aviso de privacidad identifica al responsable,

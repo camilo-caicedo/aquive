@@ -33,8 +33,10 @@ diseño. Ver `CLAUDE.md` antes de tocar nada.
 ## Estado
 
 Las seis fases están implementadas y desplegadas. Lo que falta para
-lanzar de verdad está en `PLAN.md`, sección "Pendientes que NO son
-código".
+lanzar de verdad está en `docs/PENDIENTES-LEGALES.md`.
+
+El backend se está migrando de PL/pgSQL a una capa de dominio en
+TypeScript. Ver `docs/decisiones/0001-backend-tipado-en-typescript.md`.
 
 | Flujo | Estado |
 |---|---|
@@ -98,7 +100,8 @@ en `administradores` con el id del usuario que va a moderar.
 | Ruta | Para qué |
 |---|---|
 | `CLAUDE.md` | Contexto y **reglas duras**. El archivo más importante. |
-| `PLAN.md` | Las seis fases y los pendientes que no son código. |
+| `docs/decisiones/` | Por qué el proyecto es como es. Empezar por el LEEME. |
+| `docs/PENDIENTES-LEGALES.md` | Bloqueantes que no se resuelven programando. |
 | `docs/ESPECIFICACION.md` | Roles, flujos y modelo de datos. |
 | `docs/legal/PLANTILLAS.md` | Aviso de privacidad, términos y autorización. |
 | `supabase/schema.sql` | Esquema completo. Fuente de verdad de la base. |
