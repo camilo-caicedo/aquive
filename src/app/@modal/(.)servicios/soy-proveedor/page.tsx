@@ -10,7 +10,7 @@ import { HojaModal } from '@/components/hoja-modal'
  */
 export default async function SoyProveedorInterceptado() {
   return (
-    <HojaModal etiqueta="Ofrecer mi trabajo">
+    <HojaModal etiqueta="Ofrecer mi trabajo" ruta="/servicios/soy-proveedor">
       <SoyProveedorPage />
     </HojaModal>
   )

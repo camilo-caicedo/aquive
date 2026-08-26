@@ -11,7 +11,7 @@ import { HojaModal } from '@/components/hoja-modal'
  */
 export default async function PublicarServicioInterceptado() {
   return (
-    <HojaModal etiqueta="Pedir un servicio">
+    <HojaModal etiqueta="Pedir un servicio" ruta="/servicios/publicar">
       <PublicarServicioPage />
     </HojaModal>
   )

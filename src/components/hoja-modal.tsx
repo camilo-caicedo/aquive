@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, type ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 
 /**
  * El caparazón de una pantalla interceptada.
@@ -25,16 +25,36 @@ import { useRouter } from 'next/navigation'
  */
 export function HojaModal({
   etiqueta,
+  ruta,
   children,
 }: {
   /** Qué es, para quien no ve la pantalla. */
   etiqueta: string
+  /**
+   * La ruta de esta hoja, sin query. Es lo que le permite saber cuándo ya
+   * no le toca.
+   *
+   * ⚠ Sin esto la hoja sobrevive a las navegaciones de debajo. Next
+   * conserva el estado de los slots que no casan con la URL nueva —para
+   * eso están—, así que tocar «Entrar con Google» cargaba `/login` detrás
+   * y la hoja se quedaba encima, tapándolo. Y cerrarla devolvía al
+   * directorio, porque la historia sí había avanzado.
+   */
+  ruta: string
   children: ReactNode
 }) {
   const router = useRouter()
+  const rutaActual = usePathname()
   const ref = useRef<HTMLDialogElement>(null)
 
+  // Le toca cuando la URL es la suya. Deja de tocarle en cuanto lo de
+  // debajo navega a otra parte, y vuelve a tocarle si se regresa con la
+  // flecha atrás.
+  const leToca = rutaActual === ruta
+
   useEffect(() => {
+    if (!leToca) return
+
     const abrir = () => {
       const dialogo = ref.current
       if (dialogo && !dialogo.open) dialogo.showModal()
@@ -42,14 +62,18 @@ export function HojaModal({
     abrir()
 
     // ⚠ `pageshow` no es paranoia. Desde la hoja se puede salir del sitio
-    // —«Entrar con Google» se lleva el navegador entero— y al volver con la
-    // flecha atrás la página se restaura de la caché sin re-montar nada.
+    // —una pasarela de acceso se lleva el navegador entero— y al volver con
+    // la flecha atrás la página se restaura de la caché sin re-montar nada.
     // El navegador NO conserva la capa superior en esa caché, así que el
     // diálogo vuelve cerrado: la hoja desaparece, la URL sigue diciendo que
     // está abierta y no queda nada que tocar.
     window.addEventListener('pageshow', abrir)
     return () => window.removeEventListener('pageshow', abrir)
-  }, [])
+    // ⚠ Depende de `leToca` y no de nada más. El componente NO se desmonta
+    // al navegar por debajo —Next conserva el slot—, así que un efecto que
+    // solo corriera al montar dejaría el diálogo cerrado para siempre en
+    // cuanto se volviera aquí con la flecha atrás.
+  }, [leToca])
 
   // Cerrar es volver: la entrada anterior de la historia es la lista, así
   // que la URL y lo que se ve vuelven juntos.
@@ -59,6 +83,10 @@ export function HojaModal({
   // página—, y ahí un `router.back()` es una navegación que nadie pidió.
   // Estos dos solo ocurren cuando alguien los provoca.
   const cerrar = () => router.back()
+
+  // Se quita entera, y con ella el bloqueo del scroll y la capa superior.
+  // Va DESPUÉS de los ganchos, que no se pueden saltar.
+  if (!leToca) return null
 
   return (
     <dialog

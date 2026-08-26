@@ -7,7 +7,7 @@ export default async function PublicarEnMuroInterceptado({
   searchParams: Promise<{ cara?: string }>
 }) {
   return (
-    <HojaModal etiqueta="Publicar en el muro">
+    <HojaModal etiqueta="Publicar en el muro" ruta="/muro/publicar">
       <PublicarEnMuroPage searchParams={searchParams} />
     </HojaModal>
   )

@@ -3,7 +3,7 @@ import { HojaModal } from '@/components/hoja-modal'
 
 export default async function PublicarInterceptado() {
   return (
-    <HojaModal etiqueta="Pedir ayuda">
+    <HojaModal etiqueta="Pedir ayuda" ruta="/publicar">
       <PublicarPage />
     </HojaModal>
   )

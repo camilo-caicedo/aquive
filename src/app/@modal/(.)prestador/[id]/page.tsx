@@ -23,9 +23,12 @@ export default async function FichaInterceptada({
 }: {
   params: Promise<{ id: string }>
 }) {
+  const { id } = await params
+
   return (
-    <HojaModal etiqueta="Ficha del prestador">
-      <FichaPage params={params} />
+    <HojaModal etiqueta="Ficha del prestador" ruta={`/prestador/${id}`}>
+      {/* La promesa ya resuelta, para no volver a esperar lo mismo. */}
+      <FichaPage params={Promise.resolve({ id })} />
     </HojaModal>
   )
 }
