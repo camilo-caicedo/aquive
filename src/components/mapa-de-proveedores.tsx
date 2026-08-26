@@ -34,7 +34,7 @@ export function MapaDeProveedores({ proveedores }: { proveedores: EnListado[] })
       nombre: p.nombre_visible,
       detalle: p.oficios[0]?.nombre ?? null,
       color: HEX[familiaDe(p.oficios[0]?.grupo)],
-      href: `/servicios/${p.id}`,
+      href: `/prestador/${p.id}`,
     }))
 
   if (puntos.length === 0) {

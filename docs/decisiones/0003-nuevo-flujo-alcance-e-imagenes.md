@@ -38,7 +38,7 @@ decisión 1 de abajo.
 | Grupo | Pantallas | Destino en el repo |
 | --- | --- | --- |
 | Entrada | 01, 03, 04 | `app/page.tsx`, `app/login`, `app/registro` |
-| Buscar | 05–09 | `app/page.tsx`, `app/servicios/[id]`, `tarjeta-proveedor.tsx`, `hoja-filtros.tsx` |
+| Buscar | 05–09 | `app/page.tsx`, `app/prestador/[id]`, `tarjeta-proveedor.tsx`, `hoja-filtros.tsx` |
 | Contratar | 10–13 | `app/servicios/publicar`, `app/servicios/confirmar`, `chat.tsx` |
 | Ofrecer | 14, 15 | `app/servicios/soy-proveedor` |
 | Perfil | 16–25 | `app/registro`, `app/mis-datos/[token]`, `panel-*.tsx` |

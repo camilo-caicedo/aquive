@@ -92,7 +92,7 @@ export async function Inicio({ municipio }: { municipio?: string }) {
               return (
                 <li key={p.id} className="w-64 shrink-0">
                   <Link
-                    href={`/servicios/${p.id}`}
+                    href={`/prestador/${p.id}`}
                     className={`block h-full overflow-hidden rounded-2xl bg-card ${SOMBRA_CARTEL[familia]}`}
                   >
                     <div

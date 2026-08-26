@@ -128,6 +128,7 @@ const TAMBIEN: Record<string, string[]> = {
     '/',
     '/directorio',
     '/servicios',
+    '/prestador',
     '/profesionales',
     '/entidades',
     '/ayudas',

@@ -506,7 +506,7 @@ export function PanelProveedores({
             <li key={p.id} className="rounded-2xl bg-card p-4 shadow-canto">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Link
-                  href={`/servicios/${p.id}`}
+                  href={`/prestador/${p.id}`}
                   className="font-heading text-lg leading-tight underline-offset-4 hover:underline"
                 >
                   {p.nombre_visible}

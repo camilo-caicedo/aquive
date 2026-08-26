@@ -341,7 +341,7 @@ portar**.
 | Grupo | Pantallas | Dónde vive |
 | --- | --- | --- |
 | Entrada | 01 Bienvenida, 03 Entrar, 04 Carné | `components/bienvenida.tsx`, `app/login`, `app/servicios/soy-proveedor/listo` |
-| Buscar | 05 Inicio, 06 Categorías, 07 Listado, 08 Zonas + Mapa, 09 Ficha | `app/page.tsx`, `app/categorias`, `app/zonas`, `app/mapa`, `app/servicios/[id]` |
+| Buscar | 05 Inicio, 06 Categorías, 07 Listado, 08 Zonas + Mapa, 09 Ficha | `app/inicio`, `app/categorias`, `app/zonas`, `app/directorio` (lista y mapa), `app/prestador/[id]` |
 | Contratar | 10 Pedir, 11 Enviada, 12 Chat, 13 Calificar | `app/servicios/publicar`, `app/mensajes`, `app/servicios/chat/[respuesta]`, `app/servicios/confirmar` |
 | Ofrecer | 14 Formulario, 15 Mi ficha | `app/servicios/soy-proveedor` |
 | Perfil | 16–25 | `app/perfil/**`, `app/mis-solicitudes` (20), `app/servicios/mi-perfil/[token]` |

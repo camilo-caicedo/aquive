@@ -232,7 +232,7 @@ export function PanelServicios({
               {datos.por_verificar.map((p) => (
                 <li key={p.id} className="rounded-2xl bg-card p-4 shadow-canto">
                   <Link
-                    href={`/servicios/${p.id}`}
+                    href={`/prestador/${p.id}`}
                     className="font-heading text-lg leading-tight underline-offset-4 hover:underline"
                   >
                     {p.nombre_visible}
@@ -315,7 +315,7 @@ export function PanelServicios({
               {datos.resenas_ocultas.map((r) => (
                 <li key={r.id} className="rounded-2xl bg-card p-4 shadow-canto">
                   <Link
-                    href={`/servicios/${r.proveedor_id}`}
+                    href={`/prestador/${r.proveedor_id}`}
                     className="font-heading text-lg leading-tight underline-offset-4 hover:underline"
                   >
                     {r.proveedor_nombre}

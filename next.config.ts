@@ -39,6 +39,19 @@ const nextConfig: NextConfig = {
       // —/servicios/[id], /servicios/publicar— no se tocan: `source` sin
       // comodín solo calza la ruta exacta.
       { source: '/servicios', destination: '/directorio', permanent: true },
+      // La ficha se mudó de `/servicios/<id>` a `/prestador/<id>`: un
+      // segmento dinámico con hermanos estáticos —publicar, confirmar,
+      // soy-proveedor, chat…— no se puede interceptar sin tragárselos.
+      //
+      // ⚠ El patrón es un UUID y no `:id` a secas. Sin él, esta regla se
+      // llevaría por delante `/servicios/publicar` y todos los demás, que
+      // siguen viviendo donde estaban.
+      {
+        source:
+          '/servicios/:id([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})',
+        destination: '/prestador/:id',
+        permanent: true,
+      },
     ]
   },
   experimental: {

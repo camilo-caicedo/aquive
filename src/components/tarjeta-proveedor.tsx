@@ -63,7 +63,7 @@ export function TarjetaProveedor({ proveedor }: { proveedor: EnListado }) {
 
       <div className="p-4">
         <Link
-          href={`/servicios/${proveedor.id}`}
+          href={`/prestador/${proveedor.id}`}
           className="font-heading text-lg leading-tight font-extrabold underline-offset-4 hover:underline"
         >
           {proveedor.nombre_visible}
@@ -111,7 +111,7 @@ export function TarjetaProveedor({ proveedor }: { proveedor: EnListado }) {
               acción principal de la pantalla, y en una lista de veinte
               tarjetas ninguna de las veinte lo es. */}
           <Link
-            href={`/servicios/${proveedor.id}`}
+            href={`/prestador/${proveedor.id}`}
             className="shadow-canto ml-auto inline-flex min-h-12 shrink-0 items-center rounded-full bg-card px-5 text-base font-semibold transition-colors hover:bg-primary hover:text-primary-foreground"
           >
             Ver ficha

@@ -311,10 +311,10 @@ dialog [data-flujo='barra'] {
   position: static;
 }
 
-/* Lo fijo de la pantalla de ATRÁS no puede seguir encima de la hoja: es de
-   otra pantalla y ya no se puede tocar. La barra inferior y el encabezado
-   los esconde `[data-marco-flujo]`, que también está dentro del modal;
-   falta la píldora de la acción principal. */
+/* La píldora de la acción principal es de la pantalla de ATRÁS, y con una
+   hoja abierta queda flotando encima de ella sin poder tocarse. El
+   encabezado, la barra y el pie sí se quedan: siguen siendo el marco de la
+   pantalla que está esperando debajo. */
 body:has(dialog[open]) [data-accion-principal] {
   display: none;
 }
@@ -381,13 +381,18 @@ body:has(dialog[open]) [data-accion-principal] {
    un hueco muerto debajo de la barra de acción del flujo.
    -------------------------------------------------------------------- */
 
-body:has([data-marco-flujo]) [data-encabezado],
-body:has([data-marco-flujo]) [data-barra-inferior],
-body:has([data-marco-flujo]) [data-pie-de-pagina] {
+/* ⚠ `:not(dialog *)` no es un detalle: un flujo abierto DENTRO de una hoja
+   modal no puede llevarse por delante el encabezado, la barra y el pie de
+   la pantalla que se quedó detrás. Esa pantalla sigue siendo un destino
+   —está ahí, esperando a que se cierre la hoja— y sin esto la aplicación
+   entera se quedaba sin cromo mientras la hoja estuviera abierta. */
+body:has([data-marco-flujo]:not(dialog *)) [data-encabezado],
+body:has([data-marco-flujo]:not(dialog *)) [data-barra-inferior],
+body:has([data-marco-flujo]:not(dialog *)) [data-pie-de-pagina] {
   display: none;
 }
 
-body:has([data-marco-flujo]) {
+body:has([data-marco-flujo]:not(dialog *)) {
   padding-bottom: 0;
 }
 

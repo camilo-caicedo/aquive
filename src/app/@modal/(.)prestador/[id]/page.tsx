@@ -1,4 +1,4 @@
-import FichaPage from '@/app/servicios/[id]/page'
+import FichaPage from '@/app/prestador/[id]/page'
 import { HojaModal } from '@/components/hoja-modal'
 
 /**
@@ -11,6 +11,12 @@ import { HojaModal } from '@/components/hoja-modal'
  *
  * La flecha atrás de `MarcoFlujo` ya vuelve a la pantalla anterior, así que
  * dentro del modal cierra, que es lo que tiene que hacer.
+ *
+ * ⚠ La ficha vive en `/prestador/<id>` y no en `/servicios/<id>` por esto
+ * mismo: un segmento dinámico con hermanos estáticos no se puede
+ * interceptar. `(.)servicios/[id]` casaba también con
+ * `/servicios/soy-proveedor` y le pasaba «soy-proveedor» al contrato como
+ * si fuera un id.
  */
 export default async function FichaInterceptada({
   params,

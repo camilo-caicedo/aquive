@@ -128,7 +128,7 @@ export default async function SolicitudServicioPage({
             {solicitud.respuestas.map((r) => (
               <li key={r.id} className="rounded-2xl bg-card p-4 shadow-canto">
                 <Link
-                  href={`/servicios/${r.proveedor_id}`}
+                  href={`/prestador/${r.proveedor_id}`}
                   className="text-lg font-bold underline-offset-4 hover:underline"
                 >
                   {r.proveedor_nombre}

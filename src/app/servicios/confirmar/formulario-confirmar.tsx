@@ -95,7 +95,7 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
           <Button
             className="mt-3"
             nativeButton={false}
-            render={<Link href={`/servicios/${listo.id}`} />}
+            render={<Link href={`/prestador/${listo.id}`} />}
           >
             Ver su ficha
           </Button>

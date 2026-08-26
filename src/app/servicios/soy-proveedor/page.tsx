@@ -139,7 +139,7 @@ export default async function SoyProveedorPage() {
 
       <div className="mt-3 grid grid-cols-2 gap-2">
         <Link
-          href={`/servicios/${proveedor.id}`}
+          href={`/prestador/${proveedor.id}`}
           className="shadow-canto flex min-h-12 items-center justify-center gap-2 rounded-full bg-card px-4 text-base font-semibold"
         >
           <Eye className="size-5" aria-hidden="true" />

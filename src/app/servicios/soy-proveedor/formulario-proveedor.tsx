@@ -972,7 +972,7 @@ export function FormularioProveedor({
             variant="outline"
             className="w-full"
             nativeButton={false}
-            render={<Link href={`/servicios/${proveedor.id}`} />}
+            render={<Link href={`/prestador/${proveedor.id}`} />}
           >
             <Eye className="size-5" aria-hidden="true" />
             Ver mi ficha como la ven los demás

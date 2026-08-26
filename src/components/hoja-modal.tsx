@@ -25,13 +25,10 @@ import { useRouter } from 'next/navigation'
  */
 export function HojaModal({
   etiqueta,
-  variante = 'hoja',
   children,
 }: {
   /** Qué es, para quien no ve la pantalla. */
   etiqueta: string
-  /** `hoja` sube desde abajo y deja ver la lista; `pantalla` la tapa entera. */
-  variante?: 'hoja' | 'pantalla'
   children: ReactNode
 }) {
   const router = useRouter()
@@ -60,19 +57,14 @@ export function HojaModal({
       onClick={(e) => {
         if (e.target === ref.current) ref.current?.close()
       }}
-      className={
-        variante === 'hoja'
-          ? 'animar-hoja m-0 mt-auto max-h-[92dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-3xl bg-background p-0 text-foreground backdrop:bg-foreground/40 sm:mx-auto sm:my-auto sm:max-h-[88dvh] sm:rounded-3xl'
-          : 'animar-hoja m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto overscroll-contain bg-background p-0 text-foreground backdrop:bg-foreground/40'
-      }
+      className="animar-hoja m-0 mt-auto max-h-[92dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-3xl bg-background p-0 text-foreground backdrop:bg-foreground/40 sm:mx-auto sm:my-auto sm:max-h-[88dvh] sm:rounded-3xl"
     >
-      {/* El asa. No hace nada —cerrar es la equis, `Escape` o el fondo—,
-          pero es lo que dice que esto se puede cerrar sin haberlo probado. */}
-      {variante === 'hoja' && (
-        <div className="sticky top-0 z-10 flex justify-center bg-background pt-2 pb-1">
-          <span aria-hidden="true" className="h-1 w-10 rounded-full bg-border" />
-        </div>
-      )}
+      {/* El asa. No hace nada —cerrar es `Escape`, la flecha de volver o el
+          fondo—, pero es lo que dice que esto se puede cerrar sin haberlo
+          probado. */}
+      <div className="flex shrink-0 justify-center pt-2 pb-1">
+        <span aria-hidden="true" className="h-1 w-10 rounded-full bg-border" />
+      </div>
       {children}
     </dialog>
   )

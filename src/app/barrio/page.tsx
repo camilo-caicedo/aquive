@@ -105,7 +105,7 @@ export default async function BarrioPage({
               <div className="p-4">
                 <h2 className="font-heading text-base leading-tight">{p.nombre}</h2>
                 <Link
-                  href={`/servicios/${p.proveedor_id}`}
+                  href={`/prestador/${p.proveedor_id}`}
                   className="text-enlace mt-1 block text-base underline-offset-4 hover:underline"
                 >
                   {p.proveedor_nombre}
