@@ -76,7 +76,7 @@ export function ListaSolicitudesServicio({
       {solicitudes.map((s) => {
         const zona = zonaLegible(s.zona_nombre, s.zona_texto)
         return (
-          <li key={s.id} className="rounded-2xl bg-card p-4 shadow-sm">
+          <li key={s.id} className="rounded-2xl bg-card p-4 shadow-canto">
             <div className="flex items-baseline justify-between gap-2">
               <span className="min-w-0 text-lg font-bold">{s.oficio_nombre}</span>
               <span className="shrink-0 font-mono text-sm text-muted-foreground">

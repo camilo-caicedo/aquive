@@ -57,7 +57,7 @@ function FilaSolicitud({ s }: { s: SolicitudAdmin }) {
   }
 
   return (
-    <li className="rounded-2xl bg-card p-4 shadow-sm">
+    <li className="rounded-2xl bg-card p-4 shadow-canto">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <span className="text-base font-bold">
           {categoriaInfo(s.categoria).etiqueta} · {s.barrio}

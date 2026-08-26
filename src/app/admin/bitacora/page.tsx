@@ -93,7 +93,7 @@ export default async function BitacoraPage({
                 aria-current={activo ? 'page' : undefined}
                 className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm transition-colors ${
                   activo
-                    ? 'border-border bg-card font-semibold text-foreground shadow-sm'
+                    ? 'border-border bg-card font-semibold text-foreground shadow-canto'
                     : 'border-transparent text-muted-foreground hover:bg-muted'
                 }`}
               >
@@ -124,7 +124,7 @@ export default async function BitacoraPage({
               <h2 className="text-sm font-semibold text-muted-foreground">{g.dia}</h2>
               <ul className="mt-2 space-y-2">
                 {g.filas.map((a, i) => (
-                  <li key={`${a.lector}-${a.cuando}-${i}`} className="rounded-2xl bg-card p-3 shadow-sm">
+                  <li key={`${a.lector}-${a.cuando}-${i}`} className="rounded-2xl bg-card p-3 shadow-canto">
                     <p className="text-sm font-medium">
                       {a.organizacion ?? (a.rol === 'admin' ? 'Administración' : 'Una fundación')}{' '}
                       · {a.tipo}

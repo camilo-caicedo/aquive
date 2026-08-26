@@ -248,7 +248,7 @@ export function PanelProveedores({
           Registrar a alguien
         </Button>
       ) : (
-        <div className="space-y-4 rounded-2xl bg-card p-4 shadow-sm">
+        <div className="space-y-4 rounded-2xl bg-card p-4 shadow-canto">
           {/* Para leer en voz alta, con la persona enfrente: lo que se va a
               publicar son sus datos, no los de quien llena el formulario. */}
           <p className="flex items-start gap-2 rounded-xl bg-secondary p-3 text-base text-secondary-foreground">
@@ -499,7 +499,7 @@ export function PanelProveedores({
       ) : (
         <ul className="mt-3 space-y-3">
           {proveedores.map((p) => (
-            <li key={p.id} className="rounded-2xl bg-card p-4 shadow-sm">
+            <li key={p.id} className="rounded-2xl bg-card p-4 shadow-canto">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Link
                   href={`/servicios/${p.id}`}

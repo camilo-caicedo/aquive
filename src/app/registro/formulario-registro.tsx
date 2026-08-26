@@ -578,7 +578,7 @@ export function FormularioRegistro({
         }
         >
           {tipo === 'servidor' && (
-            <div className="space-y-4 rounded-2xl bg-card p-4 shadow-sm">
+            <div className="space-y-4 rounded-2xl bg-card p-4 shadow-canto">
               <div>
                 <Label htmlFor="profesion" className="mb-1">
                   Profesión
@@ -695,7 +695,7 @@ export function FormularioRegistro({
             cobijas en la casa, y negárselo no protegía nada. Va después del
             bloque de matrícula para que un profesional lea primero su
             profesión y después qué insumos tiene. */}
-        <div className="space-y-2 rounded-2xl bg-card p-4 shadow-sm">
+        <div className="space-y-2 rounded-2xl bg-card p-4 shadow-canto">
           <Label className="mb-1">Qué tengo para dar (opcional)</Label>
           <p className="text-sm text-muted-foreground">
             {tipo === 'servidor'

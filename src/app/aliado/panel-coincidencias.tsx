@@ -73,7 +73,7 @@ export function PanelCoincidencias({ coincidencias }: { coincidencias: Coinciden
       {coincidencias.map((c) => {
         const clave = `${c.solicitud_id}-${c.ofertador_id}`
         return (
-          <li key={clave} className="rounded-2xl bg-card p-4 shadow-sm">
+          <li key={clave} className="rounded-2xl bg-card p-4 shadow-canto">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-mono text-lg font-bold">{c.codigo}</span>
               <span className="text-base text-muted-foreground">{c.municipio}</span>

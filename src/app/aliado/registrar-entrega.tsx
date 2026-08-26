@@ -86,7 +86,7 @@ export function RegistrarEntrega({
   }
 
   return (
-    <div className="mt-3 rounded-2xl bg-card p-4 shadow-sm">
+    <div className="mt-3 rounded-2xl bg-card p-4 shadow-canto">
       <h4 className="text-lg font-bold">Registrar lo que llegó</h4>
 
       {pendientes.length === 0 ? (

@@ -74,7 +74,7 @@ export default async function MatriculasPage() {
             const perfil = porPerfil.get(s.perfil_id)
             const registro = REGISTROS_MATRICULA[s.entidad_matricula]
             return (
-              <li key={s.perfil_id} className="rounded-2xl bg-card p-4 shadow-sm">
+              <li key={s.perfil_id} className="rounded-2xl bg-card p-4 shadow-canto">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-base font-bold">
                     {perfil?.nombre_visible ?? 'Perfil sin nombre'}

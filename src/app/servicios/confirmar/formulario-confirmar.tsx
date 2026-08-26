@@ -86,7 +86,7 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
   if (listo) {
     return (
       <Alert className="mt-6">
-        <AlertTitle className="font-heading text-2xl">Gracias</AlertTitle>
+        <AlertTitle className="font-heading text-2xl font-extrabold tracking-tight">Gracias</AlertTitle>
         <AlertDescription>
           <p className="mt-2 text-base">
             Tu calificación ya aparece en la ficha de {listo.nombre}, y ese
@@ -164,8 +164,13 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
                 onClick={() => setNotas((p) => ({ ...p, [c.clave]: n.valor }))}
                 className={`inline-flex min-h-14 flex-1 items-center justify-center rounded-full px-3 text-base transition-colors ${
                   notas[c.clave] === n.valor
-                    ? 'bg-primary font-semibold text-primary-foreground'
-                    : 'bg-card shadow-sm hover:bg-muted'
+                    ? // Tinta, no lima. Son tres criterios de cinco niveles:
+                      // con lima habría hasta tres rellenos compitiendo con
+                      // el botón de enviar, que es la acción de verdad. El
+                      // negro sobre blanco da 16,88:1 y no deja duda de cuál
+                      // está elegido sin depender de percibir un color.
+                      'bg-foreground font-semibold text-background'
+                    : 'bg-card shadow-canto hover:bg-muted'
                 }`}
               >
                 {n.etiqueta}

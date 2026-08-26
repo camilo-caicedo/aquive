@@ -66,7 +66,7 @@ function Invitacion({
     // pintaba un QR de 160 px más la URL entera más tres botones: con tres
     // invitaciones abiertas había que bajar tres pantallas para llegar al
     // equipo, que es a lo que se entra.
-    <li className="rounded-2xl bg-card p-4 shadow-sm">
+    <li className="rounded-2xl bg-card p-4 shadow-canto">
       <p className="text-base font-medium">
         {invitacion.rol_otorgado === 'coordinador' ? 'Coordinador' : 'Miembro'} ·{' '}
         {invitacion.usos}/{invitacion.usos_max} usos · vence el{' '}
@@ -187,7 +187,7 @@ function Miembro({
     <li
       className={
         miembro.estado === 'activo'
-          ? 'flex items-center gap-3 rounded-2xl bg-card p-4 shadow-sm'
+          ? 'flex items-center gap-3 rounded-2xl bg-card p-4 shadow-canto'
           : miembro.estado === 'pendiente'
             ? 'flex items-center gap-3 rounded-2xl border border-enlace/40 bg-accent p-4'
             : 'flex items-center gap-3 rounded-2xl border border-dashed border-border p-4'

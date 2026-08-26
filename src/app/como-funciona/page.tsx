@@ -174,7 +174,7 @@ export default function ComoFuncionaPage() {
           enseña modistas. */}
       <ul className="lista-escalonada mt-6 grid gap-3 sm:grid-cols-2">
         {PARTES.map(({ Icono, titulo, texto }) => (
-          <li key={titulo} className="animar-entrada rounded-2xl bg-card p-4 shadow-sm">
+          <li key={titulo} className="animar-entrada rounded-2xl bg-card p-4 shadow-canto">
             <span className="flex size-10 items-center justify-center rounded-full bg-accent text-accent-foreground">
               <Icono className="size-5" aria-hidden="true" />
             </span>
@@ -191,7 +191,7 @@ export default function ComoFuncionaPage() {
             key={id}
             id={id}
             open={abierto}
-            className="group rounded-2xl bg-card shadow-sm"
+            className="group rounded-2xl bg-card shadow-canto"
           >
             {/* `list-none` mata el triangulito del navegador, que en Safari
                 se sale de la caja. La flecha la pone el `after` de abajo. */}

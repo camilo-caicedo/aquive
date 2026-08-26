@@ -110,7 +110,7 @@ export function PanelReferencias({
               key={r.id}
               className={
                 r.puedo_leerla
-                  ? 'rounded-2xl bg-card p-4 shadow-sm'
+                  ? 'rounded-2xl bg-card p-4 shadow-canto'
                   : 'rounded-2xl border border-dashed border-border p-4'
               }
             >

@@ -46,7 +46,7 @@ export function Siluetas({ cuantas = 3 }: { cuantas?: number }) {
   return (
     <ul aria-hidden="true" className="space-y-3">
       {Array.from({ length: cuantas }, (_, i) => (
-        <li key={i} className="punto-urgente rounded-2xl bg-card p-4 shadow-sm">
+        <li key={i} className="punto-urgente rounded-2xl bg-card p-4 shadow-canto">
           <div className="h-5 w-1/3 rounded-full bg-muted" />
           <div className="mt-2 h-4 w-2/3 rounded-full bg-muted" />
           <div className="mt-3 h-4 w-full rounded-full bg-muted" />

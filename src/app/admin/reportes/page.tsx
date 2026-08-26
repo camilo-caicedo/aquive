@@ -71,7 +71,7 @@ export default async function ReportesPage() {
       ) : (
         <ul className="space-y-3">
           {reportes.map((r) => (
-            <li key={r.id} className="rounded-2xl bg-card p-4 shadow-sm">
+            <li key={r.id} className="rounded-2xl bg-card p-4 shadow-canto">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-base font-bold">{MOTIVOS[r.motivo]}</span>
                 <span className="text-sm text-muted-foreground">{fecha(r.creado_at)}</span>
@@ -99,7 +99,7 @@ export default async function ReportesPage() {
                         {r.items.map((it, i) => (
                           <li
                             key={i}
-                            className="rounded-full bg-card px-3 py-1 text-sm shadow-sm"
+                            className="rounded-full bg-card px-3 py-1 text-sm shadow-canto"
                           >
                             {it}
                           </li>

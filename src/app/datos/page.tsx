@@ -102,11 +102,11 @@ export default async function DatosPage() {
       ) : (
         <>
           <dl className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl bg-card p-4 shadow-sm">
+            <div className="rounded-2xl bg-card p-4 shadow-canto">
               <dt className="text-base text-muted-foreground">Solicitudes registradas</dt>
               <dd className="mt-1 text-3xl font-bold">{total}</dd>
             </div>
-            <div className="rounded-2xl bg-card p-4 shadow-sm">
+            <div className="rounded-2xl bg-card p-4 shadow-canto">
               <dt className="text-base text-muted-foreground">Se resolvieron</dt>
               <dd className="mt-1 text-3xl font-bold">
                 {cumplidas}
@@ -115,7 +115,7 @@ export default async function DatosPage() {
                 </span>
               </dd>
             </div>
-            <div className="rounded-2xl bg-card p-4 shadow-sm">
+            <div className="rounded-2xl bg-card p-4 shadow-canto">
               <dt className="text-base text-muted-foreground">Primera respuesta</dt>
               <dd className="mt-1 text-3xl font-bold">
                 {medianaHoras === null ? (

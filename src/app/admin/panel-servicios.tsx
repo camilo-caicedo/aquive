@@ -145,7 +145,7 @@ export function PanelServicios({
             ['Solicitudes vivas', datos.totales.solicitudes],
             ['Servicios confirmados', datos.totales.servicios_confirmados],
           ].map(([etiqueta, valor]) => (
-            <div key={etiqueta as string} className="rounded-2xl bg-card p-3 shadow-sm">
+            <div key={etiqueta as string} className="rounded-2xl bg-card p-3 shadow-canto">
               <dt className="text-sm text-muted-foreground">{etiqueta}</dt>
               <dd className="text-2xl font-bold">{valor}</dd>
             </div>
@@ -175,7 +175,7 @@ export function PanelServicios({
                   className={`flex min-h-11 items-center gap-3 rounded-2xl px-4 py-2.5 transition-colors ${
                     activa
                       ? 'border border-enlace/25 bg-accent text-accent-foreground'
-                      : 'bg-card shadow-sm hover:bg-muted'
+                      : 'bg-card shadow-canto hover:bg-muted'
                   }`}
                 >
                   <c.Icono
@@ -220,7 +220,7 @@ export function PanelServicios({
           ) : (
             <ul className="mt-3 space-y-3">
               {datos.por_verificar.map((p) => (
-                <li key={p.id} className="rounded-2xl bg-card p-4 shadow-sm">
+                <li key={p.id} className="rounded-2xl bg-card p-4 shadow-canto">
                   <Link
                     href={`/servicios/${p.id}`}
                     className="text-base font-bold underline-offset-4 hover:underline"
@@ -306,7 +306,7 @@ export function PanelServicios({
           ) : (
             <ul className="mt-3 space-y-3">
               {datos.resenas_ocultas.map((r) => (
-                <li key={r.id} className="rounded-2xl bg-card p-4 shadow-sm">
+                <li key={r.id} className="rounded-2xl bg-card p-4 shadow-canto">
                   <Link
                     href={`/servicios/${r.proveedor_id}`}
                     className="text-base font-bold underline-offset-4 hover:underline"
@@ -401,7 +401,7 @@ export function PanelServicios({
               {datos.suspendidos.map((p) => (
                 <li
                   key={p.id}
-                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-card p-3 shadow-sm"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-card p-3 shadow-canto"
                 >
                   <span className="text-sm">{p.nombre_visible}</span>
                   <Button

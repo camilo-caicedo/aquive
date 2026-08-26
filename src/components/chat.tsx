@@ -199,7 +199,7 @@ export function Chat({
                       // hilo las burbujas recibidas casi no se recortaban.
                       // La sombra hace el resto — el borde sobraría con
                       // quince mensajes seguidos.
-                      'rounded-xl rounded-bl-sm bg-card text-foreground shadow-sm'
+                      'rounded-xl rounded-bl-sm bg-card text-foreground shadow-canto'
               }`}
             >
               {/* Moderar oculta, no borra, y el hueco se ve: si un mensaje

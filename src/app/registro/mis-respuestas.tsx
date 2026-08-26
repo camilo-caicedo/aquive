@@ -31,7 +31,7 @@ export function MisRespuestas({ respuestas }: { respuestas: MiRespuesta[] }) {
       {respuestas.map((r) => {
         const horas = Math.max(0, Math.round(horasParaVencer(r.expira_at)))
         return (
-          <li key={r.id} className="rounded-2xl bg-card p-4 shadow-sm">
+          <li key={r.id} className="rounded-2xl bg-card p-4 shadow-canto">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="font-mono text-lg font-bold">{r.codigo}</span>
               <span className="text-sm text-muted-foreground">

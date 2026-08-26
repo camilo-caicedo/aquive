@@ -172,7 +172,7 @@ export default async function AliadoPage({
                   aria-current={activa ? 'page' : undefined}
                   className={`inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border px-4 text-base transition-colors ${
                     activa
-                      ? 'border-border bg-card font-semibold text-foreground shadow-sm'
+                      ? 'border-border bg-card font-semibold text-foreground shadow-canto'
                       : 'border-transparent text-muted-foreground hover:bg-muted'
                   }`}
                 >

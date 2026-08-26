@@ -61,7 +61,7 @@ export function Pestanas({
               // depende solo del tono.
               className={`inline-flex min-h-12 w-full items-center justify-center gap-1.5 rounded-full px-5 text-base whitespace-nowrap transition-colors ${
                 p.activa
-                  ? 'bg-card font-semibold text-foreground shadow-sm'
+                  ? 'bg-card font-semibold text-foreground shadow-canto'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >

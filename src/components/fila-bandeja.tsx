@@ -64,7 +64,7 @@ export function FilaBandeja({
   const pideAccion = !!accion
 
   return (
-    <li className={pideAccion ? 'rounded-2xl bg-accent' : 'rounded-2xl bg-card shadow-sm'}>
+    <li className={pideAccion ? 'rounded-2xl bg-accent' : 'rounded-2xl bg-card shadow-canto'}>
       <Link
         href={href}
         className="flex min-h-16 items-start gap-3 rounded-2xl px-4 py-3 transition-colors hover:bg-muted/50"

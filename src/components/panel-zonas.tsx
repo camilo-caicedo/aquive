@@ -96,7 +96,7 @@ export function PanelZonas({ zonas }: { zonas: ZonaPropuesta[] }) {
         {zonas.map((z) => {
           const c = campo(z)
           return (
-            <li key={z.id} className="rounded-2xl bg-card p-4 shadow-sm">
+            <li key={z.id} className="rounded-2xl bg-card p-4 shadow-canto">
               <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
                 <MapPin className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
                 <span>

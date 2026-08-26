@@ -61,7 +61,7 @@ export default async function MisDatosPage({
 
       <section className="mt-6">
         <h2 className="font-heading text-2xl">De la solicitud</h2>
-        <div className="mt-2 rounded-2xl bg-card p-4 text-base shadow-sm">
+        <div className="mt-2 rounded-2xl bg-card p-4 text-base shadow-canto">
           <p>
             {datos.municipio} — {datos.barrio}
           </p>
@@ -91,7 +91,7 @@ export default async function MisDatosPage({
               acompaña tu entrega y necesita saber a quién le entrega. Solo
               ellos lo ven, y queda registrado cada vez que lo miran.
             </p>
-            <div className="mt-2 rounded-2xl bg-card p-4 text-base shadow-sm">
+            <div className="mt-2 rounded-2xl bg-card p-4 text-base shadow-canto">
               {/* ⚠ Ya no hay documento que enseñar: la plataforma dejó de
                   pedirlo y de guardarlo. La identidad la comprueba la
                   fundación en persona. */}

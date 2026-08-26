@@ -37,7 +37,7 @@ export function PuertaCerrada({
   const url = destino ? `${href}?volver=${encodeURIComponent(destino)}` : href
 
   return (
-    <div className="rounded-2xl bg-card p-4 shadow-sm">
+    <div className="rounded-2xl bg-card p-4 shadow-canto">
       <h2 className="text-lg font-semibold">{titulo}</h2>
       <p className="mt-2 text-base text-muted-foreground">{porque}</p>
 

@@ -96,7 +96,7 @@ function FormularioOrganizacion({
   }
 
   return (
-    <div className="space-y-4 rounded-2xl bg-card p-4 shadow-sm">
+    <div className="space-y-4 rounded-2xl bg-card p-4 shadow-canto">
       {/* ⚠ La lista de comprobación va DENTRO del flujo de crear y no
           arriba de la pantalla. Sirve en el momento de crear una, y ahí lo
           que hace falta es poder ir tachando; como párrafo de la pestaña
@@ -311,7 +311,7 @@ function Invitacion({
   }
 
   return (
-    <li className="rounded-2xl bg-card p-3 shadow-sm">
+    <li className="rounded-2xl bg-card p-3 shadow-canto">
       <p className="text-base font-medium">
         {invitacion.rol_otorgado === 'coordinador' ? 'Coordinador' : 'Miembro'} ·{' '}
         {invitacion.usos}/{invitacion.usos_max} usos
@@ -367,7 +367,7 @@ function FichaOrganizacion({
   }
 
   return (
-    <li className="rounded-2xl bg-card p-4 shadow-sm">
+    <li className="rounded-2xl bg-card p-4 shadow-canto">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-lg font-bold">{organizacion.nombre}</span>
         <span

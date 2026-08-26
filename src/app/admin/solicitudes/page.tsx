@@ -65,7 +65,7 @@ export default async function SolicitudesAdminPage({
                 aria-current={activo ? 'page' : undefined}
                 className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm transition-colors ${
                   activo
-                    ? 'border-border bg-card font-semibold text-foreground shadow-sm'
+                    ? 'border-border bg-card font-semibold text-foreground shadow-canto'
                     : 'border-transparent text-muted-foreground hover:bg-muted'
                 }`}
               >

@@ -104,7 +104,7 @@ export default async function SolicitudServicioPage({
         </Alert>
       )}
 
-      <h2 className="font-heading mt-8 text-2xl">
+      <h2 className="font-heading mt-8 text-2xl font-extrabold tracking-tight">
         {solicitud.respuestas.length === 0
           ? 'Todavía nadie ha respondido'
           : solicitud.respuestas.length === 1
@@ -120,13 +120,13 @@ export default async function SolicitudServicioPage({
       ) : (
         <>
           <p className="mt-2 text-base text-muted-foreground">
-            Tú eliges a quién escribirle. Nosotros no le dimos tu contacto a
-            nadie: no lo tenemos.
+            Tú eliges con quién hablar. Por el chat no tienes que dar tu
+            teléfono; nosotros tampoco lo tenemos.
           </p>
 
           <ul className="mt-4 space-y-3">
             {solicitud.respuestas.map((r) => (
-              <li key={r.id} className="rounded-2xl bg-card p-4 shadow-sm">
+              <li key={r.id} className="rounded-2xl bg-card p-4 shadow-canto">
                 <Link
                   href={`/servicios/${r.proveedor_id}`}
                   className="text-lg font-bold underline-offset-4 hover:underline"
@@ -146,7 +146,22 @@ export default async function SolicitudServicioPage({
                 <p className="mt-2 text-base">{r.mensaje}</p>
 
                 <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  {/* El chat va PRIMERO y es el botón lleno: llamar o escribir
+                      por WhatsApp le entrega tu número a alguien que todavía
+                      no conoces, y por aquí no hace falta. Las otras dos
+                      siguen ahí porque a veces la llamada es lo práctico —
+                      pero dejan de ser el único camino. */}
                   <Button
+                    className="sm:flex-1"
+                    nativeButton={false}
+                    render={
+                      <Link href={`/servicios/solicitud/${token}/chat/${r.id}`} />
+                    }
+                  >
+                    Abrir el chat
+                  </Button>
+                  <Button
+                    variant="outline"
                     className="sm:flex-1"
                     nativeButton={false}
                     render={

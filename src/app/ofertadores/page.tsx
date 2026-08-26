@@ -156,7 +156,7 @@ export default async function OfertadoresPage({
           {ordenados.map((o) => (
             <li
               key={o.id}
-              className="animar-entrada rounded-2xl bg-card p-4 shadow-sm"
+              className="animar-entrada rounded-2xl bg-card p-4 shadow-canto"
             >
               <div className="flex items-start gap-3">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">

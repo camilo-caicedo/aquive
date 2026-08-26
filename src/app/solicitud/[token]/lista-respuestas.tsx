@@ -23,7 +23,7 @@ export function ListaRespuestas({ respuestas }: { respuestas: Respuesta[] }) {
   return (
     <ul className="mt-3 space-y-3">
       {respuestas.map((r) => (
-        <li key={r.id} className="rounded-2xl bg-card p-4 shadow-sm">
+        <li key={r.id} className="rounded-2xl bg-card p-4 shadow-canto">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-lg font-bold">{r.nombre}</span>
             {r.tipo === 'servidor' &&

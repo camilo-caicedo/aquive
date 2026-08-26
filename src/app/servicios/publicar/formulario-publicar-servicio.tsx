@@ -131,7 +131,7 @@ export function FormularioPublicarServicio({
     return (
       <div className="mt-6">
         <Alert>
-          <AlertTitle className="font-heading text-2xl">
+          <AlertTitle className="font-heading text-2xl font-extrabold tracking-tight">
             Listo. Tu solicitud es la {listo.codigo}.
           </AlertTitle>
           <AlertDescription>
@@ -152,9 +152,13 @@ export function FormularioPublicarServicio({
                 Ver mi solicitud
               </Button>
             </div>
+            <p className="mt-3 text-base">
+              Cuando alguien responda, se abre un chat en ese mismo enlace para
+              acordar hora, lugar y precio. No tienes que dar tu teléfono.
+            </p>
             <p className="mt-3 text-sm text-muted-foreground">
-              Se borra sola a los 15 días. Puedes renovarla, cerrarla o
-              borrarla antes desde ese enlace.
+              Se borra sola a los 15 días, con el chat dentro. Puedes renovarla,
+              cerrarla o borrarla antes desde ese enlace.
             </p>
           </AlertDescription>
         </Alert>

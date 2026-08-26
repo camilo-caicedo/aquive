@@ -77,7 +77,7 @@ export function PanelSolicitudes({ solicitudes }: { solicitudes: SolicitudPorAte
   return (
     <ul className="mt-3 space-y-3">
       {solicitudes.map((s) => (
-        <li key={s.solicitud_id} className="rounded-2xl bg-card p-4 shadow-sm">
+        <li key={s.solicitud_id} className="rounded-2xl bg-card p-4 shadow-canto">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <span className="font-mono text-lg font-bold">{s.codigo}</span>
             {s.hilos > 0 && (

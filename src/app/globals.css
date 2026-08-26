@@ -196,6 +196,15 @@
   html {
     @apply font-sans;
   }
+  /* La presencia de cartel que pide el manual, en una regla y no en 93
+     sitios de llamada. Montserrat se carga en 600–900 y sin esto caía en el
+     600, que se lee como un titular cualquiera en vez de como un aviso.
+     Va en `base`, así que un `font-bold` o un `font-black` explícito en el
+     elemento sigue ganando: esto es el valor por defecto, no una cárcel. */
+  .font-heading {
+    font-weight: 800;
+    letter-spacing: -0.015em;
+  }
   /* Los iconos de lucide vienen con trazo 2; la identidad usa un trazo
      grueso y redondo, y con el trazo fino se veían de otra familia que la
      marca. Vale también para gama baja: engorda el icono sin pesar más. */

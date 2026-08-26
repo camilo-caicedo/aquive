@@ -65,7 +65,7 @@ export function TarjetaSolicitud({
 
   return (
     <li
-      className={`animar-entrada overflow-hidden rounded-2xl bg-card shadow-sm transition-shadow hover:shadow-md ${
+      className={`animar-entrada overflow-hidden rounded-2xl bg-card shadow-canto transition-shadow hover:shadow-md ${
         coincidencias ? 'border border-enlace/40' : ''
       }`}
     >

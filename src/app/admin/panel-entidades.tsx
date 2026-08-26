@@ -495,7 +495,7 @@ function FilaEntidad({
   const hojaEditar = `editar-entidad-${entidad.id}`
 
   return (
-    <li className="rounded-2xl bg-card p-3 shadow-sm">
+    <li className="rounded-2xl bg-card p-3 shadow-canto">
       <div className="flex items-start gap-3">
         {/* El orden deja de ser un número escrito a ciegas: la fila enseña
             en qué posición queda. */}

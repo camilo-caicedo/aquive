@@ -405,7 +405,7 @@ export function FormularioProveedor({
                 const oficio = nombreOficio.get(e.oficio_id)
                 const cobra = e.modo === 'solidario' || e.modo === 'normal'
                 return (
-                  <li key={e.oficio_id} className="rounded-2xl bg-card p-3 shadow-sm">
+                  <li key={e.oficio_id} className="rounded-2xl bg-card p-3 shadow-canto">
                     <p className="text-base font-medium">{oficio?.nombre ?? e.oficio_id}</p>
 
                     {oficio?.riesgo === 'alto' && (
@@ -718,7 +718,7 @@ export function FormularioProveedor({
         {/* El texto de autorización, entero y sin enlace que haya que abrir.
             Es la prueba del consentimiento informado y se guarda su versión:
             si cambia aquí, se mueve AUTORIZACION_PROVEEDOR_VERSION. */}
-        <div className="rounded-2xl bg-card p-4 shadow-sm">
+        <div className="rounded-2xl bg-card p-4 shadow-canto">
           <label className="flex items-start gap-3 text-base">
             <input
               type="checkbox"

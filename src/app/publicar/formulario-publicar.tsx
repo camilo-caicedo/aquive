@@ -470,7 +470,7 @@ export function FormularioPublicar({
                     className={`inline-flex min-h-12 items-center gap-2 rounded-full px-4 text-base transition-colors ${
                       elegida
                         ? 'bg-primary font-semibold text-primary-foreground'
-                        : 'bg-card text-foreground shadow-sm hover:bg-muted'
+                        : 'bg-card text-foreground shadow-canto hover:bg-muted'
                     }`}
                   >
                     <Icono className="size-5 shrink-0" aria-hidden="true" />
@@ -680,7 +680,7 @@ export function FormularioPublicar({
           {/* Lo que se va a publicar, antes de nada: es la respuesta a
               «¿esto es lo que pedí?», y con tres pasos atrás es lo que
               evita volver a mirar. */}
-          <div className="rounded-2xl bg-card p-4 shadow-sm">
+          <div className="rounded-2xl bg-card p-4 shadow-canto">
             <p className="text-lg font-bold">Vas a publicar</p>
             <p className="mt-1 text-base text-muted-foreground">
               {[
@@ -874,7 +874,7 @@ export function FormularioPublicar({
                 Quiero que una fundación coordine la entrega
               </button>
             ) : (
-              <div className="rounded-2xl bg-card p-4 shadow-sm">
+              <div className="rounded-2xl bg-card p-4 shadow-canto">
                 <CamposAcompanamiento
                   aliados={aliados}
                   datos={datosAliado}

@@ -207,7 +207,7 @@ export function HojaFiltros({
         <FormularioFiltros
           action={action}
           variante="outline"
-          className="mt-3 flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-sm"
+          className="mt-3 flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-canto"
         >
           {children}
         </FormularioFiltros>

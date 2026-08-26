@@ -168,7 +168,7 @@ export default async function ResponderPage({
       {/* En modo lectura: qué se pide, dónde y cuándo. El código va al
           final y en pequeño — sirve para nombrar la solicitud por teléfono,
           no para decidir. */}
-      <div className="rounded-2xl bg-card p-4 shadow-sm">
+      <div className="rounded-2xl bg-card p-4 shadow-canto">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="text-lg font-bold">

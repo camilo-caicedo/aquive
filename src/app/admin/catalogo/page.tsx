@@ -101,7 +101,7 @@ export default async function CatalogoPage({
           ) : (
             <ul className="mt-4 space-y-3">
               {sugerencias.map((s) => (
-                <li key={s.id} className="rounded-2xl bg-card p-4 shadow-sm">
+                <li key={s.id} className="rounded-2xl bg-card p-4 shadow-canto">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-base font-bold">{s.nombre_propuesto}</span>
                     <span className="text-sm text-muted-foreground">{fecha(s.creada_at)}</span>
@@ -126,7 +126,7 @@ export default async function CatalogoPage({
           {(items ?? []).map((i) => (
             <li
               key={i.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-card p-3 shadow-sm"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-card p-3 shadow-canto"
             >
               <span className="min-w-0">
                 <span className="block text-sm font-medium">{i.nombre}</span>
@@ -150,7 +150,7 @@ export default async function CatalogoPage({
           {(oficios ?? []).map((o) => (
             <li
               key={o.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-card p-3 shadow-sm"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-card p-3 shadow-canto"
             >
               <span className="min-w-0">
                 <span className="block text-sm font-medium">{o.nombre}</span>
