@@ -25,6 +25,8 @@ export const enrutador = os.router({
     miFicha: os.servicios.miFicha.handler(({ context }) =>
       servicios.miFicha(db, context.usuarioId),
     ),
+    categorias: os.servicios.categorias.handler(({ input }) => servicios.categorias(db, input)),
+    zonas: os.servicios.zonas.handler(({ input }) => servicios.zonasConGente(db, input)),
   },
   moderacion: {
     reportar: os.moderacion.reportar.handler(({ input }) => moderacion.reportar(db, input)),

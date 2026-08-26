@@ -12,7 +12,16 @@ import {
   resenasPublicas,
   zonas,
 } from '@/db/esquema'
-import type { EnListado, Facetas, Ficha, Filtros, MiFicha } from '@/contrato/servicios'
+import { NOMBRE_GRUPO } from '@/contrato/servicios'
+import type {
+  Categoria,
+  EnListado,
+  Facetas,
+  Ficha,
+  Filtros,
+  MiFicha,
+  ZonaConGente,
+} from '@/contrato/servicios'
 
 // Capa de dominio del módulo de Servicios.
 //
@@ -165,6 +174,9 @@ export async function directorio(
   // de producto 7 esconde.
   if (filtros.oficio) {
     condiciones.push(sql`${proveedoresPublicos.oficios} @> array[${filtros.oficio}]::text[]`)
+  }
+  if (filtros.grupo) {
+    condiciones.push(sql`${proveedoresPublicos.grupos} @> array[${filtros.grupo}]::text[]`)
   }
   if (filtros.modalidad) {
     condiciones.push(sql`${proveedoresPublicos.modalidad} @> array[${filtros.modalidad}]::text[]`)
@@ -333,4 +345,88 @@ export async function miFicha(
     suspendido: mia.suspendido,
     oficios_escondidos: Math.max(0, declarados - visibles),
   }
+}
+
+/**
+ * Los grupos de oficio con cuánta gente hay en cada uno.
+ *
+ * Se cuenta sobre `proveedor_oficios_publicos`, que ya aplica la regla de
+ * producto 7: un cuidador de niños sin referencia confirmada no suma a
+ * «Cuidado». Contar sobre la tabla inflaría el número con gente que la
+ * pantalla siguiente no va a enseñar, y eso se lee como un error.
+ */
+export async function categorias(
+  db: BaseDeDatos,
+  filtros: { municipio?: string },
+): Promise<Categoria[]> {
+  const condiciones = filtros.municipio
+    ? [eq(proveedoresPublicos.municipio, filtros.municipio)]
+    : []
+
+  const filas = await db
+    .select({
+      grupo: proveedorOficiosPublicos.grupo,
+      // Personas distintas, no oficios: alguien con tres oficios de Hogar es
+      // una persona, y decir «3 cerca» cuando hay una sola es mentir.
+      cuantos: sql<number>`count(distinct ${proveedorOficiosPublicos.proveedorId})::int`,
+      ejemplos: sql<string[]>`(array_agg(distinct ${proveedorOficiosPublicos.oficioNombre}))[1:3]`,
+    })
+    .from(proveedorOficiosPublicos)
+    .innerJoin(
+      proveedoresPublicos,
+      eq(proveedoresPublicos.id, proveedorOficiosPublicos.proveedorId),
+    )
+    .where(condiciones.length > 0 ? and(...condiciones) : undefined)
+    .groupBy(proveedorOficiosPublicos.grupo)
+    .orderBy(desc(sql`count(distinct ${proveedorOficiosPublicos.proveedorId})`))
+
+  return filas
+    .filter((f) => f.grupo !== null)
+    .map((f) => ({
+      grupo: f.grupo!,
+      nombre: NOMBRE_GRUPO[f.grupo!] ?? f.grupo!,
+      cuantos: aNumero(f.cuantos),
+      ejemplos: f.ejemplos ?? [],
+    }))
+}
+
+/**
+ * Las zonas con gente, agregadas.
+ *
+ * Devuelve CUÁNTOS por zona y nada más. No hay coordenadas en la base y no
+ * las va a haber: la granularidad máxima es barrio o comuna (regla de
+ * producto 10). Publicar la ubicación puntual de alguien que trabaja solo en
+ * la calle, con su nombre y su teléfono al lado, es un dato que sirve para
+ * encontrarlo.
+ */
+export async function zonasConGente(
+  db: BaseDeDatos,
+  filtros: { municipio?: string },
+): Promise<ZonaConGente[]> {
+  const condiciones = filtros.municipio
+    ? [eq(proveedoresPublicos.municipio, filtros.municipio)]
+    : []
+
+  const filas = await db
+    .select({
+      id: zonas.id,
+      nombre: zonas.nombre,
+      municipio: zonas.municipio,
+      municipioNombre: municipios.nombre,
+      cuantos: sql<number>`count(${proveedoresPublicos.id})::int`,
+    })
+    .from(zonas)
+    .innerJoin(proveedoresPublicos, eq(proveedoresPublicos.zonaId, zonas.id))
+    .leftJoin(municipios, eq(municipios.codigoDane, zonas.municipio))
+    .where(condiciones.length > 0 ? and(...condiciones) : undefined)
+    .groupBy(zonas.id, zonas.nombre, zonas.municipio, municipios.nombre)
+    .orderBy(desc(sql`count(${proveedoresPublicos.id})`), asc(zonas.nombre))
+
+  return filas.map((f) => ({
+    id: f.id,
+    nombre: f.nombre,
+    municipio: f.municipio,
+    municipio_nombre: f.municipioNombre ?? null,
+    cuantos: aNumero(f.cuantos),
+  }))
 }

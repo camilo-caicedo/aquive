@@ -110,6 +110,9 @@ export type EnListado = z.infer<typeof EnListado>
  */
 export const Filtros = z.object({
   oficio: z.string().optional().catch(undefined),
+  // Una familia entera —«Comida», «Cuidado»— y no un oficio suelto. Es a lo
+  // que lleva cada tarjeta de la pantalla de categorías.
+  grupo: z.string().optional().catch(undefined),
   // Cinco dígitos, código DANE. Se valida aquí y no en la pantalla: la
   // aplicación de Expo no va a repetir la expresión regular.
   municipio: z
@@ -151,6 +154,48 @@ export const MiFicha = z.object({
 
 export type MiFicha = z.infer<typeof MiFicha>
 
+/**
+ * Los ocho grupos de oficio, con su nombre legible.
+ *
+ * Vive en el contrato y no en `lib/servicios.ts` porque es dato compartido:
+ * la aplicación de Expo va a pintar las mismas categorías y no tiene por qué
+ * llevar una segunda copia de esta tabla que se desincronice.
+ */
+export const NOMBRE_GRUPO: Record<string, string> = {
+  comida: 'Comida',
+  belleza: 'Belleza',
+  confeccion: 'Confección y arreglos',
+  transporte: 'Transporte y trasteos',
+  aseo: 'Aseo',
+  cuidado: 'Cuidado',
+  reparacion: 'Reparaciones',
+  otros: 'Otros',
+}
+
+/** Un grupo de oficios con cuánta gente hay detrás. Pantalla 06. */
+export const Categoria = z.object({
+  grupo: z.string(),
+  nombre: z.string(),
+  cuantos: z.number(),
+  // Tres oficios de ejemplo, para que «Hogar» signifique algo antes de
+  // entrar. Salen de los que de verdad tienen gente, no de una lista fija:
+  // enseñar «Plomería» donde no hay ningún plomero es una promesa falsa.
+  ejemplos: z.array(z.string()),
+})
+
+export type Categoria = z.infer<typeof Categoria>
+
+/** Una zona con cuánta gente trabaja ahí. Pantalla 08. */
+export const ZonaConGente = z.object({
+  id: z.uuid(),
+  nombre: z.string(),
+  municipio: z.string(),
+  municipio_nombre: z.string().nullable(),
+  cuantos: z.number(),
+})
+
+export type ZonaConGente = z.infer<typeof ZonaConGente>
+
 export const contratoServicios = {
   /** La ficha pública de un prestador. Pantalla 09. */
   ficha: oc.input(z.object({ id: z.uuid() })).output(Ficha.nullable()),
@@ -180,4 +225,27 @@ export const contratoServicios = {
    * una que ya existe.
    */
   miFicha: oc.output(MiFicha.nullable()),
+
+  /**
+   * Las categorías con cuánta gente hay en cada una. Pantalla 06.
+   *
+   * Solo los grupos que tienen a alguien: una rejilla de ocho tarjetas donde
+   * cinco dicen «0 cerca» no es un catálogo, es una lista de lo que no
+   * tenemos.
+   */
+  categorias: oc
+    .input(z.object({ municipio: z.string().regex(/^[0-9]{5}$/).optional().catch(undefined) }))
+    .output(z.array(Categoria)),
+
+  /**
+   * Las zonas con gente, agregadas. Pantalla 08.
+   *
+   * Devuelve CUÁNTOS por zona, nunca dónde está nadie. La granularidad
+   * máxima del proyecto es barrio o comuna (regla de producto 10), y una
+   * zona con su conteo es justo eso: dice que en Belén trabajan seis
+   * personas, no dónde vive ninguna de las seis.
+   */
+  zonas: oc
+    .input(z.object({ municipio: z.string().regex(/^[0-9]{5}$/).optional().catch(undefined) }))
+    .output(z.array(ZonaConGente)),
 }

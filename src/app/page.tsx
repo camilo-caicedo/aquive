@@ -5,6 +5,7 @@ import { Info, Inbox, ShieldAlert, Stethoscope, CircleAlert, Briefcase } from 'l
 import { servidor } from '@/orpc/local'
 import { AVISO_SERVICIOS, NO_PAGUES_POR_ADELANTADO } from '@/lib/honestidad'
 import { GRUPOS, MODALIDADES, MODOS_PRECIO } from '@/lib/servicios'
+import { NOMBRE_GRUPO } from '@/contrato/servicios'
 import { TarjetaProveedor } from '@/components/tarjeta-proveedor'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -39,6 +40,7 @@ export default async function InicioPage({
 }: {
   searchParams: Promise<{
     oficio?: string
+    grupo?: string
     municipio?: string
     zona?: string
     modalidad?: string
@@ -56,6 +58,7 @@ export default async function InicioPage({
   // así que un municipio que no sean cinco dígitos ya no llega a la consulta.
   const pedidos = {
     oficio: params.oficio || undefined,
+    grupo: params.grupo || undefined,
     municipio: params.municipio || undefined,
     zona: params.zona || undefined,
     modalidad: MODALIDADES.some((m) => m.valor === params.modalidad)
@@ -80,6 +83,7 @@ export default async function InicioPage({
   const oficio = params.oficio && oficiosCatalogo.some((o) => o.id === params.oficio)
     ? params.oficio
     : null
+  const grupo = params.grupo && NOMBRE_GRUPO[params.grupo] ? params.grupo : null
   const municipio = params.municipio && /^[0-9]{5}$/.test(params.municipio)
     ? params.municipio
     : null
@@ -98,6 +102,7 @@ export default async function InicioPage({
   // dejarla colgada devolvía una lista vacía sin explicación.
   const aplicados: Record<string, string | null> = {
     oficio,
+    grupo,
     municipio,
     zona,
     modalidad,
@@ -121,6 +126,7 @@ export default async function InicioPage({
   const chipsAplicados = (
     [
       ['oficio', oficio ? nombreOficio.get(oficio) : null],
+      ['grupo', grupo ? NOMBRE_GRUPO[grupo] : null],
       ['municipio', municipio ? nombreMunicipio.get(municipio) : null],
       ['zona', zona ? nombreZona.get(zona) : null],
       ['modalidad', MODALIDADES.find((m) => m.valor === modalidad)?.etiqueta ?? null],

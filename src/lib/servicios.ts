@@ -1,3 +1,4 @@
+import { NOMBRE_GRUPO } from '@/contrato/servicios'
 // Etiquetas y formato del módulo de Servicios.
 //
 // Las listas cerradas viven aquí y en el CHECK de la base, y son gemelas:
@@ -78,16 +79,9 @@ export const UNIDADES: { valor: UnidadPrecio; etiqueta: string }[] = [
   { valor: 'unidad', etiqueta: 'por unidad' },
 ]
 
-export const GRUPOS: Record<GrupoOficio, string> = {
-  comida: 'Comida',
-  belleza: 'Belleza',
-  confeccion: 'Confección y arreglos',
-  transporte: 'Transporte y trasteos',
-  aseo: 'Aseo',
-  cuidado: 'Cuidado',
-  reparacion: 'Reparaciones',
-  otros: 'Otros',
-}
+// La tabla vive en el contrato, que es la capa compartida con Expo. Aquí solo
+// se estrecha el tipo para el código de la web, que sí conoce `GrupoOficio`.
+export const GRUPOS = NOMBRE_GRUPO as Record<GrupoOficio, string>
 
 export const TIPOS_PROVEEDOR: { valor: TipoProveedor; etiqueta: string }[] = [
   { valor: 'persona', etiqueta: 'Trabajo por mi cuenta' },
