@@ -302,11 +302,11 @@ diferencia entre «el código no debería» y «la base no lo acepta».
 
 | Paso | Estado |
 | --- | --- |
-| 1 · Tipos de Drizzle desde el esquema | pendiente |
-| 2 · Eliminar el acceso a datos desde el navegador | pendiente |
-| 3 · Contrato oRPC con las primeras lecturas | pendiente |
-| 4 · Migrar lecturas, luego escrituras | pendiente |
-| 5 · Cron y cifrado fuera del motor | pendiente |
+| 1 · Tipos de Drizzle desde el esquema | **hecho** — `npm run db:pull`, 60 objetos verificados contra el catálogo |
+| 2 · Eliminar el acceso a datos desde el navegador | en curso — quedan ~28 archivos, casi todos en admin y aliado |
+| 3 · Contrato oRPC con las primeras lecturas | **hecho** — Servicios, chat, comunidad, moderación |
+| 4 · Migrar lecturas, luego escrituras | en curso |
+| 5 · Cron y cifrado fuera del motor | parcial — el cron de imágenes huérfanas ya está fuera; el cifrado sigue en el motor |
 | 6 · better-auth; espacios de trabajo de npm | pendiente |
 | 7 · App Expo sobre el contrato | pendiente |
 
@@ -341,19 +341,27 @@ portar**.
 | Grupo | Pantallas | Dónde vive |
 | --- | --- | --- |
 | Entrada | 01 Bienvenida, 03 Entrar, 04 Carné | `app/page.tsx`, `app/login`, `app/registro` |
-| Buscar | 05 Inicio, 06 Categorías, 07 Listado, 08 Zonas, 09 Ficha | `app/page.tsx`, `app/servicios/[id]`, `tarjeta-proveedor.tsx`, `hoja-filtros.tsx` |
-| Contratar | 10 Pedir, 11 Enviada, 12 Chat, 13 Calificar | `app/servicios/publicar`, `chat.tsx`, `app/servicios/confirmar` |
+| Buscar | 05 Inicio, 06 Categorías, 07 Listado, 08 Zonas + Mapa, 09 Ficha | `app/page.tsx`, `app/categorias`, `app/zonas`, `app/mapa`, `app/servicios/[id]` |
+| Contratar | 10 Pedir, 11 Enviada, 12 Chat, 13 Calificar | `app/servicios/publicar`, `app/mensajes`, `app/servicios/chat/[respuesta]`, `app/servicios/confirmar` |
 | Ofrecer | 14 Formulario, 15 Mi ficha | `app/servicios/soy-proveedor` |
 | Perfil | 16–25 | `app/registro`, `app/mis-datos/[token]`, `panel-*.tsx` |
 | Insumos | 26 Publicar, 27 Tablero, 28 Responder, 29 Mi solicitud | `app/publicar`, `app/solicitudes`, `app/responder/[codigo]`, `app/solicitud/[token]` |
-| Comunidad | 30 Muro, 31 Hecho en el barrio | **nuevo** |
+| Comunidad | 30 Muro, 31 Hecho en el barrio | `app/muro`, `app/barrio` |
 | Fundación | 32 Entregas, 33 Hilo, 34 Dato sensible | `app/aliado`, `hoja-dato-sensible.tsx` |
-| Moderación | 35 Colas, 36 Matrículas, + imágenes | `app/admin`, `app/admin/matriculas` |
+| Moderación | 35 Colas, 36 Matrículas, imágenes | `app/admin`, `app/admin/matriculas`, `app/admin/imagenes` |
 | Información | 37 Ayuda, 38 PQR, 39 Contactos, 40 Quiénes somos | `app/como-funciona`, `app/seguridad`; PQR es **nuevo** |
 
-**Barra inferior: `Inicio · Buscar · Mensajes · Perfil`.** Cuatro celdas fijas.
+**Barra inferior: `Inicio · Comunidad · Mensajes · Perfil`.** Cuatro celdas.
+
+El prototipo dice `Inicio · Buscar · Mensajes · Perfil`, pero aquí Inicio y
+Buscar son **la misma pantalla** —la portada es el directorio— y Comunidad, que
+son dos destinos nuevos, se quedaría sin puerta. Es la misma idea con las
+cuatro celdas puestas donde este sitio tiene contenido.
+
 La emergencia no tiene celda propia: se entra desde el inicio y sus pantallas
-encienden «Inicio».
+encienden «Inicio». Y **hay una sola bandeja de mensajes**: los pedidos de
+servicio y las entregas acompañadas viven juntos en `/mensajes`, porque tener
+dos celdas llamadas «Mensajes» era ofrecer dos puertas al mismo cuarto.
 
 ## Identidad visual
 
