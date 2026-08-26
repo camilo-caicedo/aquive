@@ -51,15 +51,16 @@ const fecha = (iso: string) =>
 /**
  * En qué quedó un código, con la palabra que lo dice.
  *
- * Tres estados y ninguno depende del color: «Calificado» sobre lima,
+ * Tres estados y ninguno depende del color: «Calificado» sobre salvia,
  * «Sin usar» sobre aviso, «Vencido» sobre arena, y en los tres el sello
- * lleva la palabra (regla 9).
+ * lleva la palabra (regla 9). Ninguno usa el lima: ese relleno es de la
+ * acción principal de la pantalla, que aquí es generar un código.
  */
 function estadoCodigo(c: MisServicios['codigos'][number]) {
   if (c.confirmado_at) {
     return {
       texto: 'Calificado',
-      clase: 'bg-primary text-primary-foreground',
+      clase: 'bg-ok-suave text-foreground',
       cuando: `Usado el ${fecha(c.confirmado_at)}`,
     }
   }

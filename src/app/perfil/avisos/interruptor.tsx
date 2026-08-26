@@ -158,7 +158,7 @@ export function InterruptorAvisos({ municipios }: { municipios: number }) {
                   !t.hay
                     ? 'bg-muted text-foreground'
                     : activo
-                      ? 'bg-primary text-primary-foreground'
+                      ? 'bg-ok-suave text-foreground'
                       : 'bg-accent text-accent-foreground'
                 }`}
               >

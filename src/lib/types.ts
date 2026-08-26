@@ -193,6 +193,12 @@ export interface MiProveedor {
   alta_asistida: boolean
   sin_cuenta: boolean
   creado_at: string
+  /** Lo que ESA persona aceptó y cuándo, no la versión de hoy (v4-e1). */
+  autorizacion_version: string | null
+  autorizacion_at: string | null
+  acepto_mapa: boolean
+  mapa_version: string | null
+  mapa_at: string | null
   oficios: {
     oficio_id: string
     nombre: string

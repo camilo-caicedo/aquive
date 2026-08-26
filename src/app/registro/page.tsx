@@ -10,7 +10,6 @@ import {
   type MiRespuesta,
   type OfrecimientoResumen,
 } from '@/lib/types'
-import { PestanasLoMio } from '@/components/pestanas-lo-mio'
 import { FormularioRegistro } from './formulario-registro'
 import { AvisosOfertador } from './avisos-ofertador'
 import { CerrarSesion } from './cerrar-sesion'
@@ -101,14 +100,7 @@ export default async function RegistroPage({
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
       <VueltaAlDestino />
-      <CabeceraPantalla titulo="Lo mío">
-        <PestanasLoMio
-          activa={
-            vista === 'respuestas' ? 'respuestas' : vista === 'ajustes' ? 'ajustes' : 'perfil'
-          }
-          conSesion
-          respuestas={respuestas.length}
-        />
+      <CabeceraPantalla titulo="Lo mío" volver="/perfil">
       </CabeceraPantalla>
 
 

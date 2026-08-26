@@ -8,9 +8,9 @@ export const metadata = { title: 'Mis datos y contacto' }
 
 /** Los tres sellos posibles. Relleno con palabra: el color nunca informa solo. */
 const SELLO = {
-  publico: { texto: 'Público', clase: 'bg-primary text-primary-foreground' },
+  publico: { texto: 'Público', clase: 'bg-ok-suave text-foreground' },
   privado: { texto: 'Privado', clase: 'bg-muted text-foreground' },
-  ninguno: { texto: 'No se guarda', clase: 'bg-ok-suave text-foreground' },
+  ninguno: { texto: 'No se guarda', clase: 'bg-accent text-accent-foreground' },
 } as const
 
 /**

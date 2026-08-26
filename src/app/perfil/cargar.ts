@@ -37,6 +37,7 @@ export async function cargarPerfil() {
     municipios,
     { data: refs },
     { data: servicios },
+    { data: perfilOfertador },
   ] = await Promise.all([
     supabase.rpc('mi_proveedor', {}),
     supabase.from('catalogo_oficios').select('*').eq('activo', true).order('orden'),
@@ -47,6 +48,11 @@ export async function cargarPerfil() {
     listarMunicipios(supabase),
     supabase.rpc('mis_referencias', {}),
     supabase.rpc('mis_servicios', {}),
+    // ¿Tiene perfil de ofertador? Es el rol del módulo de emergencia y es
+    // otro que el de prestador: quien lo tiene guarda respuestas y ajustes
+    // en /registro, y sin esta comprobación esas dos vistas se quedarían sin
+    // ninguna puerta al retirar las pestañas viejas.
+    supabase.from('perfiles').select('id').eq('id', user.id).maybeSingle(),
   ])
 
   const proveedor = (mio as MiProveedor | null) ?? null
@@ -55,6 +61,8 @@ export async function cargarPerfil() {
     supabase,
     user,
     proveedor,
+    /** Tiene perfil en el módulo de emergencia, que es otro rol. */
+    esOfertador: Boolean(perfilOfertador),
     oficios: (oficios ?? []) as Oficio[],
     zonas: (zonas ?? []) as Zona[],
     municipios: municipios ?? [],

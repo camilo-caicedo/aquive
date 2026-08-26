@@ -731,7 +731,7 @@ export function FormularioProveedor({
                         <span
                           className={`font-heading rounded-full px-3 py-0.5 text-xs tracking-[0.085em] uppercase ${
                             publicado
-                              ? 'bg-primary text-primary-foreground'
+                              ? 'bg-ok-suave text-foreground'
                               : 'bg-accent text-accent-foreground'
                           }`}
                         >

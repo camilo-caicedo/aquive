@@ -4,7 +4,6 @@ import { AccionPrincipal } from '@/components/accion-principal'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { ChevronRight, Smartphone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { PestanasLoMio } from '@/components/pestanas-lo-mio'
 import { PestanasMias } from './pestanas-mias'
 
 export const metadata = { title: 'Lo mío' }
@@ -35,8 +34,7 @@ export default async function MisSolicitudesPage() {
     <main className="mx-auto max-w-lg px-4 py-6">
       {/* El h1 repite la etiqueta de la barra (regla 8): quien tocó «Lo
           mío» tiene que aterrizar en algo que se llame igual. */}
-      <CabeceraPantalla titulo="Lo mío">
-        <PestanasLoMio activa="solicitudes" conSesion={!!user} />
+      <CabeceraPantalla titulo="Lo mío" volver="/perfil">
       </CabeceraPantalla>
 
       {/* En tarjeta y con icono, no como párrafo suelto: es lo único que

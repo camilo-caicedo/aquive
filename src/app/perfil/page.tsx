@@ -12,6 +12,7 @@ import {
   Smartphone,
   Star,
   UserPen,
+  UserRound,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
@@ -143,15 +144,26 @@ export default async function PerfilPage() {
   // ─────────────────────────────────────────────────────────────────
   // Con cuenta: la cabecera de identidad y el menú de diez filas.
   // ─────────────────────────────────────────────────────────────────
-  const [{ data: mio }, { data: servicios }, { data: refs }, municipios] =
-    await Promise.all([
+  const [
+    { data: mio },
+    { data: servicios },
+    { data: refs },
+    municipios,
+    { data: perfilOfertador },
+  ] = await Promise.all([
       supabase.rpc('mi_proveedor', {}),
       supabase.rpc('mis_servicios', {}),
       supabase.rpc('mis_referencias', {}),
       listarMunicipios(supabase),
+      // ¿Tiene también perfil de ofertador? Es el rol del módulo de
+      // emergencia, distinto del de prestador. Sus dos vistas vivían tras
+      // unas pestañas que este menú reemplaza, y sin esto se quedarían sin
+      // ninguna puerta.
+      supabase.from('perfiles').select('id').eq('id', user.id).maybeSingle(),
     ])
 
   const proveedor = (mio as MiProveedor | null) ?? null
+  const esOfertador = Boolean(perfilOfertador)
   const misServicios = (servicios as unknown as MisServicios | null) ?? {
     codigos: [],
     resenas: [],
@@ -274,6 +286,27 @@ export default async function PerfilPage() {
             nombre="Mis solicitudes"
             familia="azul"
           />
+          {/* Las dos vistas del módulo de emergencia. Solo salen si esa
+              persona tiene ese rol: son de quien OFRECE ayuda, que es otro
+              papel que el de prestar un servicio. Vivían tras unas pestañas
+              que se retiraron al llegar este menú, y sin estas dos filas se
+              habrían quedado sin ninguna puerta. */}
+          {esOfertador && (
+            <>
+              <Fila
+                href="/registro?ver=respuestas"
+                Icono={ClipboardList}
+                nombre="Mis respuestas"
+                familia="verde"
+              />
+              <Fila
+                href="/registro"
+                Icono={UserRound}
+                nombre="Mi perfil de ayuda"
+                familia="verde"
+              />
+            </>
+          )}
           <Fila
             href="/perfil/resenas"
             Icono={Star}

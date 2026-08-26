@@ -103,8 +103,14 @@ export default async function PrivacidadPage() {
       ? [
           {
             nombre: 'Publicar mi nombre, teléfono y oficios',
-            version: AUTORIZACION_PROVEEDOR_VERSION,
-            cuando: `Tu ficha está publicada desde el ${fecha(proveedor.creado_at)}`,
+            // La versión y la fecha que ESTA persona aceptó, no las de hoy.
+            // Antes se leían de una constante y del `creado_at`, que es
+            // parecido pero no es lo mismo: si alguien pregunta qué autorizó,
+            // la respuesta tiene que ser su fila.
+            version: proveedor.autorizacion_version ?? AUTORIZACION_PROVEEDOR_VERSION,
+            cuando: proveedor.autorizacion_at
+              ? `Aceptada el ${fecha(proveedor.autorizacion_at)}`
+              : `Tu ficha está publicada desde el ${fecha(proveedor.creado_at)}`,
           },
         ]
       : []),
@@ -112,8 +118,10 @@ export default async function PrivacidadPage() {
       ? [
           {
             nombre: 'Aparecer en el mapa con un punto',
-            version: AUTORIZACION_PROVEEDOR_VERSION,
-            cuando: 'Aceptada. Puedes quitarte del mapa sin borrar la ficha.',
+            version: proveedor?.mapa_version ?? 'mapa-v1',
+            cuando: proveedor?.mapa_at
+              ? `Aceptada el ${fecha(proveedor.mapa_at)}. Puedes quitarte del mapa sin borrar la ficha.`
+              : 'Aceptada. Puedes quitarte del mapa sin borrar la ficha.',
           },
         ]
       : []),
