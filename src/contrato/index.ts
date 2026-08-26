@@ -1,6 +1,7 @@
 import { contratoChat } from './chat'
 import { contratoComunidad } from './comunidad'
 import { contratoModeracion } from './moderacion'
+import { contratoPqr } from './pqr'
 import { contratoServicios } from './servicios'
 
 // El contrato completo. Es lo único que la aplicación de Expo va a importar:
@@ -10,6 +11,7 @@ export const contrato = {
   moderacion: contratoModeracion,
   chat: contratoChat,
   comunidad: contratoComunidad,
+  pqr: contratoPqr,
 }
 
 export type Contrato = typeof contrato

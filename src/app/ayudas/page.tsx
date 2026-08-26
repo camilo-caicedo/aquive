@@ -7,6 +7,9 @@ import {
   ShieldAlert,
   X,
   Info,
+  ListChecks,
+  PackageOpen,
+  Users,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import type { Categoria } from '@/lib/types'
@@ -18,7 +21,6 @@ import { Button } from '@/components/ui/button'
 import { AVISO_TABLERO_CORTO } from '@/lib/honestidad'
 import { Estado } from '@/components/estado'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
-import { PestanasAyudas } from '@/components/pestanas-ayudas'
 import { CruceInverso } from './cruce-inverso'
 
 const POR_PAGINA = 20
@@ -154,10 +156,45 @@ export default async function SolicitudesPage({
           Insumos para la emergencia: quién los necesita y quién los tiene.
           Pedir no exige cuenta.
         </p>
-        <PestanasAyudas activa={modoTengo ? 'tengo' : 'necesitan'} />
       </CabeceraPantalla>
 
       <section>
+        {/* Esto era un segmentado de tres —«Quién necesita · Lo que puedo
+            dar · Quién ofrece»— encima del título. Con la barra inferior ya
+            contando como una capa, era la tercera, y la regla 3 dice que un
+            tercer grupo de píldoras significa que la pantalla hace dos
+            trabajos.
+
+            Los otros dos destinos no se pierden: bajan al cuerpo como
+            salidas de texto. No son «qué lista veo» —que es lo que un
+            segmentado promete—, son dos herramientas distintas: el cruce al
+            revés y el directorio de quien ofrece. */}
+        <div className="flex flex-wrap items-center gap-x-5">
+          {modoTengo ? (
+            <Link
+              href="/ayudas"
+              className="inline-flex min-h-12 items-center gap-1.5 text-base text-enlace underline underline-offset-4"
+            >
+              <ListChecks className="size-5 shrink-0" aria-hidden="true" />
+              Ver todas las solicitudes
+            </Link>
+          ) : (
+            <Link
+              href="/ayudas?modo=tengo"
+              className="inline-flex min-h-12 items-center gap-1.5 text-base text-enlace underline underline-offset-4"
+            >
+              <PackageOpen className="size-5 shrink-0" aria-hidden="true" />
+              Cruzar con lo que puedo dar
+            </Link>
+          )}
+          <Link
+            href="/ofertadores"
+            className="inline-flex min-h-12 items-center gap-1.5 text-base text-enlace underline underline-offset-4"
+          >
+            <Users className="size-5 shrink-0" aria-hidden="true" />
+            Quién ya está ofreciendo
+          </Link>
+        </div>
 
         {modoTengo ? (
           <div className="mt-4">

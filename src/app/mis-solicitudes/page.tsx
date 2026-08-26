@@ -5,9 +5,7 @@ import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { ChevronRight, Smartphone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { PestanasLoMio } from '@/components/pestanas-lo-mio'
-import { SeccionPlegable } from '@/components/seccion-plegable'
-import { ListaLocal } from './lista-local'
-import { ListaServicios } from './lista-servicios'
+import { PestanasMias } from './pestanas-mias'
 
 export const metadata = { title: 'Lo mío' }
 
@@ -51,32 +49,13 @@ export default async function MisSolicitudesPage() {
           los datos del navegador, se pierden: guarda el enlace de cada una.
         </p>
       </div>
-      {/* Dos módulos, dos listas, y por eso dos plegables: las de insumos
-          viven 72 horas y las de servicios 15 días renovables, así que no
-          son la misma cosa aunque las dos sean «lo que pedí». Las de
-          servicios no tenían ninguna pantalla donde verse — el token se
-          guardaba en este teléfono al publicar y ahí se quedaba.
-
-          Servicios va primero: es el modulo que hoy recibe a la gente, y
-          sus solicitudes duran mas, asi que es la lista a la que se vuelve. */}
-      <div className="mt-4 space-y-3">
-        <SeccionPlegable
-          titulo="Solicitudes de servicios"
-          resumen="Oficios que pediste en el directorio. Duran 15 días, renovables."
-          resumenSiempre
-          abierta
-        >
-          <ListaServicios />
-        </SeccionPlegable>
-
-        <SeccionPlegable
-          titulo="Solicitudes de ayuda"
-          resumen="Insumos que pediste. Se borran solas a las 72 horas."
-          resumenSiempre
-        >
-          <ListaLocal />
-        </SeccionPlegable>
-      </div>
+      {/* Dos módulos, dos listas: las de insumos viven 72 horas y las de
+          servicios 15 días renovables, así que no son la misma cosa aunque
+          las dos sean «lo que pedí». Eso no se aplana — lo que cambia es
+          cómo se eligen: eran dos plegables y ahora son dos pestañas con
+          contador, porque un plegable obliga a abrirlo para saber si hay
+          algo dentro, y a lo que se viene aquí es a saberlo. */}
+      <PestanasMias />
 
       {/* La fila hacia /aliado se fue: desde que hay celda propia en la
           barra, tenerla también aquí eran dos puertas al mismo cuarto —lo

@@ -340,23 +340,34 @@ portar**.
 
 | Grupo | Pantallas | Dónde vive |
 | --- | --- | --- |
-| Entrada | 01 Bienvenida, 03 Entrar, 04 Carné | `app/page.tsx`, `app/login`, `app/registro` |
+| Entrada | 01 Bienvenida, 03 Entrar, 04 Carné | `components/bienvenida.tsx`, `app/login`, `app/servicios/soy-proveedor/listo` |
 | Buscar | 05 Inicio, 06 Categorías, 07 Listado, 08 Zonas + Mapa, 09 Ficha | `app/page.tsx`, `app/categorias`, `app/zonas`, `app/mapa`, `app/servicios/[id]` |
 | Contratar | 10 Pedir, 11 Enviada, 12 Chat, 13 Calificar | `app/servicios/publicar`, `app/mensajes`, `app/servicios/chat/[respuesta]`, `app/servicios/confirmar` |
 | Ofrecer | 14 Formulario, 15 Mi ficha | `app/servicios/soy-proveedor` |
-| Perfil | 16–25 | `app/registro`, `app/mis-datos/[token]`, `panel-*.tsx` |
-| Insumos | 26 Publicar, 27 Tablero, 28 Responder, 29 Mi solicitud | `app/publicar`, `app/solicitudes`, `app/responder/[codigo]`, `app/solicitud/[token]` |
+| Perfil | 16–25 | `app/perfil/**`, `app/mis-solicitudes` (20), `app/servicios/mi-perfil/[token]` |
+| Insumos | 26 Publicar, 27 Tablero, 28 Responder, 29 Mi solicitud | `app/publicar`, `app/ayudas`, `app/responder/[codigo]`, `app/solicitud/[token]` |
 | Comunidad | 30 Muro, 31 Hecho en el barrio | `app/muro`, `app/barrio` |
-| Fundación | 32 Entregas, 33 Hilo, 34 Dato sensible | `app/aliado`, `hoja-dato-sensible.tsx` |
+| Fundación | 32 Entregas, 33 Hilo, 34 Dato sensible | `app/aliado`, `app/aliado/conversacion/[id]` (33), `hoja-dato-sensible.tsx` (34) |
 | Moderación | 35 Colas, 36 Matrículas, imágenes | `app/admin`, `app/admin/matriculas`, `app/admin/imagenes` |
-| Información | 37 Ayuda, 38 PQR, 39 Contactos, 40 Quiénes somos | `app/como-funciona`, `app/seguridad`; PQR es **nuevo** |
+| Información | 37 Ayuda, 38 PQR, 39 Contactos, 40 Quiénes somos | `app/ayuda`, `app/pqr`, `app/contacto`, `app/quienes-somos` |
 
-**Barra inferior: `Inicio · Comunidad · Mensajes · Perfil`.** Cuatro celdas.
+**Barra inferior: `Inicio · Buscar · Mensajes · Perfil`.** Cuatro celdas, las del
+prototipo.
 
-El prototipo dice `Inicio · Buscar · Mensajes · Perfil`, pero aquí Inicio y
-Buscar son **la misma pantalla** —la portada es el directorio— y Comunidad, que
-son dos destinos nuevos, se quedaría sin puerta. Es la misma idea con las
-cuatro celdas puestas donde este sitio tiene contenido.
+**La portada depende de la sesión.** Quien llega sin sesión ve la **bienvenida**
+(pantalla 01); con sesión, el directorio. Y si la URL trae filtros
+—`/?oficio=…`— se sirve el directorio aunque no haya sesión: ese enlace viene
+de alguien que compartió una búsqueda, y enseñarle una bienvenida tira a la
+basura lo que lo hacía útil. El directorio tiene además URL propia,
+`/directorio`, que es la que indexa el buscador.
+
+⚠ La bienvenida lleva el nombre y la frase de descripción **palabra por
+palabra**: un rastreador nunca trae sesión, así que para Google `/` ES la
+bienvenida, y la verificación de marca ya se cayó dos veces por menos.
+
+`Buscar` lleva a `/categorias`, no a un buscador: es la puerta ancha para quien
+no sabe qué buscar. Comunidad —el muro y los productos— no tiene celda propia:
+cuelga de Inicio, como en el prototipo.
 
 La emergencia no tiene celda propia: se entra desde el inicio y sus pantallas
 encienden «Inicio». Y **hay una sola bandeja de mensajes**: los pedidos de

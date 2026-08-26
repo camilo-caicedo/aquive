@@ -122,7 +122,7 @@ export function ListaLocal() {
     // «Buscando…» se conserva para el lector de pantalla; lo que se ve son
     // las siluetas de las tarjetas que están por llegar.
     return (
-      <div className="mt-6" aria-busy="true" aria-live="polite">
+      <div aria-busy="true" aria-live="polite">
         <span className="sr-only">Buscando…</span>
         <Siluetas cuantas={2} />
       </div>
@@ -131,31 +131,31 @@ export function ListaLocal() {
 
   if (solicitudes.length === 0) {
     return (
-      <div className="mt-6">
-        <Estado
-          Icono={FileQuestion}
-          titulo="No hay solicitudes guardadas en este teléfono"
-          detalle="Se guardan aquí al publicarlas, y solo aquí: si cambias de teléfono se pierden."
-          accion={
-            <Button nativeButton={false} render={<Link href="/publicar" />}>
-              Publicar una solicitud
-            </Button>
-          }
-        />
-      </div>
+      <Estado
+        Icono={FileQuestion}
+        titulo="No hay solicitudes guardadas en este teléfono"
+        detalle="Se guardan aquí al publicarlas, y solo aquí: si cambias de teléfono se pierden."
+        accion={
+          // Sin relleno lima: la píldora fija de la pantalla ya lleva esa
+          // misma acción, y dos limas son dos acciones principales.
+          <Button variant="outline" nativeButton={false} render={<Link href="/publicar" />}>
+            Publicar una solicitud
+          </Button>
+        }
+      />
     )
   }
 
   return (
-    <ul className="mt-6 space-y-3">
+    <ul className="space-y-3">
       {solicitudes.map((s) => (
-        // ⚠ Arena, no papel elevado ni apagado. Estas filas viven DENTRO de
-        // un plegable, que ya es una tarjeta blanca: en `bg-card` no se veía
-        // el borde de cada fila, y `bg-muted` está a un pelo del blanco
-        // —#eee7db contra #fefcfa— así que había que fijarse para separarlas.
-        // La arena es el mismo tono de los rieles y las franjas del resto
-        // del sitio, y aguanta encima los botones en papel.
-        <li key={s.token} className="rounded-2xl bg-secondary p-4">
+        // Papel con canto, no arena. La fila iba en arena porque vivía
+        // DENTRO de un plegable, que ya era una tarjeta blanca; desde que el
+        // plegable es una pestaña, lo que hay debajo es la crema de la
+        // pantalla, y ahí lo que se lee como tarjeta es el papel con su
+        // sombra de 1 px — la misma receta de /ofertadores y de las filas de
+        // esta misma pantalla.
+        <li key={s.token} className="shadow-canto rounded-2xl bg-card p-4">
           <div className="flex items-start justify-between gap-2">
             {/* Antes solo estaba el código. Quien publicó tres cosas
                 distintas no tiene forma de saber cuál es cuál mirando cuatro
@@ -207,7 +207,9 @@ export function ListaLocal() {
               onClick={() => setQrDe((q) => (q === s.token ? null : s.token))}
               aria-expanded={qrDe === s.token}
               aria-label="Ver el código QR"
-              className="shadow-canto flex size-12 shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground transition-colors hover:text-foreground"
+              // Misma receta que los dos botones `outline` de al lado: sobre
+              // papel, el papel no se distingue del papel.
+              className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <QrCode className="size-5" aria-hidden="true" />
             </button>

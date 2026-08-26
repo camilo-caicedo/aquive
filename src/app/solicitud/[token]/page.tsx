@@ -270,13 +270,24 @@ export default async function SolicitudPage({
 
       {vista === 'ajustes' && (
         <>
+          {/* Las dos secciones que el prototipo no dibuja, y que se quedan
+              porque son funcionalidad de verdad. Lo que baja es su peso: eran
+              dos titulares de 24 px, del tamaño de «Solicitudes abiertas» en
+              el tablero, compitiendo entre sí y con el h1 dentro de una
+              pestaña que solo tiene una acción de verdad —«Ya me ayudaron»,
+              que es el único relleno lima de la pantalla—. Ahora son
+              versalitas: etiquetan la sección sin pelear con nada. */}
           <section className="mt-6 space-y-3">
-            <h2 className="font-heading text-2xl">Avisos</h2>
+            <h2 className="font-heading text-xs tracking-[0.085em] uppercase text-muted-foreground">
+              Avisos
+            </h2>
             <ActivarAvisos token={token} yaTieneAvisos={solicitud.tiene_avisos} />
           </section>
 
           <section className="mt-8">
-            <h2 className="font-heading text-2xl">Administrar</h2>
+            <h2 className="font-heading text-xs tracking-[0.085em] uppercase text-muted-foreground">
+              Administrar
+            </h2>
             <GestionSolicitud token={token} />
 
             {/* Solo en Flujo 2: en Flujo 1 no hay nada que consultar, y

@@ -1,6 +1,15 @@
 import Link from 'next/link'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
-import { Info, Inbox, MapPin, Plus, PlusCircle, PackageOpen, Truck } from 'lucide-react'
+import {
+  Info,
+  Inbox,
+  MapPin,
+  Plus,
+  PlusCircle,
+  PackageOpen,
+  Truck,
+  ClipboardList,
+} from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios, mapaDeNombres } from '@/lib/municipios'
 import { Button } from '@/components/ui/button'
@@ -8,7 +17,6 @@ import { SelectFiltro } from '@/components/select-filtro'
 import { HojaFiltros } from '@/components/hoja-filtros'
 import { BotonReportar } from '@/components/boton-reportar'
 import { AccionPrincipal } from '@/components/accion-principal'
-import { PestanasAyudas } from '@/components/pestanas-ayudas'
 import { CintaMiSolicitud } from './cinta-mi-solicitud'
 
 export const metadata = { title: 'Quién está ofreciendo' }
@@ -49,15 +57,22 @@ export default async function OfertadoresPage({
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      {/* Mismo titulo que la celda de la barra —«Ayudas»— y no «Quien
-          ofrece»: esto es una de las tres listas del mismo destino, y el
-          segmentado dice cual. */}
-      <CabeceraPantalla titulo="Ayudas">
-        <PestanasAyudas activa="ofrecen" />
-      </CabeceraPantalla>
+      {/* El titulo era «Ayudas» y lo que decia cual de las tres listas era
+          el segmentado. Sin segmentado (regla 3), el h1 tiene que nombrar lo
+          que hay en la pantalla: «Quien ofrece». */}
+      <CabeceraPantalla titulo="Quién ofrece" />
       <p className="mt-1 text-base text-muted-foreground">
         Personas y negocios que ya dijeron con qué pueden ayudar.
       </p>
+      <div className="flex flex-wrap items-center gap-x-5">
+        <Link
+          href="/ayudas"
+          className="inline-flex min-h-12 items-center gap-1.5 text-base text-enlace underline underline-offset-4"
+        >
+          <ClipboardList className="size-5 shrink-0" aria-hidden="true" />
+          Quién necesita ayuda
+        </Link>
+      </div>
       {/* Antes esta línea decía «desde aquí no se les escribe», y era
           cierta: el contacto solo ocurría cuando alguien respondía una
           solicitud. Con el cruce al revés dejó de serlo — quien ya publicó

@@ -56,6 +56,23 @@ export function PieDePagina() {
 
         <nav aria-label="Documentos legales" className="mt-4">
           <ul className="flex flex-wrap gap-x-4">
+            {/* Ayuda va primera: es la puerta a la PQR y al soporte, y quien
+                baja hasta el pie suele venir buscando a quién escribirle. */}
+            <li>
+              <Link href="/ayuda" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
+                Ayuda
+              </Link>
+            </li>
+            <li>
+              <Link href="/contacto" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
+                Contacto
+              </Link>
+            </li>
+            <li>
+              <Link href="/quienes-somos" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
+                Quiénes somos
+              </Link>
+            </li>
             <li>
               <Link href="/como-funciona" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
                 Cómo funciona

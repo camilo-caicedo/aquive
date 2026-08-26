@@ -9,6 +9,7 @@ import * as chat from '@/server/chat/hilo'
 import * as comunidad from '@/server/comunidad/muro'
 import * as imagenes from '@/server/imagenes/recorrido'
 import * as moderacion from '@/server/moderacion/comandos'
+import * as pqr from '@/server/pqr/buzon'
 import * as servicios from '@/server/servicios/consultas'
 import * as ubicacion from '@/server/servicios/ubicacion'
 
@@ -103,6 +104,18 @@ export const enrutador = os.router({
         return await imagenes.procesar(db, input.imagen_id)
       } catch (e) {
         if (e instanceof imagenes.ImagenRechazada) {
+          throw errors.RECHAZADO({ data: { motivo: e.message } })
+        }
+        throw e
+      }
+    }),
+  },
+  pqr: {
+    crear: os.pqr.crear.handler(async ({ input, errors }) => {
+      try {
+        return await pqr.crear(db, input)
+      } catch (e) {
+        if (e instanceof pqr.PqrRechazada) {
           throw errors.RECHAZADO({ data: { motivo: e.message } })
         }
         throw e

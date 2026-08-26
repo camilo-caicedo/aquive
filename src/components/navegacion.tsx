@@ -3,10 +3,10 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  HandHeart,
   Stethoscope,
   PackageCheck,
   MessageSquare,
+  Search,
   UserRound,
 } from 'lucide-react'
 
@@ -53,10 +53,10 @@ const ENLACES = [
   // Los dos lados del directorio, uno en cada celda: quién presta un
   // servicio y quién está pidiendo uno. Antes el segundo era una sección
   // colgada del primero —/servicios/solicitudes— y no lo encontraba nadie.
-  // Comunidad: el muro y «Hecho en el barrio». Son dos destinos nuevos que
-  // sin celda propia no los encuentra nadie — se entra por el muro y desde
-  // ahí se cruza al otro.
-  { href: '/muro', etiqueta: 'Comunidad', Icono: HandHeart },
+  // «Buscar» lleva a las categorías, no a un buscador: es la puerta ancha
+  // para quien no sabe qué escribir. Debajo cuelgan el listado, el mapa por
+  // zonas y la ficha.
+  { href: '/categorias', etiqueta: 'Buscar', Icono: Search },
   // ⚠ Toda la emergencia en una sola celda. Eran dos destinos de la barra
   // —«Solicitudes» y «Quién ofrece»— más un segmentado propio dentro del
   // primero: tres capas de navegación para tres listas de la misma
@@ -68,7 +68,11 @@ const ENLACES = [
   // entero— pero deja de gastar una de las cuatro celdas, que ahora las pide
   // el chat.
   { href: '/mensajes', etiqueta: 'Mensajes', Icono: MessageSquare },
-  { href: '/mis-solicitudes', etiqueta: 'Perfil', Icono: UserRound },
+  // ⚠ Apunta a /perfil y NO a /registro: aquel rebota a /login sin sesión, y
+  // quien publicó una solicitud sin cuenta —que es el rol central de este
+  // sitio— se quedaría fuera de lo suyo. /perfil sirve las dos caras: con
+  // sesión el menú del prototipo, sin ella las solicitudes de este teléfono.
+  { href: '/perfil', etiqueta: 'Perfil', Icono: UserRound },
 ]
 
 // La quinta, antes de «Lo mío», y distinta según el público — que son dos
@@ -116,23 +120,26 @@ const TAMBIEN: Record<string, string[]> = {
   // Todo lo que se entra a MIRAR cuelga del inicio, incluida la emergencia:
   // sale de la barra pero no del sitio, así que sus pantallas encienden
   // «Inicio» en vez de apagar las cuatro celdas.
+  // Lo que se entra a MIRAR desde el inicio: la emergencia entera y la
+  // comunidad. Ninguna de las dos gasta celda, y sus pantallas encienden
+  // «Inicio» en vez de apagar las cuatro.
   '/': [
+    '/directorio',
     '/servicios',
     '/servidores',
-    '/categorias',
-    '/zonas',
-    '/mapa',
     '/ayudas',
     '/ofertadores',
     '/publicar',
     '/responder',
     '/solicitudes',
+    '/muro',
+    '/barrio',
   ],
   // Las otras dos listas de la emergencia, y los dos extremos de una
   // solicitud. /solicitud/[token] no está aquí: esa es la propia, y vive
   // en «Lo mío».
-  // El muro y los productos son las dos caras de Comunidad.
-  '/muro': ['/barrio'],
+  // Buscar: categorías es la puerta, y debajo el mapa, las zonas y la ficha.
+  '/categorias': ['/zonas', '/mapa'],
   // La ruta vieja de la bandeja acompañada redirige aquí, pero alguien puede
   // llegar por un enlace guardado.
   '/mensajes': ['/coordinacion'],
@@ -141,11 +148,16 @@ const TAMBIEN: Record<string, string[]> = {
   // apagaba las cuatro celdas y la barra parecía de otra aplicación.
   // `/servicios/soy-proveedor` es la pestaña «Mi ficha», aunque su ruta
   // cuelgue del módulo de servicios: quien la abre viene a mirar lo suyo.
-  '/mis-solicitudes': [
+  '/perfil': [
+    '/mis-solicitudes',
     '/registro',
     '/mis-datos',
     '/solicitud',
     '/servicios/soy-proveedor',
+    '/servicios/mi-perfil',
+    '/ayuda',
+    '/contacto',
+    '/quienes-somos',
   ],
 }
 
