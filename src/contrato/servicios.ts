@@ -218,7 +218,53 @@ const erroresUbicacion = {
   },
 } as const
 
+/** Un profesional con matrícula, para la tira de la portada. */
+export const ProfesionalBreve = z.object({
+  id: z.uuid(),
+  nombre_visible: z.string(),
+  profesion: z.string().nullable(),
+  verificado: z.boolean(),
+  municipios: z.array(z.string()),
+})
+
+/** Una entidad del directorio informativo. */
+export const EntidadBreve = z.object({
+  id: z.uuid(),
+  nombre: z.string(),
+  subtitulo: z.string().nullable(),
+  cobertura: z.string(),
+})
+
+export type ProfesionalBreve = z.infer<typeof ProfesionalBreve>
+export type EntidadBreve = z.infer<typeof EntidadBreve>
+
 export const contratoServicios = {
+  /**
+   * Lo que llena la portada: quién está trabajando AHORA y cerca.
+   *
+   * «Ahora» es el día y la franja de este momento en America/Bogota, cruzados
+   * con los que cada prestador declaró. En UTC el servidor cambiaría de día a
+   * las 7 p. m. hora de Cali y la lista se vaciaría a media tarde.
+   *
+   * «Cerca» es el municipio y nada más fino. No hay ubicación del visitante y
+   * no se le va a pedir: la distancia en kilómetros que dibuja el prototipo
+   * necesitaría saber dónde está quien mira, y eso es un dato que esta
+   * aplicación no recoge de quien busca.
+   */
+  inicio: oc
+    .input(
+      z.object({
+        municipio: z.string().regex(/^[0-9]{5}$/).optional().catch(undefined),
+      }),
+    )
+    .output(
+      z.object({
+        disponibles: z.array(EnListado),
+        profesionales: z.array(ProfesionalBreve),
+        entidades: z.array(EntidadBreve),
+      }),
+    ),
+
   /** La ficha pública de un prestador. Pantalla 09. */
   ficha: oc.input(z.object({ id: z.uuid() })).output(Ficha.nullable()),
 

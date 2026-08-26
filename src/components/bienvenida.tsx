@@ -86,7 +86,7 @@ export function Bienvenida() {
             segundo dice de frente que lleva a entrar con Google, para que
             nadie lo toque creyendo que sigue mirando. */}
         <Link
-          href="/directorio"
+          href="/inicio"
           className="shadow-cartel-azul mt-7 block rounded-2xl bg-card p-5 transition-transform hover:-translate-y-0.5"
         >
           <span className="font-heading block text-xl">Necesito un servicio</span>

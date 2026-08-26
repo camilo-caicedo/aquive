@@ -25,6 +25,7 @@ const os = implement(contrato).$context<Contexto>()
 
 export const enrutador = os.router({
   servicios: {
+    inicio: os.servicios.inicio.handler(({ input }) => servicios.inicio(db, input)),
     ficha: os.servicios.ficha.handler(({ input }) => servicios.ficha(db, input.id)),
     directorio: os.servicios.directorio.handler(({ input }) => servicios.directorio(db, input)),
     miFicha: os.servicios.miFicha.handler(({ context }) =>

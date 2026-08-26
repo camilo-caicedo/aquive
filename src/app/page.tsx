@@ -1,33 +1,64 @@
+import type { Metadata } from 'next'
+
 import { createClient } from '@/lib/supabase/server'
 import { Bienvenida } from '@/components/bienvenida'
 import { Directorio } from '@/components/directorio'
+import { Inicio } from '@/components/inicio'
 
 /**
  * La portada, y la decisión de qué es la portada.
  *
- * Decisión del responsable: **quien llega sin sesión ve la bienvenida**, no el
- * directorio. Pero hacerlo a secas rompería dos cosas, así que hay tres casos:
+ * Tres casos, y ninguno es de conveniencia:
  *
- *   · Con sesión                    → el directorio. Ya eligió qué viene a hacer.
- *   · Sin sesión, `/` a secas       → la bienvenida (pantalla 01).
- *   · Sin sesión, `/?oficio=…`      → el directorio, con sus filtros puestos.
+ *   · Sin sesión, `/` a secas  → la BIENVENIDA. Decisión del responsable.
+ *   · Con sesión               → el INICIO: los tres módulos y quién trabaja
+ *                                ahora. Quien ya entró no necesita que le
+ *                                expliquen qué es esto cada vez.
+ *   · Con filtros en la URL    → el DIRECTORIO, con los filtros puestos.
  *
- * El tercero no es una excepción de conveniencia. Una URL con filtros viene de
- * alguien que compartió una búsqueda por WhatsApp —«mira, modistas en la
- * comuna 3»— y enseñarle una bienvenida a quien abre ese enlace tira a la
- * basura justo lo que lo hacía útil. Los filtros viven en la URL precisamente
- * para eso.
+ * El tercero existe porque una URL con filtros viene de alguien que compartió
+ * una búsqueda por WhatsApp —«mira, modistas en la comuna 3»—, y enseñarle una
+ * bienvenida a quien abre ese enlace tira a la basura lo que lo hacía útil.
+ *
+ * Se RENDERIZA aquí en vez de redirigir a `/directorio`, y a propósito: un
+ * `redirect()` desde un Server Component sale como 200 con la orden dentro,
+ * así que quien no ejecuta JavaScript —un rastreador, un previsualizador de
+ * enlaces de WhatsApp— recibe una página vacía en vez del listado. Lo que sí
+ * hace falta es que ese listado tenga UNA dirección para el buscador, y de eso
+ * se encarga el `canonical` de abajo: dos URL con el mismo contenido se
+ * reparten el posicionamiento.
  *
  * ⚠ La decisión vive AQUÍ y no en `src/proxy.ts`. El proxy corre también sobre
  * `/api/*` y su único trabajo es refrescar el token de Supabase; meterle
- * enrutado de producto lo convierte en un sitio donde nadie va a buscarlo
- * cuando esto no haga lo que se espera.
+ * enrutado de producto lo convierte en un sitio donde nadie va a buscarlo.
  *
  * ⚠ Y la bienvenida lleva el nombre y la frase de descripción palabra por
  * palabra, porque un rastreador nunca trae sesión: para Google, `/` ES la
  * bienvenida. La verificación de marca ya se cayó dos veces por menos.
  */
-export default async function InicioPage({
+/**
+ * El listado filtrado tiene su dirección propia. Si esta URL trae filtros, le
+ * dice al buscador que la buena es aquella.
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>
+}): Promise<Metadata> {
+  const params = await searchParams
+  const puestos = Object.entries(params).filter(([, v]) => Boolean(v)) as [
+    string,
+    string,
+  ][]
+  if (puestos.length === 0) return {}
+  return {
+    alternates: {
+      canonical: `/directorio?${new URLSearchParams(puestos).toString()}`,
+    },
+  }
+}
+
+export default async function PortadaPage({
   searchParams,
 }: {
   searchParams: Promise<{
@@ -42,12 +73,14 @@ export default async function InicioPage({
   const params = await searchParams
   const hayFiltros = Object.values(params).some(Boolean)
 
+  if (hayFiltros) return <Directorio searchParams={searchParams} />
+
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user && !hayFiltros) return <Bienvenida />
+  if (!user) return <Bienvenida />
 
-  return <Directorio searchParams={searchParams} />
+  return <Inicio />
 }

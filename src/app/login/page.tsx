@@ -97,7 +97,7 @@ export default async function LoginPage({
             la segunda como enlace: es para pocos, y con dos botones iguales
             quien solo venía a mirar dudaba cuál era el suyo. */}
         <Link
-          href="/directorio"
+          href="/inicio"
           className="shadow-canto mt-4 inline-flex min-h-12 items-center rounded-full bg-card px-5 text-base font-semibold"
         >
           Seguir sin cuenta

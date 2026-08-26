@@ -1,8 +1,9 @@
+import Image from 'next/image'
 import Link from 'next/link'
+
+import isotipo from '@/../docs/marca/isotipo-carrito.png'
 import { ShieldCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
-import { Marca } from '@/components/marca'
-import { Button } from '@/components/ui/button'
 import { BarraInferior, Navegacion, type Coordinacion } from '@/components/navegacion'
 import { BotonAvisos } from '@/components/boton-avisos'
 import { BotonInstalar } from '@/components/boton-instalar'
@@ -64,13 +65,26 @@ export async function Encabezado() {
       className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm"
     >
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2">
-        {/* La marca va suelta, sin caja: la identidad dice que no se encierra
-            en un cuadro con borde cuando ya hay fondo. Antes había un
-            alfiler de mapa aquí, y ese alfiler prometía un mapa que AquíVe
-            no es. */}
+        {/* El isotipo suelto y el nombre en píldora lima, como en la
+            bienvenida: es la misma marca en los dos sitios y conviene que se
+            reconozca igual. El nombre va en TEXTO y no dibujado — el revisor
+            de marca de Google lee el DOM.
+
+            El PNG no tiene canal alfa, así que el isotipo va en su círculo
+            blanco; suelto sobre el crema se vería un cuadrado. */}
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <Marca className="size-9 text-foreground" />
-          <span className="font-heading text-2xl leading-none">AquíVe</span>
+          <span className="size-10 shrink-0 overflow-hidden rounded-full bg-card p-1">
+            <Image
+              src={isotipo}
+              alt=""
+              width={40}
+              height={40}
+              className="h-full w-full object-contain"
+            />
+          </span>
+          <span className="bg-primary text-primary-foreground font-heading rounded-full px-3 py-1 text-base leading-none tracking-[0.08em] uppercase">
+            Aquí Ve
+          </span>
         </Link>
 
         {/* Arriba solo queda la identidad y lo de la cuenta. «Mi perfil»
@@ -108,19 +122,17 @@ export async function Encabezado() {
               instalar; en iPhone no aparece nunca. */}
           <BotonInstalar />
           {tienePerfil && <BotonAvisos sinVer={encabezado?.avisos_sin_ver ?? 0} />}
-          {/* Para quien no tiene sesión, y en relleno lima por
-              decisión del responsable (20 de agosto de 2026).
-
-              ⚠ Es una excepción consciente a la regla 2, no un descuido:
-              en una pantalla que además tiene `AccionPrincipal` —la
-              portada, el directorio de quien ofrece— un visitante ve dos
-              rellenos lima a la vez. Si algún día hay que elegir uno,
-              el de la píldora fija es la acción de la pantalla y este es
-              la puerta de la cuenta. Va el último de la fila. */}
+          {/* Píldora blanca con canto, no relleno lima. El lima del
+              encabezado ya lo gasta la marca, y dos limas en la misma barra
+              —la marca y la puerta de la cuenta— se disputan el ojo sin que
+              ninguno sea la acción de la pantalla (regla 2). */}
           {!user && (
-            <Button nativeButton={false} render={<Link href="/login" />}>
+            <Link
+              href="/login"
+              className="shadow-canto inline-flex min-h-12 shrink-0 items-center rounded-full bg-card px-5 text-base font-semibold"
+            >
               Entrar
-            </Button>
+            </Link>
           )}
         </div>
       </div>

@@ -10,6 +10,8 @@ import {
   proveedores,
   proveedoresPublicos,
   resenasPublicas,
+  servidoresPublicos,
+  entidadesPublicas,
   zonas,
 } from '@/db/esquema'
 import { NOMBRE_GRUPO } from '@/contrato/servicios'
@@ -19,7 +21,9 @@ import type {
   Facetas,
   Ficha,
   Filtros,
+  EntidadBreve,
   MiFicha,
+  ProfesionalBreve,
   ZonaConGente,
 } from '@/contrato/servicios'
 
@@ -433,4 +437,184 @@ export async function zonasConGente(
     municipio_nombre: f.municipioNombre ?? null,
     cuantos: aNumero(f.cuantos),
   }))
+}
+
+/**
+ * El día y la franja de AHORA en Colombia.
+ *
+ * En UTC el servidor cambia de día a las 7 p. m. hora de Cali, así que una
+ * lista de «quién trabaja hoy» calculada en UTC se vaciaría a media tarde y
+ * volvería a llenarse con la gente del día siguiente. La zona va escrita.
+ */
+function ahoraEnColombia(): { dia: string; franja: string } {
+  const partes = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Bogota',
+    weekday: 'short',
+    hour: 'numeric',
+    hour12: false,
+  }).formatToParts(new Date())
+
+  const dias: Record<string, string> = {
+    Mon: 'lun',
+    Tue: 'mar',
+    Wed: 'mie',
+    Thu: 'jue',
+    Fri: 'vie',
+    Sat: 'sab',
+    Sun: 'dom',
+  }
+  const dia = dias[partes.find((p) => p.type === 'weekday')?.value ?? 'Mon'] ?? 'lun'
+  const hora = Number(partes.find((p) => p.type === 'hour')?.value ?? 12)
+
+  // Los mismos cortes que usa la interfaz al pedir la franja: mañana hasta
+  // las 12, tarde hasta las 18, noche el resto.
+  const franja = hora < 12 ? 'manana' : hora < 18 ? 'tarde' : 'noche'
+  return { dia, franja }
+}
+
+/**
+ * Lo que llena la portada.
+ *
+ * Tres consultas en una llamada, porque son tres tiras de la misma pantalla y
+ * pedirlas por separado desde el cliente sería tres viajes para pintar un
+ * primer pantallazo.
+ */
+export async function inicio(
+  db: BaseDeDatos,
+  filtros: { municipio?: string },
+): Promise<{
+  disponibles: EnListado[]
+  profesionales: ProfesionalBreve[]
+  entidades: EntidadBreve[]
+}> {
+  const { dia, franja } = ahoraEnColombia()
+
+  const cerca = filtros.municipio
+    ? eq(proveedoresPublicos.municipio, filtros.municipio)
+    : undefined
+
+  const [filas, profesionales, entidades] = await Promise.all([
+    db
+      .select({
+        id: proveedoresPublicos.id,
+        nombreVisible: proveedoresPublicos.nombreVisible,
+        tipo: proveedoresPublicos.tipo,
+        telefonoVerificado: proveedoresPublicos.telefonoVerificado,
+        municipio: proveedoresPublicos.municipio,
+        municipioNombre: municipios.nombre,
+        zonaNombre: proveedoresPublicos.zonaNombre,
+        zonaTexto: proveedoresPublicos.zonaTexto,
+        modalidad: proveedoresPublicos.modalidad,
+        referenciasConfirmadas: proveedoresPublicos.referenciasConfirmadas,
+        serviciosConfirmados: proveedoresPublicos.serviciosConfirmados,
+        totalResenas: proveedoresPublicos.totalResenas,
+        cumplimiento: proveedoresPublicos.cumplimiento,
+        descripcion: proveedoresPublicos.descripcion,
+        latitud: proveedoresPublicos.latitud,
+        longitud: proveedoresPublicos.longitud,
+      })
+      .from(proveedoresPublicos)
+      .leftJoin(municipios, eq(municipios.codigoDane, proveedoresPublicos.municipio))
+      .where(
+        and(
+          sql`${proveedoresPublicos.dias} @> array[${dia}]::text[]`,
+          sql`${proveedoresPublicos.franjas} @> array[${franja}]::text[]`,
+          ...(cerca ? [cerca] : []),
+        ),
+      )
+      .orderBy(
+        desc(proveedoresPublicos.telefonoVerificado),
+        desc(proveedoresPublicos.serviciosConfirmados),
+      )
+      .limit(12),
+    db
+      .select({
+        id: servidoresPublicos.id,
+        nombre_visible: servidoresPublicos.nombreVisible,
+        profesion: servidoresPublicos.profesion,
+        verificado: servidoresPublicos.verificado,
+        municipios: servidoresPublicos.municipios,
+      })
+      .from(servidoresPublicos)
+      // Los que alguien ya revisó, primero. Es la única señal comprobada que
+      // hay en esta tira, y la ficha explica qué significa.
+      .orderBy(desc(servidoresPublicos.verificado))
+      .limit(12),
+    db
+      .select({
+        id: entidadesPublicas.id,
+        nombre: entidadesPublicas.nombre,
+        subtitulo: entidadesPublicas.subtitulo,
+        cobertura: entidadesPublicas.cobertura,
+      })
+      .from(entidadesPublicas)
+      .orderBy(asc(entidadesPublicas.orden))
+      .limit(12),
+  ])
+
+  const ids = filas.map((f) => f.id!).filter(Boolean)
+  const oficios = ids.length
+    ? await db
+        .select({
+          proveedorId: proveedorOficiosPublicos.proveedorId,
+          oficio_id: proveedorOficiosPublicos.oficioId,
+          nombre: proveedorOficiosPublicos.oficioNombre,
+          grupo: proveedorOficiosPublicos.grupo,
+          modo: proveedorOficiosPublicos.modo,
+          precio_desde: proveedorOficiosPublicos.precioDesde,
+          unidad: proveedorOficiosPublicos.unidad,
+        })
+        .from(proveedorOficiosPublicos)
+        .where(inArray(proveedorOficiosPublicos.proveedorId, ids))
+        .orderBy(asc(proveedorOficiosPublicos.oficioNombre))
+    : []
+
+  const porProveedor = new Map<string, EnListado['oficios']>()
+  for (const o of oficios) {
+    const lista = porProveedor.get(o.proveedorId!) ?? []
+    lista.push({
+      oficio_id: o.oficio_id!,
+      nombre: o.nombre ?? '',
+      grupo: o.grupo,
+      modo: (o.modo ?? 'normal') as EnListado['oficios'][number]['modo'],
+      precio_desde: aNumeroONulo(o.precio_desde),
+      unidad: o.unidad as EnListado['oficios'][number]['unidad'],
+    })
+    porProveedor.set(o.proveedorId!, lista)
+  }
+
+  return {
+    disponibles: filas.map((f) => ({
+      id: f.id!,
+      nombre_visible: f.nombreVisible ?? '',
+      tipo: f.tipo ?? 'persona',
+      telefono_verificado: f.telefonoVerificado ?? false,
+      municipio: f.municipio ?? '',
+      municipio_nombre: f.municipioNombre ?? null,
+      zona_nombre: f.zonaNombre,
+      zona_texto: f.zonaTexto,
+      modalidad: (f.modalidad ?? []) as EnListado['modalidad'],
+      referencias_confirmadas: aNumero(f.referenciasConfirmadas),
+      servicios_confirmados: aNumero(f.serviciosConfirmados),
+      total_resenas: aNumero(f.totalResenas),
+      cumplimiento: aNumeroONulo(f.cumplimiento),
+      descripcion: f.descripcion,
+      latitud: aNumeroONulo(f.latitud),
+      longitud: aNumeroONulo(f.longitud),
+      oficios: porProveedor.get(f.id!) ?? [],
+    })),
+    profesionales: profesionales.map((p) => ({
+      id: p.id!,
+      nombre_visible: p.nombre_visible ?? '',
+      profesion: p.profesion,
+      verificado: p.verificado ?? false,
+      municipios: p.municipios ?? [],
+    })),
+    entidades: entidades.map((e) => ({
+      id: e.id!,
+      nombre: e.nombre ?? '',
+      subtitulo: e.subtitulo,
+      cobertura: e.cobertura ?? 'local',
+    })),
+  }
 }

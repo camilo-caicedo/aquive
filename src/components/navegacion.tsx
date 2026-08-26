@@ -124,6 +124,7 @@ const TAMBIEN: Record<string, string[]> = {
   // comunidad. Ninguna de las dos gasta celda, y sus pantallas encienden
   // «Inicio» en vez de apagar las cuatro.
   '/': [
+    '/inicio',
     '/directorio',
     '/servicios',
     '/servidores',
