@@ -245,6 +245,37 @@
   animation: aparecer 0.28s ease-out both;
 }
 
+/* La hoja que sube. Solo transform y opacidad, como todo lo demás: el
+   `<dialog>` está en la capa superior y animar su alto o su posición lo
+   haría repintar la pantalla entera en un teléfono viejo. */
+@keyframes subir-hoja {
+  from {
+    opacity: 0;
+    transform: translateY(2rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animar-hoja {
+  animation: subir-hoja 0.24s ease-out both;
+}
+
+.animar-hoja::backdrop {
+  animation: aparecer-fondo 0.24s ease-out both;
+}
+
+@keyframes aparecer-fondo {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Escalona las tarjetas de una lista sin JS: cada hijo entra un pelo
    después que el anterior, y se corta a los 8 para que una lista larga
    no obligue a esperar. */

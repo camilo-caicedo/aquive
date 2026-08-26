@@ -128,7 +128,7 @@ const DATOS_ESTRUCTURADOS = {
   },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children, modal }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
@@ -156,6 +156,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <div id="contenido" className="flex-1">
           {children}
         </div>
+        {/* Las pantallas interceptadas: la ficha y los formularios de flujo
+            se abren encima de lo que ya estaba, sin desmontarlo. Fuera de
+            una intercepción esto es `null`. Ver `hoja-modal.tsx`. */}
+        {modal}
         <PieDePagina />
       </body>
     </html>
