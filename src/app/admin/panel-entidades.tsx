@@ -275,7 +275,7 @@ function FormularioEntidad({
         <Label className="mb-2">Enlaces</Label>
         <div className="space-y-2">
           {enlaces.map((en, i) => (
-            <div key={i} className="space-y-2 rounded-lg border border-border p-3">
+            <div key={i} className="space-y-2 rounded-xl bg-background p-3">
               <Input
                 value={en.etiqueta}
                 onChange={(e) => actualizarEnlace(i, 'etiqueta', e.target.value)}
@@ -511,7 +511,7 @@ function FilaEntidad({
             <span
               className={
                 entidad.activa
-                  ? 'inline-flex shrink-0 items-center rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-foreground'
+                  ? 'inline-flex shrink-0 items-center rounded-full bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-foreground'
                   : 'inline-flex shrink-0 items-center rounded-full border border-enlace/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground'
               }
             >

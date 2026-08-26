@@ -147,7 +147,7 @@ export function PanelServicios({
           ].map(([etiqueta, valor]) => (
             <div key={etiqueta as string} className="rounded-2xl bg-card p-3 shadow-canto">
               <dt className="font-heading text-xs tracking-[0.085em] uppercase text-muted-foreground">{etiqueta}</dt>
-              <dd className="text-2xl font-bold">{valor}</dd>
+              <dd className="mt-0.5 font-heading text-3xl leading-none">{valor}</dd>
             </div>
           ))}
         </dl>
@@ -172,9 +172,15 @@ export function PanelServicios({
                 <Link
                   href={`/admin/servicios?cola=${c.clave}`}
                   aria-current={activa ? 'page' : undefined}
+                  // ⚠ La cola elegida va en arena, no en lima: el relleno
+                  // lima está reservado a la acción principal de la
+                  // pantalla, y una pestaña activa no es una acción
+                  // (regla 2). Que esté elegida lo dicen tres cosas más
+                  // —`aria-current`, la negrita y el fondo—, así que no
+                  // depende del color (regla 9).
                   className={`flex min-h-12 items-center gap-3 rounded-2xl px-4 py-2.5 transition-colors ${
                     activa
-                      ? 'border border-enlace/25 bg-accent text-accent-foreground'
+                      ? 'bg-secondary text-secondary-foreground'
                       : 'bg-card shadow-canto hover:bg-muted'
                   }`}
                 >
@@ -182,12 +188,16 @@ export function PanelServicios({
                     className={`size-5 shrink-0 ${activa ? '' : 'text-muted-foreground'}`}
                     aria-hidden="true"
                   />
-                  <span className="min-w-0 flex-1 text-base font-medium">{c.etiqueta}</span>
                   <span
-                    className={`flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                    className={`min-w-0 flex-1 text-base ${activa ? 'font-bold' : 'font-medium'}`}
+                  >
+                    {c.etiqueta}
+                  </span>
+                  <span
+                    className={`flex size-7 shrink-0 items-center justify-center rounded-full text-base font-bold ${
                       c.cuantas > 0
                         ? activa
-                          ? 'bg-primary text-primary-foreground'
+                          ? 'bg-card text-foreground'
                           : 'bg-secondary text-secondary-foreground'
                         : 'text-muted-foreground'
                     }`}

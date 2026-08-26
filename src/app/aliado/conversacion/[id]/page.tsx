@@ -34,7 +34,7 @@ export default async function ConversacionPage({
   // valida contra una lista corta y no se usa tal cual: un `volver` que
   // venga de la URL y se pinte sin mirar es un redirect abierto con otro
   // nombre.
-  const atras = volver === '/coordinacion' ? '/coordinacion' : '/aliado?hilos=1'
+  const atras = volver === '/mensajes' ? '/mensajes' : '/aliado?hilos=1'
   const supabase = await createClient()
 
   const {

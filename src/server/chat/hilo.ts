@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 
-import { and, asc, eq } from 'drizzle-orm'
+import { and, asc, desc, eq, sql } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
 import {
@@ -12,7 +12,7 @@ import {
   solicitudesServicio,
 } from '@/db/esquema'
 import { MENSAJE_CONTACTO, contieneContacto } from '@/lib/validacion'
-import type { Autor, Hilo, Mensaje } from '@/contrato/chat'
+import type { Autor, Hilo, HiloEnBandeja, Mensaje } from '@/contrato/chat'
 
 // El chat de Servicios. Capa de dominio: sin `next/*`, sin cookies.
 //
@@ -187,4 +187,63 @@ export async function escribir(
       creado_at: String(creado.creado_at),
     },
   }
+}
+
+/**
+ * La bandeja del prestador.
+ *
+ * Solo del lado con cuenta, y eso no es una carencia: quien pide un servicio
+ * no tiene cuenta a propósito, así que no existe nadie a quien listarle sus
+ * hilos. Los suyos viven en el enlace de su solicitud.
+ */
+export async function bandeja(
+  db: BaseDeDatos,
+  usuarioId: string | null,
+): Promise<HiloEnBandeja[]> {
+  if (!usuarioId) return []
+
+  const filas = await db
+    .select({
+      respuestaId: respuestasServicio.id,
+      oficio: catalogoOficios.nombre,
+      chatId: chatsServicio.id,
+    })
+    .from(chatsServicio)
+    .innerJoin(respuestasServicio, eq(respuestasServicio.id, chatsServicio.respuestaId))
+    .innerJoin(proveedores, eq(proveedores.id, respuestasServicio.proveedorId))
+    .innerJoin(
+      solicitudesServicio,
+      eq(solicitudesServicio.id, respuestasServicio.solicitudId),
+    )
+    .leftJoin(catalogoOficios, eq(catalogoOficios.id, solicitudesServicio.oficioId))
+    .where(eq(proveedores.perfilId, usuarioId))
+
+  const salida: HiloEnBandeja[] = []
+  for (const f of filas) {
+    const [ultimo] = await db
+      .select({ cuerpo: mensajesServicio.cuerpo, creado: mensajesServicio.creadoAt })
+      .from(mensajesServicio)
+      .where(
+        and(eq(mensajesServicio.chatId, f.chatId), eq(mensajesServicio.oculto, false)),
+      )
+      .orderBy(desc(mensajesServicio.creadoAt))
+      .limit(1)
+
+    const [{ n }] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(mensajesServicio)
+      .where(eq(mensajesServicio.chatId, f.chatId))
+
+    salida.push({
+      respuesta_id: f.respuestaId,
+      // Quien pidió no tiene nombre publicado, y no se le inventa uno.
+      con: 'Quien pidió el servicio',
+      oficio: f.oficio ?? null,
+      ultimo: ultimo?.cuerpo ?? null,
+      ultimo_at: ultimo ? String(ultimo.creado) : null,
+      mensajes: Number(n),
+    })
+  }
+
+  return salida.sort((a, b) => (b.ultimo_at ?? '').localeCompare(a.ultimo_at ?? ''))
 }

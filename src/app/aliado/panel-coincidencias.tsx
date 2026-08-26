@@ -118,7 +118,7 @@ export function PanelCoincidencias({ coincidencias }: { coincidencias: Coinciden
                   placeholder="Cuéntale para qué lo buscas y cómo sería la entrega en el acopio."
                   aria-label="Mensaje de la invitación"
                 />
-                <p className="text-sm text-muted-foreground">
+                <p className="text-base text-muted-foreground">
                   Este mensaje va firmado por ti, no por quien ofrece. Se abre
                   la conversación con los tres dentro.
                 </p>

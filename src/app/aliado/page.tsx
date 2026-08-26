@@ -36,7 +36,7 @@ type Vista = 'conversaciones' | 'coincidencias' | 'equipo' | 'proveedores'
  * quien ofreció ayuda en una solicitud acompañada. El segundo aterrizaba
  * en el panel de una fundación que no es la suya, con las colas de
  * `PanelHilos` —conceptos de quien coordina— y con la de por defecto
- * siempre vacía. Ahora se va a `/coordinacion`, que es una lista de sus
+ * siempre vacía. Ahora se va a `/mensajes`, que es una lista de sus
  * conversaciones y nada más.
  *
  * Cada pestaña consulta lo suyo y nada más. Antes se hacían las cuatro
@@ -56,7 +56,7 @@ export default async function AliadoPage({
   if (!user) redirect('/login')
 
   const { data: esAliado } = await supabase.rpc('soy_aliado')
-  if (!esAliado) redirect('/coordinacion')
+  if (!esAliado) redirect('/mensajes')
 
   const vista: Vista =
     ver === 'coincidencias' || ver === 'equipo' || ver === 'proveedores'

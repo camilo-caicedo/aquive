@@ -115,7 +115,7 @@ export function PanelReferencias({
               }
             >
               <div className="flex items-start justify-between gap-2">
-                <span className="min-w-0 text-lg font-bold">{r.proveedor_nombre}</span>
+                <span className="min-w-0 font-heading text-xl leading-tight">{r.proveedor_nombre}</span>
                 {/* El estado en palabras y con su color, nunca solo color
                     (regla 9). «Por llamar» es lo único que pide algo. */}
                 <span
@@ -133,13 +133,13 @@ export function PanelReferencias({
               </div>
 
               {r.oficio_nombre && (
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-base text-muted-foreground">
                   Referencia de: {r.oficio_nombre}
                 </p>
               )}
 
               {!r.proveedor_telefono_verificado && (
-                <p className="mt-1 text-sm text-accent-foreground">
+                <p className="mt-1 text-base text-accent-foreground">
                   Su propio teléfono todavía está sin verificar.
                 </p>
               )}
@@ -170,7 +170,7 @@ export function PanelReferencias({
                   </HojaDatoSensible>
                 </div>
               ) : (
-                <p className="mt-3 text-sm text-muted-foreground">
+                <p className="mt-3 text-base text-muted-foreground">
                   No tienes permiso para ver estos datos. Un coordinador lo
                   otorga persona por persona.
                 </p>

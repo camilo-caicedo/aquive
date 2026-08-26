@@ -118,7 +118,7 @@ export function PanelSolicitudes({ solicitudes }: { solicitudes: SolicitudPorAte
                 aria-label="Primer mensaje"
                 placeholder="Ej: Tenemos el agua y el arroz en la bodega. Puedes pasar por el acopio en horario de atención."
               />
-              <p className="text-sm text-muted-foreground">
+              <p className="text-base text-muted-foreground">
                 Este mensaje lo va a leer quien pidió. No pongas teléfonos ni
                 direcciones que no sean las del acopio.
               </p>

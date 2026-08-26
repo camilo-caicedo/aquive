@@ -130,7 +130,7 @@ export default async function MatriculasPage() {
                 ) : (
                   // `OTRA`: sin registro consultable no hay nada que mirar,
                   // y fingir que sí lo hay es peor que decirlo.
-                  <p className="mt-3 rounded-lg border border-enlace/25 bg-accent p-3 text-base text-accent-foreground">
+                  <p className="mt-3 rounded-xl bg-accent p-3 text-base text-accent-foreground">
                     Esa entidad no tiene registro consultable. Sin registro no
                     se puede verificar: el perfil se queda sin sello, y sin
                     sello no ha sido revisado en absoluto.

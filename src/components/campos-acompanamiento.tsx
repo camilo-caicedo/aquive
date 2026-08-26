@@ -83,11 +83,16 @@ export function CamposAcompanamiento({
       {aliados.length > 1 && (
         <fieldset>
           <legend className="mb-2 text-base font-medium">¿Cuál te queda mejor?</legend>
-          <div className="space-y-2">
+          {/* Con hueco para la sombra de cartel de la opción elegida. */}
+          <div className="space-y-3">
             {aliados.map((a) => (
               <label
                 key={a.id}
-                className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-border p-3 has-checked:border-enlace has-checked:bg-accent"
+                // Papel blanco con su canto, no un contorno: la identidad
+                // separa las tarjetas del crema con una sombra de 1 px.
+                // La elegida se lleva además la sombra de cartel, que es lo
+                // que se ve de reojo sin buscar el punto del radio.
+                className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl bg-card p-3 shadow-canto has-checked:bg-accent has-checked:shadow-cartel-azul"
               >
                 <input
                   type="radio"
@@ -100,12 +105,12 @@ export function CamposAcompanamiento({
                 <span>
                   <span className="text-base font-medium">{a.nombre}</span>
                   {a.direccion_acopio && (
-                    <span className="block text-sm text-muted-foreground">
+                    <span className="block text-base text-muted-foreground">
                       {a.direccion_acopio}
                     </span>
                   )}
                   {a.horario_acopio && (
-                    <span className="block text-sm text-muted-foreground">
+                    <span className="block text-base text-muted-foreground">
                       {a.horario_acopio}
                     </span>
                   )}
@@ -158,10 +163,10 @@ export function CamposAcompanamiento({
           inputMode="tel"
           autoComplete="tel"
         />
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           Para que la fundación te avise de la entrega. Solo lo ve ella.
         </p>
-        {errorTelefono && <p className="mt-1 text-sm text-destructive">{errorTelefono}</p>}
+        {errorTelefono && <p className="mt-1 text-base text-destructive">{errorTelefono}</p>}
       </div>
 
       {/* Solo con una fundación elegida. El consentimiento nombra a quien va

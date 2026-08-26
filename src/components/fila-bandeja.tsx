@@ -16,14 +16,6 @@ function enMarcha(estado: EstadoConversacion) {
   return estado === 'abierta' || estado === 'acordada' || estado === 'entregada'
 }
 
-/** Verde pálido para lo que va bien, amarillo pálido para lo que espera
- *  algo. Nunca solo color: el sello lleva su texto (regla 9). */
-function claseEstado(estado: EstadoConversacion) {
-  return enMarcha(estado)
-    ? 'bg-ok-suave text-foreground'
-    : 'bg-accent text-accent-foreground'
-}
-
 /**
  * La cinta de arriba y la sombrilla de cartel, en el gajo del estado.
  *
@@ -100,9 +92,10 @@ export function FilaBandeja({
           <span className="font-mono text-sm font-bold tracking-[0.085em] uppercase">
             {codigo}
           </span>
-          <span
-            className={`shrink-0 rounded-full px-2.5 py-0.5 text-sm font-semibold ${claseEstado(estado)}`}
-          >
+          {/* Papel blanco sobre el gajo: el sello tiene que recortarse
+              contra la cinta, y un pálido sobre un saturado del mismo tono
+              se emborrona. La palabra la lleva él; el color, la cinta. */}
+          <span className="shrink-0 rounded-full bg-card px-2.5 py-0.5 text-sm font-semibold text-foreground">
             {ETIQUETA_ESTADO[estado]}
           </span>
         </span>

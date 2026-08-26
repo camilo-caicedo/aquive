@@ -110,6 +110,7 @@ export const enrutador = os.router({
     }),
   },
   chat: {
+    bandeja: os.chat.bandeja.handler(({ context }) => chat.bandeja(db, context.usuarioId)),
     leer: os.chat.leer.handler(({ input, context }) =>
       chat.leer(db, input.respuesta_id, { token: input.token, usuarioId: context.usuarioId }),
     ),

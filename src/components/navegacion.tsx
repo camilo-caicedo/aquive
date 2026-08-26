@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation'
 import {
   HandHeart,
   Stethoscope,
-  PackageOpen,
   PackageCheck,
   MessageSquare,
   UserRound,
@@ -50,19 +49,26 @@ const ENLACES = [
   // Detrás son módulos distintos —y el primero tiene otro responsable del
   // tratamiento— pero para quien busca es la misma pregunta. Las tres se
   // reparten en `PestanasServicios`.
-  { href: '/', etiqueta: 'Servicios', Icono: Stethoscope },
+  { href: '/', etiqueta: 'Inicio', Icono: Stethoscope },
   // Los dos lados del directorio, uno en cada celda: quién presta un
   // servicio y quién está pidiendo uno. Antes el segundo era una sección
   // colgada del primero —/servicios/solicitudes— y no lo encontraba nadie.
-  { href: '/solicitudes', etiqueta: 'Solicitudes', Icono: HandHeart },
+  // Comunidad: el muro y «Hecho en el barrio». Son dos destinos nuevos que
+  // sin celda propia no los encuentra nadie — se entra por el muro y desde
+  // ahí se cruza al otro.
+  { href: '/muro', etiqueta: 'Comunidad', Icono: HandHeart },
   // ⚠ Toda la emergencia en una sola celda. Eran dos destinos de la barra
   // —«Solicitudes» y «Quién ofrece»— más un segmentado propio dentro del
   // primero: tres capas de navegación para tres listas de la misma
   // pregunta, y encima compitiendo por sitio con el módulo de servicios,
   // que es el que hoy recibe a la gente. Las tres se reparten ahora en
   // `PestanasAyudas`.
-  { href: '/ayudas', etiqueta: 'Ayudas', Icono: PackageOpen },
-  { href: '/mis-solicitudes', etiqueta: 'Lo mío', Icono: UserRound },
+  // ⚠ La emergencia sale de la barra (ADR 0003, decisión del 26 de agosto de
+  // 2026): se entra a ella desde el inicio. No se retira nada —/ayudas sigue
+  // entero— pero deja de gastar una de las cuatro celdas, que ahora las pide
+  // el chat.
+  { href: '/mensajes', etiqueta: 'Mensajes', Icono: MessageSquare },
+  { href: '/mis-solicitudes', etiqueta: 'Perfil', Icono: UserRound },
 ]
 
 // La quinta, antes de «Lo mío», y distinta según el público — que son dos
@@ -76,9 +82,13 @@ const ENLACES = [
 //     viven en /coordinacion.
 //
 // Nadie ve las dos, así que la barra no cambia bajo los pies de nadie.
+// ⚠ Aquí había DOS celdas llamadas «Mensajes» —esta y la de la barra fija—
+// para quien coordinaba una entrega. Dos puertas al mismo cuarto, y ninguna
+// con todos sus mensajes dentro. Las conversaciones acompañadas se fueron a
+// /mensajes con el resto; queda solo la celda de quien trabaja en una
+// fundación, que no es una bandeja sino su panel de trabajo.
 const QUINTA = {
   organizacion: { href: '/aliado', etiqueta: 'Entregas', Icono: PackageCheck },
-  coordinacion: { href: '/coordinacion', etiqueta: 'Mensajes', Icono: MessageSquare },
 } as const
 
 export type Coordinacion = keyof typeof QUINTA | null
@@ -103,11 +113,29 @@ const TAMBIEN: Record<string, string[]> = {
   // La portada es el directorio, así que las otras dos listas de la misma
   // pregunta cuelgan de ella, y también la puerta vieja /servicios y todo
   // lo que hay debajo: publicar una ficha, una ficha concreta, la demanda.
-  '/': ['/servicios', '/servidores'],
+  // Todo lo que se entra a MIRAR cuelga del inicio, incluida la emergencia:
+  // sale de la barra pero no del sitio, así que sus pantallas encienden
+  // «Inicio» en vez de apagar las cuatro celdas.
+  '/': [
+    '/servicios',
+    '/servidores',
+    '/categorias',
+    '/zonas',
+    '/mapa',
+    '/ayudas',
+    '/ofertadores',
+    '/publicar',
+    '/responder',
+    '/solicitudes',
+  ],
   // Las otras dos listas de la emergencia, y los dos extremos de una
   // solicitud. /solicitud/[token] no está aquí: esa es la propia, y vive
   // en «Lo mío».
-  '/ayudas': ['/ofertadores', '/publicar', '/responder'],
+  // El muro y los productos son las dos caras de Comunidad.
+  '/muro': ['/barrio'],
+  // La ruta vieja de la bandeja acompañada redirige aquí, pero alguien puede
+  // llegar por un enlace guardado.
+  '/mensajes': ['/coordinacion'],
   // /solicitud/[token] es la pantalla de una solicitud propia: se llega
   // desde «Lo mío» y se vuelve ahí. Sin esta línea, abrir la solicitud
   // apagaba las cuatro celdas y la barra parecía de otra aplicación.

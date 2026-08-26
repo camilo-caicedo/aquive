@@ -30,8 +30,8 @@ export function CerrarSesion() {
           <LogOut className="size-5" aria-hidden="true" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-base font-medium">Cerrar sesión</span>
-          <span className="block text-sm text-muted-foreground">
+          <span className="font-heading block text-lg leading-tight">Cerrar sesión</span>
+          <span className="block text-base text-muted-foreground">
             Sales en este teléfono. Tu perfil sigue publicado.
           </span>
         </span>

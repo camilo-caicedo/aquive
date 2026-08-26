@@ -19,7 +19,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 export function MisRespuestas({ respuestas }: { respuestas: MiRespuesta[] }) {
   if (respuestas.length === 0) {
     return (
-      <p className="mt-3 rounded-2xl border border-dashed border-border p-6 text-center text-base text-muted-foreground">
+      <p className="shadow-canto mt-3 rounded-2xl bg-card p-6 text-center text-base text-muted-foreground">
         Todavía no has respondido ninguna solicitud. Las que respondas
         aparecen aquí mientras sigan abiertas.
       </p>
@@ -33,8 +33,8 @@ export function MisRespuestas({ respuestas }: { respuestas: MiRespuesta[] }) {
         return (
           <li key={r.id} className="rounded-2xl bg-card p-4 shadow-canto">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <span className="font-mono text-lg font-bold">{r.codigo}</span>
-              <span className="text-sm text-muted-foreground">
+              <span className="font-mono text-lg font-bold tracking-[0.12em]">{r.codigo}</span>
+              <span className="text-base text-muted-foreground">
                 {horas > 0 ? `Se borra en ${horas} h` : 'Está por borrarse'}
               </span>
             </div>
@@ -45,7 +45,7 @@ export function MisRespuestas({ respuestas }: { respuestas: MiRespuesta[] }) {
             </p>
 
             {r.flujo === 'acompanado' && r.tiene_hilo && (
-              <p className="mt-1 flex items-center gap-1.5 text-sm text-foreground">
+              <p className="bg-ok-suave mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium text-foreground">
                 <HeartHandshake className="size-4 shrink-0" aria-hidden="true" />
                 Una fundación acompaña esta entrega
               </p>
@@ -67,7 +67,7 @@ export function MisRespuestas({ respuestas }: { respuestas: MiRespuesta[] }) {
               </Alert>
             )}
 
-            <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+            <p className="mt-2 flex items-center gap-1.5 text-base text-muted-foreground">
               <MessageSquare className="size-4 shrink-0" aria-hidden="true" />
               {r.num_respuestas === 1
                 ? 'Eres la única persona que ha respondido'

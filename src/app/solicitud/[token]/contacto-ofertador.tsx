@@ -90,7 +90,7 @@ export function ContactoOfertador({
               cada persona es una decisión distinta (regla 5). */}
           <p className="mt-4 text-sm text-muted-foreground">
             {AVISO_CONTACTO}{' '}
-            <Link href="/seguridad" className="underline underline-offset-4">
+            <Link href="/seguridad" className="text-enlace underline underline-offset-4">
               Cómo cuidarte
             </Link>
           </p>

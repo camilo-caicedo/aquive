@@ -77,14 +77,14 @@ function Invitacion({
           necesita: un QR de 25 usos pegado en un muro lo escanea cualquiera
           que pase. */}
       {invitacion.usos_max > 1 && (
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           Este es de pared: piensa quién más pasa por ahí antes de pegarlo.
         </p>
       )}
 
       {verQr && (
         <>
-          <div className="mt-2 rounded-lg bg-muted p-3 text-sm break-all">{enlace}</div>
+          <div className="mt-2 rounded-lg bg-muted p-3 font-mono text-base break-all">{enlace}</div>
           {/* eslint-disable-next-line @next/next/no-img-element -- data URI generada en cliente, no aplica optimización de next/image */}
           <img
             src={qrDataUrl}
@@ -194,11 +194,11 @@ function Miembro({
       }
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-bold">
+        <p className="truncate font-heading text-lg leading-tight">
           {miembro.nombre_visible}
           {esYo && <span className="font-normal text-muted-foreground"> · eres tú</span>}
         </p>
-        <p className="truncate text-sm text-muted-foreground">
+        <p className="truncate text-base text-muted-foreground">
           {etiquetaEstado}
           {miembro.estado === 'activo' && miembro.rol === 'coordinador'
             ? ' · coordinador'
@@ -362,7 +362,7 @@ export function PanelEquipo({
   return (
     <div className="mt-6 space-y-6">
       <div>
-        <h3 className="text-lg font-bold">Invitar a alguien</h3>
+        <h3 className="font-heading text-xl leading-tight">Invitar a alguien</h3>
         <p className="mt-1 text-base text-muted-foreground">
           Quien abra el enlace o escanee el código entra al equipo de una vez,
           sin que nadie lo apruebe. Un QR para pegar en la pared sirve para
@@ -401,7 +401,7 @@ export function PanelEquipo({
 
       {pendientes.length > 0 && (
         <div>
-          <h3 className="text-lg font-bold">Por aprobar</h3>
+          <h3 className="font-heading text-xl leading-tight">Por aprobar</h3>
           <ul className="mt-3 space-y-3">
             {pendientes.map((m) => (
               <Miembro
@@ -417,7 +417,7 @@ export function PanelEquipo({
       )}
 
       <div>
-        <h3 className="text-lg font-bold">Equipo</h3>
+        <h3 className="font-heading text-xl leading-tight">Equipo</h3>
         <ul className="mt-3 space-y-3">
           {resto.map((m) => (
             <Miembro

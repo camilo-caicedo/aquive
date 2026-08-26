@@ -60,7 +60,29 @@ const errores = {
   },
 } as const
 
+/** Una fila de la bandeja. */
+export const HiloEnBandeja = z.object({
+  respuesta_id: z.uuid(),
+  con: z.string(),
+  oficio: z.string().nullable(),
+  ultimo: z.string().nullable(),
+  ultimo_at: z.string().nullable(),
+  mensajes: z.number(),
+})
+
+export type HiloEnBandeja = z.infer<typeof HiloEnBandeja>
+
 export const contratoChat = {
+  /**
+   * Los hilos de quien está en sesión, como prestador.
+   *
+   * Solo del lado con cuenta. Quien pide un servicio NO tiene cuenta —esa es
+   * la promesa— así que no hay a quién listarle nada: sus hilos viven en el
+   * enlace de su solicitud, que es lo único que la plataforma le dio. La
+   * pantalla lo dice en vez de enseñar una bandeja vacía.
+   */
+  bandeja: oc.output(z.array(HiloEnBandeja)),
+
   /** El hilo abierto por una respuesta, con sus mensajes. Pantalla 12. */
   leer: oc
     .errors(errores)

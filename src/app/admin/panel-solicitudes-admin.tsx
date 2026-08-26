@@ -88,7 +88,7 @@ function FilaSolicitud({ s }: { s: SolicitudAdmin }) {
           el administrador, nunca sale en el tablero, y eso se dice aquí y
           no en un aviso general. */}
       {(s.contacto?.nombre || s.contacto?.telefono || s.contacto?.correo) && (
-        <div className="mt-3 rounded-lg border border-enlace/30 bg-accent p-3 text-base text-accent-foreground">
+        <div className="mt-3 rounded-xl bg-accent p-3 text-base text-accent-foreground">
           <p className="font-medium">Contacto que dejó quien pidió</p>
           <p className="mt-0.5">
             {[s.contacto.nombre, s.contacto.telefono, s.contacto.correo]

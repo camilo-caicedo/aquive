@@ -66,10 +66,14 @@ function Chip({
       type="button"
       aria-pressed={activo}
       onClick={onClick}
-      className={`inline-flex min-h-12 items-center rounded-full border px-4 text-base transition-colors ${
+      // ⚠ El chip elegido va en arena, no en lima: el relleno lima está
+      // reservado a la acción principal de la pantalla, y un filtro no es
+      // una acción (regla 2). Que esté puesto lo dicen `aria-pressed`, la
+      // negrita y el fondo, así que no depende del color (regla 9).
+      className={`inline-flex min-h-12 items-center rounded-full px-4 text-base transition-colors ${
         activo
-          ? 'border-enlace bg-primary text-primary-foreground'
-          : 'border-border bg-card hover:bg-muted'
+          ? 'bg-secondary font-bold text-secondary-foreground'
+          : 'bg-card shadow-canto hover:bg-muted'
       }`}
     >
       {children}
@@ -214,8 +218,8 @@ export function PanelProveedores({
             <p className="text-base font-medium">
               Listo. Este es el enlace de {enlace.nombre}:
             </p>
-            <p className="mt-2 break-all font-mono text-sm">{enlace.url}</p>
-            <p className="mt-2 text-sm">
+            <p className="mt-2 break-all font-mono text-base">{enlace.url}</p>
+            <p className="mt-2 text-base">
               <strong>Se muestra una sola vez.</strong> Cópialo y dáselo ahora:
               es la única forma que tiene esa persona de cambiar o borrar su
               ficha, y no lo podemos recuperar. Si se pierde, hay que
@@ -294,7 +298,7 @@ export function PanelProveedores({
               maxLength={20}
               className="mt-1"
             />
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-base text-muted-foreground">
               Queda público.
             </p>
 
@@ -395,17 +399,17 @@ export function PanelProveedores({
                   className="mt-1"
                 />
                 {zonasDelMunicipio.length === 0 && (
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="mt-1 text-base text-muted-foreground">
                     Ese municipio todavía no tiene comunas cargadas. Lo que
                     escribas entra a la cola de zonas por revisar y, cuando se
                     apruebe, queda en la lista para los demás.
                   </p>
                 )}
-                {errorZona && <p className="mt-1 text-sm text-destructive">{errorZona}</p>}
+                {errorZona && <p className="mt-1 text-base text-destructive">{errorZona}</p>}
               </div>
 
               {!hayUbicacion && (
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-2 text-base text-muted-foreground">
                   Hace falta al menos una de las dos.
                 </p>
               )}
@@ -439,7 +443,7 @@ export function PanelProveedores({
                 if (delGrupo.length === 0) return null
                 return (
                   <div key={grupo}>
-                    <p className="text-sm font-medium text-muted-foreground">{etiqueta}</p>
+                    <p className="font-heading text-xs tracking-[0.085em] uppercase text-muted-foreground">{etiqueta}</p>
                     <div className="mt-1.5 flex flex-wrap gap-2">
                       {delGrupo.map((o) => (
                         <Chip
@@ -464,7 +468,7 @@ export function PanelProveedores({
           {/* La declaración del aliado. Es lo único que queda si algún día
               esta persona dice que nunca autorizó nada, así que se pide
               explícita y no se da por hecha. */}
-          <label className="flex items-start gap-3 rounded-lg border border-border p-3 text-base">
+          <label className="flex items-start gap-3 rounded-xl bg-background p-3 text-base">
             <input
               type="checkbox"
               checked={leiTexto}
@@ -490,7 +494,7 @@ export function PanelProveedores({
         </div>
       )}
 
-      <h3 className="font-heading mt-8 text-2xl">Fichas de la organización</h3>
+      <h3 className="font-heading mt-8 text-xl">Fichas de la organización</h3>
 
       {proveedores.length === 0 ? (
         <p className="mt-3 text-base text-muted-foreground">
@@ -503,12 +507,12 @@ export function PanelProveedores({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Link
                   href={`/servicios/${p.id}`}
-                  className="text-base font-bold underline-offset-4 hover:underline"
+                  className="font-heading text-lg leading-tight underline-offset-4 hover:underline"
                 >
                   {p.nombre_visible}
                 </Link>
                 {p.telefono_verificado ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-foreground">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-foreground">
                     <BadgeCheck className="size-4" aria-hidden="true" />
                     Verificado
                   </span>
@@ -520,13 +524,13 @@ export function PanelProveedores({
               </div>
 
               {p.oficios && p.oficios.length > 0 && (
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-base text-muted-foreground">
                   {p.oficios.join(' · ')}
                 </p>
               )}
 
               {p.oficios_esperando > 0 && (
-                <p className="mt-2 text-sm text-accent-foreground">
+                <p className="mt-2 text-base text-accent-foreground">
                   {p.oficios_esperando === 1
                     ? 'Un oficio suyo no se publica'
                     : `${p.oficios_esperando} oficios suyos no se publican`}{' '}
@@ -537,7 +541,7 @@ export function PanelProveedores({
               )}
 
               {p.suspendido && (
-                <p className="mt-2 text-sm text-accent-foreground">
+                <p className="mt-2 text-base text-accent-foreground">
                   Suspendida por moderación. No aparece en el directorio.
                 </p>
               )}

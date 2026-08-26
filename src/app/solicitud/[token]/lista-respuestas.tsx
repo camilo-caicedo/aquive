@@ -79,7 +79,12 @@ export function ListaRespuestas({ respuestas }: { respuestas: Respuesta[] }) {
                 </Link>
               </p>
 
+              {/* Arena y no lima. Aquí hay una de estas por respuesta, y
+                  cinco rellenos lima en una pantalla no son cinco acciones
+                  principales: son ninguna (regla 1). El mismo criterio que
+                  usan las fichas del directorio. */}
               <Button
+                variant="secondary"
                 className="mt-3 w-full"
                 nativeButton={false}
                 render={

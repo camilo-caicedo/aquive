@@ -32,7 +32,7 @@ export function PanelHilos({
    * ⚠ Para quien solo ofreció ayuda no significan nada, y la de por
    * defecto —«Sin asignar»— excluye los hilos propios, así que estaba
    * siempre vacía: lo primero que veía era una lista en blanco teniendo
-   * conversaciones abiertas. Ver `/coordinacion`.
+   * conversaciones abiertas. Ver `/mensajes`.
    */
   conColas?: boolean
   /** A dónde vuelve el hilo que se abra desde aquí. */
@@ -91,10 +91,14 @@ export function PanelHilos({
             type="button"
             aria-pressed={cola === c.clave}
             onClick={() => setCola(c.clave)}
-            className={`inline-flex min-h-12 shrink-0 items-center gap-1.5 rounded-full border px-4 text-base transition-colors ${
+            // Arena para la cola elegida, no el amarillo del pendiente:
+            // ese fondo dice «esto espera a alguien», y una pestaña activa
+            // no espera nada (regla 2). El peso y `aria-pressed` dicen lo
+            // mismo sin depender del color (regla 9).
+            className={`inline-flex min-h-12 shrink-0 items-center gap-1.5 rounded-full px-4 text-base transition-colors ${
               cola === c.clave
-                ? 'border-enlace bg-accent font-medium text-accent-foreground'
-                : 'border-border bg-card text-foreground'
+                ? 'bg-secondary font-bold text-secondary-foreground'
+                : 'bg-card text-foreground shadow-canto'
             }`}
           >
             {c.etiqueta}

@@ -57,27 +57,27 @@ export function PieDePagina() {
         <nav aria-label="Documentos legales" className="mt-4">
           <ul className="flex flex-wrap gap-x-4">
             <li>
-              <Link href="/como-funciona" className="inline-flex min-h-12 items-center text-base underline">
+              <Link href="/como-funciona" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
                 Cómo funciona
               </Link>
             </li>
             <li>
-              <Link href="/privacidad" className="inline-flex min-h-12 items-center text-base underline">
+              <Link href="/privacidad" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
                 Aviso de privacidad
               </Link>
             </li>
             <li>
-              <Link href="/terminos" className="inline-flex min-h-12 items-center text-base underline">
+              <Link href="/terminos" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
                 Términos de uso
               </Link>
             </li>
             <li>
-              <Link href="/seguridad" className="inline-flex min-h-12 items-center text-base underline">
+              <Link href="/seguridad" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
                 Cómo cuidarte
               </Link>
             </li>
             <li>
-              <Link href="/datos" className="inline-flex min-h-12 items-center text-base underline">
+              <Link href="/datos" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
                 Datos abiertos
               </Link>
             </li>
