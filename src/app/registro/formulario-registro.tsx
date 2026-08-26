@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { RESPONSABLE, ENTIDADES_MATRICULA } from '@/lib/config'
@@ -873,9 +874,9 @@ export function FormularioRegistro({
             plataforma para que personas afectadas puedan contactarme. Entiendo
             que esta información será visible para cualquiera en internet, que
             puedo borrarla en cualquier momento, y he leído el{' '}
-            <a href="/privacidad" className="text-enlace underline">
+            <Link href="/privacidad" className="text-enlace underline">
               aviso de privacidad
-            </a>
+            </Link>
             .
           </span>
         </label>
