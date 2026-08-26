@@ -1,6 +1,6 @@
 # ADR 0003 · Flujo nuevo, alcance nuevo y subida de imágenes
 
-- **Estado:** propuesta — **tres decisiones pendientes del responsable**
+- **Estado:** aceptada — las tres decisiones se respondieron el 2026-08-26
 - **Fecha:** 2026-08-26
 - **Decide:** responsable del proyecto
 - **Fuente:** prototipo `docs/marca/AquiVe-Flujo.dc.html`, 40 pantallas
@@ -15,8 +15,9 @@ tres destinos que no existen en el repo y cambia cómo se contactan las personas
 El propio prototipo trae un mapa de pantalla a archivos del repo. Se verificó:
 los 18 componentes que cita existen. El mapa es fiable.
 
-Este ADR separa lo que se puede ejecutar de lo que necesita firma. **Lo primero
-avanza; lo segundo no se construye hasta que haya respuesta.**
+Este ADR separó lo ejecutable de lo que necesitaba firma. **Las tres decisiones
+se respondieron el 26 de agosto de 2026 y las tres van hacia adelante.** Las
+respuestas están al final, y lo que fijan ya está escrito en `CLAUDE.md`.
 
 ## Lo que el prototipo cambia y no toca reglas duras
 
@@ -68,7 +69,7 @@ Se anota porque en una reescritura de 40 pantallas es justo lo que se cae:
 
 ## Decisión 1 · Chat interno en Servicios
 
-**Necesita respuesta del responsable. Cambia una regla dura.**
+> **Respondida el 2026-08-26: sí.** El chat se construye.
 
 El prototipo introduce chat dentro de la plataforma para Servicios (pantalla
 12), abierto por el pedido, con este pie: «Este chat existe para acordar el
@@ -107,8 +108,8 @@ plan, y la barra vuelve a tener tres celdas más una.
 
 ## Decisión 2 · Muro y «Hecho en el barrio»
 
-**Necesita respuesta del responsable. Toca el alcance cerrado y la zona gris de
-alojamiento.**
+> **Respondida el 2026-08-26: sí, ambas.** Y el alojamiento pasa a plan pagado,
+> con lo que la zona gris de uso comercial deja de existir.
 
 Dos destinos nuevos sin equivalente en el repo:
 
@@ -141,7 +142,9 @@ la interfaz la recuerde.
 
 ## Decisión 3 · Qué imagen se puede subir
 
-**Necesita respuesta del responsable. Es la pregunta abierta de `CLAUDE.md`.**
+> **Respondida el 2026-08-26: cualquier imagen, hasta 2 MB, con moderación desde
+> el panel de admin antes de publicarse.** El corte deja de ser por tema y pasa
+> a ser por revisión humana.
 
 El prototipo abre imágenes en dos sitios y deja un tercero cerrado:
 
@@ -242,17 +245,55 @@ haber una persona mirando.
    matar el acceso desde el navegador, contrato con las primeras lecturas.
 3. Rehacer las pantallas de Buscar (05–09) sobre el contrato nuevo, ya con la
    identidad nueva. Una sola pasada por archivo.
-4. Contratar (10–13) y Ofrecer (14–15). La pantalla 12 solo si se aprobó la
-   decisión 1.
+4. Contratar (10–13) y Ofrecer (14–15), con el chat y su filtro de contacto.
 5. Perfil (16–25).
 6. Insumos (26–29), sin invertir de más: el módulo de emergencia se apaga solo.
 7. Fundación (32–34) y Moderación (35–36).
-8. Comunidad (30–31) e Información (37–40). Al final: 30 y 31 dependen de la
-   decisión 2, y son lo único que no tiene código previo que reusar.
+8. Comunidad (30–31) e Información (37–40). Al final porque son lo único sin
+   código previo que reusar.
 
-Las imágenes entran con el paso 8, y solo con la decisión 3 respondida.
+Las imágenes entran con el paso 8: el almacenamiento, la cuarentena con `sharp`
+y la cola de moderación del admin son un solo trabajo y se hacen juntos.
+
+## Las respuestas
+
+Del responsable, 26 de agosto de 2026.
+
+**1 · Chat: sí.** Se construye la pantalla 12 y la celda «Mensajes» de la barra.
+La regla 3 anterior queda reemplazada por la regla de producto 2 de
+`CLAUDE.md`: el chat vive dentro y muere con lo que lo abrió, y filtra datos de
+contacto. Ese filtro no es opcional — sin él el chat solo hace más lento pedir
+el número por fuera.
+
+**2 · Muro y productos: sí, los dos.** Y el alojamiento pasa a **Vercel Pro**,
+así que la restricción de uso no comercial del plan gratuito ya no aplica. Eso
+cierra la zona gris que estaba abierta en `docs/PENDIENTES-LEGALES.md` desde
+antes de este ADR, y desbloquea las dos pantallas.
+
+**3 · Imágenes: cualquiera, hasta 2 MB, moderadas antes de publicarse.** El
+recorrido con cuarentena que este ADR propuso se mantiene entero, y ahora tiene
+además el paso de admin que le faltaba. Los dos pasos técnicos siguen siendo
+obligatorios por razones que no son de política:
+
+- **Reencodificar con `sharp` descarta el EXIF**, que en una foto de teléfono
+  lleva las coordenadas GPS de dónde se tomó. Sin ese paso, publicar la foto de
+  una nevera publica dónde vive quien la dona, y ninguna moderación humana ve
+  eso mirando la imagen.
+- **Borrar la fila borra el objeto**, porque `ON DELETE CASCADE` no alcanza el
+  bucket.
+
+Y un criterio de moderación no es discrecional: una foto donde se identifique a
+un menor se rechaza. Es el artículo 7 de la Ley 1581, no una preferencia.
+
+## Alcance del proyecto, después de estas respuestas
+
+El «alcance cerrado» del proyecto anterior deja de existir como lista de
+prohibiciones. Lo que queda prohibido, y es corto: que la plataforma reciba
+dinero, que exista una pasarela de pago, y los oficios que exigen matrícula
+fuera de `catalogo_servicios`. Todo lo demás se decide caso por caso.
 
 ## Revisión
 
-Se revisa cuando estén las tres decisiones. Cada una que se rechace saca su
-parte del plan sin tocar el resto.
+Se revisa si la moderación de imágenes resulta insostenible para la fundación
+en volumen —es trabajo humano recurrente, no código que se escribe una vez—, o
+si aparece un consumidor de la API que no hable TypeScript.

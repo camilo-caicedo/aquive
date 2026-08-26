@@ -78,30 +78,39 @@ Hasta que estos cinco estén, la pantalla que pide identidad no se despliega.
 - [ ] Insertar la primera fila en `administradores` a mano, con el id del
       usuario que va a moderar. Sin eso, `/admin` no es accesible para nadie.
 
-## Zona gris sin resolver · uso comercial del alojamiento
+## Resuelto · uso comercial del alojamiento
 
-El plan gratuito de Vercel es «solo uso personal no comercial», y Vercel define
-comercial como cualquier despliegue usado para el beneficio económico de
-**cualquiera** involucrado en **cualquier parte** de la producción del
-proyecto, incluido un consultor pagado que escriba el código. Y textualmente:
-*«Asking for Donations fall under commercial usage.»*
+- [x] **Se paga el alojamiento.** Decisión del responsable, 26 de agosto de 2026:
+      el proyecto pasa a Vercel Pro. La restricción de «solo uso personal no
+      comercial» del plan gratuito deja de aplicar, y con ella la zona gris que
+      abría la fundación operando la plataforma. Ya no hace falta consultar a
+      soporte.
 
-La regla de `CLAUDE.md` de nunca poner botón de donar es correcta y está
-verificada contra la fuente.
+La regla de no poner botón de donar **sigue en pie**, pero ahora por decisión de
+producto —la plataforma no mueve dinero— y no por los términos del alojamiento.
 
-Con la fundación a cargo, la lectura se complica. Mientras nadie cobre por
-operar esto y no haya pasarela ni donaciones, el argumento de que sigue siendo
-no comercial se sostiene. Se debilita si la fundación tiene personal asalariado
-cuya función incluye operar la plataforma.
+## Nuevo · lo que el rediseño agrega a los textos legales
 
-- [ ] **Preguntarle a soporte de Vercel.** Es gratis. Conviene resolverlo antes
-      de crecer, no después, y no se resuelve adivinando.
+El chat interno y la subida de imágenes cambian promesas que los textos
+actuales hacen. Van antes de publicar cualquiera de las dos:
 
-Si al final toca pagar: Supabase Pro desde 25 USD/mes y Vercel Pro 20 USD/mes
-por asiento. Nada de lo que hay hoy lo obliga.
+- [ ] **Aviso de privacidad: mensajería.** Hoy promete que no hay mensajería
+      interna. Ahora hay chat de servicios, que se borra con el pedido que lo
+      abrió. Hay que decirlo, y decir cuánto vive.
+- [ ] **Aviso de privacidad: imágenes.** Qué se guarda, dónde, cuánto vive, que
+      se moderan antes de publicarse y que se borran con su publicación.
+- [ ] **Términos: moderación de imágenes.** Criterios de rechazo y qué pasa con
+      una cuenta que sube contenido rechazado varias veces.
+- [ ] **Términos, sección 3.** Siguen diciendo «No hay estrellas, ni reputación,
+      ni sellos de "confiable", y no los va a haber». Van a existir.
+- [ ] **Autorización de publicación** para quien publica en el muro y en «Hecho
+      en el barrio»: aparecen su nombre y su foto, así que necesita casilla
+      explícita y versión guardada, igual que el prestador.
 
 ## Pendiente de decisión, no de trámite
 
-- [ ] **Subida de imágenes.** Choca con la regla 1 y necesita ADR antes de la
-      primera línea de código. Ver `CLAUDE.md`, «Pregunta abierta · imágenes y
-      datos personales».
+- [x] **Subida de imágenes.** Resuelta el 26 de agosto de 2026 por el ADR 0003:
+      cualquier imagen, hasta 2 MB, moderada desde el panel de admin antes de
+      publicarse. Los dos pasos técnicos obligatorios —reencodificar con `sharp`
+      para descartar el EXIF con coordenadas, y borrar el objeto al borrar la
+      fila— están en la regla de producto 8 de `CLAUDE.md`.
