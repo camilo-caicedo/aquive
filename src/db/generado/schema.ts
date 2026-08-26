@@ -1104,6 +1104,28 @@ export const productos = pgTable("productos", {
 	check("productos_unidad_check", sql`unidad = ANY (ARRAY['unidad'::text, 'libra'::text, 'kilo'::text, 'docena'::text, 'plato'::text, 'trabajo'::text])`),
 ]);
 
+export const pqr = pgTable("pqr", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	tipo: text().notNull(),
+	asunto: text().notNull(),
+	detalle: text().notNull(),
+	tokenHash: text("token_hash").notNull(),
+	estado: text().default('abierta').notNull(),
+	respuesta: text(),
+	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	respondidaAt: timestamp("respondida_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("idx_pqr_abiertas").using("btree", table.creadaAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(estado = 'abierta'::text)`),
+	unique("pqr_token_hash_key").on(table.tokenHash),
+	check("pqr_asunto_check", sql`(char_length(asunto) >= 3) AND (char_length(asunto) <= 140)`),
+	check("pqr_detalle_check", sql`(char_length(detalle) >= 10) AND (char_length(detalle) <= 1000)`),
+	check("pqr_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'respondida'::text])`),
+	check("pqr_respondida_con_respuesta", sql`(estado <> 'respondida'::text) OR ((respuesta IS NOT NULL) AND (respondida_at IS NOT NULL))`),
+	check("pqr_respuesta_check", sql`char_length(respuesta) <= 2000`),
+	check("pqr_sin_pii", sql`(NOT contiene_pii(asunto)) AND (NOT contiene_pii(detalle))`),
+	check("pqr_tipo_check", sql`tipo = ANY (ARRAY['peticion'::text, 'queja'::text, 'reclamo'::text, 'sugerencia'::text])`),
+]);
+
 export const destapesContacto = pgTable("destapes_contacto", {
 	solicitudId: uuid("solicitud_id").notNull(),
 	perfilId: uuid("perfil_id").notNull(),
@@ -1397,4 +1419,7 @@ export const productosPublicos = pgView("productos_publicos", {	id: uuid(),
 	unidad: text(),
 	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }),
 	imagen: text(),
-}).as(sql`SELECT p.id, p.proveedor_id, pp.nombre_visible AS proveedor_nombre, pp.municipio, pp.zona_nombre, p.nombre, p.detalle, p.modo, p.precio_desde, p.unidad, p.creado_at, ( SELECT i.ruta FROM imagenes i WHERE i.objeto_tipo = 'producto'::text AND i.objeto_id = p.id AND i.estado = 'aprobada'::text ORDER BY i.subida_at LIMIT 1) AS imagen FROM productos p JOIN proveedores_publicos pp ON pp.id = p.proveedor_id WHERE p.disponible`);
+	telefono: text(),
+	telefonoVerificado: boolean("telefono_verificado"),
+	grupos: text().array(),
+}).as(sql`SELECT p.id, p.proveedor_id, pp.nombre_visible AS proveedor_nombre, pp.municipio, pp.zona_nombre, p.nombre, p.detalle, p.modo, p.precio_desde, p.unidad, p.creado_at, ( SELECT i.ruta FROM imagenes i WHERE i.objeto_tipo = 'producto'::text AND i.objeto_id = p.id AND i.estado = 'aprobada'::text ORDER BY i.subida_at LIMIT 1) AS imagen, pp.telefono, pp.telefono_verificado, pp.grupos FROM productos p JOIN proveedores_publicos pp ON pp.id = p.proveedor_id WHERE p.disponible`);

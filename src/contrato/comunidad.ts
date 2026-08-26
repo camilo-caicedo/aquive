@@ -48,14 +48,28 @@ export const EnMuro = z.object({
 
 export type EnMuro = z.infer<typeof EnMuro>
 
-export const UnidadProducto = z.enum([
+export const UNIDADES_PRODUCTO = [
   'unidad',
   'libra',
   'kilo',
   'docena',
   'plato',
   'trabajo',
-])
+] as const
+
+export const UnidadProducto = z.enum(UNIDADES_PRODUCTO)
+
+export type UnidadProducto = z.infer<typeof UnidadProducto>
+
+/** Cómo se lee cada unidad al lado de un precio: «desde $3.500 la unidad». */
+export const NOMBRE_UNIDAD: Record<(typeof UNIDADES_PRODUCTO)[number], string> = {
+  unidad: 'la unidad',
+  libra: 'la libra',
+  kilo: 'el kilo',
+  docena: 'la docena',
+  plato: 'el plato',
+  trabajo: 'el trabajo',
+}
 
 export const Producto = z.object({
   id: z.uuid(),
@@ -69,9 +83,38 @@ export const Producto = z.object({
   precio_desde: z.number().nullable(),
   unidad: UnidadProducto.nullable(),
   imagen: z.string().nullable(),
+  /**
+   * El mismo de su ficha, no uno nuevo: sale de `proveedores_publicos`,
+   * que es donde vive el consentimiento. Sin él no hay manera de comprarle
+   * a nadie, y la lista sería un escaparate sin puerta.
+   */
+  telefono: z.string().nullable(),
+  telefono_verificado: z.boolean(),
+  /** Familias de oficio de quien vende. Para acotar la lista. */
+  grupos: z.array(z.string()),
+  creado_at: z.string(),
 })
 
 export type Producto = z.infer<typeof Producto>
+
+/**
+ * Un producto visto por su dueño.
+ *
+ * Lleva `disponible`, que la lista pública no necesita —solo enseña lo
+ * disponible— pero su dueño sí: es el interruptor de «hoy no hay».
+ */
+export const MiProducto = z.object({
+  id: z.uuid(),
+  nombre: z.string(),
+  detalle: z.string().nullable(),
+  modo: z.enum(['gratis', 'aporte', 'solidario', 'normal']),
+  precio_desde: z.number().nullable(),
+  unidad: UnidadProducto.nullable(),
+  disponible: z.boolean(),
+  creado_at: z.string(),
+})
+
+export type MiProducto = z.infer<typeof MiProducto>
 
 const errores = {
   RECHAZADO: {
@@ -124,9 +167,52 @@ export const contratoComunidad = {
       z.object({
         municipio: z.string().regex(/^[0-9]{5}$/).optional().catch(undefined),
         busqueda: z.string().trim().max(60).optional().catch(undefined),
+        /** Familia de oficio de quien vende: comida, belleza, aseo… */
+        grupo: z.string().trim().max(40).optional().catch(undefined),
+        /** Cómo lo cobra. «Gratis» y «solidario» es lo que busca quien no tiene. */
+        modo: z.enum(['gratis', 'aporte', 'solidario', 'normal']).optional().catch(undefined),
+        /** Para la tira del inicio, que no quiere sesenta. */
+        limite: z.number().int().min(1).max(60).optional().catch(undefined),
       }),
     )
     .output(z.array(Producto)),
+
+  /** Los míos, incluidos los que tengo apagados. */
+  misProductos: oc.output(z.array(MiProducto)),
+
+  /**
+   * Poner algo a la venta.
+   *
+   * Hace falta ficha de prestador: es la que lleva el nombre, la que tiene
+   * la autorización firmada con su fecha y por donde escribe quien lo
+   * quiere. Lo comprueba el dominio, no la pantalla.
+   */
+  publicarProducto: oc
+    .errors(errores)
+    .input(
+      z.object({
+        nombre: z.string().trim().min(2).max(140),
+        detalle: z.string().trim().max(300).optional(),
+        modo: z.enum(['gratis', 'aporte', 'solidario', 'normal']),
+        /** Sin decimales y con techo: es un precio de barrio, no una factura. */
+        precio_desde: z.number().int().positive().max(99999999).optional(),
+        unidad: UnidadProducto.optional(),
+        imagen_id: z.uuid().optional(),
+      }),
+    )
+    .output(z.object({ id: z.uuid() })),
+
+  /** «Hoy no hay», sin tener que escribirlo otra vez mañana. */
+  disponibilidadProducto: oc
+    .errors(errores)
+    .input(z.object({ id: z.uuid(), disponible: z.boolean() }))
+    .output(z.object({ ok: z.literal(true) })),
+
+  /** Borrado de verdad, con su foto (regla de producto 3). */
+  borrarProducto: oc
+    .errors(errores)
+    .input(z.object({ id: z.uuid() }))
+    .output(z.object({ ok: z.literal(true) })),
 
   // --- Imágenes -------------------------------------------------------
 

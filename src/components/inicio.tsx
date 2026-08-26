@@ -4,7 +4,11 @@ import { Heart, ShoppingBag, Wrench } from 'lucide-react'
 import { servidor } from '@/orpc/local'
 import { GRUPOS, precioLegible, zonaLegible } from '@/lib/servicios'
 import { CINTA, SOMBRA_CARTEL, TINTA_CINTA, familiaDe } from '@/lib/familias'
-import { TiraEntidades, TiraProfesionales } from '@/components/inicio-tiras'
+import {
+  TiraEntidades,
+  TiraProductos,
+  TiraProfesionales,
+} from '@/components/inicio-tiras'
 import type { GrupoOficio } from '@/lib/types'
 
 /**
@@ -20,8 +24,14 @@ import type { GrupoOficio } from '@/lib/types'
  * la granularidad de todo el sitio.
  */
 export async function Inicio({ municipio }: { municipio?: string }) {
-  const { disponibles, profesionales, entidades } =
-    await servidor.servicios.inicio({ municipio })
+  // Dos llamadas y no una: los productos son de comunidad y los oficios de
+  // servicios. Meterlos en el mismo procedimiento uniría dos dominios que
+  // no se necesitan, y la aplicación de Expo tendría que pedir los dos
+  // igual. En paralelo cuestan lo que cuesta el más lento.
+  const [{ disponibles, profesionales, entidades }, productos] = await Promise.all([
+    servidor.servicios.inicio({ municipio }),
+    servidor.comunidad.productos({ municipio, limite: 10 }),
+  ])
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-5">
@@ -37,7 +47,7 @@ export async function Inicio({ municipio }: { municipio?: string }) {
               className="bg-familia-azul shadow-cartel-azul flex h-28 flex-col justify-between rounded-2xl p-3 text-white transition-transform hover:-translate-y-0.5"
             >
               <Wrench className="size-6" aria-hidden="true" />
-              <span className="font-heading text-base">Servicio</span>
+              <span className="font-heading text-base">Servicios</span>
             </Link>
           </li>
           <li>
@@ -46,7 +56,7 @@ export async function Inicio({ municipio }: { municipio?: string }) {
               className="bg-familia-amarillo shadow-cartel-amarillo text-foreground flex h-28 flex-col justify-between rounded-2xl p-3 transition-transform hover:-translate-y-0.5"
             >
               <ShoppingBag className="size-6" aria-hidden="true" />
-              <span className="font-heading text-base">Producto</span>
+              <span className="font-heading text-base">Productos</span>
             </Link>
           </li>
           <li>
@@ -55,7 +65,7 @@ export async function Inicio({ municipio }: { municipio?: string }) {
               className="bg-familia-rojo shadow-cartel-rojo text-foreground flex h-28 flex-col justify-between rounded-2xl p-3 transition-transform hover:-translate-y-0.5"
             >
               <Heart className="size-6" aria-hidden="true" />
-              <span className="font-heading text-base">Donar</span>
+              <span className="font-heading text-base">Donaciones</span>
             </Link>
           </li>
         </ul>
@@ -159,6 +169,8 @@ export async function Inicio({ municipio }: { municipio?: string }) {
           Abrir el muro
         </Link>
       </section>
+
+      <TiraProductos productos={productos} />
 
       <TiraProfesionales profesionales={profesionales} />
 

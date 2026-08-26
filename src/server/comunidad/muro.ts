@@ -148,15 +148,28 @@ export async function publicar(
 
 export async function productos(
   db: BaseDeDatos,
-  filtros: { municipio?: string; busqueda?: string },
+  filtros: {
+    municipio?: string
+    busqueda?: string
+    grupo?: string
+    modo?: string
+    limite?: number
+  },
 ): Promise<Producto[]> {
   const condiciones = []
   if (filtros.municipio) condiciones.push(eq(productosPublicos.municipio, filtros.municipio))
+  if (filtros.modo) condiciones.push(eq(productosPublicos.modo, filtros.modo))
+  // La familia de oficio de quien vende, que es un arreglo: quien cocina
+  // puede tener también «aseo» declarado y sale en las dos.
+  if (filtros.grupo) {
+    condiciones.push(sql`${productosPublicos.grupos} @> array[${filtros.grupo}]::text[]`)
+  }
   if (filtros.busqueda) {
     const patron = `%${filtros.busqueda}%`
     condiciones.push(
       or(
         ilike(productosPublicos.nombre, patron),
+        ilike(productosPublicos.detalle, patron),
         ilike(productosPublicos.proveedorNombre, patron),
       )!,
     )
@@ -167,7 +180,7 @@ export async function productos(
     .from(productosPublicos)
     .where(condiciones.length > 0 ? and(...condiciones) : undefined)
     .orderBy(desc(productosPublicos.creadoAt))
-    .limit(60)
+    .limit(filtros.limite ?? 60)
 
   return filas.map((f) =>
     conUrl({
@@ -182,6 +195,10 @@ export async function productos(
       precio_desde: f.precioDesde === null ? null : Number(f.precioDesde),
       unidad: f.unidad as Producto['unidad'],
       imagen: f.imagen,
+      telefono: f.telefono,
+      telefono_verificado: f.telefonoVerificado ?? false,
+      grupos: f.grupos ?? [],
+      creado_at: f.creadoAt ?? '',
     }),
   )
 }

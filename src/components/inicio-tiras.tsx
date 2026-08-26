@@ -1,4 +1,9 @@
 import Link from 'next/link'
+import Image from 'next/image'
+
+import { precioLegible } from '@/lib/servicios'
+import type { Producto } from '@/contrato/comunidad'
+import type { UnidadPrecio } from '@/lib/types'
 
 import type { EntidadBreve, ProfesionalBreve } from '@/contrato/servicios'
 
@@ -117,6 +122,74 @@ export function TiraEntidades({ entidades }: { entidades: EntidadBreve[] }) {
                   {e.cobertura === 'nacional' ? 'Nacional' : 'Local'}
                 </span>
               </p>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+/**
+ * Lo que se vende en el barrio, de lo más nuevo a lo más viejo.
+ *
+ * Va antes que profesionales y entidades a propósito: es lo que cambia
+ * todos los días. Un profesional publicado hace tres meses sigue ahí; unos
+ * tamales, no. Lo que se renueva va arriba, o la portada se queda quieta.
+ *
+ * Cada tarjeta lleva el precio, porque es lo primero que se mira, y no
+ * lleva contacto: para eso está la lista, donde hay sitio para el botón sin
+ * apretar la tarjeta a 224 px.
+ */
+export function TiraProductos({ productos }: { productos: Producto[] }) {
+  if (productos.length === 0) return null
+
+  return (
+    <section className="mt-8">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="font-heading text-2xl">Hecho en el barrio</h2>
+        <Link
+          href="/barrio"
+          className="text-enlace shrink-0 text-base underline underline-offset-4"
+        >
+          Ver todo
+        </Link>
+      </div>
+      <p className="mt-1 text-base text-muted-foreground">
+        Lo que hacen y venden las personas del directorio. Lo más nuevo primero.
+      </p>
+
+      <ul className="riel -mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-2">
+        {productos.map((p) => (
+          <li key={p.id} className="w-56 shrink-0">
+            <Link
+              href="/barrio"
+              className="shadow-cartel-amarillo block h-full overflow-hidden rounded-2xl bg-card"
+            >
+              {p.imagen ? (
+                <Image
+                  src={p.imagen}
+                  alt=""
+                  width={400}
+                  height={280}
+                  className="h-28 w-full object-cover"
+                />
+              ) : (
+                <div className="flex h-28 w-full items-center justify-center bg-muted">
+                  <span className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase">
+                    Sin foto
+                  </span>
+                </div>
+              )}
+              <div className="p-3">
+                <p className="font-heading truncate text-base">{p.nombre}</p>
+                <p className="mt-1 text-base font-semibold">
+                  {precioLegible(p.modo, p.precio_desde, p.unidad as UnidadPrecio | null)}
+                </p>
+                <p className="mt-1 truncate text-sm text-muted-foreground">
+                  {p.proveedor_nombre}
+                </p>
+              </div>
             </Link>
           </li>
         ))}

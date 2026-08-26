@@ -15,7 +15,10 @@ comisión y sin mover dinero por la plataforma. Cinco cosas:
 2. **Insumos.** Quien necesita publica una solicitud; quien puede, responde.
    Viene del módulo de emergencia y se queda.
 3. **Comunidad.** Un muro con dos caras —lo que sobra y lo que falta— y
-   «Hecho en el barrio», un listado de productos del vecindario.
+   «Hecho en el barrio», donde quien tiene ficha pone lo que vende. Un
+   producto cuelga de la ficha de quien lo vende: así aparece con el nombre
+   y la autorización que esa persona ya firmó, se contacta por su mismo
+   teléfono y se borra con ella.
 4. **Fundación.** Entregas coordinadas, hilos acompañados y lectura de datos
    sensibles con bitácora.
 5. **Moderación.** Colas de trabajo, verificación de matrículas y revisión de
@@ -346,7 +349,7 @@ portar**.
 | Ofrecer | 14 Formulario, 15 Mi ficha | `app/servicios/soy-proveedor` |
 | Perfil | 16–25 | `app/perfil/**`, `app/mis-solicitudes` (20), `app/servicios/mi-perfil/[token]` |
 | Insumos | 26 Publicar, 27 Tablero, 28 Responder, 29 Mi solicitud | `app/publicar`, `app/ayudas`, `app/responder/[codigo]`, `app/solicitud/[token]` |
-| Comunidad | 30 Muro, 31 Hecho en el barrio | `app/muro`, `app/barrio` |
+| Comunidad | 30 Muro, 31 Hecho en el barrio | `app/muro`, `app/barrio` (con `publicar` y `mios`) |
 | Fundación | 32 Entregas, 33 Hilo, 34 Dato sensible | `app/aliado`, `app/aliado/conversacion/[id]` (33), `hoja-dato-sensible.tsx` (34) |
 | Moderación | 35 Colas, 36 Matrículas, imágenes | `app/admin`, `app/admin/matriculas`, `app/admin/imagenes` |
 | Información | 37 Ayuda, 38 PQR, 39 Contactos, 40 Quiénes somos | `app/ayuda`, `app/pqr`, `app/contacto`, `app/quienes-somos` |

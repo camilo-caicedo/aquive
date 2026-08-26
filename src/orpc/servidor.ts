@@ -7,6 +7,7 @@ import { db } from '@/db/cliente'
 import type { Contexto } from './contexto'
 import * as chat from '@/server/chat/hilo'
 import * as comunidad from '@/server/comunidad/muro'
+import * as productos from '@/server/comunidad/productos'
 import * as imagenes from '@/server/imagenes/recorrido'
 import * as moderacion from '@/server/moderacion/comandos'
 import * as pqr from '@/server/pqr/buzon'
@@ -59,6 +60,49 @@ export const enrutador = os.router({
   comunidad: {
     muro: os.comunidad.muro.handler(({ input }) => comunidad.muro(db, input)),
     productos: os.comunidad.productos.handler(({ input }) => comunidad.productos(db, input)),
+    misProductos: os.comunidad.misProductos.handler(({ context }) =>
+      productos.mios(db, context.usuarioId),
+    ),
+    publicarProducto: os.comunidad.publicarProducto.handler(
+      async ({ input, context, errors }) => {
+        try {
+          return await productos.publicar(db, input, { usuarioId: context.usuarioId })
+        } catch (e) {
+          if (e instanceof productos.ProductoRechazado) {
+            throw errors.RECHAZADO({ data: { motivo: e.message } })
+          }
+          throw e
+        }
+      },
+    ),
+    disponibilidadProducto: os.comunidad.disponibilidadProducto.handler(
+      async ({ input, context, errors }) => {
+        try {
+          await productos.disponibilidad(db, input.id, input.disponible, {
+            usuarioId: context.usuarioId,
+          })
+          return { ok: true as const }
+        } catch (e) {
+          if (e instanceof productos.ProductoRechazado) {
+            throw errors.RECHAZADO({ data: { motivo: e.message } })
+          }
+          throw e
+        }
+      },
+    ),
+    borrarProducto: os.comunidad.borrarProducto.handler(
+      async ({ input, context, errors }) => {
+        try {
+          await productos.borrarProducto(db, input.id, { usuarioId: context.usuarioId })
+          return { ok: true as const }
+        } catch (e) {
+          if (e instanceof productos.ProductoRechazado) {
+            throw errors.RECHAZADO({ data: { motivo: e.message } })
+          }
+          throw e
+        }
+      },
+    ),
     publicarEnMuro: os.comunidad.publicarEnMuro.handler(
       async ({ input, context, errors }) => {
         try {
