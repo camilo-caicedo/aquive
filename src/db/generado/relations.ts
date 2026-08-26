@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { catalogoItems, ofrecimientos, perfiles, sugerenciasItem, conversaciones, entregas, organizaciones, entidades, solicitudes, solicitudesContacto, municipios, zonas, invitacionesOrganizacion, identidades, accesosIdentidad, mensajes, servidores, administradores, pushSuscripciones, pushOfertadores, solicitudItems, respuestas, catalogoOficios, referencias, proveedores, accesosReferencia, respuestasServicio, solicitudesServicio, serviciosPrestados, resenas, chatsServicio, mensajesServicio, destapesContacto, proveedorOficios, miembrosOrganizacion } from "./schema";
+import { catalogoItems, ofrecimientos, perfiles, sugerenciasItem, conversaciones, entregas, organizaciones, entidades, solicitudes, solicitudesContacto, municipios, zonas, invitacionesOrganizacion, identidades, accesosIdentidad, mensajes, servidores, administradores, pushSuscripciones, pushOfertadores, solicitudItems, respuestas, catalogoOficios, referencias, proveedores, accesosReferencia, respuestasServicio, solicitudesServicio, serviciosPrestados, resenas, chatsServicio, mensajesServicio, imagenes, publicacionesMuro, productos, destapesContacto, proveedorOficios, miembrosOrganizacion } from "./schema";
 import { usersInAuth } from "../tipos";
 
 export const ofrecimientosRelations = relations(ofrecimientos, ({one}) => ({
@@ -47,6 +47,7 @@ export const perfilesRelations = relations(perfiles, ({one, many}) => ({
 	}),
 	respuestas: many(respuestas),
 	proveedores: many(proveedores),
+	publicacionesMuros: many(publicacionesMuro),
 	destapesContactos: many(destapesContacto),
 	miembrosOrganizacions_aprobadoPor: many(miembrosOrganizacion, {
 		relationName: "miembrosOrganizacion_aprobadoPor_perfiles_id"
@@ -161,6 +162,7 @@ export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
 	referencias: many(referencias),
 	accesosReferencias: many(accesosReferencia),
 	proveedores: many(proveedores),
+	imagenes: many(imagenes),
 }));
 
 export const solicitudesContactoRelations = relations(solicitudesContacto, ({one}) => ({
@@ -203,6 +205,7 @@ export const zonasRelations = relations(zonas, ({one, many}) => ({
 	}),
 	proveedores: many(proveedores),
 	solicitudesServicios: many(solicitudesServicio),
+	publicacionesMuros: many(publicacionesMuro),
 }));
 
 export const municipiosRelations = relations(municipios, ({many}) => ({
@@ -210,6 +213,7 @@ export const municipiosRelations = relations(municipios, ({many}) => ({
 	solicitudes: many(solicitudes),
 	proveedores: many(proveedores),
 	solicitudesServicios: many(solicitudesServicio),
+	publicacionesMuros: many(publicacionesMuro),
 }));
 
 export const invitacionesOrganizacionRelations = relations(invitacionesOrganizacion, ({one, many}) => ({
@@ -368,6 +372,7 @@ export const proveedoresRelations = relations(proveedores, ({one, many}) => ({
 		fields: [proveedores.zonaId],
 		references: [zonas.id]
 	}),
+	productos: many(productos),
 	proveedorOficios: many(proveedorOficios),
 }));
 
@@ -445,6 +450,35 @@ export const mensajesServicioRelations = relations(mensajesServicio, ({one}) => 
 	chatsServicio: one(chatsServicio, {
 		fields: [mensajesServicio.chatId],
 		references: [chatsServicio.id]
+	}),
+}));
+
+export const imagenesRelations = relations(imagenes, ({one}) => ({
+	usersInAuth: one(usersInAuth, {
+		fields: [imagenes.revisadaPor],
+		references: [usersInAuth.id]
+	}),
+}));
+
+export const publicacionesMuroRelations = relations(publicacionesMuro, ({one}) => ({
+	municipio: one(municipios, {
+		fields: [publicacionesMuro.municipio],
+		references: [municipios.codigoDane]
+	}),
+	perfile: one(perfiles, {
+		fields: [publicacionesMuro.perfilId],
+		references: [perfiles.id]
+	}),
+	zona: one(zonas, {
+		fields: [publicacionesMuro.zonaId],
+		references: [zonas.id]
+	}),
+}));
+
+export const productosRelations = relations(productos, ({one}) => ({
+	proveedore: one(proveedores, {
+		fields: [productos.proveedorId],
+		references: [proveedores.id]
 	}),
 }));
 

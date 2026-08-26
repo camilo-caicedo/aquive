@@ -110,18 +110,18 @@ export default async function MisDatosPage({
           <section className="mt-6">
             <h2 className="font-heading text-2xl">Quién los ha visto</h2>
             {datos.accesos.length === 0 ? (
-              <p className="mt-2 rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
+              <p className="shadow-canto mt-2 rounded-2xl bg-card p-6 text-center text-base text-muted-foreground">
                 Nadie los ha consultado todavía.
               </p>
             ) : (
               <ul className="mt-2 space-y-2">
                 {datos.accesos.map((a, i) => (
-                  <li key={i} className="rounded-lg border border-border p-3 text-base">
+                  <li key={i} className="shadow-canto rounded-2xl bg-card p-3 text-base">
                     <p className="font-medium">
                       {a.rol === 'admin' ? 'Moderación de AquíVe' : 'La fundación'}
                     </p>
                     <p className="text-muted-foreground">{a.motivo}</p>
-                    <p className="text-sm text-muted-foreground">{fecha(a.cuando)}</p>
+                    <p className="text-base text-muted-foreground">{fecha(a.cuando)}</p>
                   </li>
                 ))}
               </ul>

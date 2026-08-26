@@ -61,7 +61,7 @@ export async function Encabezado() {
     <>
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm">
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2">
-        {/* El gato va suelto, sin caja: la identidad dice que no se encierra
+        {/* La marca va suelta, sin caja: la identidad dice que no se encierra
             en un cuadro con borde cuando ya hay fondo. Antes había un
             alfiler de mapa aquí, y ese alfiler prometía un mapa que AquíVe
             no es. */}
@@ -105,13 +105,13 @@ export async function Encabezado() {
               instalar; en iPhone no aparece nunca. */}
           <BotonInstalar />
           {tienePerfil && <BotonAvisos sinVer={encabezado?.avisos_sin_ver ?? 0} />}
-          {/* Para quien no tiene sesión, y en relleno terracota por
+          {/* Para quien no tiene sesión, y en relleno lima por
               decisión del responsable (20 de agosto de 2026).
 
               ⚠ Es una excepción consciente a la regla 2, no un descuido:
               en una pantalla que además tiene `AccionPrincipal` —la
               portada, el directorio de quien ofrece— un visitante ve dos
-              rellenos terracota a la vez. Si algún día hay que elegir uno,
+              rellenos lima a la vez. Si algún día hay que elegir uno,
               el de la píldora fija es la acción de la pantalla y este es
               la puerta de la cuenta. Va el último de la fila. */}
           {!user && (

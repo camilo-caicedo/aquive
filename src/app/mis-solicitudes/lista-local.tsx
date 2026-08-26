@@ -160,7 +160,7 @@ export function ListaLocal() {
             {/* Antes solo estaba el código. Quien publicó tres cosas
                 distintas no tiene forma de saber cuál es cuál mirando cuatro
                 letras: lo que reconoce es «Alimentación · Comuna 15». */}
-            <p className="min-w-0 text-lg font-bold">
+            <p className="font-heading min-w-0 text-lg">
               {datos[s.token]
                 ? `${categoriaInfo(datos[s.token].categoria as Categoria).etiqueta} · ${
                     datos[s.token].barrio
@@ -207,7 +207,7 @@ export function ListaLocal() {
               onClick={() => setQrDe((q) => (q === s.token ? null : s.token))}
               aria-expanded={qrDe === s.token}
               aria-label="Ver el código QR"
-              className="flex size-12 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:text-foreground"
+              className="shadow-canto flex size-12 shrink-0 items-center justify-center rounded-full bg-card text-muted-foreground transition-colors hover:text-foreground"
             >
               <QrCode className="size-5" aria-hidden="true" />
             </button>

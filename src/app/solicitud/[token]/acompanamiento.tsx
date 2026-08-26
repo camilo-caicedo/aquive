@@ -119,7 +119,7 @@ export function Acompanamiento({
           ¿Prefieres que una fundación coordine la entrega?
         </button>
       ) : (
-        <div className="space-y-4 rounded-xl border border-border p-4">
+        <div className="shadow-canto space-y-4 rounded-2xl bg-card p-4">
           <h2 className="font-heading text-2xl">Que una fundación te acompañe</h2>
 
           <CamposAcompanamiento aliados={aliados} datos={datos} onCambio={setDatos} />

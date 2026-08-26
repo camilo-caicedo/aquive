@@ -59,7 +59,7 @@ function FilaSolicitud({ s }: { s: SolicitudAdmin }) {
   return (
     <li className="rounded-2xl bg-card p-4 shadow-canto">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <span className="text-base font-bold">
+        <span className="font-heading text-lg leading-tight">
           {categoriaInfo(s.categoria).etiqueta} · {s.barrio}
         </span>
         <span className="text-sm text-muted-foreground">
@@ -69,7 +69,7 @@ function FilaSolicitud({ s }: { s: SolicitudAdmin }) {
         </span>
       </div>
 
-      <p className="mt-0.5 text-sm text-muted-foreground">
+      <p className="mt-0.5 text-base text-muted-foreground">
         {s.municipio} · <span className="font-mono">{s.codigo}</span>
       </p>
 
@@ -81,14 +81,14 @@ function FilaSolicitud({ s }: { s: SolicitudAdmin }) {
         ))}
       </ul>
 
-      {s.nota && <p className="mt-2 text-sm text-muted-foreground">«{s.nota}»</p>}
+      {s.nota && <p className="mt-2 text-base text-muted-foreground">«{s.nota}»</p>}
 
       {/* Excepción explícita a la regla 1 de CLAUDE.md — ver
           supabase/migraciones/v2-k4-contacto-solicitante.sql. Solo lo ve
           el administrador, nunca sale en el tablero, y eso se dice aquí y
           no en un aviso general. */}
       {(s.contacto?.nombre || s.contacto?.telefono || s.contacto?.correo) && (
-        <div className="mt-3 rounded-lg border border-enlace/30 bg-accent p-3 text-sm text-accent-foreground">
+        <div className="mt-3 rounded-lg border border-enlace/30 bg-accent p-3 text-base text-accent-foreground">
           <p className="font-medium">Contacto que dejó quien pidió</p>
           <p className="mt-0.5">
             {[s.contacto.nombre, s.contacto.telefono, s.contacto.correo]
@@ -101,12 +101,12 @@ function FilaSolicitud({ s }: { s: SolicitudAdmin }) {
 
       {cerrada ? (
         <>
-          <p className="mt-3 flex items-center gap-1.5 text-sm text-foreground">
+          <p className="mt-3 flex items-center gap-1.5 text-base text-foreground">
             <CheckCircle2 className="size-4 shrink-0" aria-hidden="true" />
             Marcada como entregada. Ya no sale en el tablero.
           </p>
           {s.nota_admin && (
-            <p className="mt-2 rounded-lg bg-muted p-3 text-sm">{s.nota_admin}</p>
+            <p className="mt-2 rounded-lg bg-muted p-3 text-base">{s.nota_admin}</p>
           )}
         </>
       ) : (
@@ -119,7 +119,7 @@ function FilaSolicitud({ s }: { s: SolicitudAdmin }) {
             aria-label={`Comentario sobre ${s.codigo}`}
             placeholder="Ej: Ya se entregó por medio de la fundación, no hace falta ir."
           />
-          <p className="text-sm text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             Esto lo lee cualquiera en el tablero. Di qué pasó, no de quién:
             nada de nombres, teléfonos ni direcciones.
           </p>
@@ -133,18 +133,17 @@ function FilaSolicitud({ s }: { s: SolicitudAdmin }) {
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
-              className="h-11 text-sm"
               disabled={enviando}
               onClick={() => guardar(false)}
             >
               <MessageSquare className="size-4" aria-hidden="true" />
               Solo comentar
             </Button>
-            <Button className="h-11 text-sm" disabled={enviando} onClick={() => guardar(true)}>
+            <Button disabled={enviando} onClick={() => guardar(true)}>
               {enviando ? 'Guardando…' : 'Marcar entregada'}
             </Button>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-base text-muted-foreground">
             Marcarla entregada la saca del tablero pero <strong>no la borra</strong>:
             quien pidió conserva su enlace y sus respuestas, y se borra sola a
             las 72 horas como todas.
@@ -158,7 +157,7 @@ function FilaSolicitud({ s }: { s: SolicitudAdmin }) {
 export function PanelSolicitudesAdmin({ solicitudes }: { solicitudes: SolicitudAdmin[] }) {
   if (solicitudes.length === 0) {
     return (
-      <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+      <p className="rounded-2xl border border-dashed border-border p-6 text-center text-base text-muted-foreground">
         No hay solicitudes que cumplan ese filtro.
       </p>
     )

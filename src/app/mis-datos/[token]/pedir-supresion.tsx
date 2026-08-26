@@ -63,12 +63,16 @@ export function PedirSupresion({ token }: { token: string }) {
 
       {confirmando ? (
         <>
-          <p className="mt-3 text-base font-medium text-destructive">
+          <p className="mt-3 rounded-2xl bg-accent p-3 text-base font-semibold text-accent-foreground">
             ¿Seguro? Esto no se puede deshacer, y para volver a tener
             acompañamiento habría que darlos otra vez.
           </p>
           <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Button variant="destructive" disabled={enviando} onClick={suprimir}>
+            <Button
+              className="bg-familia-rojo text-foreground hover:bg-familia-rojo/85"
+              disabled={enviando}
+              onClick={suprimir}
+            >
               {enviando ? 'Borrando…' : 'Sí, borra mis datos'}
             </Button>
             <Button

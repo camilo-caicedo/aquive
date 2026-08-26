@@ -78,13 +78,13 @@ export function AccionesServidor({
   if (suspendido) {
     return (
       <div className="mt-3">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           Mientras esté suspendida no aparece en la plataforma y no puede
           responder.
         </p>
         <Button
           variant="outline"
-          className="mt-2 h-11 w-full text-sm"
+          className="mt-2 w-full"
           disabled={enviando}
           onClick={() => suspender(false)}
         >
@@ -103,13 +103,12 @@ export function AccionesServidor({
     <div className="mt-3">
       {confirmando ? (
         <>
-          <p className="text-sm font-medium text-destructive">
+          <p className="text-base font-medium text-destructive">
             ¿Seguro? El perfil deja de aparecer en la plataforma.
           </p>
           <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Button
               variant="destructive"
-              className="h-11 text-sm"
               disabled={enviando}
               onClick={() => suspender(true)}
             >
@@ -117,7 +116,6 @@ export function AccionesServidor({
             </Button>
             <Button
               variant="outline"
-              className="h-11 text-sm"
               disabled={enviando}
               onClick={() => setConfirmando(false)}
             >
@@ -128,14 +126,13 @@ export function AccionesServidor({
       ) : (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {!sinRegistro && (
-            <Button className="h-11 text-sm" disabled={enviando} onClick={verificar}>
+            <Button disabled={enviando} onClick={verificar}>
               <BadgeCheck className="size-4" aria-hidden="true" />
               {enviando ? 'Guardando…' : 'Aparece: verificar'}
             </Button>
           )}
           <Button
             variant="outline"
-            className="h-11 text-sm"
             disabled={enviando}
             onClick={() => setConfirmando(true)}
           >

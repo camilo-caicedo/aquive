@@ -382,16 +382,14 @@ export function FormularioRegistro({
                 role="checkbox"
                 aria-checked={o.marcado}
                 onClick={o.alternar}
-                className={`flex min-h-16 w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${
-                  o.marcado ? 'border-enlace bg-accent' : 'border-border bg-card'
+                className={`shadow-canto flex min-h-16 w-full items-center gap-3 rounded-2xl p-3 text-left transition-colors ${
+                  o.marcado ? 'bg-accent' : 'bg-card'
                 }`}
               >
                 <span
                   aria-hidden="true"
-                  className={`flex size-8 shrink-0 items-center justify-center rounded-full border-2 ${
-                    o.marcado
-                      ? 'border-enlace bg-primary text-primary-foreground'
-                      : 'border-border'
+                  className={`flex size-8 shrink-0 items-center justify-center rounded-full ${
+                    o.marcado ? 'bg-primary text-primary-foreground' : 'bg-muted'
                   }`}
                 >
                   {o.marcado && <Check className="size-5" />}
@@ -548,7 +546,7 @@ export function FormularioRegistro({
             es el punto: la logística era lo que más se repetía en el chat. Se
             puede desmarcar en una respuesta concreta — se puede tener carro y
             no poder ese día. */}
-        <label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-border p-3 has-checked:border-enlace has-checked:bg-accent">
+        <label className="shadow-canto flex min-h-12 cursor-pointer items-start gap-3 rounded-2xl bg-card p-3 has-checked:bg-accent">
           <input
             type="checkbox"
             checked={puedeTrasladarse}
@@ -557,7 +555,7 @@ export function FormularioRegistro({
           />
           <span>
             <span className="text-base font-medium">Puedo trasladarme a entregar</span>
-            <span className="block text-sm text-muted-foreground">
+            <span className="block text-base text-muted-foreground">
               Puedes llevar las cosas hasta donde haga falta. Aparece en tu ficha
               y viene marcado cuando respondas.
             </span>
@@ -760,7 +758,7 @@ export function FormularioRegistro({
               {inventario.map((o) => (
                 <li
                   key={claveOfrecimiento(o)}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-border p-2"
+                  className="flex items-center justify-between gap-2 rounded-2xl bg-background p-2"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-base">
@@ -839,15 +837,15 @@ export function FormularioRegistro({
       {/* Lo que va a quedar público, dicho ANTES de publicar. Hoy la
           gente lo descubre después de guardar. */}
       {asistente && (
-        <div className="rounded-2xl bg-secondary p-4">
-          <h3 className="text-lg font-semibold">Esto es lo que va a quedar público</h3>
-          <ul className="mt-2 space-y-0.5 text-base text-secondary-foreground">
+        <div className="rounded-2xl bg-foreground p-4 text-background">
+          <h3 className="font-heading text-xl">Esto es lo que va a quedar público</h3>
+          <ul className="mt-3 space-y-1 text-base">
             <li>{nombre.trim() || 'Tu nombre visible'}</li>
             <li>{tipo === 'servidor' ? 'Servicios profesionales' : 'Insumos'}</li>
             <li>{resumenMunicipios}</li>
             <li>{contacto.trim() || 'Tu forma de contacto'}</li>
           </ul>
-          <p className="mt-2 text-sm text-secondary-foreground">
+          <p className="mt-3 border-t border-background/25 pt-3 text-base">
             Y esto no: tu correo, que no se guarda en ninguna parte.
           </p>
         </div>
@@ -861,7 +859,7 @@ export function FormularioRegistro({
       >
         {/* Texto exacto de docs/legal/PLANTILLAS.md sección 3. La marca
             de tiempo que lo acompaña es la prueba de la autorización. */}
-        <label className="flex cursor-pointer gap-3 rounded-lg border-2 border-border bg-muted/40 p-4 has-checked:border-enlace">
+        <label className="flex cursor-pointer gap-3 rounded-2xl bg-background p-4 has-checked:bg-accent">
           <input
             type="checkbox"
             checked={autorizo}
@@ -877,14 +875,14 @@ export function FormularioRegistro({
             plataforma para que personas afectadas puedan contactarme. Entiendo
             que esta información será visible para cualquiera en internet, que
             puedo borrarla en cualquier momento, y he leído el{' '}
-            <a href="/privacidad" className="underline">
+            <a href="/privacidad" className="text-enlace underline">
               aviso de privacidad
             </a>
             .
           </span>
         </label>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           {autorizo
             ? `Fecha de la autorización: ${hoy}.`
             : 'Sin esto no se publica nada. Puedes editar el resto igual.'}

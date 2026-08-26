@@ -15,7 +15,7 @@ function Fila({ href, etiqueta, detalle }: { href: string; etiqueta: string; det
   return (
     <Link
       href={href}
-      className="flex min-h-16 items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-muted"
+      className="shadow-canto flex min-h-16 items-center justify-between gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
     >
       <span>
         <span className="block text-base font-medium">{etiqueta}</span>

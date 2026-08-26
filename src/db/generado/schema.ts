@@ -1013,6 +1013,97 @@ export const mensajesServicio = pgTable("mensajes_servicio", {
 	check("mensajes_servicio_cuerpo_check", sql`(char_length(cuerpo) >= 1) AND (char_length(cuerpo) <= 500)`),
 ]);
 
+export const imagenes = pgTable("imagenes", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	objetoTipo: text("objeto_tipo").notNull(),
+	objetoId: uuid("objeto_id"),
+	ruta: text().notNull(),
+	estado: text().default('en_cola').notNull(),
+	motivo: text(),
+	ancho: integer(),
+	alto: integer(),
+	bytes: integer(),
+	subidaAt: timestamp("subida_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	revisadaAt: timestamp("revisada_at", { withTimezone: true, mode: 'string' }),
+	revisadaPor: uuid("revisada_por"),
+}, (table) => [
+	index("idx_imagenes_cola").using("btree", table.estado.asc().nullsLast().op("text_ops"), table.subidaAt.asc().nullsLast().op("text_ops")).where(sql`(estado = 'en_cola'::text)`),
+	index("idx_imagenes_objeto").using("btree", table.objetoTipo.asc().nullsLast().op("text_ops"), table.objetoId.asc().nullsLast().op("uuid_ops")).where(sql`(objeto_id IS NOT NULL)`),
+	foreignKey({
+			columns: [table.revisadaPor],
+			foreignColumns: [usersInAuth.id],
+			name: "imagenes_revisada_por_fkey"
+		}).onDelete("set null"),
+	unique("imagenes_ruta_key").on(table.ruta),
+	check("imagenes_estado_check", sql`estado = ANY (ARRAY['en_cola'::text, 'aprobada'::text, 'rechazada'::text])`),
+	check("imagenes_objeto_tipo_check", sql`objeto_tipo = ANY (ARRAY['muro'::text, 'producto'::text])`),
+]);
+
+export const publicacionesMuro = pgTable("publicaciones_muro", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	cara: text().notNull(),
+	perfilId: uuid("perfil_id"),
+	autorNombre: text("autor_nombre"),
+	autorizacionVersion: text("autorizacion_version"),
+	autorizacionAt: timestamp("autorizacion_at", { withTimezone: true, mode: 'string' }),
+	tokenHash: text("token_hash"),
+	categoria: text().notNull(),
+	titulo: text().notNull(),
+	detalle: text(),
+	municipio: text().notNull(),
+	zonaId: uuid("zona_id"),
+	estado: text().default('abierta').notNull(),
+	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }),
+	esPrueba: boolean("es_prueba").default(false).notNull(),
+}, (table) => [
+	index("idx_muro_abierta").using("btree", table.cara.asc().nullsLast().op("timestamptz_ops"), table.municipio.asc().nullsLast().op("text_ops"), table.creadaAt.desc().nullsFirst().op("timestamptz_ops")).where(sql`(estado = 'abierta'::text)`),
+	foreignKey({
+			columns: [table.municipio],
+			foreignColumns: [municipios.codigoDane],
+			name: "publicaciones_muro_municipio_fkey"
+		}),
+	foreignKey({
+			columns: [table.perfilId],
+			foreignColumns: [perfiles.id],
+			name: "publicaciones_muro_perfil_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.zonaId],
+			foreignColumns: [zonas.id],
+			name: "publicaciones_muro_zona_id_fkey"
+		}).onDelete("set null"),
+	check("muro_necesita_sin_datos", sql`(cara <> 'necesita'::text) OR ((token_hash IS NOT NULL) AND (perfil_id IS NULL) AND (autor_nombre IS NULL))`),
+	check("muro_ofrece_con_nombre", sql`(cara <> 'ofrece'::text) OR ((perfil_id IS NOT NULL) AND (autor_nombre IS NOT NULL) AND (autorizacion_version IS NOT NULL))`),
+	check("publicaciones_muro_cara_check", sql`cara = ANY (ARRAY['ofrece'::text, 'necesita'::text])`),
+	check("publicaciones_muro_detalle_check", sql`char_length(detalle) <= 300`),
+	check("publicaciones_muro_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'resuelta'::text])`),
+	check("publicaciones_muro_titulo_check", sql`(char_length(titulo) >= 3) AND (char_length(titulo) <= 140)`),
+]);
+
+export const productos = pgTable("productos", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	proveedorId: uuid("proveedor_id").notNull(),
+	nombre: text().notNull(),
+	detalle: text(),
+	modo: text().default('normal').notNull(),
+	precioDesde: numeric("precio_desde", { precision: 12, scale:  2 }),
+	unidad: text(),
+	disponible: boolean().default(true).notNull(),
+	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_productos_proveedor").using("btree", table.proveedorId.asc().nullsLast().op("uuid_ops")).where(sql`disponible`),
+	foreignKey({
+			columns: [table.proveedorId],
+			foreignColumns: [proveedores.id],
+			name: "productos_proveedor_id_fkey"
+		}).onDelete("cascade"),
+	check("productos_detalle_check", sql`char_length(detalle) <= 300`),
+	check("productos_modo_check", sql`modo = ANY (ARRAY['gratis'::text, 'aporte'::text, 'solidario'::text, 'normal'::text])`),
+	check("productos_nombre_check", sql`(char_length(nombre) >= 2) AND (char_length(nombre) <= 140)`),
+	check("productos_unidad_check", sql`unidad = ANY (ARRAY['unidad'::text, 'libra'::text, 'kilo'::text, 'docena'::text, 'plato'::text, 'trabajo'::text])`),
+]);
+
 export const destapesContacto = pgTable("destapes_contacto", {
 	solicitudId: uuid("solicitud_id").notNull(),
 	perfilId: uuid("perfil_id").notNull(),
@@ -1279,3 +1370,31 @@ export const oficiosConProveedores = pgView("oficios_con_proveedores", {	id: tex
 	grupo: text(),
 	orden: integer(),
 }).as(sql`SELECT DISTINCT o.id, o.nombre, o.grupo, o.orden FROM catalogo_oficios o JOIN proveedor_oficios_publicos pop ON pop.oficio_id = o.id`);
+
+export const muroPublico = pgView("muro_publico", {	id: uuid(),
+	cara: text(),
+	categoria: text(),
+	titulo: text(),
+	detalle: text(),
+	municipio: text(),
+	municipioNombre: text("municipio_nombre"),
+	zonaId: uuid("zona_id"),
+	zonaNombre: text("zona_nombre"),
+	autorNombre: text("autor_nombre"),
+	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }),
+	imagen: text(),
+}).as(sql`SELECT m.id, m.cara, m.categoria, m.titulo, m.detalle, m.municipio, mu.nombre AS municipio_nombre, m.zona_id, z.nombre AS zona_nombre, m.autor_nombre, m.creada_at, ( SELECT i.ruta FROM imagenes i WHERE i.objeto_tipo = 'muro'::text AND i.objeto_id = m.id AND i.estado = 'aprobada'::text ORDER BY i.subida_at LIMIT 1) AS imagen FROM publicaciones_muro m JOIN municipios mu ON mu.codigo_dane = m.municipio LEFT JOIN zonas z ON z.id = m.zona_id WHERE m.estado = 'abierta'::text AND (m.expira_at IS NULL OR m.expira_at > now())`);
+
+export const productosPublicos = pgView("productos_publicos", {	id: uuid(),
+	proveedorId: uuid("proveedor_id"),
+	proveedorNombre: text("proveedor_nombre"),
+	municipio: text(),
+	zonaNombre: text("zona_nombre"),
+	nombre: text(),
+	detalle: text(),
+	modo: text(),
+	precioDesde: numeric("precio_desde", { precision: 12, scale:  2 }),
+	unidad: text(),
+	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }),
+	imagen: text(),
+}).as(sql`SELECT p.id, p.proveedor_id, pp.nombre_visible AS proveedor_nombre, pp.municipio, pp.zona_nombre, p.nombre, p.detalle, p.modo, p.precio_desde, p.unidad, p.creado_at, ( SELECT i.ruta FROM imagenes i WHERE i.objeto_tipo = 'producto'::text AND i.objeto_id = p.id AND i.estado = 'aprobada'::text ORDER BY i.subida_at LIMIT 1) AS imagen FROM productos p JOIN proveedores_publicos pp ON pp.id = p.proveedor_id WHERE p.disponible`);

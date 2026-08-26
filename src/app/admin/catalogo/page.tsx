@@ -84,7 +84,7 @@ export default async function CatalogoPage({
 
       {vista === 'sugeridos' && (
         <>
-          <p className="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">
+          <p className="rounded-2xl bg-accent p-4 text-base leading-relaxed text-accent-foreground">
             Aprobar crea un ítem nuevo. Fusionar reutiliza uno existente y todo
             lo que usaba la sugerencia pasa a apuntar ahí. Rechazar no crea ni
             cambia nada.
@@ -103,10 +103,10 @@ export default async function CatalogoPage({
               {sugerencias.map((s) => (
                 <li key={s.id} className="rounded-2xl bg-card p-4 shadow-canto">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-base font-bold">{s.nombre_propuesto}</span>
+                    <span className="font-heading text-lg leading-tight">{s.nombre_propuesto}</span>
                     <span className="text-sm text-muted-foreground">{fecha(s.creada_at)}</span>
                   </div>
-                  <p className="mt-0.5 text-sm text-muted-foreground">
+                  <p className="mt-0.5 text-base text-muted-foreground">
                     {s.categoria_sugerida
                       ? categoria(s.categoria_sugerida).etiqueta
                       : 'Sin categoría sugerida'}{' '}
@@ -129,7 +129,7 @@ export default async function CatalogoPage({
               className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-card p-3 shadow-canto"
             >
               <span className="min-w-0">
-                <span className="block text-sm font-medium">{i.nombre}</span>
+                <span className="block text-base font-medium">{i.nombre}</span>
                 <span className="block text-sm text-muted-foreground">
                   {categoria(i.categoria).etiqueta} · {i.unidad} ·{' '}
                   <span className="font-mono">{i.id}</span>
@@ -153,7 +153,7 @@ export default async function CatalogoPage({
               className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-card p-3 shadow-canto"
             >
               <span className="min-w-0">
-                <span className="block text-sm font-medium">{o.nombre}</span>
+                <span className="block text-base font-medium">{o.nombre}</span>
                 <span className="block text-sm text-muted-foreground">
                   {o.grupo} · <span className="font-mono">{o.id}</span>
                 </span>

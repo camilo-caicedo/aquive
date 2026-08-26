@@ -63,7 +63,7 @@ export default async function SolicitudesAdminPage({
                     : `/admin/solicitudes?filtro=${c.clave}`
                 }
                 aria-current={activo ? 'page' : undefined}
-                className={`inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm transition-colors ${
+                className={`inline-flex min-h-12 shrink-0 items-center gap-1.5 rounded-full border px-4 text-base transition-colors ${
                   activo
                     ? 'border-border bg-card font-semibold text-foreground shadow-canto'
                     : 'border-transparent text-muted-foreground hover:bg-muted'
@@ -71,7 +71,7 @@ export default async function SolicitudesAdminPage({
               >
                 {c.etiqueta}
                 <span
-                  className={`rounded-full px-2 text-sm ${
+                  className={`rounded-full px-2 text-base ${
                     activo ? 'bg-secondary text-secondary-foreground' : 'bg-muted'
                   }`}
                 >

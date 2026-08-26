@@ -80,10 +80,10 @@ function Chip({
       type="button"
       aria-pressed={activo}
       onClick={onClick}
-      className={`inline-flex min-h-12 items-center rounded-full border px-4 text-base transition-colors ${
+      className={`inline-flex min-h-12 items-center rounded-full px-4 text-base transition-colors ${
         activo
-          ? 'border-enlace bg-primary text-primary-foreground'
-          : 'border-border bg-card hover:bg-muted'
+          ? 'bg-primary text-primary-foreground font-semibold'
+          : 'shadow-canto bg-card hover:bg-muted'
       }`}
     >
       {children}
@@ -305,7 +305,7 @@ export function FormularioProveedor({
           aparece y lleva a arreglarlo. Un párrafo que explica la regla S y
           deja a la persona sin saber qué tocar no sirve de nada. */}
       {proveedor?.oficios.some((o) => !o.publicado) && (
-        <div className="flex items-start gap-3 rounded-2xl border border-enlace/30 bg-accent p-4 text-accent-foreground">
+        <div className="flex items-start gap-3 rounded-2xl bg-accent p-4 text-accent-foreground">
           <EyeOff className="size-5 shrink-0 translate-y-0.5" aria-hidden="true" />
           <div className="min-w-0 flex-1">
             <p className="text-base font-semibold">
@@ -322,7 +322,7 @@ export function FormularioProveedor({
           </div>
           <a
             href="#telefono"
-            className="inline-flex min-h-12 shrink-0 items-center rounded-full bg-background px-4 text-base font-medium"
+            className="shadow-canto inline-flex min-h-12 shrink-0 items-center rounded-full bg-card px-4 text-base font-semibold"
           >
             Arreglar
           </a>
@@ -382,7 +382,9 @@ export function FormularioProveedor({
               if (delGrupo.length === 0) return null
               return (
                 <div key={grupo}>
-                  <p className="text-sm font-medium text-muted-foreground">{etiqueta}</p>
+                  <p className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase">
+                    {etiqueta}
+                  </p>
                   <div className="mt-1.5 flex flex-wrap gap-2">
                     {delGrupo.map((o) => (
                       <Chip
@@ -406,10 +408,12 @@ export function FormularioProveedor({
                 const cobra = e.modo === 'solidario' || e.modo === 'normal'
                 return (
                   <li key={e.oficio_id} className="rounded-2xl bg-card p-3 shadow-canto">
-                    <p className="text-base font-medium">{oficio?.nombre ?? e.oficio_id}</p>
+                    <p className="font-heading text-lg leading-tight">
+                      {oficio?.nombre ?? e.oficio_id}
+                    </p>
 
                     {oficio?.riesgo === 'alto' && (
-                      <p className="mt-1 text-sm text-accent-foreground">
+                      <p className="mt-2 rounded-xl bg-accent px-3 py-2 text-base text-accent-foreground">
                         Para este oficio hace falta que verifiquemos tu teléfono y
                         que confirmes una referencia. Hasta entonces no aparece en
                         el directorio.

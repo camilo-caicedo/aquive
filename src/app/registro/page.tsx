@@ -154,16 +154,20 @@ export default async function RegistroPage({
               borrar queda aparte, en rojo, con la consecuencia escrita. */}
           <CerrarSesion />
 
-          <section className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4">
+          {/* Papel con la sombra desplazada en rojo pastel, como la
+              pantalla 25 del prototipo: la identidad la carga el cartel, no
+              un contorno ni la letra en rojo —que sobre crema es justo lo
+              que la paleta no aguanta—. */}
+          <section className="shadow-cartel-rojo rounded-2xl bg-card p-4">
             <div className="flex items-start gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+              <span className="bg-familia-rojo flex size-10 shrink-0 items-center justify-center rounded-full text-foreground">
                 <Trash2 className="size-5" aria-hidden="true" />
               </span>
               <div className="min-w-0 flex-1">
-                <h2 className="text-base font-medium text-destructive">
+                <h2 className="font-heading text-xl leading-tight">
                   Borrar mi cuenta y mis datos
                 </h2>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-base text-muted-foreground">
                   Inmediato y no se puede deshacer.
                 </p>
               </div>
@@ -182,10 +186,10 @@ export default async function RegistroPage({
 
             {/* Lo que hoy no se decía en ningún lado, y es la pregunta que
                 de verdad se hace quien tiene las dos cosas. */}
-            <p className="mt-3 text-sm text-muted-foreground">
+            <p className="mt-3 text-base text-muted-foreground">
               Tu ficha del directorio de servicios se borra aparte: son dos
               cosas distintas.{' '}
-              <Link href="/servicios/soy-proveedor" className="underline">
+              <Link href="/servicios/soy-proveedor" className="text-enlace underline">
                 Mi ficha
               </Link>
             </p>

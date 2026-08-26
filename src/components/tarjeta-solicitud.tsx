@@ -65,7 +65,10 @@ export function TarjetaSolicitud({
 
   return (
     <li
-      className={`animar-entrada overflow-hidden rounded-2xl bg-card shadow-canto transition-shadow hover:shadow-md ${
+      // `shadow-canto` y nada más: la identidad tiene dos sombras —el canto
+      // de 1 px de lo blanco sobre crema y la desplazada de cartel— y
+      // `shadow-md` no es ninguna de las dos.
+      className={`animar-entrada overflow-hidden rounded-2xl bg-card shadow-canto ${
         coincidencias ? 'border border-enlace/40' : ''
       }`}
     >
@@ -126,7 +129,7 @@ export function TarjetaSolicitud({
 
       {/* Sello discreto, no un distintivo de categoría: dice que hay una
           fundación coordinando, y nada más. Ni cuál, ni de quién es la
-          solicitud. Va en salvia con icono y texto, nunca solo color. */}
+          solicitud. Va con icono y texto, nunca solo color. */}
       {solicitud.flujo === 'acompanado' && (
         <p className="mt-3 flex items-center gap-1.5 text-sm text-foreground">
           <HeartHandshake className="size-4 shrink-0" aria-hidden="true" />

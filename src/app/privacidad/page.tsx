@@ -20,10 +20,18 @@ import {
 export default function PrivacidadPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="font-heading text-3xl">Cómo tratamos la información en AquíVe</h1>
-      <p className="mt-3 text-base">Última actualización: {FECHA_LEGALES}</p>
+      {/* La etiqueta de arriba dice qué documento es esto; el `h1` dice qué
+          promete. Sin ella, «Cómo tratamos la información» podía ser una
+          página de ayuda cualquiera y no el aviso que tiene efecto legal. */}
+      <p className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase">
+        Aviso de privacidad
+      </p>
+      <h1 className="font-heading mt-2 text-3xl">Cómo tratamos la información en AquíVe</h1>
+      <p className="mt-3 text-base text-muted-foreground">
+        Última actualización: {FECHA_LEGALES}
+      </p>
 
-      <div className="border-border mt-6 rounded-2xl border p-4">
+      <div className="shadow-canto mt-6 rounded-2xl bg-card p-4">
         <p className="text-base">
           AquíVe tiene dos partes y funcionan al revés la una de la otra. En <strong>ayuda de
           emergencia</strong> no guardamos datos de quien pide y todo se borra solo. En{' '}
@@ -32,7 +40,7 @@ export default function PrivacidadPage() {
         </p>
       </div>
 
-      <h2 className="font-heading mt-6 text-2xl">Quién es responsable</h2>
+      <h2 className="font-heading mt-8 text-2xl">Quién es responsable</h2>
       {/* ⚠ Un solo responsable. Hasta el 20/08/2026 aquí había dos bloques
           —la persona natural para la emergencia, la fundación para el
           directorio— y con ellos el nombre completo de una persona en una
@@ -58,9 +66,9 @@ export default function PrivacidadPage() {
         pides que una fundación te acompañe», más abajo.
       </p>
 
-      <h2 className="font-heading mt-8 text-2xl">Ayuda de emergencia</h2>
+      <h2 className="font-heading mt-10 border-t border-border pt-6 text-3xl">Ayuda de emergencia</h2>
 
-      <h2 className="font-heading mt-6 text-2xl">Si publicas una solicitud de ayuda: no guardamos ningún dato tuyo, salvo que tú decidas dejarlo.</h2>
+      <h2 className="font-heading mt-8 text-2xl">Si publicas una solicitud de ayuda: no guardamos ningún dato tuyo, salvo que tú decidas dejarlo.</h2>
       <p className="mt-3 text-base">
         No pedimos ni almacenamos tu cédula, dirección exacta, edad ni la de tu familia. Una solicitud contiene
         únicamente el municipio, el barrio, los artículos que necesitas y una nota opcional.
@@ -90,7 +98,7 @@ export default function PrivacidadPage() {
         no permite identificar a nadie y sirve para entender qué se necesitó y dónde.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">Si ofreces ayuda o servicios profesionales: sí guardamos algunos datos, y son públicos.</h2>
+      <h2 className="font-heading mt-8 text-2xl">Si ofreces ayuda o servicios profesionales: sí guardamos algunos datos, y son públicos.</h2>
       <p className="mt-3 text-base">
         Guardamos tu nombre visible, municipios donde puedes ayudar, tu forma de contacto, tu descripción y, si
         eres profesional, tu profesión y número de matrícula. Estos datos se muestran públicamente, porque esa es
@@ -107,7 +115,7 @@ export default function PrivacidadPage() {
         Puedes borrar tu perfil completo desde tu cuenta, en cualquier momento.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">
+      <h2 className="font-heading mt-8 text-2xl">
         Si pides que una fundación te acompañe: ahí sí guardamos datos tuyos, cifrados.
       </h2>
       <p className="mt-3 text-base">
@@ -139,14 +147,14 @@ export default function PrivacidadPage() {
         con la solicitud. No es un archivo: no la uses para guardar nada que necesites después.
       </p>
 
-      <h2 className="font-heading mt-8 text-2xl">Servicios</h2>
+      <h2 className="font-heading mt-10 border-t border-border pt-6 text-3xl">Servicios</h2>
       <p className="mt-3 text-base">
         Esta parte de AquíVe existe para que quien vive de su trabajo pueda ser encontrado después
         del sismo. Funciona distinto a todo lo anterior y por eso está separada: aquí los datos
         permanecen y la responsable es {RESPONSABLE_SERVICIOS}.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">Si necesitas un servicio: seguimos sin guardar datos tuyos.</h2>
+      <h2 className="font-heading mt-8 text-2xl">Si necesitas un servicio: seguimos sin guardar datos tuyos.</h2>
       <p className="mt-3 text-base">
         Buscar en el directorio no exige cuenta ni deja rastro tuyo. Si publicas lo que necesitas,
         guardamos únicamente el oficio, el municipio, la zona, qué tan urgente es, si puedes pagar y
@@ -164,7 +172,7 @@ export default function PrivacidadPage() {
         ella.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">Qué comprobamos antes de publicar una ficha</h2>
+      <h2 className="font-heading mt-8 text-2xl">Qué comprobamos antes de publicar una ficha</h2>
       <p className="mt-3 text-base">
         Una sola cosa: que el teléfono contesta. Alguien de {RESPONSABLE} marca el número que diste y confirma
         que contestas tú. Hasta que eso pase, tu ficha no se ve en el directorio, aunque esté completa.
@@ -177,7 +185,7 @@ export default function PrivacidadPage() {
         puede dar un conocido.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">Si ofreces un servicio: tu ficha es pública y permanece.</h2>
+      <h2 className="font-heading mt-8 text-2xl">Si ofreces un servicio: tu ficha es pública y permanece.</h2>
       <p className="mt-3 text-base">
         Guardamos tu nombre visible, tu teléfono, si eres persona o microempresa, tus oficios con su
         precio, tu municipio y zona, tus horarios, tus medios de pago y tu descripción. Todo eso{' '}
@@ -211,7 +219,7 @@ export default function PrivacidadPage() {
         alguien, lo haces por fuera de esta plataforma y nosotros no vemos nada de eso.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">Tus derechos</h2>
+      <h2 className="font-heading mt-8 text-2xl">Tus derechos</h2>
       <p className="mt-3 text-base">
         Conforme a la Ley 1581 de 2012 puedes conocer, actualizar, rectificar y suprimir tus datos, y revocar la
         autorización. Escríbenos a {CORREO_CONTACTO}, sea cual sea la parte del sitio. Una consulta
@@ -223,7 +231,7 @@ export default function PrivacidadPage() {
         borrarlo ahí mismo, sin pedirle permiso a nadie.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">Cómo borrar lo que guardamos de ti</h2>
+      <h2 className="font-heading mt-8 text-2xl">Cómo borrar lo que guardamos de ti</h2>
       <p className="mt-3 text-base">
         Depende de qué sea, y en los tres casos lo puedes hacer tú sin pedirle permiso a nadie:
       </p>
@@ -250,7 +258,7 @@ export default function PrivacidadPage() {
         motivo. Nunca qué vio. Sobrevive a propósito, porque es tu prueba de que alguien los consultó.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">La ayuda de emergencia es temporal.</h2>
+      <h2 className="font-heading mt-8 text-2xl">La ayuda de emergencia es temporal.</h2>
       <p className="mt-3 text-base">
         Fue creada para la emergencia del sismo del 10 de agosto de 2026 y dejará de operar cuando deje de ser
         útil. El directorio de servicios está pensado para durar más, porque la recuperación económica

@@ -85,6 +85,9 @@ export function FormularioRespuesta({
   return (
     <div className="mt-4 space-y-4">
       <div>
+        <p className="font-heading mb-1 text-xs tracking-[0.085em] text-muted-foreground uppercase">
+          Tu mensaje
+        </p>
         <Label htmlFor="mensaje" className="mb-1">
           ¿Qué puedes aportar? (máx. 200 caracteres)
         </Label>
@@ -102,7 +105,7 @@ export function FormularioRespuesta({
       {/* Viene marcada si ya lo dijo en su perfil, y se puede desmarcar: se
           puede tener carro y no poder ese día. Así la logística deja de ser
           la primera pregunta de cada conversación. */}
-      <label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-border p-3 has-checked:border-enlace has-checked:bg-accent">
+      <label className="shadow-canto flex min-h-12 cursor-pointer items-start gap-3 rounded-2xl border border-transparent bg-card p-3 has-checked:border-enlace has-checked:bg-accent has-checked:shadow-none">
         <input
           type="checkbox"
           checked={puedeLlevar}

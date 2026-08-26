@@ -144,7 +144,7 @@ export default async function SolicitudesDeServicioPage({
           <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
           <span>
             Para responder necesitas tener tu ficha publicada en el directorio.{' '}
-            <Link href="/servicios/soy-proveedor" className="underline">
+            <Link href="/servicios/soy-proveedor" className="text-enlace underline underline-offset-4">
               Publicar mi ficha
             </Link>
           </span>
@@ -152,7 +152,7 @@ export default async function SolicitudesDeServicioPage({
       )}
 
       {solicitudes.length === 0 ? (
-        <div className="mt-6 rounded-lg border border-dashed border-border p-8 text-center">
+        <div className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center">
           <Inbox className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
           <p className="mt-2 text-base text-muted-foreground">
             {hayFiltro

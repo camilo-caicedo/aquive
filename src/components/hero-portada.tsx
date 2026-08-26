@@ -17,7 +17,7 @@ import { PlegableRecordado } from '@/components/plegable-recordado'
  */
 export function HeroPortada() {
   return (
-    <section className="animar-entrada rounded-2xl border border-border bg-secondary p-5 sm:p-8">
+    <section className="animar-entrada rounded-2xl bg-secondary p-5 sm:p-8">
       {/* El nombre va en el encabezado principal, no solo en la barra de
           arriba. Google rechazó la verificación de la marca dos veces por
           esto: su revisor compara el nombre de la pantalla de
@@ -67,7 +67,7 @@ export function HeroPortada() {
           `PlegableRecordado`. */}
       <PlegableRecordado
         id="portada-avisos"
-        className="group mt-4 rounded-2xl border border-border bg-card p-4"
+        className="shadow-canto group mt-4 rounded-2xl bg-card p-4"
       >
         {/* El escudo a la izquierda y el galón a la derecha, no los dos
             del mismo lado: el escudo dice de qué habla esto y el galón

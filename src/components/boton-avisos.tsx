@@ -215,9 +215,13 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
           // es verdad, pero un «9+» sobre un icono de 20 px no se lee en un
           // teléfono al sol, que es donde se usa esto. El número exacto
           // sigue estando dentro, en la hoja, junto a cada aviso.
+          // ⚠ El anillo es TINTA, no papel. El lima sobre el crema del
+          // encabezado da 1,35:1: un punto de 10 px con anillo del mismo
+          // fondo no se veía. Con el canto negro del cartel se lee, y sigue
+          // sin depender solo del color — la campana ya dice «N sin ver».
           <span
             aria-hidden="true"
-            className="absolute top-2 right-2 size-2.5 rounded-full bg-primary ring-2 ring-background"
+            className="absolute top-2 right-2 size-2.5 rounded-full bg-primary ring-2 ring-foreground"
           />
         )}
       </button>

@@ -86,8 +86,14 @@ export function RegistrarEntrega({
   }
 
   return (
-    <div className="mt-3 rounded-2xl bg-card p-4 shadow-canto">
-      <h4 className="text-lg font-bold">Registrar lo que llegó</h4>
+    // Tarjeta de cartel en verde: es el bloque de cerrar la entrega, y en
+    // una pantalla que por lo demás es un hilo de mensajes tiene que
+    // reconocerse a media pantalla sin leerlo.
+    <div className="mt-4 rounded-2xl bg-card p-4 shadow-cartel-verde">
+      <p className="font-heading text-xs tracking-[0.085em] uppercase text-muted-foreground">
+        Cerrar la entrega
+      </p>
+      <h4 className="mt-1.5 font-heading text-xl leading-tight">Registrar lo que llegó</h4>
 
       {pendientes.length === 0 ? (
         <p className="mt-2 text-base text-muted-foreground">
@@ -148,6 +154,9 @@ export function RegistrarEntrega({
           la fundación. Cada vez que se pide queda registrado quién la vio
           y por qué. */}
       <div className="mt-4 border-t border-border pt-3">
+        <p className="mb-2 font-heading text-xs tracking-[0.085em] uppercase text-muted-foreground">
+          Datos de la entrega
+        </p>
         <HojaDatoSensible
           id={`planilla-${conversacionId}`}
           titulo="Planilla para firmar"
@@ -156,13 +165,20 @@ export function RegistrarEntrega({
           alAbrir={pedirPlanilla}
         >
           {planilla && motivo && (
-        <div className="mt-3 rounded-lg border border-enlace/25 bg-accent p-3 text-accent-foreground">
-          <p className="text-base font-medium">{planilla.nombre}</p>
-          <p className="text-base">
+        <div className="rounded-xl bg-card p-4 shadow-canto">
+          <p className="font-heading text-xs tracking-[0.085em] uppercase text-muted-foreground">
+            Quién recibe
+          </p>
+          <p className="mt-1.5 text-xl leading-tight font-semibold">{planilla.nombre}</p>
+          <p className="mt-1 font-mono text-base">
             {planilla.documento_tipo} {planilla.documento}
             {planilla.telefono ? ` · ${planilla.telefono}` : ''}
           </p>
-          <ul className="mt-2 space-y-1 text-base">
+
+          <p className="mt-4 font-heading text-xs tracking-[0.085em] uppercase text-muted-foreground">
+            Qué se entrega
+          </p>
+          <ul className="mt-1.5 space-y-1 text-base">
             {planilla.entregas.map((e, i) => (
               <li key={i}>
                 {e.cantidad} {e.unidad} de {e.item}
@@ -170,7 +186,7 @@ export function RegistrarEntrega({
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-sm">
+          <p className="mt-3 text-base text-muted-foreground">
             Autorización aceptada el{' '}
             {new Date(planilla.autorizacion_at).toLocaleDateString('es-CO')} (versión{' '}
             {planilla.autorizacion_version}).

@@ -43,7 +43,7 @@ export default async function AliadosPage() {
 
       <section className="mt-6">
         <h2 className="font-heading text-2xl">Organizaciones</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           Una organización aliada coordina entregas dentro de AquíVe. No hay
           cola de verificación porque la verificación ocurre afuera, y eres tú.
         </p>
@@ -56,7 +56,7 @@ export default async function AliadosPage() {
 
       <Link
         href="/admin/bitacora?tipo=identidades"
-        className="mt-6 inline-flex min-h-11 items-center gap-1.5 text-sm underline underline-offset-4"
+        className="mt-6 inline-flex min-h-12 items-center gap-1.5 text-base underline underline-offset-4"
       >
         Quién ha visto identidades
         <ChevronRight className="size-4" aria-hidden="true" />

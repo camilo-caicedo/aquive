@@ -56,7 +56,7 @@ export function AccionesSugerencia({ sugerencia }: { sugerencia: SugerenciaPendi
     <div className="mt-3 space-y-3">
       {sugerencia.parecidos.length > 0 ? (
         <div className="rounded-lg border border-enlace/25 bg-accent p-3">
-          <p className="text-sm font-medium text-accent-foreground">
+          <p className="text-base font-medium text-accent-foreground">
             Ya existe algo parecido
           </p>
           <div className="mt-2 space-y-2">
@@ -64,7 +64,7 @@ export function AccionesSugerencia({ sugerencia }: { sugerencia: SugerenciaPendi
               <Button
                 key={p.id}
                 variant="outline"
-                className="h-11 w-full justify-start text-sm"
+                className="w-full justify-start"
                 disabled={enviando}
                 onClick={() => resolver('fusionar', p.id)}
               >
@@ -75,7 +75,7 @@ export function AccionesSugerencia({ sugerencia }: { sugerencia: SugerenciaPendi
           </div>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">Nada parecido en el catálogo.</p>
+        <p className="text-base text-muted-foreground">Nada parecido en el catálogo.</p>
       )}
 
       <div>
@@ -84,7 +84,7 @@ export function AccionesSugerencia({ sugerencia }: { sugerencia: SugerenciaPendi
         </Label>
         <Input
           id={`nota-${sugerencia.id}`}
-          className="mt-1 h-11 text-sm"
+          className="mt-1"
           maxLength={300}
           value={nota}
           disabled={enviando}
@@ -95,7 +95,7 @@ export function AccionesSugerencia({ sugerencia }: { sugerencia: SugerenciaPendi
 
       <div className="flex flex-wrap items-center gap-2">
         <Button
-          className="h-11 flex-1 text-sm"
+          className="flex-1"
           disabled={enviando}
           onClick={() => resolver('aprobar')}
         >
@@ -103,7 +103,6 @@ export function AccionesSugerencia({ sugerencia }: { sugerencia: SugerenciaPendi
         </Button>
         <Button
           variant="ghost"
-          className="h-11 text-sm"
           disabled={enviando}
           onClick={() => resolver('rechazar')}
         >

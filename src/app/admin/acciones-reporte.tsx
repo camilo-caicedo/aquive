@@ -72,16 +72,15 @@ export function AccionesReporte({
     <div className="mt-3">
       {confirmando ? (
         <>
-          <p className="text-sm font-medium text-destructive">
+          <p className="text-base font-medium text-destructive">
             ¿Seguro? No se puede deshacer.
           </p>
           {consecuencia && (
-            <p className="mt-1 text-sm text-muted-foreground">{consecuencia}</p>
+            <p className="mt-1 text-base text-muted-foreground">{consecuencia}</p>
           )}
           <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
             <Button
               variant="destructive"
-              className="h-11 text-sm"
               disabled={enviando}
               onClick={() => resolver(true)}
             >
@@ -89,7 +88,6 @@ export function AccionesReporte({
             </Button>
             <Button
               variant="outline"
-              className="h-11 text-sm"
               disabled={enviando}
               onClick={() => setConfirmando(false)}
             >
@@ -100,7 +98,7 @@ export function AccionesReporte({
       ) : (
         <>
           {soloDescartar && (
-            <p className="mb-2 text-sm text-muted-foreground">
+            <p className="mb-2 text-base text-muted-foreground">
               {!existe ? (
                 'Lo reportado ya no existe: se borró o venció. Solo queda descartar el reporte.'
               ) : (
@@ -119,7 +117,6 @@ export function AccionesReporte({
             {!soloDescartar && (
               <Button
                 variant="destructive"
-                className="h-11 text-sm"
                 disabled={enviando}
                 onClick={() => setConfirmando(true)}
               >
@@ -128,14 +125,13 @@ export function AccionesReporte({
             )}
             <Button
               variant="outline"
-              className="h-11 text-sm"
               disabled={enviando}
               onClick={() => resolver(false)}
             >
               {enviando ? 'Guardando…' : 'Descartar'}
             </Button>
           </div>
-          <p className="mt-2 text-sm text-muted-foreground">
+          <p className="mt-2 text-base text-muted-foreground">
             Descartar deja el contenido como está y saca el reporte de la
             cola.
           </p>

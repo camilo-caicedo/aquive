@@ -229,7 +229,7 @@ export default async function SolicitudesPage({
           />
 
           {/* «Por vencer» era un enlace suelto encima del formulario, en
-              relleno terracota, compitiendo con la acción principal. Ahora
+              relleno lima, compitiendo con la acción principal. Ahora
               es un criterio más, y se aplica con el mismo botón. */}
           <GrupoChips
             name="urgentes"
@@ -267,7 +267,7 @@ export default async function SolicitudesPage({
                         key={c.clave}
                         href={c.href}
                         scroll={false}
-                        className="inline-flex min-h-12 items-center gap-2 rounded-full border border-border bg-card px-4 text-base transition-colors hover:bg-muted"
+                        className="shadow-canto inline-flex min-h-12 items-center gap-2 rounded-full bg-card px-4 text-base transition-colors hover:bg-muted"
                       >
                         Quitar {c.etiqueta}
                         <X className="size-4 shrink-0" aria-hidden="true" />
@@ -275,7 +275,13 @@ export default async function SolicitudesPage({
                     ))}
                   </>
                 ) : (
-                  <Button nativeButton={false} render={<Link href="/publicar" />}>
+                  // Sin relleno lima: la píldora fija ya lleva esa misma
+                  // acción, y dos limas son dos acciones principales.
+                  <Button
+                    variant="outline"
+                    nativeButton={false}
+                    render={<Link href="/publicar" />}
+                  >
                     <PlusCircle className="size-5" aria-hidden="true" />
                     Publicar la primera
                   </Button>
@@ -295,7 +301,7 @@ export default async function SolicitudesPage({
               <ShieldAlert className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
               <span>
                 {AVISO_TABLERO_CORTO}{' '}
-                <Link href="/seguridad" className="underline underline-offset-4">
+                <Link href="/seguridad" className="text-enlace underline underline-offset-4">
                   Cómo cuidarte
                 </Link>
               </span>
@@ -323,7 +329,7 @@ export default async function SolicitudesPage({
         )}
       </section>
       {/* La acción principal de la portada. Los dos botones del héroe
-          bajan a arena para que la única terracota rellena de la pantalla
+          bajan a arena para que el único relleno lima de la pantalla
           sea ésta (regla 2): el héroe se va con el desplazamiento y la
           píldora se queda donde llega el pulgar. */}
       {!modoTengo && (

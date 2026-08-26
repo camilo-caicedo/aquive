@@ -87,7 +87,7 @@ export function HojaDatoSensible({
               placeholder="Ej: confirmar la entrega del martes"
               className="mt-1"
             />
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1.5 text-base text-muted-foreground">
               Se escribe ahora y queda en la bitácora junto a tu nombre y la
               hora. Mínimo {MINIMO_MOTIVO} caracteres.
             </p>
@@ -111,15 +111,19 @@ export function HojaDatoSensible({
         <>
           {children}
 
-          {/* Después, no en letra pequeña antes: es lo que la persona tiene
-              que saber ya que lo hizo. */}
-          <Alert>
-            <AlertDescription>
-              Esta lectura quedó registrada en la bitácora con tu nombre, la
-              hora y el motivo que escribiste. Lo de arriba no se guarda en
-              esta pantalla: si recargas, desaparece.
-            </AlertDescription>
-          </Alert>
+          {/* Después, y no en letra pequeña antes: es lo que la persona
+              tiene que saber ya que lo hizo (regla 11). Tarjeta de cartel y
+              no un aviso apagado — que quede registrado es la mitad del
+              trato, y decirlo bajito sería quedarse con la otra mitad. */}
+          <div className="rounded-2xl bg-card p-4 shadow-cartel-verde">
+            <p className="font-heading text-base leading-snug">
+              Esta lectura quedó registrada en la bitácora
+            </p>
+            <p className="mt-1.5 text-base leading-relaxed">
+              Con tu nombre, la hora y el motivo que escribiste. Lo de arriba no
+              se guarda en esta pantalla: si recargas, desaparece.
+            </p>
+          </div>
         </>
       )}
     </HojaAccion>

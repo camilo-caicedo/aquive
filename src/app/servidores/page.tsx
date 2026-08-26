@@ -217,7 +217,7 @@ export default async function ServidoresPage({
           />
         </>
       ) : !servidores || servidores.length === 0 ? (
-        <div className="mt-6 rounded-lg border border-dashed border-border p-8 text-center">
+        <div className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center">
           <Inbox className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
           <p className="mt-2 text-base text-muted-foreground">
             {hayFiltro
@@ -234,7 +234,12 @@ export default async function ServidoresPage({
               Ver todos
             </Button>
           ) : (
-            <Button className="mt-4" nativeButton={false} render={<Link href="/registro" />}>
+            <Button
+              variant="outline"
+              className="mt-4"
+              nativeButton={false}
+              render={<Link href="/registro" />}
+            >
               Ofrecer mis servicios
             </Button>
           )}
@@ -287,12 +292,17 @@ export default async function ServidoresPage({
                   ese aviso queda a varias pantallas de aquí. */}
               <p className="mt-3 text-sm text-muted-foreground">
                 {s.verificado ? AVISO_CONTACTO_VERIFICADO : AVISO_CONTACTO}{' '}
-                <Link href="/seguridad" className="underline">
+                <Link href="/seguridad" className="text-enlace underline underline-offset-4">
                   Cómo cuidarte
                 </Link>
               </p>
 
+              {/* Arena y no lima, aunque sea la acción de la tarjeta: en una
+                  lista de veinte fichas ninguna de las veinte es la acción
+                  principal de la pantalla (regla 1). El mismo criterio que
+                  usa `TarjetaProveedor` en el directorio de oficios. */}
               <Button
+                variant="secondary"
                 className="mt-3 w-full"
                 nativeButton={false}
                 render={

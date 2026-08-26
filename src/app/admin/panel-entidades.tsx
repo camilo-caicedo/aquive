@@ -187,7 +187,7 @@ function FormularioEntidad({
           rows={3}
           placeholder="Qué hace la organización, en dos o tres líneas"
         />
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           {descripcion.length}/600 · es el párrafo que se lee en su ficha del
           directorio
         </p>
@@ -211,7 +211,7 @@ function FormularioEntidad({
             Local
           </Button>
         </div>
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-base text-muted-foreground">
           Una entidad nacional sale siempre, filtre por donde filtre quien
           busca. Usa Nacional también para un servicio virtual, sin sede en un
           municipio.
@@ -259,12 +259,12 @@ function FormularioEntidad({
               </ComboboxList>
             </ComboboxContent>
           </Combobox>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-base text-muted-foreground">
             Solo con cobertura local, y hace falta al menos uno: sin
             municipios, una entidad local se guardaría sin cobertura.
           </p>
           {!municipiosValidos && (
-            <p className="mt-1 text-sm text-destructive">
+            <p className="mt-1 text-base text-destructive">
               Una entidad local necesita al menos un municipio.
             </p>
           )}
@@ -314,7 +314,7 @@ function FormularioEntidad({
                 <Button
                   type="button"
                   variant="ghost"
-                  className="h-9 text-sm"
+                  className="shrink-0"
                   onClick={() => setEnlaces((prev) => prev.filter((_, idx) => idx !== i))}
                 >
                   <X className="size-4" aria-hidden="true" />
@@ -352,7 +352,7 @@ function FormularioEntidad({
           <Plus className="size-5" aria-hidden="true" />
           Otro enlace
         </Button>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           Hasta {MAX_ENLACES}. El orden de la lista es el orden de los botones,
           y solo se aceptan direcciones que empiecen por https://.
         </p>
@@ -383,7 +383,7 @@ function FormularioEntidad({
           value={orden}
           onChange={(e) => setOrden(Number(e.target.value) || 0)}
         />
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           De menor a mayor. Empata por nombre.
         </p>
       </div>
@@ -442,7 +442,7 @@ function AccionesEntidad({ entidad }: { entidad: EntidadAdmin }) {
       >
         {entidad.activa ? 'Retirar del directorio' : 'Publicar en el directorio'}
       </Button>
-      <p className="text-sm text-muted-foreground">
+      <p className="text-base text-muted-foreground">
         {entidad.activa
           ? 'Retirarla la esconde del directorio sin borrar nada: se puede volver a publicar.'
           : 'Publicarla la devuelve al directorio tal como está escrita.'}
@@ -450,7 +450,7 @@ function AccionesEntidad({ entidad }: { entidad: EntidadAdmin }) {
 
       {confirmando ? (
         <>
-          <p className="text-sm font-medium text-destructive">
+          <p className="text-base font-medium text-destructive">
             ¿Seguro? Esto borra la entidad para siempre, con su descripción y
             sus enlaces. No se puede deshacer.
           </p>
@@ -507,7 +507,7 @@ function FilaEntidad({
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-base font-bold">{entidad.nombre}</span>
+            <span className="font-heading text-lg leading-tight">{entidad.nombre}</span>
             <span
               className={
                 entidad.activa
@@ -518,7 +518,7 @@ function FilaEntidad({
               {entidad.activa ? 'Publicada' : 'Retirada'}
             </span>
           </div>
-          <p className="mt-0.5 text-sm text-muted-foreground">
+          <p className="mt-0.5 text-base text-muted-foreground">
             {entidad.cobertura === 'nacional'
               ? 'Nacional'
               : `Local · ${entidad.municipios.length} ${
@@ -565,7 +565,7 @@ export function PanelEntidades({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
+        <p className="text-base text-muted-foreground">
           <span className="font-semibold text-foreground">
             {entidades.length} {entidades.length === 1 ? 'entidad' : 'entidades'}
           </span>
@@ -575,7 +575,7 @@ export function PanelEntidades({
           id="nueva-entidad"
           titulo="Nueva entidad"
           disparador={(props) => (
-            <Button {...props} className="h-11 shrink-0 text-sm">
+            <Button {...props} className="shrink-0">
               <Plus className="size-4" aria-hidden="true" />
               Nueva
             </Button>
@@ -586,7 +586,7 @@ export function PanelEntidades({
       </div>
 
       {entidades.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+        <p className="rounded-2xl border border-dashed border-border p-6 text-center text-base text-muted-foreground">
           No hay entidades en el directorio.
         </p>
       ) : (

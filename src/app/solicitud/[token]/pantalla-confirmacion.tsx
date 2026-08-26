@@ -5,7 +5,6 @@ import Link from 'next/link'
 import qrcode from 'qrcode-generator'
 import { AVISO_PUBLICAR } from '@/lib/honestidad'
 import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ActivarAvisos } from '@/components/activar-avisos'
 
 export function PantallaConfirmacion({
@@ -42,9 +41,27 @@ export function PantallaConfirmacion({
   }
 
   return (
-    <div className="space-y-4 text-center">
-      <p className="text-base text-muted-foreground">Tu solicitud quedó publicada</p>
-      <p className="text-5xl font-bold tracking-wide">{codigo}</p>
+    <div className="space-y-4">
+      {/* El código sobre tinta, no sobre el papel: es el único dato de esta
+          pantalla que hay que copiar a mano si todo lo demás falla, y sobre
+          crema quedaba como un titular más. En Geist Mono, que es lo que
+          manda la identidad para los códigos, y con la etiqueta en lima
+          —relleno oscuro debajo, así el lima sí puede ser letra aquí—. */}
+      <div className="rounded-2xl bg-foreground p-5">
+        <p className="font-heading text-xs tracking-[0.085em] text-primary uppercase">
+          Tu código de solicitud
+        </p>
+        <p className="mt-3 font-mono text-5xl leading-none font-bold tracking-[0.12em] text-background">
+          {codigo}
+        </p>
+        <p className="mt-3 text-base text-background/75">
+          Tu solicitud quedó publicada. Guarda este enlace: es la única forma
+          de volver, y no podemos recuperarlo si lo pierdes.
+        </p>
+        <p className="mt-3 rounded-xl bg-background/10 p-3 text-sm break-all text-background/75">
+          {link}
+        </p>
+      </div>
 
       {/* Antes que el enlace, y con el botón grande. Estuvo escondido en la
           cuarta pestaña hasta agosto de 2026, y el resultado fue medible:
@@ -54,31 +71,24 @@ export function PantallaConfirmacion({
           Se ofrece con un botón porque el navegador exige un gesto: lanzarlo
           solo no funciona, y donde funcionara saldría sin contexto y le
           darían a «Bloquear», que no se puede deshacer. */}
-      <div className="text-left">
-        <ActivarAvisos token={token} destacado yaTieneAvisos={yaTieneAvisos} />
-      </div>
-
-      <Alert variant="warning">
-        <AlertDescription>
-          Guarda este enlace. Es la única forma de volver a tu solicitud — no
-          podemos recuperarlo si lo pierdes.
-        </AlertDescription>
-      </Alert>
+      <ActivarAvisos token={token} destacado yaTieneAvisos={yaTieneAvisos} />
 
       {/* Solo mientras no haya respuestas: esta pantalla se ve en cada
           visita al enlace, no solo al publicar, y el aviso habla en futuro.
           Con respuestas ya visibles abajo, el que aplica es el que va
-          pegado a cada botón de contacto. */}
+          pegado a cada botón de contacto.
+
+          El aviso de «guarda el enlace» ya no se repite aquí: lo dice el
+          bloque de arriba, pegado al código, y dos veces la misma frase en
+          una pantalla se lee como textura (regla 5). */}
       {sinRespuestas && (
-        <p className="text-left text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           {AVISO_PUBLICAR}{' '}
-          <Link href="/seguridad" className="underline">
+          <Link href="/seguridad" className="text-enlace underline underline-offset-4">
             Cómo cuidarte
           </Link>
         </p>
       )}
-
-      <div className="break-all rounded-lg border border-border p-3 text-sm">{link}</div>
 
       <div className="flex flex-col gap-2">
         <Button type="button" className="w-full" onClick={copiarEnlace}>
@@ -89,7 +99,7 @@ export function PantallaConfirmacion({
         <img
           src={qrDataUrl}
           alt="Código QR de tu solicitud"
-          className="mx-auto h-40 w-40"
+          className="shadow-canto mx-auto h-40 w-40 rounded-xl bg-card p-2"
           width={160}
           height={160}
         />

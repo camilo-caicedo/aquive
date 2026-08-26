@@ -6,6 +6,8 @@ import { contrato } from '@/contrato'
 import { db } from '@/db/cliente'
 import type { Contexto } from './contexto'
 import * as chat from '@/server/chat/hilo'
+import * as comunidad from '@/server/comunidad/muro'
+import * as imagenes from '@/server/imagenes/recorrido'
 import * as moderacion from '@/server/moderacion/comandos'
 import * as servicios from '@/server/servicios/consultas'
 import * as ubicacion from '@/server/servicios/ubicacion'
@@ -51,6 +53,42 @@ export const enrutador = os.router({
   },
   moderacion: {
     reportar: os.moderacion.reportar.handler(({ input }) => moderacion.reportar(db, input)),
+  },
+  comunidad: {
+    muro: os.comunidad.muro.handler(({ input }) => comunidad.muro(db, input)),
+    productos: os.comunidad.productos.handler(({ input }) => comunidad.productos(db, input)),
+    publicarEnMuro: os.comunidad.publicarEnMuro.handler(
+      async ({ input, context, errors }) => {
+        try {
+          return await comunidad.publicar(db, input, { usuarioId: context.usuarioId })
+        } catch (e) {
+          if (e instanceof comunidad.MuroRechazado) {
+            throw errors.RECHAZADO({ data: { motivo: e.message } })
+          }
+          throw e
+        }
+      },
+    ),
+    firmarImagen: os.comunidad.firmarImagen.handler(async ({ input, errors }) => {
+      try {
+        return await imagenes.firmarSubida(db, input)
+      } catch (e) {
+        if (e instanceof imagenes.ImagenRechazada) {
+          throw errors.RECHAZADO({ data: { motivo: e.message } })
+        }
+        throw e
+      }
+    }),
+    procesarImagen: os.comunidad.procesarImagen.handler(async ({ input, errors }) => {
+      try {
+        return await imagenes.procesar(db, input.imagen_id)
+      } catch (e) {
+        if (e instanceof imagenes.ImagenRechazada) {
+          throw errors.RECHAZADO({ data: { motivo: e.message } })
+        }
+        throw e
+      }
+    }),
   },
   chat: {
     leer: os.chat.leer.handler(({ input, context }) =>

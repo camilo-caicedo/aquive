@@ -146,7 +146,10 @@ export default async function OfertadoresPage({
                 Ver todos
               </Button>
             )}
-            <Button nativeButton={false} render={<Link href="/publicar" />}>
+            {/* Sin relleno lima: la píldora fija de abajo ya lleva esa
+                misma acción, y dos limas en una pantalla son dos acciones
+                principales (regla 1). */}
+            <Button variant="outline" nativeButton={false} render={<Link href="/publicar" />}>
               Publicar lo que necesito
             </Button>
           </div>
@@ -222,13 +225,19 @@ export default async function OfertadoresPage({
         </ul>
       )}
 
-      <div className="mt-8 rounded-xl border border-border bg-secondary p-5">
+      <div className="mt-8 rounded-2xl bg-secondary p-5">
         <h2 className="font-heading text-2xl">¿Necesitas algo de esto?</h2>
         <p className="mt-1 text-base text-muted-foreground">
           Publica qué te hace falta. No pedimos tu nombre, tu teléfono ni tu
           dirección.
         </p>
-        <Button className="mt-4 w-full sm:w-auto" nativeButton={false} render={<Link href="/publicar" />}>
+        {/* Lo mismo aquí: el lima de esta pantalla es la píldora fija. */}
+        <Button
+          variant="outline"
+          className="mt-4 w-full sm:w-auto"
+          nativeButton={false}
+          render={<Link href="/publicar" />}
+        >
           <PlusCircle className="size-5" aria-hidden="true" />
           Publicar mi solicitud
         </Button>

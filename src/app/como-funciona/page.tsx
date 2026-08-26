@@ -300,7 +300,7 @@ export default function ComoFuncionaPage() {
         </ul>
         <p className="mt-3 text-base text-muted-foreground">
           Todo está en el{' '}
-          <Link href="/privacidad" className="underline">
+          <Link href="/privacidad" className="text-enlace underline underline-offset-4">
             aviso de privacidad
           </Link>
           , con más detalle.
@@ -318,7 +318,7 @@ export default function ComoFuncionaPage() {
           </li>
           <li>
             No pedimos ni movemos dinero, y nadie debería pedírtelo por aquí.{' '}
-            <Link href="/seguridad" className="underline">
+            <Link href="/seguridad" className="text-enlace underline underline-offset-4">
               Cómo cuidarte
             </Link>
             .
@@ -327,11 +327,19 @@ export default function ComoFuncionaPage() {
             Puedes instalar AquíVe en tu teléfono desde el icono de descarga del
             encabezado. Es la misma página, sin tienda de aplicaciones.
           </li>
-          <li>
-            Para emergencias, 123. Esta plataforma no reemplaza a las
-            autoridades.
-          </li>
         </ul>
+
+        {/* Fuera de la lista y en rojo pastel con texto negro (5,67:1): en
+            una viñeta más, entre «puedes instalar la aplicación» y el aviso
+            de privacidad, la línea que hay que recordar de verdad se leía
+            como una nota al pie. */}
+        <div className="mt-4 rounded-2xl bg-familia-rojo p-4 text-foreground">
+          <p className="font-heading text-base">Si hay riesgo para alguien ahora</p>
+          <p className="mt-2 text-base">
+            Eso no se publica aquí: es el <strong>123</strong>. Esta plataforma
+            no reemplaza a las autoridades ni atiende urgencias.
+          </p>
+        </div>
       </section>
     </main>
   )

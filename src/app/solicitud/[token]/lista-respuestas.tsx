@@ -74,7 +74,7 @@ export function ListaRespuestas({ respuestas }: { respuestas: Respuesta[] }) {
                 {r.tipo === 'servidor' && r.verificado
                   ? AVISO_CONTACTO_VERIFICADO
                   : AVISO_CONTACTO}{' '}
-                <Link href="/seguridad" className="underline">
+                <Link href="/seguridad" className="text-enlace underline underline-offset-4">
                   Cómo cuidarte
                 </Link>
               </p>

@@ -127,30 +127,40 @@ export function PanelServiciosProveedor({
         </Alert>
       )}
 
+      {/* Panel de tinta, como la pantalla 23 del prototipo: es el único
+          momento en la vida del código en que se puede leer, y en un Alert
+          genérico se perdía entre el resto de la pantalla.
+
+          El lima aquí SÍ es color de letra, y es el único sitio donde lo
+          es: sobre la tinta da 12,46:1. Lo prohibido es el lima sobre
+          claro, que se queda en 1,35:1. */}
       {codigo && (
-        <Alert className="mt-3">
-          <AlertDescription>
-            <p className="text-base font-medium">Dáselo a tu cliente:</p>
-            <p className="mt-2 font-mono text-3xl tracking-widest">{codigo}</p>
-            <p className="mt-2 text-sm">
-              <strong>Se muestra una sola vez.</strong> Anótalo o mándaselo
-              ahora por WhatsApp. No lo podemos recuperar; si se pierde,
-              generas otro.
-            </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                onClick={() => navigator.clipboard.writeText(codigo)}
-              >
-                <Copy className="size-4" aria-hidden="true" />
-                Copiar
-              </Button>
-              <Button variant="ghost" onClick={() => setCodigo(null)}>
-                Ya lo entregué
-              </Button>
-            </div>
-          </AlertDescription>
-        </Alert>
+        <div className="mt-3 rounded-2xl bg-foreground p-4 text-background">
+          <p className="font-heading text-xs tracking-[0.085em] text-primary uppercase">
+            Código nuevo · sin usar
+          </p>
+          <p className="mt-3 font-mono text-4xl tracking-[0.18em]">{codigo}</p>
+          <p className="mt-3 text-base">
+            <strong className="font-semibold">Se muestra una sola vez.</strong>{' '}
+            Anótalo o mándaselo ahora por WhatsApp. No lo podemos recuperar; si
+            se pierde, generas otro.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button
+              className="bg-primary text-primary-foreground hover:bg-primary/85"
+              onClick={() => navigator.clipboard.writeText(codigo)}
+            >
+              <Copy className="size-4" aria-hidden="true" />
+              Copiar
+            </Button>
+            <Button
+              className="bg-transparent text-background hover:bg-background/15"
+              onClick={() => setCodigo(null)}
+            >
+              Ya lo entregué
+            </Button>
+          </div>
+        </div>
       )}
 
       <div className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -182,7 +192,7 @@ export function PanelServiciosProveedor({
         </Button>
       </div>
 
-      <p className="mt-2 text-sm text-muted-foreground">
+      <p className="mt-2 text-base text-muted-foreground">
         Tienes {sinUsar.length}{' '}
         {sinUsar.length === 1 ? 'código sin usar' : 'códigos sin usar'}. Los que
         nadie use se borran a los 30 días.
@@ -198,7 +208,7 @@ export function PanelServiciosProveedor({
         <ul className="mt-3 space-y-3">
           {datos.resenas.map((r) => (
             <li key={r.id} className="rounded-2xl bg-card p-4 shadow-canto">
-              <p className="text-sm text-muted-foreground">
+              <p className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase">
                 Cumplimiento: {NIVEL[r.cumplimiento]} · Trato: {NIVEL[r.trato]} ·
                 Puntualidad: {NIVEL[r.puntualidad]}
               </p>
@@ -206,15 +216,15 @@ export function PanelServiciosProveedor({
               {r.comentario && <p className="mt-2 text-base">{r.comentario}</p>}
 
               {r.oculta && (
-                <p className="mt-2 text-sm text-accent-foreground">
+                <p className="mt-2 rounded-xl bg-accent px-3 py-2 text-base text-accent-foreground">
                   Está oculta mientras se revisa un reporte. Nadie la ve en tu
                   ficha.
                 </p>
               )}
 
               {r.replica ? (
-                <p className="mt-2 border-l-2 border-border pl-3 text-base text-muted-foreground">
-                  <span className="font-medium">Tu respuesta:</span> {r.replica}
+                <p className="mt-2 rounded-r-xl border-l-4 border-ok bg-background py-2 pr-3 pl-3 text-base">
+                  <span className="font-semibold">Tu respuesta:</span> {r.replica}
                 </p>
               ) : respondiendo === r.id ? (
                 <div className="mt-3 space-y-2">
@@ -226,7 +236,7 @@ export function PanelServiciosProveedor({
                     aria-label="Tu respuesta"
                     placeholder="Cuenta tu versión, en corto."
                   />
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-base text-muted-foreground">
                     {replica.length}/140. Se publica en tu ficha, debajo de la
                     calificación, y se responde una sola vez.
                   </p>
@@ -265,7 +275,7 @@ export function PanelServiciosProveedor({
 
       {/* Se dice aquí y no en los términos: es donde alguien acaba de leer
           algo que le pareció injusto. */}
-      <p className="mt-4 text-sm text-muted-foreground">
+      <p className="mt-4 text-base text-muted-foreground">
         Si una calificación te parece injusta, o alguien te amenazó con ponerte
         una mala para conseguir algo, repórtala desde tu ficha pública. Una
         persona la revisa.

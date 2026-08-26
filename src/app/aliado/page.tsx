@@ -152,6 +152,13 @@ export default async function AliadoPage({
               hace falta el enlace que reparte su coordinador.
             </p>
           )}
+          {/* Al pie y no encima de la lista (regla 1): el reloj de la
+              regla 4, dicho una vez, donde no le quita sitio a los hilos. */}
+          <p className="mt-6 rounded-2xl bg-accent p-4 text-base leading-relaxed text-accent-foreground">
+            Un hilo con conversación abierta se renueva solo, con techo duro de
+            5 días desde que se publicó la solicitud. Al llegar al techo se
+            cierra y se borra igual.
+          </p>
         </section>
       )}
 
@@ -262,7 +269,7 @@ async function Proveedores() {
         origen={origen}
       />
 
-      <h3 className="font-heading mt-10 text-2xl">Referencias por comprobar</h3>
+      <h3 className="font-heading mt-10 text-xl">Referencias por comprobar</h3>
       <p className="mt-1 text-base text-muted-foreground">
         Cada una es el contacto de alguien que no usa esta plataforma y que
         autorizó que lo llamaran una vez. Los datos se destapan de a uno, con
@@ -272,7 +279,7 @@ async function Proveedores() {
         referencias={(refs as unknown as ReferenciaPorRevisar[]) ?? []}
       />
 
-      <h3 className="font-heading mt-10 text-2xl">Zonas por revisar</h3>
+      <h3 className="font-heading mt-10 text-xl">Zonas por revisar</h3>
       <p className="mt-1 text-base text-muted-foreground">
         Barrios y veredas que escribió alguien al registrarse, en municipios
         que todavía no tienen comunas cargadas. Al aprobarlos quedan en el

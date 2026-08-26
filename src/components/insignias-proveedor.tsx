@@ -33,18 +33,18 @@ export function InsigniasProveedor({
     <ul className="flex flex-wrap gap-1.5">
       {mostrar !== 'resto' &&
         (telefonoVerificado ? (
-        <li className="inline-flex items-center gap-1.5 rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-foreground">
+        <li className="inline-flex items-center gap-1.5 rounded-full bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-foreground">
           <BadgeCheck className="size-4 shrink-0" aria-hidden="true" />
           Teléfono verificado
         </li>
       ) : (
-        <li className="inline-flex items-center gap-1.5 rounded-full border border-enlace/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
+        <li className="inline-flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
           <span aria-hidden="true">!</span> Sin verificar
         </li>
       ))}
 
       {mostrar !== 'telefono' && referenciasConfirmadas > 0 && (
-        <li className="inline-flex items-center gap-1.5 rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-foreground">
+        <li className="inline-flex items-center gap-1.5 rounded-full bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-foreground">
           <Users className="size-4 shrink-0" aria-hidden="true" />
           {referenciasConfirmadas === 1
             ? '1 referencia'

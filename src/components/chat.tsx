@@ -161,8 +161,12 @@ export function Chat({
 
       {/* Al principio del hilo y no bajo el redactor, donde competía con
           el botón de enviar. Se lee una vez, al entrar, que es cuando
-          sirve. */}
-      <p className="mt-4 text-center text-sm text-muted-foreground">
+          sirve. Dos cosas, y las dos son reglas del proyecto: que aquí
+          están los tres (regla L) y que esto se borra (regla 4). */}
+      <p className="mx-auto mt-4 max-w-sm rounded-2xl bg-ok-suave px-4 py-2.5 text-center text-base text-foreground">
+        Los tres están en este hilo. Nadie puede escribirse por aparte.
+      </p>
+      <p className="mt-2 text-center text-sm text-muted-foreground">
         Esta conversación se borra junto con la solicitud, a las 72 horas. No la
         uses para guardar nada que necesites después.
       </p>
@@ -183,7 +187,7 @@ export function Chat({
           return (
           <li key={m.id} className={mio ? 'text-right' : undefined}>
             {!mismoEmisor && (
-              <p className={`mt-3 text-sm text-muted-foreground`}>
+              <p className="mt-3 font-heading text-xs tracking-[0.085em] uppercase text-muted-foreground">
                 {ETIQUETA_ROL[m.rol]}
                 {m.nombre ? ` · ${m.nombre}` : ''}
               </p>

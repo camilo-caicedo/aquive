@@ -1,6 +1,19 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Las imágenes aprobadas se sirven del bucket público del almacén. El
+  // patrón se limita a ese host y a esa ruta: `next/image` optimiza lo que
+  // le digan, y una lista abierta lo convierte en un optimizador gratis para
+  // cualquiera que le pase una URL.
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'lcceoyzmlhmqodnwgmwu.supabase.co',
+        pathname: '/storage/v1/object/public/publico/**',
+      },
+    ],
+  },
   experimental: {
     // El enrutador de Next reutiliza la respuesta anterior al navegar con
     // Link. Aquí eso es peligroso: las solicitudes se borran de verdad a

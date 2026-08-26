@@ -1,7 +1,7 @@
 import { calcularFrescura } from '@/lib/tiempo'
 
 // Los tokens de la identidad, no los verdes y ámbares de Tailwind: sobre el
-// papel cálido del fondo aquellos se veían de otra paleta.
+// papel crema del fondo aquellos se veían de otra paleta.
 const ESTILOS = {
   reciente: 'border-ok/30 bg-ok-suave text-foreground',
   activa: 'border-accent bg-accent text-accent-foreground',

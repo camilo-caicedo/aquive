@@ -166,7 +166,7 @@ export async function CruceInverso({
           {municipiosCalzan.length > 0 && (
             <FormularioFiltros
               action="/ayudas"
-              className="mt-3 flex flex-col gap-2 rounded-xl border border-border bg-card p-3 sm:flex-row"
+              className="shadow-canto mt-3 flex flex-col gap-2 rounded-2xl bg-card p-3 sm:flex-row"
             >
               <input type="hidden" name="modo" value="tengo" />
               {seleccion.map((id) => (
@@ -188,7 +188,7 @@ export async function CruceInverso({
           )}
 
           {resultados.length === 0 ? (
-            <div className="mt-4 rounded-xl border border-dashed border-border p-8 text-center">
+            <div className="mt-4 rounded-2xl border border-dashed border-border p-8 text-center">
               <SearchX className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
               <p className="mt-2 text-base text-muted-foreground">
                 {municipio

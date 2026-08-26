@@ -27,15 +27,17 @@ export function BorrarPerfil({ tienePerfil }: { tienePerfil: boolean }) {
     }
   }
 
+  // ⚠ Sin cromo propio: la tarjeta de «Borrar mi cuenta» que lo contiene
+  // ya trae el título y la consecuencia escrita. Antes esto añadía otro
+  // <h2> y otro párrafo casi idéntico justo debajo.
   return (
-    <section className="mt-10 border-t border-border pt-6">
-      <h2 className="font-heading text-2xl">Borrar mi cuenta</h2>
-      <p className="mt-2 text-base text-muted-foreground">
-        {tienePerfil
-          ? 'Se borra tu perfil, tu matrícula y todas las respuestas que hayas enviado. También se borra tu cuenta: no queda nada tuyo, ni siquiera el identificador de Google.'
-          : 'Todavía no has creado un perfil, pero puedes borrar tu cuenta y con ella el identificador de Google que guardamos.'}{' '}
-        Es inmediato y no se puede deshacer.
-      </p>
+    <div>
+      {!tienePerfil && (
+        <p className="text-base text-muted-foreground">
+          Todavía no has creado un perfil, pero puedes borrar tu cuenta y con
+          ella el identificador de Google que guardamos.
+        </p>
+      )}
 
       {estado === 'error' && (
         <Alert variant="destructive" className="mt-3">
@@ -46,8 +48,8 @@ export function BorrarPerfil({ tienePerfil }: { tienePerfil: boolean }) {
       )}
 
       {estado === 'confirmando' ? (
-        <div className="mt-3 rounded-lg border-2 border-destructive p-4">
-          <p className="text-base">
+        <div className="mt-3 rounded-2xl bg-background p-4">
+          <p className="text-base font-semibold">
             ¿Seguro? Esto borra tu cuenta y todo lo que hayas publicado, para
             siempre. Si alguien estaba esperando tu respuesta, dejará de verla.
           </p>
@@ -59,9 +61,10 @@ export function BorrarPerfil({ tienePerfil }: { tienePerfil: boolean }) {
             >
               Cancelar
             </Button>
+            {/* Rojo pastel de la sombrilla con tinta negra (5,67:1): es
+                relleno, no letra roja sobre claro. */}
             <Button
-              variant="destructive"
-              className="flex-1"
+              className="flex-1 bg-familia-rojo text-foreground hover:bg-familia-rojo/85"
               disabled={estado !== 'confirmando'}
               onClick={borrar}
             >
@@ -71,8 +74,7 @@ export function BorrarPerfil({ tienePerfil }: { tienePerfil: boolean }) {
         </div>
       ) : (
         <Button
-          variant="destructive"
-          className="mt-3 w-full sm:w-auto"
+          className="mt-3 w-full bg-familia-rojo text-foreground hover:bg-familia-rojo/85 sm:w-auto"
           disabled={estado === 'borrando'}
           onClick={() => setEstado('confirmando')}
         >
@@ -80,6 +82,6 @@ export function BorrarPerfil({ tienePerfil }: { tienePerfil: boolean }) {
           {estado === 'borrando' ? 'Borrando…' : 'Borrar mi cuenta y mis datos'}
         </Button>
       )}
-    </section>
+    </div>
   )
 }

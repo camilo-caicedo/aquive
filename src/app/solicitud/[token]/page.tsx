@@ -225,7 +225,7 @@ export default async function SolicitudPage({
       {vista === 'coordinacion' && (
         <section className="mt-6 space-y-4">
           {hilos.length === 0 ? (
-            <p className="rounded-lg border border-dashed border-border p-6 text-center text-base text-muted-foreground">
+            <p className="rounded-2xl border border-dashed border-border p-6 text-center text-base text-muted-foreground">
               Todavía no hay ninguna conversación. Aparecen cuando alguien
               ofrece ayuda o cuando la fundación se organiza para entregarte.
             </p>
@@ -284,7 +284,7 @@ export default async function SolicitudPage({
                 ninguno haría dudar de lo único que hay que creerse. */}
             {acompanada && (
               <p className="mt-3 text-base">
-                <Link href={`/mis-datos/${token}`} className="underline">
+                <Link href={`/mis-datos/${token}`} className="text-enlace underline underline-offset-4">
                   Ver qué datos tuyos guardamos, y borrarlos
                 </Link>
               </p>

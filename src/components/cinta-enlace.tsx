@@ -75,19 +75,27 @@ export function CintaEnlace({
   }
 
   return (
-    <div className="rounded-2xl border border-enlace/30 bg-accent p-3 text-accent-foreground">
+    // Sobre tinta, igual que la pantalla de confirmación: es la llave, y la
+    // llave se mira aparte del resto de la pantalla. Antes era una franja de
+    // amarillo pálido con borde azul, del mismo peso que los tres avisos que
+    // vienen debajo, y se leía como uno más.
+    <div className="rounded-2xl bg-foreground p-4 text-background">
       <div className="flex items-center gap-3">
         <Link2 className="size-5 shrink-0" aria-hidden="true" />
-        <p className="min-w-0 flex-1 text-base">
-          Guarda este enlace: es la única llave
-        </p>
-        <Button
-          variant="outline"
-          className="shrink-0 bg-background"
-          onClick={copiar}
-        >
+        <div className="min-w-0 flex-1">
+          <p className="font-heading text-xs tracking-[0.085em] text-primary uppercase">
+            Tu solicitud
+          </p>
+          <p className="mt-0.5 font-mono text-xl leading-none font-bold tracking-[0.12em]">
+            {codigo}
+          </p>
+        </div>
+        {/* Arena y no lima: sobre la tinta ya destaca sola, y el lima de
+            esta pantalla es de la acción de la pestaña que se esté viendo
+            —responder, confirmar, activar avisos— (regla 1). */}
+        <Button variant="secondary" className="shrink-0" onClick={copiar}>
           {copiado ? (
-            <Check className="size-5 text-foreground" aria-hidden="true" />
+            <Check className="size-5" aria-hidden="true" />
           ) : (
             <Copy className="size-5" aria-hidden="true" />
           )}
@@ -95,7 +103,12 @@ export function CintaEnlace({
         </Button>
       </div>
 
-      <div className="mt-2 flex flex-wrap gap-4">
+      <p className="mt-3 text-sm text-background/75">
+        Guarda este enlace: es la única llave. No hay cuenta ni contraseña que
+        recuperar.
+      </p>
+
+      <div className="mt-1 flex flex-wrap gap-4">
         <button
           type="button"
           onClick={() => setVerQr((v) => !v)}
@@ -111,7 +124,7 @@ export function CintaEnlace({
           className="inline-flex min-h-12 items-center gap-1.5 text-sm underline underline-offset-4"
         >
           {guardado ? (
-            <Check className="size-4 shrink-0 text-foreground" aria-hidden="true" />
+            <Check className="size-4 shrink-0" aria-hidden="true" />
           ) : (
             <Bookmark className="size-4 shrink-0" aria-hidden="true" />
           )}
@@ -125,11 +138,11 @@ export function CintaEnlace({
           <img
             src={qrDataUrl}
             alt={`Código QR del enlace de la solicitud ${codigo}`}
-            className="mx-auto rounded-lg bg-background p-2"
+            className="mx-auto rounded-xl bg-card p-2"
             width={160}
             height={160}
           />
-          <p className="mt-1 text-sm break-all">{link}</p>
+          <p className="mt-2 text-sm break-all text-background/75">{link}</p>
         </div>
       )}
 

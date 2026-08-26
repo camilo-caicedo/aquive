@@ -153,14 +153,23 @@ export default async function ResponderPage({
         </AlertDescription>
       </Alert>
     ) : (
-      <Alert variant="warning" className="mt-4">
-        <AlertDescription>
+      // El aviso de cartel: relleno amarillo de familia y texto negro
+      // encima (10,38:1), no una franja de amarillo pálido del mismo peso
+      // que el resto de la pantalla. Es lo último que se lee antes de
+      // entregar nombre y teléfono a un desconocido, y tiene que pesar.
+      //
+      // ⚠ El enlace va en negro subrayado y NO en `text-enlace`: el azul
+      // sobre este amarillo da 3,12:1, que no pasa AA. El azul es color de
+      // texto sobre crema y sobre blanco, no sobre los gajos.
+      <div className="mt-4 rounded-2xl bg-familia-amarillo p-4 text-foreground">
+        <p className="font-heading text-base">Antes de responder</p>
+        <p className="mt-2 text-base">
           {AVISO_RESPONDER}{' '}
-          <Link href="/seguridad" className="underline">
+          <Link href="/seguridad" className="font-medium underline underline-offset-4">
             Cómo cuidarte
           </Link>
-        </AlertDescription>
-      </Alert>
+        </p>
+      </div>
     )
 
   return (
@@ -169,6 +178,9 @@ export default async function ResponderPage({
           final y en pequeño — sirve para nombrar la solicitud por teléfono,
           no para decidir. */}
       <div className="rounded-2xl bg-card p-4 shadow-canto">
+        <p className="font-heading mb-2 text-xs tracking-[0.085em] text-muted-foreground uppercase">
+          Qué pidió
+        </p>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <p className="text-lg font-bold">

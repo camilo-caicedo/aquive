@@ -82,7 +82,7 @@ export default async function BitacoraPage({
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Bitácora" volver="/admin">
-        <p className="mt-1 text-sm text-muted-foreground">Últimas lecturas</p>
+        <p className="mt-1 text-base text-muted-foreground">Últimas lecturas</p>
         <nav aria-label="Filtrar la bitácora" className="riel -mx-4 mt-3 flex gap-2 overflow-x-auto px-4">
           {CHIPS.map((c) => {
             const activo = filtro === c.clave
@@ -91,7 +91,7 @@ export default async function BitacoraPage({
                 key={c.clave}
                 href={c.clave === 'todo' ? '/admin/bitacora' : `/admin/bitacora?tipo=${c.clave}`}
                 aria-current={activo ? 'page' : undefined}
-                className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-sm transition-colors ${
+                className={`inline-flex min-h-12 shrink-0 items-center rounded-full border px-4 text-base transition-colors ${
                   activo
                     ? 'border-border bg-card font-semibold text-foreground shadow-canto'
                     : 'border-transparent text-muted-foreground hover:bg-muted'
@@ -104,7 +104,7 @@ export default async function BitacoraPage({
         </nav>
       </CabeceraPantalla>
 
-      <p className="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">
+      <p className="rounded-2xl bg-accent p-4 text-base leading-relaxed text-accent-foreground">
         Dice quién leyó, cuándo y con qué motivo. <strong>Nunca qué leyó</strong>,
         y sobrevive al borrado del dato que registra.
       </p>
@@ -121,21 +121,21 @@ export default async function BitacoraPage({
         <div className="mt-4 space-y-5">
           {grupos.map((g) => (
             <section key={g.dia}>
-              <h2 className="text-sm font-semibold text-muted-foreground">{g.dia}</h2>
+              <h2 className="font-heading text-xs tracking-[0.085em] uppercase text-muted-foreground">{g.dia}</h2>
               <ul className="mt-2 space-y-2">
                 {g.filas.map((a, i) => (
                   <li key={`${a.lector}-${a.cuando}-${i}`} className="rounded-2xl bg-card p-3 shadow-canto">
-                    <p className="text-sm font-medium">
+                    <p className="text-base font-medium">
                       {a.organizacion ?? (a.rol === 'admin' ? 'Administración' : 'Una fundación')}{' '}
                       · {a.tipo}
                     </p>
-                    <p className="mt-0.5 text-sm">«{a.motivo}»</p>
-                    <p className="mt-0.5 text-sm text-muted-foreground">
+                    <p className="mt-0.5 text-base">«{a.motivo}»</p>
+                    <p className="mt-0.5 text-base text-muted-foreground">
                       <span className="font-mono">{a.lector}</span> · {a.rol} ·{' '}
                       {hora(a.cuando)}
                     </p>
                     {a.huerfano && (
-                      <p className="mt-1 text-sm text-muted-foreground">
+                      <p className="mt-1 text-base text-muted-foreground">
                         {a.tipo === 'identidad' ? 'La identidad' : 'La referencia'} ya se
                         borró; el rastro se queda.
                       </p>
@@ -148,7 +148,7 @@ export default async function BitacoraPage({
         </div>
       )}
 
-      <p className="mt-6 text-sm text-muted-foreground">
+      <p className="mt-6 text-base text-muted-foreground">
         Si un motivo está vacío o no dice nada —«consulta», «revisión»—, eso es
         lo que hay que hablar con la organización. La bitácora no lo puede
         impedir; solo lo puede mostrar.

@@ -43,10 +43,13 @@ export function AvisosOfertador({ municipios }: { municipios: number }) {
   const activo = estado === 'activo'
   const ocupado = estado === 'trabajando' || estado === 'cargando'
 
+  // ⚠ Sin <section>, sin borde y sin <h2>: esto se monta siempre dentro
+  // de un bloque que ya tiene su título —«Avisos» en Ajustes, «Falta lo
+  // que hace que sirva» en la pantalla de cierre—, y traer el suyo pintaba
+  // dos encabezados seguidos diciendo lo mismo.
   return (
-    <section className="mt-10 border-t border-border pt-6">
-      <h2 className="font-heading text-2xl">Avisarme cuando alguien pida ayuda</h2>
-      <p className="mt-2 text-base text-muted-foreground">
+    <div>
+      <p className="text-base text-muted-foreground">
         Te llega un aviso a este teléfono cuando alguien publica una solicitud
         en {municipios === 1 ? 'tu municipio' : 'alguno de tus municipios'}. El
         aviso dice el municipio y la categoría, nunca quién pidió ni qué
@@ -104,6 +107,6 @@ export function AvisosOfertador({ municipios }: { municipios: number }) {
           </Button>
         )}
       </div>
-    </section>
+    </div>
   )
 }

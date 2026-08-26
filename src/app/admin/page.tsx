@@ -65,6 +65,7 @@ export default async function AdminPage() {
                 etiqueta: 'Matrículas por verificar',
                 detalle: 'Comprobar el número en el registro de la entidad',
                 cuantas: v(n?.matriculas),
+                gajo: 'azul',
                 espera: true,
               },
               {
@@ -73,6 +74,7 @@ export default async function AdminPage() {
                 etiqueta: 'Teléfonos por verificar',
                 detalle: 'Llamar y confirmar que contesta esa persona',
                 cuantas: v(n?.telefonos),
+                gajo: 'amarillo',
                 espera: true,
               },
               {
@@ -81,6 +83,7 @@ export default async function AdminPage() {
                 etiqueta: 'Hilos sin fundación',
                 detalle: 'Dos personas esperando a que alguien decida',
                 cuantas: v(n?.hilos_sin_fundacion),
+                gajo: 'rojo',
                 espera: true,
               },
               {
@@ -89,6 +92,7 @@ export default async function AdminPage() {
                 etiqueta: 'Reportes',
                 detalle: 'Contenido que alguien marcó como problemático',
                 cuantas: v(n?.reportes),
+                gajo: 'verde',
                 espera: true,
               },
             ],
@@ -162,6 +166,15 @@ export default async function AdminPage() {
           },
         ]}
       />
+
+      {/* Un aviso corto al pie y no encima de las colas (regla 1): lo
+          primero de la pantalla tiene que ser un dato real, no un párrafo.
+          Dice la diferencia que más se confunde aquí: esconder no es
+          borrar. */}
+      <p className="mt-6 rounded-2xl bg-accent p-4 text-base leading-relaxed text-accent-foreground">
+        Ocultar una calificación es moderación reversible. Un reporte por
+        extorsión termina en borrado de verdad, y de eso no hay vuelta.
+      </p>
     </main>
   )
 }

@@ -84,7 +84,10 @@ export default async function DatosPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-6">
-      <h1 className="font-heading flex items-center gap-2 text-3xl">
+      <p className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase">
+        Datos abiertos
+      </p>
+      <h1 className="font-heading mt-2 flex items-center gap-2 text-3xl">
         <BarChart3 className="size-6" aria-hidden="true" />
         Qué se necesitó y dónde
       </h1>
@@ -95,7 +98,7 @@ export default async function DatosPage() {
       </p>
 
       {total === 0 ? (
-        <p className="mt-6 rounded-xl border border-dashed border-border p-8 text-center text-base text-muted-foreground">
+        <p className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center text-base text-muted-foreground">
           Todavía no hay datos. Aparecerán cuando las primeras solicitudes se
           cierren o venzan.
         </p>
@@ -104,11 +107,11 @@ export default async function DatosPage() {
           <dl className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="rounded-2xl bg-card p-4 shadow-canto">
               <dt className="text-base text-muted-foreground">Solicitudes registradas</dt>
-              <dd className="mt-1 text-3xl font-bold">{total}</dd>
+              <dd className="font-heading mt-1 text-4xl">{total}</dd>
             </div>
             <div className="rounded-2xl bg-card p-4 shadow-canto">
               <dt className="text-base text-muted-foreground">Se resolvieron</dt>
-              <dd className="mt-1 text-3xl font-bold">
+              <dd className="font-heading mt-1 text-4xl">
                 {cumplidas}
                 <span className="ml-1 text-base font-normal text-muted-foreground">
                   de {total}
@@ -117,7 +120,7 @@ export default async function DatosPage() {
             </div>
             <div className="rounded-2xl bg-card p-4 shadow-canto">
               <dt className="text-base text-muted-foreground">Primera respuesta</dt>
-              <dd className="mt-1 text-3xl font-bold">
+              <dd className="font-heading mt-1 text-4xl">
                 {medianaHoras === null ? (
                   <span className="text-base font-normal text-muted-foreground">
                     Sin datos aún
@@ -179,7 +182,7 @@ export default async function DatosPage() {
         </p>
 
         {porOficio.length === 0 ? (
-          <p className="mt-4 rounded-xl border border-dashed border-border p-8 text-center text-base text-muted-foreground">
+          <p className="mt-4 rounded-2xl border border-dashed border-border p-8 text-center text-base text-muted-foreground">
             Todavía no hay datos. Aparecerán cuando las primeras solicitudes de
             servicio se cierren o venzan.
           </p>

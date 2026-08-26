@@ -7,7 +7,6 @@ import {
   SI_ALGO_SALE_MAL,
   SOBRE_LOS_PROFESIONALES,
 } from '@/lib/honestidad'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 
 export const metadata = { title: 'Cómo cuidarte' }
@@ -54,20 +53,32 @@ export default function SeguridadPage() {
         {SI_ALGO_SALE_MAL}
       </p>
 
-      <Alert variant="warning" className="mt-4">
-        <AlertDescription>{NADIE_TE_PIDE}</AlertDescription>
-      </Alert>
+      {/* Cartel amarillo con texto negro (10,38:1), no una franja pálida:
+          es la frase que hay que reconocer meses después, cuando alguien
+          intente cobrar por algo que aquí es gratis. */}
+      <div className="mt-6 rounded-2xl bg-familia-amarillo p-4 text-foreground">
+        <p className="font-heading text-base">Nadie de AquíVe te pide dinero</p>
+        <p className="mt-2 text-base">{NADIE_TE_PIDE}</p>
+      </div>
 
-      <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-        <Button
-          variant="outline"
-          className="w-full sm:w-auto"
-          nativeButton={false}
-          render={<a href="tel:123" />}
+      {/* Y el otro extremo, en rojo pastel con texto negro (5,67:1): esto no
+          es una línea de atención, y decirlo tarde no sirve de nada. */}
+      <div className="mt-4 rounded-2xl bg-familia-rojo p-4 text-foreground">
+        <p className="font-heading text-base">Si hay riesgo para alguien ahora</p>
+        <p className="mt-2 text-base">
+          Eso no es un reporte: es el <strong>123</strong>. AquíVe no atiende
+          urgencias ni rescates.
+        </p>
+        <a
+          href="tel:123"
+          className="shadow-canto mt-3 inline-flex min-h-12 items-center gap-2 rounded-full bg-card px-5 text-base font-semibold text-foreground"
         >
           <Phone className="size-5" aria-hidden="true" />
           Llamar al 123
-        </Button>
+        </a>
+      </div>
+
+      <div className="mt-6">
         <Button
           variant="outline"
           className="w-full sm:w-auto"

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
 import { CORREO_HABEAS_DATA_SERVICIOS, RESPONSABLE_SERVICIOS } from '@/lib/config'
@@ -63,8 +64,8 @@ export default async function MiPerfilPage({
 
   if (!proveedor) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-6">
-        <h1 className="font-heading text-3xl">No encontramos esa ficha</h1>
+      <main className="mx-auto max-w-lg px-4 py-6">
+        <h1 className="font-heading text-3xl leading-tight">No encontramos esa ficha</h1>
         <p className="mt-3 text-base">
           El enlace puede estar incompleto, o la ficha ya se borró. No podemos
           recuperarlo: no guardamos a quién pertenece cada enlace, y esa es
@@ -82,9 +83,9 @@ export default async function MiPerfilPage({
   }
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="font-heading text-3xl">Mi ficha</h1>
-      <p className="mt-1 text-base text-muted-foreground">
+    <main className="mx-auto max-w-lg px-4 py-6">
+      <CabeceraPantalla titulo="Mi ficha" volver="/servicios" />
+      <p className="text-base text-muted-foreground">
         Esto es lo que aparece de ti en el directorio. Puedes cambiarlo o
         borrarlo cuando quieras, sin pedirle permiso a nadie.
       </p>
@@ -123,9 +124,9 @@ export default async function MiPerfilPage({
         </div>
       )}
 
-      <p className="mt-6 text-sm text-muted-foreground">
+      <p className="mt-6 text-base text-muted-foreground">
         Ver también el{' '}
-        <Link href="/privacidad" className="underline">
+        <Link href="/privacidad" className="text-enlace underline">
           aviso de privacidad
         </Link>
         . Responsable del directorio: {RESPONSABLE_SERVICIOS}.

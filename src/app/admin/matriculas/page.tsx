@@ -47,14 +47,14 @@ export default async function MatriculasPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Matrículas" volver="/admin">
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           {cola.length === 0
             ? 'Nada por verificar'
             : `${cola.length} por verificar`}
         </p>
       </CabeceraPantalla>
 
-      <p className="rounded-2xl bg-secondary p-3 text-sm text-secondary-foreground">
+      <p className="rounded-2xl bg-accent p-4 text-base leading-relaxed text-accent-foreground">
         Consulta el número en el registro de la entidad antes de marcarlo.
         Verificar solo dice que ese número aparece ahí: ni identidad, ni
         experiencia, ni intenciones.
@@ -76,7 +76,7 @@ export default async function MatriculasPage() {
             return (
               <li key={s.perfil_id} className="rounded-2xl bg-card p-4 shadow-canto">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-base font-bold">
+                  <span className="font-heading text-lg leading-tight">
                     {perfil?.nombre_visible ?? 'Perfil sin nombre'}
                   </span>
                   {perfil?.suspendido && (
@@ -86,21 +86,39 @@ export default async function MatriculasPage() {
                     </span>
                   )}
                 </div>
-                <p className="mt-1 text-sm">{s.profesion}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {etiquetaEntidad(s.entidad_matricula)} · Matrícula{' '}
-                  <span className="font-mono">{s.numero_matricula}</span>
+                <p className="mt-1 text-base">
+                  {s.profesion}
+                  {perfil && perfil.municipios.length > 0 && (
+                    <>
+                      {' · '}
+                      {perfil.municipios.map((c) => nombreMunicipio.get(c) ?? c).join(' · ')}
+                    </>
+                  )}
                 </p>
-                {perfil && perfil.municipios.length > 0 && (
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {perfil.municipios.map((c) => nombreMunicipio.get(c) ?? c).join(' · ')}
+
+                {/* El par que se va a copiar al registro de la entidad, con
+                    su etiqueta y en mono: es lo único de la tarjeta que se
+                    teclea en otra parte, y equivocar un dígito aquí es
+                    poner un sello que no corresponde. */}
+                <div className="mt-3 rounded-xl bg-background p-3">
+                  <p className="font-heading text-xs tracking-[0.085em] uppercase text-muted-foreground">
+                    Entidad
                   </p>
-                )}
+                  <p className="mt-0.5 text-base font-medium">
+                    {etiquetaEntidad(s.entidad_matricula)}
+                  </p>
+                  <p className="mt-2.5 font-heading text-xs tracking-[0.085em] uppercase text-muted-foreground">
+                    Matrícula
+                  </p>
+                  <p className="mt-0.5 font-mono text-lg font-semibold">
+                    {s.numero_matricula}
+                  </p>
+                </div>
 
                 {registro ? (
                   <Button
                     variant="outline"
-                    className="mt-3 h-11 w-full text-sm"
+                    className="mt-3 w-full"
                     nativeButton={false}
                     render={
                       <a href={registro} target="_blank" rel="noopener noreferrer" />
@@ -112,7 +130,7 @@ export default async function MatriculasPage() {
                 ) : (
                   // `OTRA`: sin registro consultable no hay nada que mirar,
                   // y fingir que sí lo hay es peor que decirlo.
-                  <p className="mt-3 rounded-lg border border-enlace/25 bg-accent p-3 text-sm text-accent-foreground">
+                  <p className="mt-3 rounded-lg border border-enlace/25 bg-accent p-3 text-base text-accent-foreground">
                     Esa entidad no tiene registro consultable. Sin registro no
                     se puede verificar: el perfil se queda sin sello, y sin
                     sello no ha sido revisado en absoluto.
@@ -128,6 +146,13 @@ export default async function MatriculasPage() {
             )
           })}
         </ul>
+      )}
+
+      {cola.length > 0 && (
+        <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+          Sin sello el perfil se muestra con advertencia visible, no escondido.
+          «Sin verificar» y «no aplica» no son lo mismo, y la ficha lo dice.
+        </p>
       )}
     </main>
   )

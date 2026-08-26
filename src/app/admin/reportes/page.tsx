@@ -55,7 +55,7 @@ export default async function ReportesPage() {
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Reportes" volver="/admin">
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           {reportes.length === 0
             ? 'Nada sin atender'
             : `${reportes.length} sin atender`}
@@ -73,10 +73,10 @@ export default async function ReportesPage() {
           {reportes.map((r) => (
             <li key={r.id} className="rounded-2xl bg-card p-4 shadow-canto">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-base font-bold">{MOTIVOS[r.motivo]}</span>
+                <span className="font-heading text-lg leading-tight">{MOTIVOS[r.motivo]}</span>
                 <span className="text-sm text-muted-foreground">{fecha(r.creado_at)}</span>
               </div>
-              <p className="mt-0.5 text-sm text-muted-foreground">
+              <p className="mt-0.5 text-base text-muted-foreground">
                 {DONDE[r.tipo_objeto]}
                 {r.titulo && <> · {r.titulo}</>}
               </p>
@@ -84,13 +84,13 @@ export default async function ReportesPage() {
               {/* Lo reportado, dentro de la tarjeta. Es todo el punto de
                   esta pantalla: sin esto no se puede decidir. */}
               <div className="mt-3 rounded-lg bg-muted p-3">
-                <p className="text-sm font-medium text-muted-foreground">Lo reportado</p>
+                <p className="font-heading text-xs tracking-[0.085em] uppercase text-muted-foreground">Lo reportado</p>
                 {r.existe ? (
                   <>
                     {r.contenido ? (
-                      <p className="mt-1 text-sm">«{r.contenido}»</p>
+                      <p className="mt-1 text-base">«{r.contenido}»</p>
                     ) : (
-                      <p className="mt-1 text-sm text-muted-foreground">
+                      <p className="mt-1 text-base text-muted-foreground">
                         No tiene texto escrito.
                       </p>
                     )}
@@ -107,21 +107,21 @@ export default async function ReportesPage() {
                       </ul>
                     )}
                     {r.contexto && (
-                      <p className="mt-2 text-sm text-muted-foreground">
+                      <p className="mt-2 text-base text-muted-foreground">
                         <span className="font-mono">{r.contexto.codigo}</span> ·{' '}
                         {r.contexto.lugar}
                       </p>
                     )}
                   </>
                 ) : (
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="mt-1 text-base text-muted-foreground">
                     Ya no existe: se borró o venció.
                   </p>
                 )}
               </div>
 
               {r.nota && (
-                <p className="mt-3 text-sm text-muted-foreground">
+                <p className="mt-3 text-base text-muted-foreground">
                   Quien reportó escribió: «{r.nota}»
                 </p>
               )}

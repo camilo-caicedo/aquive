@@ -104,7 +104,9 @@ export function PanelHilos({
         ))}
       </div>
 
-      <ul className="space-y-2">
+      {/* Con hueco de sobra: la tarjeta de cartel proyecta su sombra 4 px
+          abajo y a la derecha, y con `space-y-2` la de abajo se la comía. */}
+      <ul className="space-y-3.5">
         {visibles.map((h) => (
           <FilaBandeja
             key={h.id}

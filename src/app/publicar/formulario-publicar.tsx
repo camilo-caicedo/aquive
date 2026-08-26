@@ -512,7 +512,7 @@ export function FormularioPublicar({
                       className={`flex min-h-14 items-center gap-2 rounded-full pr-2 pl-4 transition-colors ${
                         sel
                           ? 'border border-enlace bg-accent'
-                          : 'border border-border bg-card'
+                          : 'shadow-canto bg-card'
                       }`}
                     >
                       <button
@@ -583,7 +583,7 @@ export function FormularioPublicar({
                   'sugerencia' in s ? (
                     <li
                       key={`sugerencia-${indice}`}
-                      className="flex items-center gap-2 rounded-lg border border-enlace bg-accent p-2"
+                      className="flex items-center gap-2 rounded-2xl border border-enlace bg-accent p-2"
                     >
                       <span className="min-h-12 flex-1 px-2 py-2 text-base font-semibold text-accent-foreground">
                         {s.sugerencia}{' '}
@@ -614,7 +614,7 @@ export function FormularioPublicar({
               </ul>
 
               {mostrarSugerencia ? (
-                <div className="mt-2 space-y-2 rounded-lg border border-border p-3">
+                <div className="shadow-canto mt-2 space-y-2 rounded-2xl bg-card p-3">
                   <Label htmlFor="sugerencia" className="mb-1">
                     Escribe el nombre de lo que necesitas
                   </Label>
@@ -737,7 +737,7 @@ export function FormularioPublicar({
               se guarda ni se pregunta. Tampoco sale en el tablero: solo lo
               ven quien va a responder y la fundación, que es para quienes
               sirve. */}
-          <label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-border p-3 has-checked:border-enlace has-checked:bg-accent">
+          <label className="shadow-canto flex min-h-12 cursor-pointer items-start gap-3 rounded-2xl border border-transparent bg-card p-3 has-checked:border-enlace has-checked:bg-accent has-checked:shadow-none">
             <input
               type="checkbox"
               checked={puedeRecoger}
@@ -833,7 +833,7 @@ export function FormularioPublicar({
                 <span>
                   Acepto que este contacto se muestre a quien responda esta
                   solicitud y al administrador de AquíVe, según el{' '}
-                  <Link href="/privacidad" className="underline">
+                  <Link href="/privacidad" className="text-enlace underline underline-offset-4">
                     aviso de privacidad
                   </Link>{' '}
                   del {FECHA_LEGALES}.
