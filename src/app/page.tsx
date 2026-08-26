@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { AccionPrincipal } from '@/components/accion-principal'
-import { Info, Inbox, ShieldAlert, Stethoscope, CircleAlert, Briefcase } from 'lucide-react'
+import { Info, Inbox, ShieldAlert, Stethoscope, CircleAlert, Briefcase, MapPin } from 'lucide-react'
 import { servidor } from '@/orpc/local'
 import { AVISO_SERVICIOS, NO_PAGUES_POR_ADELANTADO } from '@/lib/honestidad'
 import { GRUPOS, MODALIDADES, MODOS_PRECIO } from '@/lib/servicios'
@@ -242,6 +242,17 @@ export default async function InicioPage({
             además aquí eran dos puertas al mismo cuarto. Queda solo lo que
             no está en la barra: publicar la ficha propia. */}
         <div className="riel -mx-4 mt-2 flex gap-2 overflow-x-auto px-4">
+          {/* El mapa conserva los filtros: «modistas en la comuna 3» se ve
+              igual en lista y en mapa, y el enlace sigue sirviendo. */}
+          <Link
+            href={chipsAplicados.length > 0 ? `/mapa?${new URLSearchParams(
+              Object.entries(aplicados).filter(([, v]) => Boolean(v)) as [string, string][],
+            ).toString()}` : '/mapa'}
+            className="shadow-canto inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
+          >
+            <MapPin className="size-4" aria-hidden="true" />
+            Ver el mapa
+          </Link>
           {!miFicha && (
             <Link
               href="/servicios/soy-proveedor"

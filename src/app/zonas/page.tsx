@@ -92,6 +92,15 @@ export default async function ZonasPage({
         </span>
       </p>
 
+      <p className="mt-4">
+        <Link
+          href={municipio ? `/mapa?municipio=${municipio}` : '/mapa'}
+          className="text-enlace text-base underline underline-offset-4"
+        >
+          Ver el mapa con quienes publicaron su ubicación
+        </Link>
+      </p>
+
       <ul className="mt-6 space-y-2">
         {zonas.map((z) => (
           <li key={z.id}>

@@ -889,6 +889,11 @@ export const proveedores = pgTable("proveedores", {
 	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	actualizadoAt: timestamp("actualizado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	esPrueba: boolean("es_prueba").default(false).notNull(),
+	latitud: numeric({ precision: 9, scale:  6 }),
+	longitud: numeric({ precision: 9, scale:  6 }),
+	aceptoMapa: boolean("acepto_mapa").default(false).notNull(),
+	mapaVersion: text("mapa_version"),
+	mapaAt: timestamp("mapa_at", { withTimezone: true, mode: 'string' }),
 }, (table) => [
 	index("idx_proveedores_municipio").using("btree", table.municipio.asc().nullsLast().op("text_ops")).where(sql`((NOT suspendido) AND acepto_publicacion)`),
 	index("idx_proveedores_organizacion").using("btree", table.organizacionId.asc().nullsLast().op("uuid_ops")).where(sql`(organizacion_id IS NOT NULL)`),
@@ -924,7 +929,9 @@ export const proveedores = pgTable("proveedores", {
   WHERE (a.user_id = ( SELECT auth.uid() AS uid))))` }),
 	check("proveedores_asistida_con_organizacion", sql`(NOT alta_asistida) OR (organizacion_id IS NOT NULL)`),
 	check("proveedores_autorizacion_version_check", sql`(char_length(TRIM(BOTH FROM autorizacion_version)) >= 3) AND (char_length(TRIM(BOTH FROM autorizacion_version)) <= 60)`),
+	check("proveedores_coordenadas_colombia", sql`((latitud IS NULL) AND (longitud IS NULL)) OR (((latitud >= '-4.5'::numeric) AND (latitud <= 13.5)) AND ((longitud >= '-82.0'::numeric) AND (longitud <= '-66.0'::numeric)))`),
 	check("proveedores_descripcion_check", sql`char_length(descripcion) <= 300`),
+	check("proveedores_mapa_completo", sql`(NOT acepto_mapa) OR ((latitud IS NOT NULL) AND (longitud IS NOT NULL) AND (mapa_version IS NOT NULL))`),
 	check("proveedores_nombre_visible_check", sql`(char_length(nombre_visible) >= 3) AND (char_length(nombre_visible) <= 60)`),
 	check("proveedores_telefono_check", sql`telefono ~ '^[0-9+()\- ]{7,20}$'::text`),
 	check("proveedores_tiene_dueno", sql`num_nonnulls(perfil_id, token_hash) = 1`),
@@ -1219,11 +1226,6 @@ export const solicitudesServicioPublicas = pgView("solicitudes_servicio_publicas
 	numRespuestas: bigint("num_respuestas", { mode: "number" }),
 }).as(sql`SELECT s.id, s.codigo, s.oficio_id, o.nombre AS oficio_nombre, o.grupo, s.municipio, s.zona_id, z.nombre AS zona_nombre, s.zona_texto, s.urgencia, s.capacidad_pago, s.nota, s.creada_at, s.expira_at, ( SELECT count(*) AS count FROM respuestas_servicio rs WHERE rs.solicitud_id = s.id) AS num_respuestas FROM solicitudes_servicio s JOIN catalogo_oficios o ON o.id = s.oficio_id LEFT JOIN zonas z ON z.id = s.zona_id WHERE s.estado = 'abierta'::text AND s.expira_at > now()`);
 
-export const municipiosConProveedores = pgView("municipios_con_proveedores", {	codigoDane: text("codigo_dane"),
-	nombre: text(),
-	departamento: text(),
-}).as(sql`SELECT DISTINCT m.codigo_dane, m.nombre, m.departamento FROM municipios m JOIN proveedores_publicos p ON p.municipio = m.codigo_dane`);
-
 export const proveedoresPublicos = pgView("proveedores_publicos", {	id: uuid(),
 	nombreVisible: text("nombre_visible"),
 	tipo: text(),
@@ -1239,6 +1241,8 @@ export const proveedoresPublicos = pgView("proveedores_publicos", {	id: uuid(),
 	mediosPago: text("medios_pago").array(),
 	descripcion: text(),
 	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }),
+	latitud: numeric(),
+	longitud: numeric(),
 	oficios: text().array(),
 	grupos: text().array(),
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
@@ -1251,13 +1255,7 @@ export const proveedoresPublicos = pgView("proveedores_publicos", {	id: uuid(),
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	totalResenas: bigint("total_resenas", { mode: "number" }),
 	modos: text().array(),
-}).as(sql`SELECT p.id, p.nombre_visible, p.tipo, p.telefono, p.telefono_verificado, p.municipio, p.zona_id, z.nombre AS zona_nombre, p.zona_texto, p.modalidad, p.dias, p.franjas, p.medios_pago, p.descripcion, p.creado_at, COALESCE(ofi.oficios, '{}'::text[]) AS oficios, COALESCE(ofi.grupos, '{}'::text[]) AS grupos, COALESCE(ref.confirmadas, 0::bigint) AS referencias_confirmadas, COALESCE(sp.confirmados, 0::bigint) AS servicios_confirmados, res.cumplimiento, res.trato, res.puntualidad, COALESCE(res.total, 0::bigint) AS total_resenas, COALESCE(ofi.modos, '{}'::text[]) AS modos FROM proveedores p LEFT JOIN zonas z ON z.id = p.zona_id JOIN LATERAL ( SELECT array_agg(DISTINCT pop.oficio_id) AS oficios, array_agg(DISTINCT pop.grupo) AS grupos, array_agg(DISTINCT pop.modo) AS modos FROM proveedor_oficios_publicos pop WHERE pop.proveedor_id = p.id) ofi ON ofi.oficios IS NOT NULL LEFT JOIN LATERAL ( SELECT count(*) AS confirmadas FROM referencias r WHERE r.proveedor_id = p.id AND r.estado = 'confirmada'::text) ref ON true LEFT JOIN LATERAL ( SELECT count(*) AS confirmados FROM servicios_prestados s WHERE s.proveedor_id = p.id AND s.confirmado_at IS NOT NULL) sp ON true LEFT JOIN LATERAL ( SELECT count(*) AS total, round(avg(r.cumplimiento), 1) AS cumplimiento, round(avg(r.trato), 1) AS trato, round(avg(r.puntualidad), 1) AS puntualidad FROM resenas r WHERE r.proveedor_id = p.id AND NOT r.oculta) res ON true WHERE NOT p.suspendido AND p.acepto_publicacion AND p.telefono_verificado`);
-
-export const oficiosConProveedores = pgView("oficios_con_proveedores", {	id: text(),
-	nombre: text(),
-	grupo: text(),
-	orden: integer(),
-}).as(sql`SELECT DISTINCT o.id, o.nombre, o.grupo, o.orden FROM catalogo_oficios o JOIN proveedor_oficios_publicos pop ON pop.oficio_id = o.id`);
+}).as(sql`SELECT p.id, p.nombre_visible, p.tipo, p.telefono, p.telefono_verificado, p.municipio, p.zona_id, z.nombre AS zona_nombre, p.zona_texto, p.modalidad, p.dias, p.franjas, p.medios_pago, p.descripcion, p.creado_at, CASE WHEN p.acepto_mapa THEN p.latitud ELSE NULL::numeric END AS latitud, CASE WHEN p.acepto_mapa THEN p.longitud ELSE NULL::numeric END AS longitud, COALESCE(ofi.oficios, '{}'::text[]) AS oficios, COALESCE(ofi.grupos, '{}'::text[]) AS grupos, COALESCE(ref.confirmadas, 0::bigint) AS referencias_confirmadas, COALESCE(sp.confirmados, 0::bigint) AS servicios_confirmados, res.cumplimiento, res.trato, res.puntualidad, COALESCE(res.total, 0::bigint) AS total_resenas, COALESCE(ofi.modos, '{}'::text[]) AS modos FROM proveedores p LEFT JOIN zonas z ON z.id = p.zona_id JOIN LATERAL ( SELECT array_agg(DISTINCT pop.oficio_id) AS oficios, array_agg(DISTINCT pop.grupo) AS grupos, array_agg(DISTINCT pop.modo) AS modos FROM proveedor_oficios_publicos pop WHERE pop.proveedor_id = p.id) ofi ON ofi.oficios IS NOT NULL LEFT JOIN LATERAL ( SELECT count(*) AS confirmadas FROM referencias r WHERE r.proveedor_id = p.id AND r.estado = 'confirmada'::text) ref ON true LEFT JOIN LATERAL ( SELECT count(*) AS confirmados FROM servicios_prestados s WHERE s.proveedor_id = p.id AND s.confirmado_at IS NOT NULL) sp ON true LEFT JOIN LATERAL ( SELECT count(*) AS total, round(avg(r.cumplimiento), 1) AS cumplimiento, round(avg(r.trato), 1) AS trato, round(avg(r.puntualidad), 1) AS puntualidad FROM resenas r WHERE r.proveedor_id = p.id AND NOT r.oculta) res ON true WHERE NOT p.suspendido AND p.acepto_publicacion AND p.telefono_verificado`);
 
 export const datosServicios = pgView("datos_servicios", {	municipio: text(),
 	grupo: text(),
@@ -1270,3 +1268,14 @@ export const datosServicios = pgView("datos_servicios", {	municipio: text(),
 	resueltas: bigint({ mode: "number" }),
 	horasPromedio: numeric("horas_promedio"),
 }).as(sql`SELECT municipio, grupo, oficio, count(*) AS solicitudes, count(*) FILTER (WHERE hubo_respuesta) AS con_respuesta, count(*) FILTER (WHERE hubo_confirmacion) AS resueltas, round(avg(horas_hasta_respuesta), 1) AS horas_promedio FROM metricas_servicio m WHERE NOT es_prueba GROUP BY municipio, grupo, oficio`);
+
+export const municipiosConProveedores = pgView("municipios_con_proveedores", {	codigoDane: text("codigo_dane"),
+	nombre: text(),
+	departamento: text(),
+}).as(sql`SELECT DISTINCT m.codigo_dane, m.nombre, m.departamento FROM municipios m JOIN proveedores_publicos p ON p.municipio = m.codigo_dane`);
+
+export const oficiosConProveedores = pgView("oficios_con_proveedores", {	id: text(),
+	nombre: text(),
+	grupo: text(),
+	orden: integer(),
+}).as(sql`SELECT DISTINCT o.id, o.nombre, o.grupo, o.orden FROM catalogo_oficios o JOIN proveedor_oficios_publicos pop ON pop.oficio_id = o.id`);

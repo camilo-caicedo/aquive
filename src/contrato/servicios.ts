@@ -91,6 +91,12 @@ export const EnListado = z.object({
   total_resenas: z.number(),
   cumplimiento: z.number().nullable(),
   descripcion: z.string().nullable(),
+  // Salen NULL si el prestador no marcó `acepto_mapa`. El filtro vive en la
+  // vista pública y no aquí: si se duplica, un día una copia se olvida, y
+  // olvidarse significa publicar dónde encontrar a alguien que no lo
+  // autorizó.
+  latitud: z.number().nullable(),
+  longitud: z.number().nullable(),
   // Los oficios de ESTE prestador, con su precio. Vienen dentro y no en una
   // consulta aparte por tarjeta.
   oficios: z.array(OficioDeProveedor),
@@ -196,6 +202,22 @@ export const ZonaConGente = z.object({
 
 export type ZonaConGente = z.infer<typeof ZonaConGente>
 
+/**
+ * Los rechazos de ubicación, declarados y no improvisados.
+ *
+ * Misma lección que en el chat: sin esto, «no encontramos tu ficha» volvía
+ * como 500 «Internal server error» y quien lo veía no sabía si el fallo era
+ * suyo o nuestro. Un rechazo que no explica es un rechazo que genera un
+ * mensaje de soporte.
+ */
+const erroresUbicacion = {
+  RECHAZADO: {
+    status: 400,
+    message: 'No se pudo guardar tu ubicación.',
+    data: z.object({ motivo: z.string() }),
+  },
+} as const
+
 export const contratoServicios = {
   /** La ficha pública de un prestador. Pantalla 09. */
   ficha: oc.input(z.object({ id: z.uuid() })).output(Ficha.nullable()),
@@ -225,6 +247,50 @@ export const contratoServicios = {
    * una que ya existe.
    */
   miFicha: oc.output(MiFicha.nullable()),
+
+  /**
+   * Guardar —o quitar— el punto propio del mapa. ADR 0004.
+   *
+   * Va como procedimiento APARTE de guardar la ficha, y no por comodidad: el
+   * consentimiento de ubicación es un acto distinto del de publicar nombre y
+   * teléfono (artículo 9, finalidad declarada). Un acto distinto merece una
+   * llamada distinta, con su propia versión de autorización y su fecha.
+   *
+   * `acepto: false` quita del mapa sin tocar nada más de la ficha. Quitarse
+   * tiene que ser tan fácil como ponerse, o el consentimiento no es libre.
+   */
+  /**
+   * El punto propio, para poder editarlo.
+   *
+   * Se lee de la TABLA y no de `proveedores_publicos`: quien se quitó del
+   * mapa tiene que poder ver su punto para volver a ponerlo, y la vista —con
+   * razón— se lo esconde a todo el mundo, incluido su dueño.
+   */
+  miUbicacion: oc
+    .input(z.object({ token: z.string().min(20).optional() }).optional())
+    .output(
+      z
+        .object({
+          latitud: z.number().nullable(),
+          longitud: z.number().nullable(),
+          acepto: z.boolean(),
+        })
+        .nullable(),
+    ),
+
+  guardarUbicacion: oc
+    .errors(erroresUbicacion)
+    .input(
+      z.object({
+        // El token de quien fue dado de alta por la fundación y no tiene
+        // cuenta. Buena parte del rebusque está en ese caso.
+        token: z.string().min(20).optional(),
+        acepto: z.boolean(),
+        latitud: z.number().min(-4.5).max(13.5).nullable(),
+        longitud: z.number().min(-82).max(-66).nullable(),
+      }),
+    )
+    .output(z.object({ ok: z.literal(true) })),
 
   /**
    * Las categorías con cuánta gente hay en cada una. Pantalla 06.

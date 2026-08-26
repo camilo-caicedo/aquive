@@ -232,14 +232,27 @@ contenido sexual o violento, y suplantación.
 - Los cuatro últimos de un documento no van en pantalla pública, ni en QR, ni
   en URL.
 
-### 10 · Los mapas agregan por zona, nunca por persona
+### 10 · La ubicación se publica solo si su dueño lo autoriza
 
-La pantalla de zonas dibuja un globo por barrio con cuánta gente trabaja ahí, y
-lo dice en pantalla. Nadie publica su dirección y la plataforma no la guarda.
-La granularidad máxima es **municipio y barrio o comuna**.
+Cambiada por el ADR 0004, decisión del responsable del 26 de agosto de 2026.
 
-Sin librería de mapas y sin geocoding: es un fondo ilustrado con globos. Un
-mapa de teselas con posiciones reales sería otra cosa y necesita su ADR.
+**Quien OFRECE puede aparecer en el mapa con un punto.** No es automático y no
+va incluido en la autorización de publicar nombre y teléfono: es una casilla
+aparte —`acepto_mapa`— con su propia versión y su fecha, porque publicar dónde
+está alguien es otra finalidad (mínimo legal 2, artículo 9).
+
+- **El punto lo pone la persona**, arrastrando el pin. Sin geocoding: así cada
+  quien elige su precisión y puede marcar la esquina en vez del portón.
+- **Quien no lo marca sigue en el directorio.** No hay penalización, y la
+  pantalla del mapa dice cuántas personas más hay en la lista.
+- **El filtro vive en `proveedores_publicos`**, no en cada consulta: la vista
+  devuelve las coordenadas en `NULL` para quien no aceptó. Si el filtro se
+  duplica, un día una copia se olvida.
+- **Se puede quitar del mapa sin borrar la ficha.**
+
+**Quien PIDE sigue sin dejar rastro.** Una solicitud no lleva coordenadas ni
+nada más fino que barrio o comuna. Eso no lo cambió el ADR 0004 y no está en
+discusión.
 
 ---
 

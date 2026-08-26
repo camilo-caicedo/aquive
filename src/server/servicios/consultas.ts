@@ -203,6 +203,8 @@ export async function directorio(
         totalResenas: proveedoresPublicos.totalResenas,
         cumplimiento: proveedoresPublicos.cumplimiento,
         descripcion: proveedoresPublicos.descripcion,
+        latitud: proveedoresPublicos.latitud,
+        longitud: proveedoresPublicos.longitud,
       })
       .from(proveedoresPublicos)
       .leftJoin(municipios, eq(municipios.codigoDane, proveedoresPublicos.municipio))
@@ -288,6 +290,8 @@ export async function directorio(
       total_resenas: aNumero(f.totalResenas),
       cumplimiento: aNumeroONulo(f.cumplimiento),
       descripcion: f.descripcion,
+      latitud: aNumeroONulo(f.latitud),
+      longitud: aNumeroONulo(f.longitud),
       oficios: porProveedor.get(f.id!) ?? [],
     })),
     facetas: {

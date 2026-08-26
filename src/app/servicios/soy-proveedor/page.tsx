@@ -12,6 +12,8 @@ import {
   type MisServicios,
 } from '@/components/panel-servicios-proveedor'
 import type { MiProveedor } from '@/lib/types'
+import { servidor } from '@/orpc/local'
+import { MiUbicacion } from '@/components/mi-ubicacion'
 
 export const metadata = { title: 'Mi ficha' }
 
@@ -59,6 +61,11 @@ export default async function SoyProveedorPage() {
     ])
 
   const proveedor = (mio as MiProveedor | null) ?? null
+
+  // El punto propio se lee de la TABLA y no de la vista pública: quien se
+  // quitó del mapa tiene que poder ver el suyo para volver a ponerlo, y la
+  // vista —con razón— se lo esconde a todo el mundo.
+  const ubicacion = proveedor ? await servidor.servicios.miUbicacion() : null
   const referencias = (refs as unknown as MiReferencia[]) ?? []
   const misServicios = (servicios as unknown as MisServicios | null) ?? null
   // Solo los oficios que están en su ficha: un código de algo que no
@@ -95,6 +102,18 @@ export default async function SoyProveedorPage() {
         oficios={oficios ?? []}
         zonas={zonas ?? []}
       />
+
+      {/* La ubicación va aparte del formulario y con su propia casilla: el
+          consentimiento de publicar dónde estás es otra finalidad que el de
+          publicar tu nombre (ADR 0004, artículo 9 de la Ley 1581). Aparte
+          también en la pantalla, para que se lea como lo que es. */}
+      <div className="mt-6">
+        <MiUbicacion
+          latitudInicial={ubicacion?.latitud ?? null}
+          longitudInicial={ubicacion?.longitud ?? null}
+          aceptadoInicial={ubicacion?.acepto ?? false}
+        />
+      </div>
 
       {/* Una referencia cuelga de la ficha, así que solo existe cuando la
           ficha existe: pedirla antes obligaría a guardar el dato de un

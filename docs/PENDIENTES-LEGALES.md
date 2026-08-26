@@ -107,6 +107,22 @@ actuales hacen. Van antes de publicar cualquiera de las dos:
       en el barrio»: aparecen su nombre y su foto, así que necesita casilla
       explícita y versión guardada, igual que el prestador.
 
+## Bloquean el mapa (ADR 0004)
+
+- [ ] **Texto de autorización de ubicación**, revisado por abogado, en
+      `docs/legal/PLANTILLAS.md`. Es una autorización APARTE de la de publicar
+      nombre y teléfono: otra finalidad, otro consentimiento (artículo 9).
+- [ ] **Aviso de privacidad: el servidor de teselas.** El mapa hace peticiones
+      a OpenStreetMap desde el navegador de quien mira, así que a ese tercero
+      le llegan su IP y qué zona está viendo. Hay que decirlo.
+- [ ] **Revisión jurídica del riesgo** de publicar la ubicación de personas que
+      trabajan solas. La decisión está tomada y registrada; lo que falta es que
+      un abogado mire la exposición.
+- [ ] **Proveedor de teselas para producción.** La política de OpenStreetMap
+      prohíbe el uso intensivo. Con tráfico pequeño se tolera; al crecer hay
+      que pasar a teselas propias (Protomaps, gratis y autoalojado) o a un plan
+      de pago. No es opcional a futuro: es una cuenta pendiente.
+
 ## Pendiente de decisión, no de trámite
 
 - [x] **Subida de imágenes.** Resuelta el 26 de agosto de 2026 por el ADR 0003:

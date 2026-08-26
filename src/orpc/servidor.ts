@@ -8,6 +8,7 @@ import type { Contexto } from './contexto'
 import * as chat from '@/server/chat/hilo'
 import * as moderacion from '@/server/moderacion/comandos'
 import * as servicios from '@/server/servicios/consultas'
+import * as ubicacion from '@/server/servicios/ubicacion'
 
 // El enrutador: pega el contrato con la capa de dominio. Aquí y solo aquí se
 // tocan las dos cosas — el contrato no sabe de Postgres y el dominio no sabe
@@ -25,6 +26,25 @@ export const enrutador = os.router({
     directorio: os.servicios.directorio.handler(({ input }) => servicios.directorio(db, input)),
     miFicha: os.servicios.miFicha.handler(({ context }) =>
       servicios.miFicha(db, context.usuarioId),
+    ),
+    miUbicacion: os.servicios.miUbicacion.handler(({ input, context }) =>
+      ubicacion.miUbicacion(db, { token: input?.token, usuarioId: context.usuarioId }),
+    ),
+    guardarUbicacion: os.servicios.guardarUbicacion.handler(
+      async ({ input, context, errors }) => {
+        try {
+          return await ubicacion.guardarUbicacion(
+            db,
+            { acepto: input.acepto, latitud: input.latitud, longitud: input.longitud },
+            { token: input.token, usuarioId: context.usuarioId },
+          )
+        } catch (e) {
+          if (e instanceof ubicacion.UbicacionRechazada) {
+            throw errors.RECHAZADO({ data: { motivo: e.message } })
+          }
+          throw e
+        }
+      },
     ),
     categorias: os.servicios.categorias.handler(({ input }) => servicios.categorias(db, input)),
     zonas: os.servicios.zonas.handler(({ input }) => servicios.zonasConGente(db, input)),
