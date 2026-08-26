@@ -52,3 +52,10 @@ next-env.d.ts
 # El runbook y el seed de servicios sí pueden ir: no tienen datos personales.
 /migracion/05-datos-cuentas.sql
 /migracion/*-datos-*.sql
+
+# Drizzle: solo se versionan los tipos generados (src/db/generado/*.ts).
+# El SQL de base y los snapshots no — el esquema lo manda supabase/migraciones/,
+# y un 0000_*.sql que recrea 37 tablas es una escopeta cargada apuntando a la
+# base de producción.
+/src/db/generado/*.sql
+/src/db/generado/meta/
