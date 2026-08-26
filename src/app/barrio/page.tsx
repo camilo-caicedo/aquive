@@ -1,10 +1,9 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Search } from 'lucide-react'
 
 import { servidor } from '@/orpc/local'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
-import { FormularioFiltros } from '@/components/formulario-filtros'
+import { BuscadorDelBarrio } from './buscador'
 import { precioLegible } from '@/lib/servicios'
 import { SOMBRA_CARTEL, type Familia } from '@/lib/familias'
 import type { UnidadPrecio } from '@/lib/types'
@@ -41,38 +40,7 @@ export default async function BarrioPage({
         Lo que hacen y venden las personas del directorio.
       </p>
 
-      {/* Búsqueda por GET: el resultado tiene URL propia y se puede compartir,
-          igual que los filtros del directorio. Va por `FormularioFiltros`
-          para que el envío no recargue la página entera y la lista no salte
-          al encabezado; sin JavaScript el navegador lo manda igual. */}
-      <FormularioFiltros
-        action="/barrio"
-        className="mt-4 flex gap-2"
-        pie={(pendiente) => (
-          <button
-            type="submit"
-            disabled={pendiente}
-            className="bg-primary text-primary-foreground shadow-boton active:shadow-boton-hundido flex size-12 shrink-0 items-center justify-center rounded-full transition-all active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-60"
-            aria-label="Buscar"
-          >
-            <Search className="size-5" aria-hidden="true" />
-          </button>
-        )}
-      >
-        {params.municipio && (
-          <input type="hidden" name="municipio" value={params.municipio} />
-        )}
-        <label htmlFor="q" className="sr-only">
-          Buscar un producto
-        </label>
-        <input
-          id="q"
-          name="q"
-          defaultValue={params.q ?? ''}
-          placeholder="Buscar un producto"
-          className="bg-card border border-input focus-visible:ring-ring min-h-12 flex-1 rounded-full px-5 text-base focus-visible:ring-2 focus-visible:outline-none"
-        />
-      </FormularioFiltros>
+      <BuscadorDelBarrio municipio={params.municipio} busqueda={params.q} />
 
       {productos.length === 0 ? (
         <p className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center text-base text-muted-foreground">
