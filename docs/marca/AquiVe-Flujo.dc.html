@@ -1,0 +1,2395 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Montserrat:wght@600;700;800;900&family=Geist+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#E7DFD0;color:#1D1D1B;font-family:Poppins,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#2860A8;text-decoration:underline;text-underline-offset:3px}
+a:hover{color:#1D4478}
+*{box-sizing:border-box}
+.pant::-webkit-scrollbar,.pant ::-webkit-scrollbar{width:0;height:0}
+.pant,.pant *{scrollbar-width:none}
+</style>
+</helmet>
+
+<div style="display:flex;gap:40px;align-items:flex-start;padding:36px 40px 64px;min-height:100vh">
+
+<div style="flex:none;position:sticky;top:36px">
+<div style="width:412px;height:876px;background:#1D1D1B;border-radius:54px;padding:10px;box-shadow:0 26px 64px rgba(29,29,27,.26)">
+<div style="width:100%;height:100%;background:#F5EEE2;border-radius:44px;overflow:hidden;display:flex;flex-direction:column;position:relative">
+
+<div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:15px 28px 4px;font:600 14px/1 Poppins,sans-serif">
+<span>9:41</span>
+<span style="display:flex;gap:4px;align-items:center">
+<span style="width:9px;height:9px;background:#1D1D1B"></span><span style="width:9px;height:9px;background:#1D1D1B"></span><span style="width:9px;height:9px;background:#1D1D1B"></span>
+<span style="width:6px;height:9px;background:#8A8A5C"></span>
+</span>
+</div>
+
+<div class="pant" style="flex:1;min-height:0;overflow-y:auto">
+
+<sc-if value="{{ es01 }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;min-height:100%">
+<div style="flex:none">
+<div style="height:16px;background:linear-gradient(90deg,#2860A8 0 25%,#F4C542 25% 50%,#38B58C 50% 75%,#E86F87 75% 100%)"></div>
+<div style="height:9px;background:radial-gradient(circle at 50% 0,#F5EEE2 7.5px,transparent 7.6px) 0 0/15px 9px repeat-x"></div>
+</div>
+<div style="padding:14px 26px 30px;display:flex;flex-direction:column;flex:1">
+<div style="position:relative;align-self:center;width:150px;height:150px;display:flex;align-items:center;justify-content:center">
+<span style="position:absolute;inset:0;border-radius:50%;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);background-image:repeating-linear-gradient(45deg,rgba(29,29,27,.1) 0 1px,transparent 1px 7px)"></span>
+<img src="docs/marca/isotipo-carrito.png" alt="AquíVe" style="position:relative;width:126px;height:126px;object-fit:contain;mix-blend-mode:multiply">
+</div>
+<span style="align-self:center;margin-top:10px;padding:6px 16px;background:#B8F000;border:0;border-radius:6px;box-shadow:3px 3px 0 #1D1D1B;font:900 17px/1.2 Montserrat,sans-serif;letter-spacing:.1em">AQUÍ VE</span>
+<h1 style="margin:24px 0 0;text-align:center;font:900 34px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">¿Qué te trae<br>hoy aquí?</h1>
+<p style="margin:14px 0 0;text-align:center;font-size:16.5px;line-height:1.5;color:#3A362F;text-wrap:pretty">Una red de vecinos donde quien necesita un servicio encuentra a quien lo ofrece, sin intermediarios. Sin comisiones, sin intermediar el pago.</p>
+<button type="button" onClick="{{ irCategorias }}" style="margin-top:24px;width:100%;padding:0;background:#fff;border:0;border-radius:16px;box-shadow:5px 5px 0 #2860A8;cursor:pointer;font-family:inherit;text-align:left;overflow:hidden" style-active="transform:translate(2px,2px);box-shadow:3px 3px 0 #2860A8">
+<span style="display:block;height:9px;background:#2860A8"></span>
+<span style="display:block;padding:15px 18px 17px">
+<span style="display:block;font:900 21px/1.1 Montserrat,sans-serif">Necesito un servicio</span>
+<span style="display:block;margin-top:6px;font-size:15.5px;color:#3A362F">Busca en tu zona, mira quién está disponible y escríbele.</span>
+</span>
+</button>
+<button type="button" onClick="{{ irLogin }}" style="margin-top:14px;width:100%;padding:0;background:#fff;border:0;border-radius:16px;box-shadow:5px 5px 0 #F4C542;cursor:pointer;font-family:inherit;text-align:left;overflow:hidden" style-active="transform:translate(2px,2px);box-shadow:3px 3px 0 #F4C542">
+<span style="display:block;height:9px;background:#F4C542"></span>
+<span style="display:block;padding:15px 18px 17px">
+<span style="display:block;font:900 21px/1.1 Montserrat,sans-serif">Ofrezco mi trabajo</span>
+<span style="display:block;margin-top:6px;font-size:15.5px;color:#3A362F">Entra con Google, publica tu oficio y aparece cuando alguien busque cerca.</span>
+</span>
+</button>
+<div style="flex:1;min-height:18px"></div>
+<p style="margin:0;text-align:center;font-size:15.5px;line-height:1.45;color:#6F5A4A">Buscar y pedir no necesita cuenta.<br><button type="button" onClick="{{ irLogin }}" style="background:transparent;border:0;padding:4px 0 0;font:600 15.5px/1 Poppins,sans-serif;color:#1D1D1B;border-bottom:2px solid #B8F000;cursor:pointer">Entrar con Google</button></p>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ esAcceso }}">
+<div style="padding:12px 24px 28px;display:flex;flex-direction:column;min-height:100%">
+<button type="button" onClick="{{ irBienvenida }}" style="display:flex;align-items:center;gap:7px;background:transparent;border:0;padding:8px 0;font:600 15px/1 Poppins,sans-serif;color:#1D1D1B;cursor:pointer">‹ Atrás</button>
+<h1 style="margin:18px 0 0;font:900 33px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Entra con<br>tu cuenta<br>de Google</h1>
+<p style="margin:14px 0 0;font-size:16.5px;line-height:1.5;color:#3A362F;text-wrap:pretty">Es el único acceso por ahora. Si es tu primera vez, la cuenta se crea sola; si ya entraste antes, vuelves a lo tuyo. Sin contraseña que recordar ni que perder.</p>
+
+<button type="button" onClick="{{ irFormulario }}" style="margin-top:26px;width:100%;min-height:60px;display:flex;align-items:center;justify-content:center;gap:12px;padding:0 18px;background:#fff;border:0;border-radius:14px;box-shadow:4px 4px 0 #2860A8;font-family:inherit;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:2px 2px 0 #2860A8">
+<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true" style="flex:none">
+<path fill="#4285F4" d="M23.06 12.25c0-.85-.08-1.67-.22-2.45H12v4.63h6.19a5.3 5.3 0 0 1-2.3 3.47v2.89h3.72c2.17-2 3.45-4.95 3.45-8.54"></path>
+<path fill="#34A853" d="M12 23.5c3.1 0 5.7-1.03 7.61-2.79l-3.72-2.88c-1.03.69-2.35 1.1-3.89 1.1-2.99 0-5.52-2.02-6.42-4.73H1.79v2.98A11.5 11.5 0 0 0 12 23.5"></path>
+<path fill="#FBBC05" d="M5.58 14.2a6.9 6.9 0 0 1 0-4.4V6.82H1.79a11.5 11.5 0 0 0 0 10.36z"></path>
+<path fill="#EA4335" d="M12 5.07c1.69 0 3.2.58 4.39 1.72l3.29-3.29A11.5 11.5 0 0 0 1.79 6.82L5.58 9.8c.9-2.71 3.43-4.73 6.42-4.73"></path>
+</svg>
+<span style="font:700 17px/1.25 Poppins,sans-serif;color:#1D1D1B">Continuar con Google</span>
+</button>
+
+<p style="margin:16px 0 0;font-size:14.5px;line-height:1.5;color:#6F5A4A;text-wrap:pretty">Solo tomamos tu nombre y tu correo. El correo no queda público y no lo usamos para escribirte nada que no hayas pedido. <a href="#1a">Términos</a> y <a href="#1a">tratamiento de datos</a>.</p>
+
+<div style="margin-top:24px;padding:15px 16px;background:#FEF6DE;border-radius:14px">
+<p style="margin:0;font:900 16px/1.15 Montserrat,sans-serif">¿No tienes cuenta de Google?</p>
+<p style="margin:8px 0 0;font-size:14.5px;line-height:1.5">No hace falta cuenta para <strong>buscar un servicio</strong> ni para <strong>pedir algo en el muro</strong>: eso funciona sin registro. Y si vas a ofrecer tu trabajo pero no manejas Google, la fundación te da de alta en persona.</p>
+<div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:13px">
+<button type="button" onClick="{{ irInicio }}" style="height:44px;padding:0 15px;background:#fff;border:0;border-radius:22px;box-shadow:0 1px 2px rgba(29,29,27,.13);font:700 14.5px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#B8F000">Seguir sin cuenta</button>
+<button type="button" onClick="{{ irContactos }}" style="height:44px;padding:0 15px;background:transparent;border:0;font:600 14.5px/1 Poppins,sans-serif;color:#1D1D1B;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Alta con la fundación</button>
+</div>
+</div>
+
+<div style="flex:1;min-height:20px"></div>
+<button type="button" onClick="{{ irAyuda }}" style="width:100%;display:flex;align-items:center;gap:11px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:14px;padding:16px 18px;font:500 16px/1 Poppins,sans-serif;color:#1D1D1B;cursor:pointer;text-align:left" style-hover="background:#FBFDF0">
+<span style="flex:none">◍</span><span style="flex:1">Ayuda con la plataforma</span><span style="flex:none;color:#6F5A4A">›</span>
+</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ es04 }}">
+<div style="padding:44px 24px 28px;display:flex;flex-direction:column;align-items:center;min-height:100%">
+<div style="position:relative;width:116px;height:116px;display:flex;align-items:center;justify-content:center">
+<span style="position:absolute;inset:0;border-radius:50%;background:#B8F000;border:0;box-shadow:4px 4px 0 #1D1D1B"></span>
+<span style="position:relative;font:900 44px/1 Montserrat,sans-serif">✓</span>
+</div>
+<h1 style="margin:26px 0 0;text-align:center;font:900 32px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Tu carné<br>quedó abierto</h1>
+<p style="margin:14px 0 0;text-align:center;font-size:16.5px;line-height:1.5;color:#3A362F;text-wrap:pretty">Ya apareces en el directorio. Un miembro de la fundación va a llamarte para verificar tu teléfono; hasta entonces tu ficha se ve sin sello.</p>
+<div style="margin-top:24px;width:100%;background:#fff;border:0;border-radius:16px;box-shadow:5px 5px 0 #F4C542;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:#1D1D1B">
+<span style="font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#B8F000">CARNÉ DE PRESTADOR</span>
+<span style="font:500 10.5px/1 'Geist Mono',monospace;letter-spacing:.1em;color:#F5EEE2">SR-247543</span>
+</div>
+<div style="padding:16px">
+<div style="display:flex;align-items:center;gap:12px">
+<span style="flex:none;width:50px;height:50px;border-radius:50%;background:#F5EEE2;border:0"></span>
+<div><p style="margin:0;font:900 19px/1.1 Montserrat,sans-serif">Marta Ríos</p><p style="margin:3px 0 0;font-size:15px;color:#3A362F">Cali, Valle del Cauca</p></div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:13px">
+<span style="padding:5px 11px;background:#FEF6DE;border:0;border-radius:20px;font:600 13px/1 Poppins,sans-serif">! Sin verificar</span>
+<span style="padding:5px 11px;background:#DFF0FA;border:0;border-radius:20px;font:600 13px/1 Poppins,sans-serif">Salud</span>
+</div>
+</div>
+</div>
+<button type="button" onClick="{{ irInicio }}" style="margin-top:24px;width:100%;height:54px;background:#B8F000;border:0;border-radius:12px;box-shadow:3px 3px 0 #1D1D1B;font:700 17.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">Ir al inicio</button>
+<button type="button" onClick="{{ irFormulario }}" style="margin-top:12px;width:100%;height:54px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:12px;font:600 17px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#FBFDF0">Completar mi ficha</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ es05 }}">
+<div style="padding:8px 0 20px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 20px 14px">
+<div style="display:flex;align-items:center;gap:9px;min-width:0">
+<img src="docs/marca/isotipo-carrito.png" alt="" style="width:40px;height:40px;object-fit:contain;flex:none;mix-blend-mode:multiply">
+<span style="padding:4px 11px;background:#B8F000;border:0;border-radius:5px;font:900 14.5px/1.2 Montserrat,sans-serif;letter-spacing:.08em">AQUÍ VE</span>
+</div>
+<button type="button" onClick="{{ irLogin }}" style="flex:none;height:40px;padding:0 15px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:20px;font:600 14.5px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#FBFDF0">Entrar</button>
+</div>
+
+<div style="padding:0 20px">
+<h1 style="margin:0;font:900 27px/1.06 Montserrat,sans-serif;letter-spacing:-.015em">Hoy en tu barrio</h1>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px">
+<button type="button" onClick="{{ irCategorias }}" style="padding:0;background:#fff;border:0;border-radius:13px;box-shadow:3px 3px 0 #2860A8;overflow:hidden;cursor:pointer;font-family:inherit" style-active="transform:translate(1px,1px);box-shadow:2px 2px 0 #2860A8">
+<span style="display:flex;height:52px;align-items:center;justify-content:center;background:#2860A8">
+<svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+</span>
+<span style="display:block;padding:9px 4px;font:600 14px/1 Poppins,sans-serif">Servicio</span>
+</button>
+<button type="button" onClick="{{ irProducto }}" style="padding:0;background:#fff;border:0;border-radius:13px;box-shadow:3px 3px 0 #F4C542;overflow:hidden;cursor:pointer;font-family:inherit" style-active="transform:translate(1px,1px);box-shadow:2px 2px 0 #F4C542">
+<span style="display:flex;height:52px;align-items:center;justify-content:center;background:#F4C542">
+<svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#1D1D1B" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 10a4 4 0 0 1-8 0"></path><path d="M3.103 6.034h17.794"></path><path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z"></path></svg>
+</span>
+<span style="display:block;padding:9px 4px;font:600 14px/1 Poppins,sans-serif">Producto</span>
+</button>
+<button type="button" onClick="{{ irMuro }}" style="padding:0;background:#fff;border:0;border-radius:13px;box-shadow:3px 3px 0 #E86F87;overflow:hidden;cursor:pointer;font-family:inherit" style-active="transform:translate(1px,1px);box-shadow:2px 2px 0 #E86F87">
+<span style="display:flex;height:52px;align-items:center;justify-content:center;background:#E86F87">
+<svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#1D1D1B" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+</span>
+<span style="display:block;padding:9px 4px;font:600 14px/1 Poppins,sans-serif">Donar</span>
+</button>
+</div>
+</div>
+
+<div style="margin-top:22px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 20px">
+<p style="margin:0;font:900 19px/1 Montserrat,sans-serif">Disponibles ahora</p>
+<button type="button" onClick="{{ irListado }}" style="background:none;border:0;padding:0;font:600 14.5px/1 Poppins,sans-serif;color:#2860A8;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Ver todo</button>
+</div>
+<div style="display:flex;gap:12px;margin-top:12px;padding:0 20px 6px;overflow-x:auto">
+<sc-for list="{{ disponibles }}" as="d" hint-placeholder-count="3">
+<button type="button" onClick="{{ d.ir }}" style="flex:none;width:186px;padding:0;background:#fff;border:0;border-radius:14px;box-shadow:4px 4px 0 {{ d.color }};overflow:hidden;cursor:pointer;font-family:inherit;text-align:left" style-active="transform:translate(2px,2px);box-shadow:2px 2px 0 {{ d.color }}">
+<span style="display:flex;align-items:center;justify-content:space-between;padding:7px 11px;background:{{ d.color }}">
+<span style="font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:{{ d.tinta }}">{{ d.categoria }}</span>
+<span style="padding:2px 7px;background:#B8F000;border:0;border-radius:10px;font:700 10.5px/1.3 Poppins,sans-serif;color:#1D1D1B">HOY</span>
+</span>
+<span style="display:block;padding:12px 12px 14px">
+<span style="display:block;font:900 17px/1.15 Montserrat,sans-serif">{{ d.nombre }}</span>
+<span style="display:block;margin-top:3px;font-size:14.5px;color:#3A362F">{{ d.oficio }}</span>
+<span style="display:block;margin-top:9px;font:600 14.5px/1 Poppins,sans-serif">{{ d.precio }}</span>
+<span style="display:block;margin-top:4px;font-size:13.5px;color:#6F5A4A">{{ d.donde }}</span>
+</span>
+</button>
+</sc-for>
+</div>
+</div>
+
+<div style="padding:14px 20px 0">
+<div style="background:#fff;border:0;border-radius:15px;box-shadow:4px 4px 0 #E86F87;padding:15px 16px">
+<p style="margin:0;font:900 18px/1.1 Montserrat,sans-serif">¿Tienes algo que ya no usas?</p>
+<p style="margin:7px 0 0;font-size:15.5px;line-height:1.45;color:#3A362F">El muro de donación es del barrio: publicas, alguien lo pide y se acuerdan por chat.</p>
+<button type="button" onClick="{{ irMuro }}" style="margin-top:13px;height:46px;padding:0 18px;background:#B8F000;border:0;border-radius:23px;box-shadow:3px 3px 0 #1D1D1B;font:700 15.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">Abrir el muro</button>
+</div>
+</div>
+
+<div style="padding:22px 20px 0">
+<p style="margin:0;font:900 19px/1 Montserrat,sans-serif">Lo que dice la gente</p>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+<sc-for list="{{ reviews }}" as="r" hint-placeholder-count="2">
+<div style="background:#fff;border-radius:14px;padding:13px 15px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+<span style="font:600 15.5px/1 Poppins,sans-serif">{{ r.oficio }}</span>
+<span style="font-size:14px;letter-spacing:.1em;color:#6F5A4A">{{ r.estrellas }}</span>
+</div>
+<p style="margin:8px 0 0;font-size:15.5px;line-height:1.45;color:#3A362F">{{ r.texto }}</p>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es05d }}">
+<div style="padding:8px 0 20px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 20px 14px">
+<div style="display:flex;align-items:center;gap:9px;min-width:0">
+<img src="docs/marca/isotipo-carrito.png" alt="" style="width:40px;height:40px;object-fit:contain;flex:none;mix-blend-mode:multiply">
+<span style="padding:4px 11px;background:#B8F000;border-radius:5px;font:900 14.5px/1.2 Montserrat,sans-serif;letter-spacing:.08em">AQUÍ VE</span>
+</div>
+<button type="button" onClick="{{ irLogin }}" style="border:0;flex:none;height:40px;padding:0 15px;background:#fff;border-radius:20px;font:600 14.5px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#FBFDF0">Entrar</button>
+</div>
+
+<div style="padding:0 20px">
+<h1 style="margin:0;font:900 27px/1.06 Montserrat,sans-serif;letter-spacing:-.015em">Hoy en tu barrio</h1>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px">
+<button type="button" onClick="{{ irCategorias }}" style="padding:0;background:#fff;border:0;border-radius:13px;box-shadow:3px 3px 0 #2860A8;overflow:hidden;cursor:pointer;font-family:inherit" style-active="transform:translate(1px,1px);box-shadow:2px 2px 0 #2860A8">
+<span style="display:flex;height:52px;align-items:center;justify-content:center;background:#2860A8">
+<svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+</span>
+<span style="display:block;padding:9px 4px;font:600 14px/1 Poppins,sans-serif">Servicio</span>
+</button>
+<button type="button" onClick="{{ irProducto }}" style="padding:0;background:#fff;border:0;border-radius:13px;box-shadow:3px 3px 0 #F4C542;overflow:hidden;cursor:pointer;font-family:inherit" style-active="transform:translate(1px,1px);box-shadow:2px 2px 0 #F4C542">
+<span style="display:flex;height:52px;align-items:center;justify-content:center;background:#F4C542">
+<svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#1D1D1B" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 10a4 4 0 0 1-8 0"></path><path d="M3.103 6.034h17.794"></path><path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z"></path></svg>
+</span>
+<span style="display:block;padding:9px 4px;font:600 14px/1 Poppins,sans-serif">Producto</span>
+</button>
+<button type="button" onClick="{{ irMuro }}" style="padding:0;background:#fff;border:0;border-radius:13px;box-shadow:3px 3px 0 #E86F87;overflow:hidden;cursor:pointer;font-family:inherit" style-active="transform:translate(1px,1px);box-shadow:2px 2px 0 #E86F87">
+<span style="display:flex;height:52px;align-items:center;justify-content:center;background:#E86F87">
+<svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#1D1D1B" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+</span>
+<span style="display:block;padding:9px 4px;font:600 14px/1 Poppins,sans-serif">Donar</span>
+</button>
+</div>
+</div>
+
+<div style="margin-top:22px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 20px">
+<p style="margin:0;font:900 19px/1 Montserrat,sans-serif">Disponibles ahora</p>
+<button type="button" onClick="{{ irListado }}" style="background:none;border:0;padding:0;font:600 14.5px/1 Poppins,sans-serif;color:#2860A8;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Ver todo</button>
+</div>
+<div style="display:flex;gap:12px;margin-top:12px;padding:0 20px 6px;overflow-x:auto">
+<sc-for list="{{ disponibles }}" as="d" hint-placeholder-count="3">
+<button type="button" onClick="{{ d.ir }}" style="border:0;flex:none;width:186px;padding:0;background:#fff;border-radius:14px;box-shadow:4px 4px 0 {{ d.color }};overflow:hidden;cursor:pointer;font-family:inherit;text-align:left;display:flex;flex-direction:column" style-active="transform:translate(2px,2px);box-shadow:2px 2px 0 {{ d.color }}">
+<span style="display:flex;align-items:center;justify-content:space-between;padding:7px 11px;background:{{ d.color }}">
+<span style="font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:{{ d.tinta }}">{{ d.categoria }}</span>
+<span style="padding:2px 7px;background:#B8F000;border-radius:10px;font:700 10.5px/1.3 Poppins,sans-serif;color:#1D1D1B">HOY</span>
+</span>
+<span style="display:block;padding:12px 12px 14px">
+<span style="display:block;font:900 17px/1.15 Montserrat,sans-serif">{{ d.nombre }}</span>
+<span style="display:block;margin-top:3px;font-size:14.5px;color:#3A362F">{{ d.oficio }}</span>
+<span style="display:block;margin-top:9px;font:600 14.5px/1 Poppins,sans-serif">{{ d.precio }}</span>
+<span style="display:block;margin-top:4px;font-size:13.5px;color:#6F5A4A">{{ d.donde }}</span>
+</span>
+</button>
+</sc-for>
+</div>
+</div>
+
+<div style="padding:14px 20px 0">
+<div style="background:#fff;border-radius:15px;box-shadow:4px 4px 0 #E86F87;padding:15px 16px">
+<p style="margin:0;font:900 18px/1.1 Montserrat,sans-serif">¿Tienes algo que ya no usas?</p>
+<p style="margin:7px 0 0;font-size:15.5px;line-height:1.45;color:#3A362F">El muro de donación es del barrio: publicas, alguien lo pide y se acuerdan por chat.</p>
+<button type="button" onClick="{{ irMuro }}" style="border:0;margin-top:13px;height:46px;padding:0 18px;background:#B8F000;border-radius:23px;box-shadow:3px 3px 0 #1D1D1B;font:700 15.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">Abrir el muro</button>
+</div>
+</div>
+
+<div style="padding:22px 20px 0">
+<p style="margin:0;font:900 19px/1 Montserrat,sans-serif">Lo que dice la gente</p>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+<sc-for list="{{ reviews }}" as="r" hint-placeholder-count="2">
+<div style="background:#fff;border-radius:14px;box-shadow:3px 3px 0 #F4C542;padding:13px 15px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+<span style="font:600 15.5px/1 Poppins,sans-serif">{{ r.oficio }}</span>
+<span style="font-size:14px;letter-spacing:.1em;color:#6F5A4A">{{ r.estrellas }}</span>
+</div>
+<p style="margin:8px 0 0;font-size:15.5px;line-height:1.45;color:#3A362F">{{ r.texto }}</p>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es05e }}">
+<div style="padding:8px 0 20px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 20px 14px">
+<div style="display:flex;align-items:center;gap:9px;min-width:0">
+<img src="docs/marca/isotipo-carrito.png" alt="" style="width:40px;height:40px;object-fit:contain;flex:none;mix-blend-mode:multiply">
+<span style="padding:4px 11px;background:#B8F000;border-radius:5px;font:900 14.5px/1.2 Montserrat,sans-serif;letter-spacing:.08em">AQUÍ VE</span>
+</div>
+<button type="button" onClick="{{ irLogin }}" style="flex:none;height:40px;padding:0 15px;background:#fff;border:0;border-radius:20px;box-shadow:2px 2px 0 #DCE8F5;font:600 14.5px/1 Poppins,sans-serif;cursor:pointer" style-hover="box-shadow:2px 2px 0 #2860A8">Entrar</button>
+</div>
+
+<div style="padding:0 20px">
+<h1 style="margin:0;font:900 27px/1.06 Montserrat,sans-serif;letter-spacing:-.015em">Hoy en tu barrio</h1>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:14px">
+<button type="button" onClick="{{ irCategorias }}" style="padding:0;background:#DCE8F5;border:0;border-radius:13px;box-shadow:3px 3px 0 #2860A8;overflow:hidden;cursor:pointer;font-family:inherit" style-active="transform:translate(1px,1px);box-shadow:2px 2px 0 #2860A8">
+<span style="display:flex;height:52px;align-items:center;justify-content:center;background:#2860A8">
+<svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+</span>
+<span style="display:block;padding:9px 4px;font:600 14px/1 Poppins,sans-serif;color:#2A2620">Servicio</span>
+</button>
+<button type="button" onClick="{{ irProducto }}" style="padding:0;background:#FBEFCF;border:0;border-radius:13px;box-shadow:3px 3px 0 #F4C542;overflow:hidden;cursor:pointer;font-family:inherit" style-active="transform:translate(1px,1px);box-shadow:2px 2px 0 #F4C542">
+<span style="display:flex;height:52px;align-items:center;justify-content:center;background:#F4C542">
+<svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#1D1D1B" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 10a4 4 0 0 1-8 0"></path><path d="M3.103 6.034h17.794"></path><path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z"></path></svg>
+</span>
+<span style="display:block;padding:9px 4px;font:600 14px/1 Poppins,sans-serif;color:#2A2620">Producto</span>
+</button>
+<button type="button" onClick="{{ irMuro }}" style="padding:0;background:#F9DEE4;border:0;border-radius:13px;box-shadow:3px 3px 0 #E86F87;overflow:hidden;cursor:pointer;font-family:inherit" style-active="transform:translate(1px,1px);box-shadow:2px 2px 0 #E86F87">
+<span style="display:flex;height:52px;align-items:center;justify-content:center;background:#E86F87">
+<svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="#1D1D1B" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+</span>
+<span style="display:block;padding:9px 4px;font:600 14px/1 Poppins,sans-serif;color:#2A2620">Donar</span>
+</button>
+</div>
+</div>
+
+<div style="margin-top:22px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 20px">
+<p style="margin:0;font:900 19px/1 Montserrat,sans-serif">Disponibles ahora</p>
+<button type="button" onClick="{{ irListado }}" style="background:transparent;border:0;padding:0;font:600 14.5px/1 Poppins,sans-serif;color:#2860A8;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Ver todo</button>
+</div>
+<div style="display:flex;gap:12px;margin-top:12px;padding:0 20px 6px;overflow-x:auto">
+<sc-for list="{{ disponiblesDiversos }}" as="d" hint-placeholder-count="3">
+<button type="button" onClick="{{ d.ir }}" style="flex:none;width:186px;padding:0;background:{{ d.tinte }};border:0;border-radius:14px;box-shadow:4px 4px 0 {{ d.color }};overflow:hidden;cursor:pointer;font-family:inherit;text-align:left;display:flex;flex-direction:column" style-active="transform:translate(2px,2px);box-shadow:2px 2px 0 {{ d.color }}">
+<span style="display:flex;align-items:center;justify-content:space-between;padding:7px 11px;background:{{ d.color }}">
+<span style="font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:{{ d.tinta }}">{{ d.categoria }}</span>
+<span style="padding:2px 7px;background:#B8F000;border-radius:10px;font:700 10.5px/1.3 Poppins,sans-serif;color:#1D1D1B">HOY</span>
+</span>
+<span style="display:block;padding:12px 12px 8px">
+<span style="display:block;font:900 17px/1.15 Montserrat,sans-serif;color:#2A2620">{{ d.nombre }}</span>
+<span style="display:block;margin-top:3px;font-size:14.5px;color:#4A443B">{{ d.oficio }}</span>
+</span>
+<span style="display:block;margin:0 8px 8px;padding:9px 10px;background:#fff;border-radius:9px">
+<span style="display:block;font:600 14.5px/1 Poppins,sans-serif;color:#2A2620">{{ d.precio }}</span>
+<span style="display:block;margin-top:4px;font-size:13px;color:#6F5A4A">{{ d.donde }}</span>
+</span>
+</button>
+</sc-for>
+</div>
+</div>
+
+<div style="padding:14px 20px 0">
+<div style="background:#F9DEE4;border-radius:15px;box-shadow:4px 4px 0 #E86F87;padding:15px 16px">
+<p style="margin:0;font:900 18px/1.1 Montserrat,sans-serif;color:#2A2620">¿Tienes algo que ya no usas?</p>
+<p style="margin:7px 0 0;font-size:15.5px;line-height:1.45;color:#4A443B">El muro de donación es del barrio: publicas, alguien lo pide y se acuerdan por chat.</p>
+<button type="button" onClick="{{ irMuro }}" style="margin-top:13px;height:46px;padding:0 18px;background:#B8F000;border:0;border-radius:23px;box-shadow:3px 3px 0 #7A9E00;font:700 15.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #7A9E00">Abrir el muro</button>
+</div>
+</div>
+
+<div style="padding:22px 20px 0">
+<p style="margin:0;font:900 19px/1 Montserrat,sans-serif">Lo que dice la gente</p>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+<sc-for list="{{ reviewsDiversas }}" as="r" hint-placeholder-count="2">
+<div style="background:{{ r.tinte }};border-radius:14px;box-shadow:3px 3px 0 {{ r.color }};padding:13px 15px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+<span style="font:600 15.5px/1 Poppins,sans-serif;color:#2A2620">{{ r.oficio }}</span>
+<span style="font-size:14px;letter-spacing:.1em;color:#4A443B">{{ r.estrellas }}</span>
+</div>
+<p style="margin:8px 0 0;font-size:15.5px;line-height:1.45;color:#4A443B">{{ r.texto }}</p>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es06 }}">
+<div style="padding:12px 20px 20px">
+<h1 style="margin:0;font:900 31px/1.02 Montserrat,sans-serif;letter-spacing:-.015em">Categorías</h1>
+<p style="margin:8px 0 0;font-size:16px;color:#3A362F">Cada color es un lado de la sombrilla.</p>
+<div style="display:flex;align-items:center;gap:10px;margin-top:16px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:13px;padding:14px 15px">
+<span style="color:#6F5A4A;font-size:16px">⌕</span>
+<span style="font-size:16px;color:#6F5A4A">Buscar un oficio</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
+<sc-for list="{{ categorias }}" as="c" hint-placeholder-count="6">
+<button type="button" onClick="{{ c.ir }}" style="padding:0;background:#fff;border:0;border-radius:15px;box-shadow:4px 4px 0 {{ c.color }};overflow:hidden;cursor:pointer;font-family:inherit;text-align:left" style-active="transform:translate(2px,2px);box-shadow:2px 2px 0 {{ c.color }}">
+<span style="display:block;height:34px;background:{{ c.color }};background-image:repeating-linear-gradient(45deg,rgba(29,29,27,.12) 0 1px,transparent 1px 7px)"></span>
+<span style="display:block;padding:12px 13px 14px">
+<span style="display:block;font:900 18px/1.1 Montserrat,sans-serif">{{ c.nombre }}</span>
+<span style="display:block;margin-top:6px;font:600 14px/1 Poppins,sans-serif;color:#1D1D1B">{{ c.cerca }} cerca</span>
+<span style="display:block;margin-top:5px;font-size:13.5px;line-height:1.35;color:#6F5A4A">{{ c.ejemplo }}</span>
+</span>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es07 }}">
+<div style="padding:12px 0 20px">
+<div style="padding:0 20px">
+<button type="button" onClick="{{ irCategorias }}" style="display:flex;align-items:center;gap:8px;background:none;border:0;padding:6px 0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A;cursor:pointer">‹ SALUD</button>
+<h1 style="margin:9px 0 0;font:900 29px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">14 personas<br>cerca de ti</h1>
+</div>
+<div style="display:flex;gap:9px;margin-top:14px;padding:0 20px 8px;overflow-x:auto">
+<button type="button" onClick="{{ irMapa }}" style="flex:none;height:42px;padding:0 15px;background:#B8F000;border:0;border-radius:21px;box-shadow:3px 3px 0 #1D1D1B;font:700 14.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">◍ Ver el mapa</button>
+<span style="flex:none;height:42px;padding:0 15px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:21px;display:flex;align-items:center;font:600 14.5px/1 Poppins,sans-serif">Disponible hoy ✕</span>
+<span style="flex:none;height:42px;padding:0 15px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:21px;display:flex;align-items:center;font-size:14.5px">A domicilio</span>
+<span style="flex:none;height:42px;padding:0 15px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:21px;display:flex;align-items:center;font-size:14.5px">Filtros</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:13px;margin-top:8px;padding:0 20px">
+<sc-for list="{{ personas }}" as="x" hint-placeholder-count="4">
+<div style="background:#fff;border:0;border-radius:15px;box-shadow:4px 4px 0 {{ x.color }};overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:{{ x.color }}">
+<span style="font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:{{ x.tinta }}">{{ x.categoria }}</span>
+<span style="padding:2px 8px;background:{{ x.fondoSello }};border:0;border-radius:10px;font:700 10.5px/1.3 Poppins,sans-serif;color:#1D1D1B">{{ x.sello }}</span>
+</div>
+<div style="padding:13px 14px 14px">
+<div style="display:flex;align-items:flex-start;gap:11px">
+<span style="flex:none;width:44px;height:44px;border-radius:11px;background:#F5EEE2;border:0"></span>
+<div style="flex:1;min-width:0">
+<p style="margin:0;font:900 17.5px/1.15 Montserrat,sans-serif">{{ x.nombre }}</p>
+<p style="margin:3px 0 0;font-size:14.5px;color:#3A362F">{{ x.oficio }}</p>
+</div>
+<span style="flex:none;text-align:right"><span style="display:block;font:600 15px/1 Poppins,sans-serif">{{ x.precio }}</span><span style="display:block;margin-top:4px;font-size:13px;color:#6F5A4A">{{ x.unidad }}</span></span>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding-top:11px;border-top:1px solid #EFE9DE">
+<span style="font-size:14px;color:#6F5A4A">{{ x.donde }} · {{ x.estrellas }}</span>
+<button type="button" onClick="{{ x.ir }}" style="flex:none;height:40px;padding:0 16px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:20px;font:700 14.5px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#B8F000">Ver ficha</button>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es08 }}">
+<div style="padding:12px 0 20px">
+<div style="padding:0 20px">
+<button type="button" onClick="{{ irListado }}" style="display:flex;align-items:center;gap:8px;background:none;border:0;padding:6px 0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A;cursor:pointer">‹ SALUD · 14 PERSONAS</button>
+<h1 style="margin:9px 0 0;font:900 29px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Dónde hay<br>gente cerca</h1>
+</div>
+<div style="position:relative;margin-top:14px;height:318px;background:#EFE7D8;background-image:repeating-linear-gradient(135deg,rgba(29,29,27,.07) 0 1px,transparent 1px 10px)">
+<span style="position:absolute;left:14px;top:12px;padding:3px 8px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:4px;font:700 10px/1.3 Montserrat,sans-serif;letter-spacing:.085em">MAPA BASE · CALI</span>
+<sc-for list="{{ pines }}" as="pin" hint-placeholder-count="4">
+<button type="button" onClick="{{ pin.ir }}" style="position:absolute;left:{{ pin.x }};top:{{ pin.y }};transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;background:none;border:0;padding:0;cursor:pointer;font-family:inherit">
+<span style="display:flex;align-items:center;gap:6px;padding:5px 10px;background:#fff;border:0;border-radius:18px;box-shadow:3px 3px 0 {{ pin.color }};white-space:nowrap">
+<span style="width:9px;height:9px;border-radius:50%;background:{{ pin.color }};border:0"></span>
+<span style="font:700 13.5px/1 Poppins,sans-serif">{{ pin.zona }}</span>
+<span style="padding:1px 6px;background:#B8F000;border:0;border-radius:9px;font:700 11.5px/1.35 Poppins,sans-serif">{{ pin.n }}</span>
+</span>
+<span style="width:2px;height:14px;background:#1D1D1B"></span>
+<span style="width:8px;height:8px;border-radius:50%;background:#1D1D1B"></span>
+</button>
+</sc-for>
+</div>
+<div style="padding:14px 20px 0">
+<div style="display:flex;gap:9px;padding:12px 14px;background:#FEF6DE;border:0;border-radius:14px">
+<span style="flex:none">◍</span>
+<p style="margin:0;font-size:14.5px;line-height:1.45;text-wrap:pretty">Cada globo es una <strong>zona</strong>, no una persona: dice cuánta gente trabaja ahí. Nadie publica su dirección y AquíVe no la guarda.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+<sc-for list="{{ zonas }}" as="z" hint-placeholder-count="4">
+<button type="button" onClick="{{ z.ir }}" style="display:flex;align-items:center;gap:12px;padding:14px 15px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:13px;cursor:pointer;font-family:inherit;text-align:left" style-hover="background:#FBFDF0">
+<span style="flex:none;width:11px;height:11px;border-radius:50%;background:{{ z.color }};border:0"></span>
+<span style="flex:1;min-width:0;font:700 16.5px/1.2 Poppins,sans-serif">{{ z.nombre }}</span>
+<span style="flex:none;font-size:14.5px;color:#3A362F">{{ z.cuantos }}</span>
+<span style="flex:none;color:#6F5A4A">›</span>
+</button>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es09 }}">
+<div style="padding:10px 0 0">
+<div style="padding:0 20px">
+<button type="button" onClick="{{ irListado }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Volver</button>
+</div>
+<div style="margin:10px 20px 0;background:#fff;border:0;border-radius:17px;box-shadow:5px 5px 0 #2860A8;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 15px;background:#1D1D1B">
+<span style="font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#B8F000">CARNÉ DE PRESTADOR</span>
+<span style="font:500 10.5px/1 'Geist Mono',monospace;letter-spacing:.1em;color:#F5EEE2">SR-247543</span>
+</div>
+<div style="height:9px;background:#2860A8"></div>
+<div style="padding:16px 16px 18px">
+<div style="display:flex;align-items:flex-start;gap:13px">
+<span style="flex:none;width:60px;height:60px;border-radius:14px;background:#F5EEE2;border:0"></span>
+<div style="flex:1;min-width:0">
+<h1 style="margin:0;font:900 25px/1.06 Montserrat,sans-serif;letter-spacing:-.01em">Marta Ríos</h1>
+<p style="margin:4px 0 0;font-size:16px;color:#3A362F">Enfermera a domicilio</p>
+<p style="margin:5px 0 0;font-size:14.5px;color:#6F5A4A">Comuna 19 · Cali, Valle del Cauca</p>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:14px">
+<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;background:#B8F000;border:0;border-radius:20px;font:700 13px/1 Poppins,sans-serif">✓ Teléfono verificado</span>
+<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;background:#DFF3EC;border:0;border-radius:20px;font:600 13px/1 Poppins,sans-serif">2 referencias</span>
+<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;background:#F5EEE2;border:0;border-radius:20px;font:600 13px/1 Poppins,sans-serif">9 servicios confirmados</span>
+</div>
+<button type="button" onClick="{{ alternarSellos }}" style="width:100%;display:flex;align-items:center;gap:10px;margin-top:14px;padding:12px 13px;background:#F5EEE2;border:0;border-radius:11px;font:600 15px/1 Poppins,sans-serif;cursor:pointer;text-align:left" style-hover="background:#FBFDF0">
+<span>ⓘ</span><span style="flex:1">Qué comprobamos y qué no</span><span>{{ galonSellos }}</span>
+</button>
+<sc-if value="{{ sellosAbiertos }}">
+<div style="margin-top:11px;padding:13px 14px;background:#F5EEE2;border:0;border-radius:11px">
+<p style="margin:0;font-size:14.5px;line-height:1.5;text-wrap:pretty">Teléfono verificado significa que alguien de la fundación llamó a ese número y contestó esta persona. Con referencias significa que dio el contacto de un cliente anterior y que ese cliente confirmó. Servicios confirmados es cuántas veces alguien usó su código después de un trabajo. Ninguna de las tres comprueba su identidad ni su experiencia, y una referencia la puede dar un conocido.</p>
+</div>
+</sc-if>
+</div>
+</div>
+
+<div style="padding:20px 20px 0">
+<p style="margin:0;font-size:16.5px;line-height:1.5;text-wrap:pretty">Auxiliar de enfermería con ocho años en atención domiciliaria. Curaciones, control de signos y acompañamiento a adultos mayores.</p>
+
+<h2 style="margin:24px 0 0;font:900 21px/1.1 Montserrat,sans-serif">Qué hace</h2>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+<sc-for list="{{ oficiosFicha }}" as="o" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:12px;padding:14px 15px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:13px">
+<span style="flex:1;min-width:0;font:600 16px/1.3 Poppins,sans-serif">{{ o.nombre }}</span>
+<span style="flex:none;text-align:right"><span style="display:block;font:700 15.5px/1 Poppins,sans-serif">{{ o.monto }}</span><span style="display:block;margin-top:4px;font-size:13px;color:#6F5A4A">{{ o.detalle }}</span></span>
+</div>
+</sc-for>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:1px;margin-top:22px;background:#1D1D1B;border:0;border-radius:14px;overflow:hidden">
+<sc-for list="{{ datosFicha }}" as="d" hint-placeholder-count="3">
+<div style="display:flex;gap:12px;padding:14px 15px;background:#fff">
+<span style="flex:none;width:22px;font-size:15px;color:#6F5A4A">{{ d.glifo }}</span>
+<div style="min-width:0">
+<p style="margin:0;font:600 15.5px/1.35 Poppins,sans-serif">{{ d.valor }}</p>
+<p style="margin:4px 0 0;font-size:14px;line-height:1.4;color:#6F5A4A">{{ d.nota }}</p>
+</div>
+</div>
+</sc-for>
+</div>
+
+<div style="margin-top:20px;padding:15px 16px;background:#F4C542;border:0;border-radius:15px;box-shadow:4px 4px 0 #1D1D1B">
+<p style="margin:0;font:900 16.5px/1.15 Montserrat,sans-serif">Antes de acordar</p>
+<p style="margin:9px 0 0;font-size:14.5px;line-height:1.5;text-wrap:pretty">AquíVe no maneja dinero y no interviene en el pago. Acuerda el precio antes de empezar y paga cuando el trabajo esté hecho: nadie de esta plataforma debería pedirte un adelanto para reservarte el cupo.</p>
+<p style="margin:10px 0 0;font-size:14.5px;line-height:1.5;text-wrap:pretty">Si el servicio es en tu casa, cuéntale a alguien quién viene, a qué hora y cuánto va a durar. Puedes pedir que el primer encuentro sea en un lugar público.</p>
+</div>
+
+<h2 style="margin:26px 0 0;font:900 21px/1.1 Montserrat,sans-serif">Qué dice quien la contrató</h2>
+<div style="display:flex;align-items:flex-end;gap:14px;margin-top:14px">
+<span style="font:900 46px/.9 Montserrat,sans-serif">9</span>
+<span style="padding-bottom:5px;font-size:15.5px;line-height:1.3;color:#3A362F">servicios<br>confirmados</span>
+<span style="margin-left:auto;padding-bottom:5px;text-align:right;font-size:14.5px;color:#6F5A4A">6 calificaciones<br>promedio 4,6</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:11px;margin-top:16px">
+<sc-for list="{{ criterios }}" as="c" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:11px">
+<span style="flex:none;width:100px;font-size:14.5px;color:#3A362F">{{ c.nombre }}</span>
+<span style="flex:1;height:12px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:7px;overflow:hidden"><span style="display:block;height:100%;width:{{ c.ancho }};background:#38B58C"></span></span>
+<span style="flex:none;width:26px;text-align:right;font:700 14.5px/1 Poppins,sans-serif">{{ c.valor }}</span>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:16px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:14px;padding:14px 15px">
+<p style="margin:0;font-size:16px;line-height:1.5">Llegó a la hora acordada y le explicó todo lo de la curación a mi mamá. Volvería a llamarla.</p>
+<div style="margin-top:12px;padding:11px 12px;background:#F5EEE2;border-left:4px solid #38B58C;border-radius:0 8px 8px 0">
+<p style="margin:0;font-size:15px;line-height:1.45;color:#3A362F"><strong>Respuesta de Marta Ríos:</strong> Gracias, cualquier cosa me escriben.</p>
+</div>
+</div>
+<p style="margin:14px 0 22px;font-size:14.5px;line-height:1.5;color:#6F5A4A;text-wrap:pretty">Solo puede calificar quien recibió el código que esta persona entrega al terminar un trabajo, y cada código sirve una sola vez. Aun así son opiniones, no comprobaciones. <button type="button" onClick="{{ irCalificar }}" style="background:none;border:0;padding:0;font:600 14.5px/1 Poppins,sans-serif;color:#2860A8;text-decoration:underline;text-underline-offset:3px;cursor:pointer">Tengo un código</button></p>
+</div>
+</div>
+<div style="position:sticky;bottom:0;background:#F5EEE2;padding:11px 20px 14px">
+<p style="margin:0;font-size:13.5px;line-height:1.4;color:#6F5A4A">Acuerda el precio antes de empezar. <a href="#1a">Cómo cuidarte</a></p>
+<div style="display:flex;align-items:center;gap:11px;margin-top:9px">
+<button type="button" onClick="{{ irPedir }}" style="flex:1;height:56px;background:#B8F000;border:0;border-radius:14px;box-shadow:3px 3px 0 #1D1D1B;font:700 17.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">Pedir el servicio</button>
+<span style="flex:none;width:56px;height:56px;border-radius:50%;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);display:flex;align-items:center;justify-content:center;font-size:21px">✆</span>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es10 }}">
+<div style="padding:10px 20px 20px">
+<button type="button" onClick="{{ irFicha }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Marta Ríos</button>
+<h1 style="margin:12px 0 0;font:900 28px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Cuéntale qué<br>necesitas</h1>
+<div style="display:flex;gap:6px;margin-top:16px">
+<span style="flex:1;height:7px;border-radius:4px;background:#B8F000;border:0"></span>
+<span style="flex:1;height:7px;border-radius:4px;background:#B8F000;border:0"></span>
+<span style="flex:1;height:7px;border-radius:4px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13)"></span>
+</div>
+<p style="margin:9px 0 0;font:700 13.5px/1 Poppins,sans-serif;color:#3A362F">Paso 2 de 3 · El pedido</p>
+
+<div style="margin-top:20px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:15px;padding:16px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">QUÉ SERVICIO</p>
+<div style="margin-top:10px;padding:13px 14px;background:#F5EEE2;border:0;border-radius:11px;display:flex;justify-content:space-between;font:600 16px/1 Poppins,sans-serif"><span>Curaciones</span><span>▾</span></div>
+<p style="margin:8px 0 0;font-size:14px;color:#6F5A4A">Sale del catálogo. Precio de referencia: desde $80.000.</p>
+</div>
+
+<div style="margin-top:14px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:15px;padding:16px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">CUÁNDO LO NECESITAS</p>
+<div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:11px">
+<span style="height:46px;padding:0 16px;background:#B8F000;border:0;border-radius:23px;display:flex;align-items:center;font:700 15px/1 Poppins,sans-serif">Esta semana</span>
+<span style="height:46px;padding:0 16px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:23px;display:flex;align-items:center;font-size:15px">Hoy mismo</span>
+<span style="height:46px;padding:0 16px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:23px;display:flex;align-items:center;font-size:15px">Sin prisa</span>
+</div>
+</div>
+
+<div style="margin-top:14px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:15px;padding:16px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">DÓNDE</p>
+<div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:11px">
+<span style="height:46px;padding:0 16px;background:#B8F000;border:0;border-radius:23px;display:flex;align-items:center;font:700 15px/1 Poppins,sans-serif">Belén</span>
+<span style="height:46px;padding:0 16px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:23px;display:flex;align-items:center;font-size:15px">Comuna 19</span>
+<span style="height:46px;padding:0 16px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:23px;display:flex;align-items:center;font-size:15px">La América</span>
+</div>
+<p style="margin:10px 0 0;font-size:14px;line-height:1.4;color:#6F5A4A">El barrio basta para coordinar. No pedimos la dirección exacta, y la das al final solo si de verdad hace falta.</p>
+</div>
+
+<div style="margin-top:14px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:15px;padding:16px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">QUÉ PUEDES PAGAR</p>
+<div style="display:flex;flex-direction:column;gap:9px;margin-top:11px">
+<span style="min-height:50px;padding:13px 15px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:11px;display:flex;align-items:center;font-size:16px">Puedo pagar la tarifa normal</span>
+<span style="min-height:50px;padding:13px 15px;background:#B8F000;border:0;border-radius:11px;display:flex;align-items:center;font:700 16px/1.3 Poppins,sans-serif">Puedo pagar algo, pero poco</span>
+<span style="min-height:50px;padding:13px 15px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:11px;display:flex;align-items:center;font-size:16px">No puedo pagar ahora</span>
+</div>
+<p style="margin:10px 0 0;font-size:14px;line-height:1.4;color:#6F5A4A">Se lo decimos a Marta antes de que responda. Ella marcó que hace algunos trabajos a precio solidario.</p>
+</div>
+
+<div style="margin-top:14px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:15px;padding:16px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">NOTA (OPCIONAL)</p>
+<div style="margin-top:10px;padding:13px 14px;background:#F5EEE2;border:0;border-radius:11px;min-height:86px;font-size:16px;line-height:1.45">Es para una curación después de una cirugía. Hay quien la reciba en la casa.</div>
+<p style="margin:9px 0 0;display:flex;justify-content:space-between;gap:12px;font-size:13.5px;color:#6F5A4A"><span>Sin teléfonos, correos ni cédulas: el envío se rechaza.</span><span>78/140</span></p>
+</div>
+</div>
+<div style="position:sticky;bottom:0;background:#F5EEE2;padding:12px 20px 14px">
+<button type="button" onClick="{{ irEnviada }}" style="width:100%;height:56px;background:#B8F000;border:0;border-radius:14px;box-shadow:3px 3px 0 #1D1D1B;font:700 17.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">Enviar el pedido</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ es11 }}">
+<div style="padding:56px 22px 24px;display:flex;flex-direction:column;min-height:100%">
+<div style="align-self:center;position:relative;width:96px;height:96px;display:flex;align-items:center;justify-content:center">
+<span style="position:absolute;inset:0;border-radius:50%;background:#B8F000;border:0;box-shadow:4px 4px 0 #1D1D1B"></span>
+<span style="position:relative;font:900 38px/1 Montserrat,sans-serif">✓</span>
+</div>
+<h1 style="margin:24px 0 0;text-align:center;font:900 30px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Tu pedido<br>salió</h1>
+<p style="margin:14px 0 0;text-align:center;font-size:16.5px;line-height:1.5;color:#3A362F;text-wrap:pretty">Marta Ríos lo recibió y se abrió un chat para acordar hora, lugar y precio.</p>
+<div style="margin-top:24px;background:#fff;border:0;border-radius:16px;box-shadow:5px 5px 0 #2860A8;overflow:hidden">
+<div style="height:9px;background:#2860A8"></div>
+<div style="padding:16px">
+<div style="display:flex;align-items:center;gap:12px">
+<span style="flex:none;width:48px;height:48px;border-radius:12px;background:#F5EEE2;border:0"></span>
+<div><p style="margin:0;font:900 18px/1.1 Montserrat,sans-serif">Marta Ríos</p><p style="margin:3px 0 0;font-size:14.5px;color:#3A362F">Enfermera a domicilio</p></div>
+</div>
+<div style="margin-top:15px;display:flex;flex-direction:column;gap:1px;background:#F0E8DA;border-radius:9px;overflow:hidden">
+<sc-for list="{{ resumenPedido }}" as="r" hint-placeholder-count="3">
+<span style="display:flex;justify-content:space-between;gap:12px;padding:11px 12px;background:#fff;font-size:15.5px"><span style="color:#6F5A4A">{{ r.clave }}</span><span style="font-weight:600">{{ r.valor }}</span></span>
+</sc-for>
+</div>
+</div>
+</div>
+<div style="margin-top:16px;padding:13px 14px;background:#FEF6DE;border:0;border-radius:13px">
+<p style="margin:0;font-size:14.5px;line-height:1.45;text-wrap:pretty">Si nadie responde en 24 horas te avisamos y puedes mandarlo a otras dos personas de tu zona con un toque.</p>
+</div>
+<button type="button" onClick="{{ irChat }}" style="margin-top:20px;width:100%;height:56px;background:#B8F000;border:0;border-radius:14px;box-shadow:3px 3px 0 #1D1D1B;font:700 17.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">Abrir el chat</button>
+<button type="button" onClick="{{ irSolicitudes }}" style="margin-top:12px;width:100%;height:54px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:14px;font:600 16.5px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#FBFDF0">Ver mis solicitudes</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ es12 }}">
+<div style="display:flex;flex-direction:column;min-height:100%">
+<div style="flex:none;display:flex;align-items:center;gap:11px;padding:9px 18px 11px;background:#F5EEE2">
+<button type="button" onClick="{{ irSolicitudes }}" style="background:none;border:0;padding:0;font-size:20px;cursor:pointer">‹</button>
+<span style="width:40px;height:40px;border-radius:10px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);flex:none"></span>
+<div style="flex:1;min-width:0"><p style="margin:0;font:900 17px/1.1 Montserrat,sans-serif">Marta Ríos</p><p style="margin:2px 0 0;font-size:13.5px;color:#15705A">● En línea</p></div>
+<span style="flex:none;padding:4px 9px;background:#DFF0FA;border:0;border-radius:10px;font:700 10.5px/1.4 Montserrat,sans-serif;letter-spacing:.085em">SALUD</span>
+</div>
+<div style="flex:1;padding:16px 18px;display:flex;flex-direction:column;gap:11px">
+<div style="align-self:center;padding:5px 12px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:20px;font:700 10.5px/1.4 Montserrat,sans-serif;letter-spacing:.085em">CHAT ABIERTO POR EL PEDIDO</div>
+<sc-for list="{{ mensajes }}" as="m" hint-placeholder-count="4">
+<div style="align-self:{{ m.lado }};max-width:85%;padding:12px 14px;background:{{ m.fondo }};border:0;border-radius:{{ m.radio }};font-size:16px;line-height:1.45">{{ m.texto }}</div>
+</sc-for>
+<div style="margin-top:6px;background:#F4C542;border:0;border-radius:14px;box-shadow:4px 4px 0 #1D1D1B;padding:14px 15px">
+<p style="margin:0;font:900 16px/1.15 Montserrat,sans-serif">El trabajo quedó hecho</p>
+<p style="margin:8px 0 0;font-size:14.5px;line-height:1.45">Marta te dio el código <strong style="font-family:'Geist Mono',monospace;letter-spacing:.1em">7K4M2</strong>. Con él puedes calificarla una sola vez.</p>
+<button type="button" onClick="{{ irCalificar }}" style="margin-top:12px;height:46px;padding:0 18px;background:#1D1D1B;border:0;border-radius:23px;font:700 15px/1 Poppins,sans-serif;color:#B8F000;cursor:pointer" style-hover="background:#000">Calificar el servicio</button>
+</div>
+</div>
+<div style="flex:none;padding:0 18px 12px">
+<div style="display:flex;align-items:center;gap:11px;padding:13px 15px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:14px">
+<span style="flex:1;font-size:16px;color:#6F5A4A">Escribe un mensaje</span>
+<span style="flex:none;width:36px;height:36px;border-radius:50%;background:#B8F000;border:0;display:flex;align-items:center;justify-content:center;font-size:14px">➤</span>
+</div>
+<p style="margin:9px 0 0;font-size:13px;line-height:1.4;color:#6F5A4A">Este chat existe para acordar el trabajo y se cierra con él. No se guardan conversaciones ni se comparten datos de contacto por aquí.</p>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es13 }}">
+<div style="padding:10px 20px 20px">
+<button type="button" onClick="{{ irChat }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Volver</button>
+<h1 style="margin:12px 0 0;font:900 28px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Califica el<br>trabajo</h1>
+<p style="margin:13px 0 0;font-size:16.5px;line-height:1.5;color:#3A362F;text-wrap:pretty">Escribe el código que te dio Marta al terminar. Sirve una sola vez y no viaja en ningún enlace ni en ningún QR: lo tienes porque ella te lo pasó.</p>
+<div style="margin-top:20px;background:#1D1D1B;border:0;border-radius:16px;padding:16px">
+<p style="margin:0;font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#B8F000">CÓDIGO DEL SERVICIO</p>
+<div style="display:flex;gap:9px;margin-top:12px">
+<sc-for list="{{ digitos }}" as="d" hint-placeholder-count="5">
+<span style="flex:1;aspect-ratio:1;background:#F5EEE2;border-radius:10px;display:flex;align-items:center;justify-content:center;font:500 26px/1 'Geist Mono',monospace">{{ d.c }}</span>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:20px">
+<sc-for list="{{ criterios }}" as="c" hint-placeholder-count="3">
+<div style="background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:14px;padding:14px 15px">
+<p style="margin:0;font:700 16.5px/1 Poppins,sans-serif">{{ c.nombre }}</p>
+<p style="margin:5px 0 0;font-size:14px;color:#6F5A4A">{{ c.pregunta }}</p>
+<p style="margin:11px 0 0;font-size:27px;letter-spacing:.14em;color:#1D1D1B">★★★★★</p>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:14px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:14px;padding:15px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">COMENTARIO (OPCIONAL)</p>
+<div style="margin-top:10px;padding:13px 14px;background:#F5EEE2;border:0;border-radius:11px;min-height:86px;font-size:16px;line-height:1.45;color:#6F5A4A">Cuenta cómo fue el trabajo. Sin teléfonos ni nombres de terceros.</div>
+<p style="margin:9px 0 0;text-align:right;font:500 13.5px/1 Poppins,sans-serif;color:#6F5A4A">0/140</p>
+</div>
+<p style="margin:16px 0 0;font-size:14.5px;line-height:1.5;color:#6F5A4A;text-wrap:pretty">Tu calificación queda pública en la ficha, sin tu nombre. Marta puede responderte una vez. Si te la usaron como amenaza, repórtala.</p>
+</div>
+<div style="position:sticky;bottom:0;background:#F5EEE2;padding:12px 20px 14px">
+<button type="button" onClick="{{ irSolicitudes }}" style="width:100%;height:56px;background:#B8F000;border:0;border-radius:14px;box-shadow:3px 3px 0 #1D1D1B;font:700 17.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">Enviar la calificación</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ es14 }}">
+<div style="padding:10px 20px 20px">
+<button type="button" onClick="{{ irBienvenida }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Atrás</button>
+<p style="margin:12px 0 0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">REGISTRO DE PRESTADORES</p>
+<h1 style="margin:8px 0 0;font:900 29px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Arma tu carné</h1>
+<p style="margin:12px 0 0;font-size:16.5px;line-height:1.5;color:#3A362F;text-wrap:pretty">Entraste con Google, así que el nombre y el correo ya están. Se guarda sección por sección: puedes salir y volver. Con tres secciones ya apareces en el directorio.</p>
+
+<div style="margin-top:18px;background:#1D1D1B;border:0;border-radius:15px;padding:15px 16px">
+<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+<span style="font:900 30px/1 Montserrat,sans-serif;color:#B8F000">60%</span>
+<span style="text-align:right;font-size:13.5px;line-height:1.35;color:#F5EEE2">6 de 10 secciones<br>listas</span>
+</div>
+<div style="display:flex;gap:4px;margin-top:12px">
+<sc-for list="{{ progreso }}" as="s" hint-placeholder-count="10">
+<span style="flex:1;height:8px;border-radius:4px;background:{{ s.color }}"></span>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:11px;margin-top:16px">
+<sc-for list="{{ secciones }}" as="s" hint-placeholder-count="9">
+<button type="button" onClick="{{ s.ir }}" style="width:100%;text-align:left;background:#fff;border:0;border-radius:14px;box-shadow:4px 4px 0 {{ s.color }};padding:0;cursor:pointer;font-family:inherit;overflow:hidden" style-active="transform:translate(2px,2px);box-shadow:2px 2px 0 {{ s.color }}">
+<span style="display:flex;align-items:center;gap:11px;padding:13px 15px 14px">
+<span style="flex:none;width:30px;height:30px;border-radius:8px;background:{{ s.color }};border:0;display:flex;align-items:center;justify-content:center;font:700 12px/1 Montserrat,sans-serif;color:{{ s.tinta }}">{{ s.num }}</span>
+<span style="flex:1;min-width:0">
+<span style="display:block;font:900 17px/1.15 Montserrat,sans-serif">{{ s.nombre }}</span>
+<span style="display:block;margin-top:4px;font-size:14.5px;line-height:1.4;color:#3A362F">{{ s.ayuda }}</span>
+</span>
+<span style="flex:none;padding:4px 9px;border-radius:11px;background:{{ s.fondoEstado }};border:0;font:700 11px/1.4 Poppins,sans-serif;white-space:nowrap">{{ s.estado }}</span>
+</span>
+</button>
+</sc-for>
+</div>
+
+<div style="margin-top:14px;background:#B8F000;border:0;border-radius:15px;box-shadow:4px 4px 0 #1D1D1B;padding:16px">
+<div style="display:flex;align-items:center;gap:10px">
+<span style="flex:none;width:30px;height:30px;border-radius:8px;background:#1D1D1B;display:flex;align-items:center;justify-content:center;font:700 12px/1 Montserrat,sans-serif;color:#B8F000">10</span>
+<span style="font:900 17px/1 Montserrat,sans-serif">Últimos pasos</span>
+</div>
+<div style="display:flex;gap:11px;margin-top:14px">
+<span style="flex:none;width:22px;height:22px;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:5px;background:#fff"></span>
+<p style="margin:0;font-size:15px;line-height:1.4">Acepto los <a href="#1a" style="color:#1D1D1B">términos</a> y la <a href="#1a" style="color:#1D1D1B">política de tratamiento de datos</a>. Mi nombre, mi teléfono y mis oficios quedan públicos.</p>
+</div>
+<button type="button" onClick="{{ irRegistroListo }}" style="margin-top:16px;width:100%;height:54px;background:#1D1D1B;border:0;border-radius:12px;font:700 17px/1 Poppins,sans-serif;color:#B8F000;cursor:pointer" style-hover="background:#000">Publicar mi carné</button>
+</div>
+
+<div style="margin-top:20px">
+<p style="margin:0 0 10px;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">VISTA PREVIA · LO QUE VERÁN</p>
+<div style="background:#fff;border:0;border-radius:16px;box-shadow:5px 5px 0 #F4C542;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 15px;background:#1D1D1B">
+<span style="font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#B8F000">CARNÉ DE PRESTADOR</span>
+<span style="font:500 10.5px/1 'Geist Mono',monospace;color:#F5EEE2">SR-247543</span>
+</div>
+<div style="height:9px;background:#F4C542"></div>
+<div style="padding:16px">
+<div style="display:flex;align-items:center;gap:12px">
+<span style="flex:none;width:50px;height:50px;border-radius:50%;background:#F5EEE2;border:0;display:flex;align-items:center;justify-content:center;font:900 20px/1 Montserrat,sans-serif;color:#6F5A4A">?</span>
+<div><p style="margin:0;font:900 18px/1.1 Montserrat,sans-serif">Tu nombre irá aquí</p><p style="margin:3px 0 0;font-size:14.5px;color:#6F5A4A">Ciudad</p></div>
+</div>
+<span style="display:inline-flex;margin-top:12px;padding:5px 11px;background:#FEF6DE;border:0;border-radius:20px;font:600 13px/1 Poppins,sans-serif">! Sin verificar</span>
+<div style="margin-top:14px;padding-top:13px;border-top:1px solid #EFE9DE;display:flex;flex-direction:column;gap:11px">
+<div><p style="margin:0;font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">OFICIOS</p><p style="margin:6px 0 0;font-size:15.5px">Plomería · Instalación de tuberías</p></div>
+<div><p style="margin:0;font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">DISPONIBILIDAD</p><p style="margin:6px 0 0;font-size:15.5px;color:#6F5A4A">Sin horarios marcados</p></div>
+</div>
+</div>
+</div>
+<p style="margin:11px 0 0;text-align:center;font-size:14px;line-height:1.45;color:#6F5A4A">Se actualiza mientras completas las secciones.</p>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es15 }}">
+<div style="padding:12px 20px 20px">
+<h1 style="margin:0;font:900 29px/1.02 Montserrat,sans-serif;letter-spacing:-.015em">Mi ficha</h1>
+<div style="margin-top:14px;display:flex;align-items:center;gap:11px;padding:14px 15px;background:#B8F000;border:0;border-radius:14px;box-shadow:4px 4px 0 #1D1D1B">
+<span style="flex:none;font:900 18px/1 Montserrat,sans-serif">✓</span>
+<p style="margin:0;flex:1;font:600 15.5px/1.4 Poppins,sans-serif">Publicada. Apareces en Salud y en las búsquedas de Belén y Comuna 19.</p>
+</div>
+<div style="margin-top:16px;background:#fff;border:0;border-radius:16px;box-shadow:5px 5px 0 #2860A8;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 15px;background:#1D1D1B">
+<span style="font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#B8F000">CARNÉ DE PRESTADOR</span>
+<span style="font:500 10.5px/1 'Geist Mono',monospace;color:#F5EEE2">SR-247543</span>
+</div>
+<div style="height:9px;background:#2860A8"></div>
+<div style="padding:16px">
+<div style="display:flex;align-items:center;gap:12px">
+<span style="flex:none;width:52px;height:52px;border-radius:13px;background:#F5EEE2;border:0"></span>
+<div><p style="margin:0;font:900 19px/1.1 Montserrat,sans-serif">Marta Ríos</p><p style="margin:3px 0 0;font-size:15px;color:#3A362F">Cali, Valle del Cauca</p></div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:13px">
+<span style="padding:5px 11px;background:#B8F000;border:0;border-radius:20px;font:700 13px/1 Poppins,sans-serif">✓ Teléfono verificado</span>
+<span style="padding:5px 11px;background:#DFF0FA;border:0;border-radius:20px;font:600 13px/1 Poppins,sans-serif">Salud</span>
+</div>
+<div style="margin-top:14px;padding-top:13px;border-top:1px solid #EFE9DE;display:flex;flex-direction:column;gap:11px">
+<div><p style="margin:0;font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">OFICIOS</p><p style="margin:6px 0 0;font-size:15.5px">Curaciones · Control de signos · Acompañamiento</p></div>
+<div><p style="margin:0;font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">DISPONIBILIDAD</p><p style="margin:6px 0 0;font-size:15.5px">Lunes a sábado · Mañana y tarde</p></div>
+</div>
+</div>
+</div>
+<div style="display:flex;gap:11px;margin-top:16px">
+<button type="button" onClick="{{ irFicha }}" style="flex:1;height:52px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:13px;font:600 16px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#FBFDF0">Ver como cliente</button>
+<button type="button" onClick="{{ irOficios }}" style="flex:1;height:52px;background:#B8F000;border:0;border-radius:13px;box-shadow:3px 3px 0 #1D1D1B;font:700 16px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">Editar</button>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:20px">
+<button type="button" onClick="{{ irCodigos }}" style="text-align:left;padding:14px 15px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:14px;cursor:pointer;font-family:inherit" style-hover="background:#FBFDF0">
+<span style="display:block;font:900 17px/1.15 Montserrat,sans-serif">Dar un código</span>
+<span style="display:block;margin-top:5px;font-size:14px;line-height:1.4;color:#3A362F">Para que te califiquen al terminar</span>
+</button>
+<button type="button" onClick="{{ irVerificaciones }}" style="text-align:left;padding:14px 15px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:14px;cursor:pointer;font-family:inherit" style-hover="background:#FBFDF0">
+<span style="display:block;font:900 17px/1.15 Montserrat,sans-serif">Verificaciones</span>
+<span style="display:block;margin-top:5px;font-size:14px;line-height:1.4;color:#3A362F">1 referencia pendiente</span>
+</button>
+</div>
+<div style="margin-top:16px;padding:14px 15px;background:#FEF6DE;border:0;border-radius:14px">
+<p style="margin:0;font-size:14.5px;line-height:1.5;text-wrap:pretty">«Cuidado de adulto mayor» no aparece todavía: es un oficio de riesgo alto y necesita una referencia confirmada además del teléfono.</p>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es16 }}">
+<div style="padding:12px 20px 20px">
+<div style="background:#fff;border:0;border-radius:17px;box-shadow:5px 5px 0 #2860A8;overflow:hidden">
+<div style="height:12px;background:linear-gradient(90deg,#2860A8 0 25%,#F4C542 25% 50%,#38B58C 50% 75%,#E86F87 75% 100%)"></div>
+<div style="padding:16px">
+<div style="display:flex;align-items:center;gap:13px">
+<span style="flex:none;width:62px;height:62px;border-radius:50%;background:#F5EEE2;border:0"></span>
+<div style="min-width:0">
+<h1 style="margin:0;font:900 23px/1.06 Montserrat,sans-serif;letter-spacing:-.01em">Marta Ríos</h1>
+<p style="margin:4px 0 0;font-size:15.5px;color:#3A362F">Enfermera a domicilio · Belén</p>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:13px">
+<span style="padding:5px 11px;background:#B8F000;border:0;border-radius:20px;font:700 13px/1 Poppins,sans-serif">✓ Teléfono verificado</span>
+<span style="padding:5px 11px;background:#FEF6DE;border:0;border-radius:20px;font:600 13px/1 Poppins,sans-serif">! 1 referencia pendiente</span>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px;background:#1D1D1B">
+<sc-for list="{{ cifras }}" as="c" hint-placeholder-count="3">
+<div style="padding:12px 11px;background:#fff">
+<p style="margin:0;font:900 24px/1 Montserrat,sans-serif">{{ c.n }}</p>
+<p style="margin:5px 0 0;font-size:12.5px;line-height:1.25;color:#3A362F">{{ c.que }}</p>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:2px;margin-top:20px;background:#1D1D1B;border:0;border-radius:15px;overflow:hidden">
+<sc-for list="{{ menuPerfil }}" as="m" hint-placeholder-count="10">
+<button type="button" onClick="{{ m.ir }}" style="display:flex;align-items:center;gap:12px;padding:15px 15px;background:#fff;border:0;cursor:pointer;font-family:inherit;text-align:left" style-hover="background:#FBFDF0">
+<span style="flex:none;width:26px;height:26px;border-radius:7px;background:{{ m.color }};border:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:{{ m.tinta }}">{{ m.glifo }}</span>
+<span style="flex:1;min-width:0;font:600 16.5px/1.25 Poppins,sans-serif">{{ m.nombre }}</span>
+<span style="flex:none;font-size:13.5px;font-weight:600;color:{{ m.colorPista }}">{{ m.pista }}</span>
+<span style="flex:none;color:#6F5A4A">›</span>
+</button>
+</sc-for>
+</div>
+<button type="button" onClick="{{ irBienvenida }}" style="margin-top:18px;width:100%;height:52px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:13px;font:600 16px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#FBFDF0">Cerrar sesión</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ es17 }}">
+<div style="padding:10px 20px 20px">
+<button type="button" onClick="{{ irPerfil }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Perfil</button>
+<h1 style="margin:12px 0 0;font:900 28px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Mis datos y<br>contacto</h1>
+<p style="margin:13px 0 0;font-size:16.5px;line-height:1.5;color:#3A362F;text-wrap:pretty">Lo marcado como público es lo que ve cualquiera que abra tu ficha. El resto no sale de aquí.</p>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:20px">
+<sc-for list="{{ campos }}" as="c" hint-placeholder-count="5">
+<div style="background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:14px;padding:14px 15px">
+<div style="display:flex;align-items:center;gap:9px">
+<span style="font:700 11px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">{{ c.etiqueta }}</span>
+<span style="padding:3px 8px;border-radius:11px;background:{{ c.fondoSello }};border:0;font:700 10.5px/1.3 Poppins,sans-serif">{{ c.sello }}</span>
+</div>
+<p style="margin:11px 0 0;padding:13px 14px;background:#F5EEE2;border-radius:11px;font-size:16.5px;line-height:1.4">{{ c.valor }}</p>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:16px;padding:14px 15px;background:#FEF6DE;border:0;border-radius:14px">
+<p style="margin:0;font-size:14.5px;line-height:1.5;text-wrap:pretty">Tu teléfono está en tu ficha porque tú lo pusiste ahí, con casilla explícita. Puedes quitarlo cuando quieras: dejas de recibir pedidos y la ficha sigue publicada.</p>
+</div>
+</div>
+<div style="position:sticky;bottom:0;background:#F5EEE2;padding:12px 20px 14px">
+<button type="button" onClick="{{ irPerfil }}" style="width:100%;height:56px;background:#B8F000;border:0;border-radius:14px;box-shadow:3px 3px 0 #1D1D1B;font:700 17.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">Guardar esta sección</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ es18 }}">
+<div style="padding:10px 20px 20px">
+<button type="button" onClick="{{ irPerfil }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Perfil</button>
+<h1 style="margin:12px 0 0;font:900 28px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Mis oficios<br>y precios</h1>
+<p style="margin:13px 0 0;font-size:16.5px;line-height:1.5;color:#3A362F;text-wrap:pretty">Hasta ocho. El precio es un piso, no una tarifa cerrada: en la ficha se lee «desde».</p>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:20px">
+<sc-for list="{{ misOficios }}" as="o" hint-placeholder-count="3">
+<div style="background:#fff;border:0;border-radius:15px;box-shadow:4px 4px 0 {{ o.color }};overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;background:{{ o.color }}">
+<span style="font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:{{ o.tinta }}">{{ o.grupo }}</span>
+<span style="padding:2px 8px;background:{{ o.fondoEstado }};border:0;border-radius:10px;font:700 10.5px/1.35 Poppins,sans-serif">{{ o.estado }}</span>
+</div>
+<div style="padding:13px 14px 14px">
+<p style="margin:0;font:900 18px/1.15 Montserrat,sans-serif">{{ o.nombre }}</p>
+<div style="display:flex;gap:9px;margin-top:12px">
+<span style="flex:none;padding:0 13px;height:40px;display:flex;align-items:center;background:#F5EEE2;border:0;border-radius:20px;font:700 14px/1 Poppins,sans-serif">{{ o.modo }}</span>
+<span style="flex:1;padding:0 13px;height:40px;display:flex;align-items:center;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:20px;font-size:14.5px">{{ o.precio }}</span>
+</div>
+<p style="margin:11px 0 0;font-size:14px;line-height:1.45;color:#6F5A4A">{{ o.nota }}</p>
+</div>
+</div>
+</sc-for>
+</div>
+<button type="button" onClick="{{ irOficios }}" style="margin-top:14px;width:100%;padding:15px;background:#fff;border:1.5px dashed #C4BCA9;border-radius:13px;font:700 15.5px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#FBFDF0">+ Agregar otro oficio</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ es19 }}">
+<div style="padding:10px 20px 20px">
+<button type="button" onClick="{{ irPerfil }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Perfil</button>
+<h1 style="margin:12px 0 0;font:900 28px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Cuándo y<br>dónde atiendes</h1>
+<div style="margin-top:18px;display:flex;align-items:center;gap:11px;padding:13px 15px;background:#B8F000;border:0;border-radius:13px">
+<span style="flex:none;font:900 16px/1 Montserrat,sans-serif">●</span>
+<p style="margin:0;flex:1;font:600 15px/1.4 Poppins,sans-serif">Hoy es jueves y estás marcada como disponible hasta las 5 p. m.</p>
+</div>
+<p style="margin:20px 0 0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">DÍAS Y HORAS</p>
+<div style="display:flex;flex-direction:column;gap:2px;margin-top:11px;background:#1D1D1B;border:0;border-radius:14px;overflow:hidden">
+<sc-for list="{{ dias }}" as="d" hint-placeholder-count="7">
+<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff">
+<span style="flex:none;width:46px;height:26px;border-radius:13px;border:0;background:{{ d.fondoSwitch }};display:flex;align-items:center;padding:0 2px;justify-content:{{ d.lado }}"><span style="width:18px;height:18px;border-radius:50%;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13)"></span></span>
+<span style="flex:1;font:700 16.5px/1 Poppins,sans-serif;color:{{ d.tintaNombre }}">{{ d.nombre }}</span>
+<span style="flex:none;font-size:14.5px;color:{{ d.colorHoras }}">{{ d.horas }}</span>
+</div>
+</sc-for>
+</div>
+<p style="margin:22px 0 0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">CÓMO ATIENDES</p>
+<div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:11px">
+<span style="height:46px;padding:0 16px;background:#B8F000;border:0;border-radius:23px;display:flex;align-items:center;gap:8px;font:700 15px/1 Poppins,sans-serif">Voy a domicilio <span style="color:#3A362F">✕</span></span>
+<span style="height:46px;padding:0 16px;background:#B8F000;border:0;border-radius:23px;display:flex;align-items:center;gap:8px;font:700 15px/1 Poppins,sans-serif">En mi local <span style="color:#3A362F">✕</span></span>
+<span style="height:46px;padding:0 16px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:23px;display:flex;align-items:center;font-size:15px">A distancia</span>
+</div>
+<p style="margin:22px 0 0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">ZONAS</p>
+<div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:11px">
+<span style="height:46px;padding:0 16px;background:#B8F000;border:0;border-radius:23px;display:flex;align-items:center;gap:8px;font:700 15px/1 Poppins,sans-serif">Belén <span style="color:#3A362F">✕</span></span>
+<span style="height:46px;padding:0 16px;background:#B8F000;border:0;border-radius:23px;display:flex;align-items:center;gap:8px;font:700 15px/1 Poppins,sans-serif">Comuna 19 <span style="color:#3A362F">✕</span></span>
+<span style="height:46px;padding:0 16px;background:#fff;border:1.5px dashed #C4BCA9;border-radius:23px;display:flex;align-items:center;font:600 15px/1 Poppins,sans-serif">+ Agregar</span>
+</div>
+<p style="margin:14px 0 0;font-size:14.5px;line-height:1.5;color:#6F5A4A;text-wrap:pretty">La zona es lo más fino que se publica: comuna o barrio. Nunca una dirección, y nunca un punto en el mapa.</p>
+</div>
+<div style="position:sticky;bottom:0;background:#F5EEE2;padding:12px 20px 14px">
+<button type="button" onClick="{{ irPerfil }}" style="width:100%;height:56px;background:#B8F000;border:0;border-radius:14px;box-shadow:3px 3px 0 #1D1D1B;font:700 17.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">Guardar esta sección</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ es20 }}">
+<div style="padding:12px 20px 20px">
+<h1 style="margin:0;font:900 29px/1.02 Montserrat,sans-serif;letter-spacing:-.015em">Mis solicitudes</h1>
+<div style="display:flex;gap:7px;margin-top:14px;padding:5px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:24px">
+<sc-for list="{{ pestanasLoMio }}" as="t" hint-placeholder-count="3">
+<span style="flex:1;min-height:40px;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:20px;background:{{ t.fondo }};font:{{ t.peso }} 14.5px/1 Poppins,sans-serif">{{ t.nombre }}<span style="padding:1px 6px;background:{{ t.fondoCuenta }};border-radius:9px;font:700 11.5px/1.4 Poppins,sans-serif">{{ t.cuenta }}</span></span>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:16px">
+<sc-for list="{{ misSolicitudes }}" as="s" hint-placeholder-count="3">
+<div style="background:#fff;border:0;border-radius:15px;box-shadow:4px 4px 0 {{ s.color }};overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;background:{{ s.color }}">
+<span style="font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:{{ s.tinta }}">{{ s.servicio }}</span>
+<span style="padding:2px 8px;background:{{ s.fondoEstado }};border:0;border-radius:10px;font:700 10.5px/1.35 Poppins,sans-serif">{{ s.estado }}</span>
+</div>
+<div style="padding:13px 14px 14px">
+<div style="display:flex;align-items:center;gap:11px">
+<span style="flex:none;width:42px;height:42px;border-radius:11px;background:#F5EEE2;border:0"></span>
+<div style="flex:1;min-width:0">
+<p style="margin:0;font:900 17.5px/1.15 Montserrat,sans-serif">{{ s.nombre }}</p>
+<p style="margin:3px 0 0;font-size:14.5px;color:#3A362F">{{ s.cuando }}</p>
+</div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:11px;border-top:1px solid #EFE9DE">
+<span style="flex:1;font-size:14px;color:#6F5A4A">{{ s.pie }}</span>
+<button type="button" onClick="{{ s.ir }}" style="flex:none;height:40px;padding:0 16px;background:{{ s.fondoBoton }};border:0;border-radius:20px;font:700 14.5px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#B8F000">{{ s.accion }}</button>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:18px;padding:14px 15px;background:#FEF6DE;border:0;border-radius:14px">
+<p style="margin:0;font-size:14.5px;line-height:1.5;text-wrap:pretty">Una solicitud de servicio vive 15 días y se renueva con un toque. Al vencer se borra de verdad, con su chat adentro.</p>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es21 }}">
+<div style="padding:10px 20px 20px">
+<button type="button" onClick="{{ irPerfil }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Perfil</button>
+<h1 style="margin:12px 0 0;font:900 28px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Lo que dicen<br>de tu trabajo</h1>
+<div style="margin-top:18px;background:#1D1D1B;border:0;border-radius:15px;padding:16px">
+<div style="display:flex;align-items:flex-end;gap:14px">
+<span style="font:900 44px/.9 Montserrat,sans-serif;color:#B8F000">9</span>
+<span style="padding-bottom:4px;font-size:15px;line-height:1.3;color:#F5EEE2">servicios<br>confirmados</span>
+<span style="margin-left:auto;padding-bottom:4px;text-align:right;font-size:14px;line-height:1.35;color:#C9C0AD">6 calificaciones<br>promedio 4,6</span>
+</div>
+<p style="margin:14px 0 0;padding-top:13px;border-top:1px solid #4A483F;font-size:13.5px;line-height:1.45;color:#C9C0AD">El número grande es cuántos trabajos se confirmaron, no la nota. Una sola reseña mala no hunde a quien vive de esto.</p>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:16px">
+<sc-for list="{{ resenasRecibidas }}" as="r" hint-placeholder-count="3">
+<div style="background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:15px;padding:14px 15px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+<span style="font-size:16px;letter-spacing:.1em">{{ r.estrellas }}</span>
+<span style="font:700 11px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">{{ r.cuando }}</span>
+</div>
+<p style="margin:10px 0 0;font-size:16px;line-height:1.5">{{ r.texto }}</p>
+<sc-if value="{{ r.respondida }}" hint-placeholder-val="{{ true }}">
+<div style="margin-top:12px;padding:11px 12px;background:#F5EEE2;border-left:4px solid #38B58C;border-radius:0 8px 8px 0">
+<p style="margin:0;font-size:15px;line-height:1.45;color:#3A362F"><strong>Tu respuesta:</strong> {{ r.replica }}</p>
+</div>
+</sc-if>
+<sc-if value="{{ r.pendiente }}">
+<button type="button" onClick="{{ irResenas }}" style="margin-top:12px;height:44px;padding:0 16px;background:#B8F000;border:0;border-radius:22px;font:700 14.5px/1 Poppins,sans-serif;cursor:pointer">Responder una vez</button>
+</sc-if>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es22 }}">
+<div style="padding:10px 20px 20px">
+<button type="button" onClick="{{ irPerfil }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Perfil</button>
+<h1 style="margin:12px 0 0;font:900 28px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Qué tienes<br>comprobado</h1>
+<p style="margin:13px 0 0;font-size:16.5px;line-height:1.5;color:#3A362F;text-wrap:pretty">Ninguna de estas señales dice que seas confiable, y la ficha lo aclara. Lo que hacen es dar algo concreto que mirar.</p>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:20px">
+<sc-for list="{{ verificaciones }}" as="v" hint-placeholder-count="4">
+<div style="background:#fff;border:0;border-radius:15px;box-shadow:4px 4px 0 {{ v.sombra }};padding:15px">
+<div style="display:flex;align-items:flex-start;gap:11px">
+<span style="flex:none;width:32px;height:32px;border-radius:9px;background:{{ v.fondoIcono }};border:0;display:flex;align-items:center;justify-content:center;font:900 15px/1 Montserrat,sans-serif">{{ v.glifo }}</span>
+<div style="flex:1;min-width:0">
+<p style="margin:0;font:900 17px/1.15 Montserrat,sans-serif">{{ v.nombre }}</p>
+<p style="margin:5px 0 0;font-size:14.5px;line-height:1.45;color:#3A362F">{{ v.dice }}</p>
+</div>
+<span style="flex:none;padding:3px 9px;background:{{ v.fondoEstado }};border:0;border-radius:11px;font:700 10.5px/1.4 Poppins,sans-serif;white-space:nowrap">{{ v.estado }}</span>
+</div>
+<sc-if value="{{ v.conAccion }}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{ irVerificaciones }}" style="margin-top:13px;width:100%;height:46px;background:#B8F000;border:0;border-radius:12px;font:700 15.5px/1 Poppins,sans-serif;cursor:pointer">{{ v.accion }}</button>
+</sc-if>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:16px;padding:14px 15px;background:#FEF6DE;border:0;border-radius:14px">
+<p style="margin:0;font-size:14.5px;line-height:1.5;text-wrap:pretty">Una referencia es el dato de otra persona que no está aquí. Va cifrada, no aparece en ninguna vista pública y cada vez que alguien de la fundación la lee queda registrado quién y por qué.</p>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es23 }}">
+<div style="padding:10px 20px 20px">
+<button type="button" onClick="{{ irPerfil }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Perfil</button>
+<h1 style="margin:12px 0 0;font:900 28px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Códigos de<br>servicio</h1>
+<p style="margin:13px 0 0;font-size:16.5px;line-height:1.5;color:#3A362F;text-wrap:pretty">Al terminar un trabajo le entregas el código a la persona: en papel o por WhatsApp. Es lo único que le permite calificarte, y sirve una sola vez.</p>
+<div style="margin-top:20px;background:#1D1D1B;border:0;border-radius:16px;padding:18px 16px">
+<p style="margin:0;font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#B8F000">CÓDIGO NUEVO · SIN USAR</p>
+<div style="display:flex;gap:9px;margin-top:13px">
+<sc-for list="{{ digitos }}" as="d" hint-placeholder-count="5">
+<span style="flex:1;aspect-ratio:1;background:#F5EEE2;border-radius:10px;display:flex;align-items:center;justify-content:center;font:500 26px/1 'Geist Mono',monospace">{{ d.c }}</span>
+</sc-for>
+</div>
+<p style="margin:14px 0 0;font-size:13.5px;line-height:1.45;color:#C9C0AD">No hay enlace ni QR: si el código viaja en una URL, cualquiera que la vea puede calificarte.</p>
+<button type="button" onClick="{{ irCodigos }}" style="margin-top:14px;width:100%;height:50px;background:#B8F000;border:2px solid #B8F000;border-radius:12px;font:700 16px/1 Poppins,sans-serif;cursor:pointer">Generar otro</button>
+</div>
+<p style="margin:22px 0 0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">LOS QUE YA DI</p>
+<div style="display:flex;flex-direction:column;gap:2px;margin-top:11px;background:#1D1D1B;border:0;border-radius:14px;overflow:hidden">
+<sc-for list="{{ codigos }}" as="c" hint-placeholder-count="4">
+<div style="display:flex;align-items:center;gap:12px;padding:13px 14px;background:#fff">
+<span style="flex:none;font:500 17px/1 'Geist Mono',monospace;letter-spacing:.12em">{{ c.codigo }}</span>
+<span style="flex:1;min-width:0;font-size:14px;color:#6F5A4A">{{ c.cuando }}</span>
+<span style="flex:none;padding:3px 9px;background:{{ c.fondo }};border:0;border-radius:11px;font:700 10.5px/1.4 Poppins,sans-serif">{{ c.estado }}</span>
+</div>
+</sc-for>
+</div>
+<p style="margin:14px 0 0;font-size:14.5px;line-height:1.5;color:#6F5A4A">Un código sin usar muere a los 30 días.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ es24 }}">
+<div style="padding:10px 20px 20px">
+<button type="button" onClick="{{ irPerfil }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Perfil</button>
+<h1 style="margin:12px 0 0;font:900 28px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Avisos</h1>
+<div style="margin-top:18px;background:#B8F000;border:0;border-radius:15px;box-shadow:4px 4px 0 #1D1D1B;padding:15px 16px">
+<p style="margin:0;font:900 17px/1.15 Montserrat,sans-serif">Activa los avisos</p>
+<p style="margin:8px 0 0;font-size:15px;line-height:1.45">Sin ellos tienes que entrar a mirar si alguien te escribió. En iPhone hay que agregar AquíVe a la pantalla de inicio para que funcionen.</p>
+<button type="button" onClick="{{ irPerfil }}" style="margin-top:13px;height:48px;padding:0 18px;background:#1D1D1B;border:0;border-radius:24px;font:700 15.5px/1 Poppins,sans-serif;color:#B8F000;cursor:pointer">Activar</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:2px;margin-top:18px;background:#1D1D1B;border:0;border-radius:14px;overflow:hidden">
+<sc-for list="{{ avisos }}" as="a" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:12px;padding:14px 15px;background:#fff">
+<span style="flex:none;width:46px;height:26px;border-radius:13px;border:0;background:{{ a.fondoSwitch }};display:flex;align-items:center;padding:0 2px;justify-content:{{ a.lado }}"><span style="width:18px;height:18px;border-radius:50%;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13)"></span></span>
+<div style="flex:1;min-width:0">
+<p style="margin:0;font:600 16px/1.25 Poppins,sans-serif">{{ a.nombre }}</p>
+<p style="margin:3px 0 0;font-size:13.5px;line-height:1.4;color:#6F5A4A">{{ a.detalle }}</p>
+</div>
+</div>
+</sc-for>
+</div>
+<p style="margin:16px 0 0;font-size:14.5px;line-height:1.5;color:#6F5A4A;text-wrap:pretty">Los avisos van al navegador, no a tu teléfono como número. Se borran cuando se borra lo que avisan.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ es25 }}">
+<div style="padding:10px 20px 20px">
+<button type="button" onClick="{{ irPerfil }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Perfil</button>
+<h1 style="margin:12px 0 0;font:900 28px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Privacidad<br>y cuenta</h1>
+<p style="margin:20px 0 0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">QUÉ HAY TUYO AQUÍ</p>
+<div style="display:flex;flex-direction:column;gap:2px;margin-top:11px;background:#1D1D1B;border:0;border-radius:14px;overflow:hidden">
+<sc-for list="{{ misDatos }}" as="d" hint-placeholder-count="4">
+<div style="display:flex;align-items:flex-start;gap:11px;padding:14px 15px;background:#fff">
+<span style="flex:none;width:11px;height:11px;margin-top:5px;border-radius:50%;background:{{ d.color }};border:0"></span>
+<div style="flex:1;min-width:0">
+<p style="margin:0;font:600 16px/1.25 Poppins,sans-serif">{{ d.que }}</p>
+<p style="margin:4px 0 0;font-size:14px;line-height:1.45;color:#6F5A4A">{{ d.vida }}</p>
+</div>
+</div>
+</sc-for>
+</div>
+<p style="margin:22px 0 0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">AUTORIZACIONES QUE DISTE</p>
+<div style="display:flex;flex-direction:column;gap:11px;margin-top:11px">
+<sc-for list="{{ autorizaciones }}" as="a" hint-placeholder-count="2">
+<div style="background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:14px;padding:14px 15px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+<p style="margin:0;font:600 16px/1.25 Poppins,sans-serif">{{ a.nombre }}</p>
+<span style="flex:none;font:600 12px/1 Poppins,sans-serif;color:#6F5A4A">{{ a.version }}</span>
+</div>
+<p style="margin:7px 0 0;font-size:14px;line-height:1.45;color:#6F5A4A">{{ a.cuando }}</p>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:22px;background:#fff;border:0;border-radius:15px;box-shadow:4px 4px 0 #E86F87;padding:16px">
+<p style="margin:0;font:900 18px/1.15 Montserrat,sans-serif">Borrar mi cuenta</p>
+<p style="margin:9px 0 0;font-size:15px;line-height:1.5;text-wrap:pretty">Se va tu ficha, tus oficios, tus chats abiertos y tus referencias cifradas. Las reseñas que te escribieron se van con la ficha. Es borrado real: no queda una copia esperando.</p>
+<p style="margin:9px 0 0;font-size:15px;line-height:1.5;color:#6F5A4A">Queda una fila sin nombre en las métricas: qué oficio se ofreció y en qué municipio. Nada más.</p>
+<button type="button" onClick="{{ irPerfil }}" style="margin-top:14px;width:100%;height:50px;background:#E86F87;border:0;border-radius:12px;font:700 16px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#DE5E78">Borrar todo lo mío</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es26 }}">
+<div style="padding:10px 20px 20px">
+<button type="button" onClick="{{ irTablero }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Atrás</button>
+<h1 style="margin:12px 0 0;font:900 28px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Pide lo que<br>te falta</h1>
+<div style="margin-top:16px;padding:14px 15px;background:#38B58C;border:0;border-radius:14px;box-shadow:4px 4px 0 #1D1D1B">
+<p style="margin:0;font:900 16px/1.15 Montserrat,sans-serif">Sin cuenta y sin dar tus datos</p>
+<p style="margin:8px 0 0;font-size:14.5px;line-height:1.45">No pedimos tu nombre, tu teléfono ni tu dirección. Una solicitud describe cosas, no personas.</p>
+</div>
+<div style="display:flex;gap:6px;margin-top:18px">
+<span style="flex:1;height:7px;border-radius:4px;background:#B8F000;border:0"></span>
+<span style="flex:1;height:7px;border-radius:4px;background:#B8F000;border:0"></span>
+<span style="flex:1;height:7px;border-radius:4px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13)"></span>
+<span style="flex:1;height:7px;border-radius:4px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13)"></span>
+</div>
+<p style="margin:9px 0 0;font:700 13.5px/1 Poppins,sans-serif">Paso 2 de 4 · Qué necesitas</p>
+<div style="margin-top:18px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:15px;padding:16px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">DEL CATÁLOGO</p>
+<div style="display:flex;flex-direction:column;gap:9px;margin-top:11px">
+<sc-for list="{{ insumos }}" as="i" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:#F5EEE2;border:0;border-radius:11px">
+<span style="flex:1;min-width:0;font:600 15.5px/1.3 Poppins,sans-serif">{{ i.nombre }}</span>
+<span style="flex:none;display:flex;align-items:center;gap:9px">
+<span style="width:30px;height:30px;border-radius:8px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);display:flex;align-items:center;justify-content:center;font:700 15px/1 Poppins,sans-serif">−</span>
+<span style="min-width:36px;text-align:center;font:600 15.5px/1 Poppins,sans-serif">{{ i.cantidad }}</span>
+<span style="width:30px;height:30px;border-radius:8px;background:#B8F000;border:0;display:flex;align-items:center;justify-content:center;font:700 15px/1 Poppins,sans-serif">+</span>
+</span>
+</div>
+</sc-for>
+</div>
+<button type="button" onClick="{{ irPublicarInsumo }}" style="margin-top:12px;width:100%;padding:13px;background:#fff;border:1.5px dashed #C4BCA9;border-radius:11px;font:700 15px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#FBFDF0">+ Buscar en el catálogo</button>
+<p style="margin:11px 0 0;font-size:14px;line-height:1.45;color:#6F5A4A">Los ítems salen de una lista cerrada. No hay campo libre para escribir qué necesitas: así es imposible que se cuele un dato personal.</p>
+</div>
+<div style="margin-top:14px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:15px;padding:16px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">DÓNDE ESTÁS</p>
+<div style="margin-top:11px;padding:13px 14px;background:#F5EEE2;border:0;border-radius:11px;display:flex;justify-content:space-between;font:600 16px/1 Poppins,sans-serif"><span>Cali · Belén</span><span>▾</span></div>
+<p style="margin:10px 0 0;font-size:14px;line-height:1.45;color:#6F5A4A">Municipio y barrio, nada más fino. No hay mapa ni dirección.</p>
+</div>
+</div>
+<div style="position:sticky;bottom:0;background:#F5EEE2;padding:12px 20px 14px">
+<button type="button" onClick="{{ irMiSolicitud }}" style="width:100%;height:56px;background:#B8F000;border:0;border-radius:14px;box-shadow:3px 3px 0 #1D1D1B;font:700 17.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">Publicar sin cuenta</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ es27 }}">
+<div style="padding:12px 0 20px">
+<div style="padding:0 20px">
+<h1 style="margin:0;font:900 29px/1.02 Montserrat,sans-serif;letter-spacing:-.015em">Quién necesita<br>algo hoy</h1>
+<p style="margin:11px 0 0;font-size:15px;line-height:1.45;color:#6F5A4A">AquíVe no verifica a quien publica ni a quien responde. <a href="#1a">Cómo cuidarte</a></p>
+</div>
+<div style="display:flex;gap:9px;margin-top:14px;padding:0 20px 8px;overflow-x:auto">
+<span style="flex:none;height:42px;padding:0 15px;background:#B8F000;border:0;border-radius:21px;display:flex;align-items:center;font:700 14.5px/1 Poppins,sans-serif">Belén ✕</span>
+<span style="flex:none;height:42px;padding:0 15px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:21px;display:flex;align-items:center;font-size:14.5px">Filtros</span>
+<span style="flex:none;height:42px;padding:0 15px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:21px;display:flex;align-items:center;font-size:14.5px">Alimentación</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;padding:8px 20px 0">
+<sc-for list="{{ tablero }}" as="t" hint-placeholder-count="3">
+<div style="background:#fff;border:0;border-radius:15px;box-shadow:4px 4px 0 #38B58C;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;background:#38B58C">
+<span style="font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em">{{ t.codigo }} · {{ t.categoria }}</span>
+<span style="padding:2px 8px;background:{{ t.fondoFrescura }};border:0;border-radius:10px;font:700 10.5px/1.35 Poppins,sans-serif">{{ t.frescura }}</span>
+</div>
+<div style="padding:13px 14px 14px">
+<p style="margin:0;font:900 17.5px/1.2 Montserrat,sans-serif">{{ t.que }}</p>
+<p style="margin:6px 0 0;font-size:14.5px;color:#3A362F">{{ t.donde }}</p>
+<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:11px">
+<sc-for list="{{ t.chips }}" as="ch" hint-placeholder-count="3">
+<span style="padding:4px 10px;background:#F5EEE2;border:0;border-radius:20px;font:600 13px/1.3 Poppins,sans-serif">{{ ch.t }}</span>
+</sc-for>
+</div>
+<button type="button" onClick="{{ irResponder }}" style="margin-top:13px;width:100%;height:46px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:12px;font:700 15.5px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#B8F000">Puedo ayudar</button>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="padding:16px 20px 0">
+<div style="padding:14px 15px;background:#FEF6DE;border:0;border-radius:14px">
+<p style="margin:0;font-size:14.5px;line-height:1.5;text-wrap:pretty">Estas solicitudes se borran solas a las 72 horas, con todo lo que llevan dentro. El directorio de oficios es lo contrario: esas fichas se quedan mientras la persona quiera.</p>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es28 }}">
+<div style="padding:10px 20px 20px">
+<button type="button" onClick="{{ irTablero }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Volver al tablero</button>
+<p style="margin:12px 0 0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">SOLICITUD 4F2A</p>
+<h1 style="margin:8px 0 0;font:900 27px/1.06 Montserrat,sans-serif;letter-spacing:-.015em">Agua, arroz y<br>tres cobijas</h1>
+<p style="margin:10px 0 0;font-size:16px;color:#3A362F">Cali · Belén · publicada hace 4 horas</p>
+<div style="margin-top:18px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:15px;padding:16px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">QUÉ PIDIÓ</p>
+<div style="display:flex;flex-direction:column;gap:2px;margin-top:11px;background:#1D1D1B;border:0;border-radius:11px;overflow:hidden">
+<sc-for list="{{ insumos }}" as="i" hint-placeholder-count="3">
+<span style="display:flex;justify-content:space-between;gap:12px;padding:11px 12px;background:#fff;font-size:15.5px"><span>{{ i.nombre }}</span><span style="font-weight:600">{{ i.cantidad }}</span></span>
+</sc-for>
+</div>
+<p style="margin:12px 0 0;font-size:15.5px;line-height:1.45;font-style:italic;color:#3A362F">«Somos del sector de la ladera, el agua no ha vuelto.»</p>
+</div>
+<div style="margin-top:16px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:15px;padding:16px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">QUÉ PUEDES CUBRIR</p>
+<div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:11px">
+<span style="height:44px;padding:0 15px;background:#B8F000;border:0;border-radius:22px;display:flex;align-items:center;font:700 14.5px/1 Poppins,sans-serif">Agua ✓</span>
+<span style="height:44px;padding:0 15px;background:#B8F000;border:0;border-radius:22px;display:flex;align-items:center;font:700 14.5px/1 Poppins,sans-serif">Cobijas ✓</span>
+<span style="height:44px;padding:0 15px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:22px;display:flex;align-items:center;font-size:14.5px">Arroz</span>
+</div>
+<p style="margin:14px 0 0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">TU MENSAJE</p>
+<div style="margin-top:10px;padding:13px 14px;background:#F5EEE2;border:0;border-radius:11px;min-height:76px;font-size:16px;line-height:1.45">Tengo dos garrafas y tres cobijas. Puedo llevarlas mañana en la mañana.</div>
+<p style="margin:8px 0 0;text-align:right;font:500 13.5px/1 Poppins,sans-serif;color:#6F5A4A">72/200</p>
+</div>
+<div style="margin-top:16px;padding:15px 16px;background:#F4C542;border:0;border-radius:15px;box-shadow:4px 4px 0 #1D1D1B">
+<p style="margin:0;font:900 16.5px/1.15 Montserrat,sans-serif">Antes de responder</p>
+<p style="margin:9px 0 0;font-size:14.5px;line-height:1.5;text-wrap:pretty">AquíVe no verifica quién publica esta solicitud. Tu nombre y tu forma de contacto quedan visibles para esa persona. Si acuerdan una entrega, prefiere un lugar público y de día.</p>
+</div>
+</div>
+<div style="position:sticky;bottom:0;background:#F5EEE2;padding:12px 20px 14px">
+<button type="button" onClick="{{ irTablero }}" style="width:100%;height:56px;background:#B8F000;border:0;border-radius:14px;box-shadow:3px 3px 0 #1D1D1B;font:700 17.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">Enviar mi respuesta</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ es29 }}">
+<div style="padding:12px 20px 20px">
+<div style="background:#1D1D1B;border:0;border-radius:16px;padding:18px 16px">
+<p style="margin:0;font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#B8F000">TU CÓDIGO DE SOLICITUD</p>
+<p style="margin:12px 0 0;font:700 44px/1 'Geist Mono',monospace;letter-spacing:.12em;color:#F5EEE2">4F2A</p>
+<p style="margin:12px 0 0;font-size:14px;line-height:1.5;color:#C9C0AD">Guarda este enlace. Es la única forma de volver: no hay cuenta ni contraseña que recuperar.</p>
+<div style="display:flex;gap:9px;margin-top:14px">
+<span style="flex:1;height:46px;background:#B8F000;border-radius:12px;display:flex;align-items:center;justify-content:center;font:700 14.5px/1 Poppins,sans-serif">Copiar enlace</span>
+<span style="flex:none;width:46px;height:46px;background:#F5EEE2;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px">▦</span>
+<span style="flex:none;width:46px;height:46px;background:#F5EEE2;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:17px">↗</span>
+</div>
+</div>
+<div style="margin-top:16px;display:flex;align-items:center;gap:11px;padding:13px 15px;background:#FEF6DE;border:0;border-radius:14px">
+<span style="flex:none;font:900 15px/1 Montserrat,sans-serif">◷</span>
+<p style="margin:0;flex:1;font-size:14.5px;line-height:1.45">Se borra en <strong>68 horas</strong>. Te avisamos a las 60 para que puedas renovarla con un toque.</p>
+</div>
+<h2 style="margin:24px 0 0;font:900 21px/1.1 Montserrat,sans-serif">Quién respondió</h2>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:13px">
+<sc-for list="{{ respuestas }}" as="r" hint-placeholder-count="2">
+<div style="background:#fff;border:0;border-radius:15px;box-shadow:4px 4px 0 {{ r.color }};padding:14px 15px">
+<div style="display:flex;align-items:flex-start;gap:11px">
+<span style="flex:none;width:42px;height:42px;border-radius:11px;background:#F5EEE2;border:0"></span>
+<div style="flex:1;min-width:0">
+<p style="margin:0;font:900 17px/1.15 Montserrat,sans-serif">{{ r.nombre }}</p>
+<p style="margin:3px 0 0;font-size:14px;color:#6F5A4A">{{ r.cuando }}</p>
+</div>
+</div>
+<p style="margin:11px 0 0;font-size:15.5px;line-height:1.45">{{ r.mensaje }}</p>
+<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:11px">
+<sc-for list="{{ r.cubre }}" as="c" hint-placeholder-count="2">
+<span style="padding:4px 10px;background:#B8F000;border:0;border-radius:20px;font:700 13px/1.3 Poppins,sans-serif">{{ c.t }}</span>
+</sc-for>
+</div>
+<div style="display:flex;gap:9px;margin-top:13px">
+<span style="flex:1;height:46px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:12px;display:flex;align-items:center;justify-content:center;font:700 15px/1 Poppins,sans-serif">Escribirle</span>
+<span style="flex:none;width:46px;height:46px;border:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px">✆</span>
+</div>
+<p style="margin:11px 0 0;font-size:13.5px;line-height:1.45;color:#6F5A4A">AquíVe no verificó la identidad de esta persona. Prefiere un lugar público y de día, y no pagues nada por adelantado.</p>
+</div>
+</sc-for>
+</div>
+<button type="button" onClick="{{ irTablero }}" style="margin-top:18px;width:100%;height:54px;background:#38B58C;border:0;border-radius:14px;box-shadow:3px 3px 0 #1D1D1B;font:700 16.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">Ya me ayudaron · cerrar y borrar</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ es30 }}">
+<div style="padding:12px 0 20px">
+<div style="padding:0 20px">
+<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+<div>
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">EL MURO DEL BARRIO</p>
+<h1 style="margin:8px 0 0;font:900 27px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Lo que sobra<br>y lo que falta</h1>
+</div>
+<button type="button" onClick="{{ irInicio }}" style="flex:none;width:36px;height:36px;border-radius:50%;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);font-size:15px;cursor:pointer">✕</button>
+</div>
+<p style="margin:11px 0 0;font-size:16px;line-height:1.5;color:#3A362F;text-wrap:pretty">Dos caras del mismo muro: quien tiene algo que dar y quien necesita algo. Se acuerda por chat y no pasa dinero por aquí.</p>
+
+<div style="display:flex;gap:7px;margin-top:16px;padding:5px;background:#fff;border-radius:24px;box-shadow:0 1px 2px rgba(29,29,27,.13)">
+<button type="button" onClick="{{ verOfrece }}" style="flex:1;min-height:42px;display:flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:20px;background:{{ fondoOfrece }};font-family:inherit;font-size:14.5px;font-weight:{{ pesoOfrece }};color:#1D1D1B;cursor:pointer">Se ofrece<span style="padding:1px 7px;background:{{ cuentaOfrece }};border-radius:9px;font:700 11.5px/1.4 Poppins,sans-serif">2</span></button>
+<button type="button" onClick="{{ verNecesita }}" style="flex:1;min-height:42px;display:flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:20px;background:{{ fondoNecesita }};font-family:inherit;font-size:14.5px;font-weight:{{ pesoNecesita }};color:#1D1D1B;cursor:pointer">Se necesita<span style="padding:1px 7px;background:{{ cuentaNecesita }};border-radius:9px;font:700 11.5px/1.4 Poppins,sans-serif">3</span></button>
+</div>
+</div>
+
+<sc-if value="{{ muroOfrece }}" hint-placeholder-val="{{ true }}">
+<div style="padding:16px 20px 0">
+<div style="background:#fff;border-radius:15px;box-shadow:4px 4px 0 #E86F87;padding:15px">
+<p style="margin:0;font:900 17px/1 Montserrat,sans-serif">Publicar una donación</p>
+<div style="margin-top:12px;padding:12px 13px;background:#F5EEE2;border-radius:11px;font-size:16px;color:#6F5A4A">¿Qué tienes para donar?</div>
+<div style="display:flex;align-items:center;gap:11px;margin-top:12px">
+<span style="flex:1;font-size:14px;color:#6F5A4A">Foto opcional</span>
+<button type="button" onClick="{{ irMuro }}" style="flex:none;height:44px;padding:0 18px;background:#B8F000;border:0;border-radius:22px;box-shadow:3px 3px 0 #7A9E00;font:700 15px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #7A9E00">Publicar</button>
+</div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;margin-top:16px;padding:0 20px">
+<sc-for list="{{ muro }}" as="m" hint-placeholder-count="2">
+<div style="background:#fff;border-radius:15px;box-shadow:4px 4px 0 {{ m.color }};overflow:hidden">
+<div style="display:flex;align-items:center;gap:11px;padding:12px 14px">
+<span style="flex:none;width:38px;height:38px;border-radius:50%;background:#F5EEE2"></span>
+<div style="flex:1;min-width:0"><p style="margin:0;font:700 15.5px/1.2 Poppins,sans-serif">{{ m.quien }}</p><p style="margin:2px 0 0;font-size:13.5px;color:#6F5A4A">{{ m.donde }}</p></div>
+<span style="flex:none;padding:3px 10px;background:{{ m.color }};border-radius:11px;font:700 11.5px/1.4 Poppins,sans-serif;color:{{ m.tinta }}">{{ m.etiqueta }}</span>
+</div>
+<div style="height:110px;background:#EFE7D8;background-image:repeating-linear-gradient(135deg,rgba(29,29,27,.07) 0 1px,transparent 1px 10px);display:flex;align-items:center;justify-content:center">
+<span style="padding:3px 9px;background:#fff;border-radius:4px;font:700 10px/1.3 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">FOTO DE LO DONADO</span>
+</div>
+<div style="padding:13px 14px 14px">
+<p style="margin:0;font:900 17.5px/1.2 Montserrat,sans-serif">{{ m.que }}</p>
+<p style="margin:7px 0 0;font-size:15.5px;line-height:1.45;color:#3A362F">{{ m.detalle }}</p>
+<div style="display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:11px;border-top:1px solid #EFE9DE">
+<span style="flex:1;font-size:14px;color:#6F5A4A">{{ m.pie }}</span>
+<button type="button" onClick="{{ irChat }}" style="flex:none;height:40px;padding:0 15px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:20px;font:700 14px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#B8F000">Solicitar</button>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ muroNecesita }}">
+<div style="padding:16px 20px 0">
+<div style="background:#fff;border-radius:15px;box-shadow:4px 4px 0 #38B58C;padding:15px">
+<p style="margin:0;font:900 17px/1 Montserrat,sans-serif">Pedir lo que te falta</p>
+<p style="margin:8px 0 0;font-size:15px;line-height:1.45;color:#3A362F">Sin cuenta y sin dar tus datos. Los ítems salen de una lista cerrada, así que no se puede colar un dato personal.</p>
+<button type="button" onClick="{{ irPublicarInsumo }}" style="margin-top:13px;height:46px;padding:0 18px;background:#B8F000;border:0;border-radius:23px;box-shadow:3px 3px 0 #7A9E00;font:700 15.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #7A9E00">Publicar una necesidad</button>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:16px;padding:0 20px">
+<sc-for list="{{ tablero }}" as="t" hint-placeholder-count="3">
+<div style="background:#DCF0E8;border-radius:15px;box-shadow:4px 4px 0 #38B58C;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;background:#38B58C">
+<span style="font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#1D1D1B">{{ t.codigo }} · {{ t.categoria }}</span>
+<span style="padding:2px 8px;background:{{ t.fondoFrescura }};border-radius:10px;font:700 10.5px/1.35 Poppins,sans-serif;color:#1D1D1B">{{ t.frescura }}</span>
+</div>
+<div style="padding:13px 14px 14px">
+<p style="margin:0;font:900 17.5px/1.2 Montserrat,sans-serif;color:#2A2620">{{ t.que }}</p>
+<p style="margin:6px 0 0;font-size:14.5px;color:#4A443B">{{ t.donde }}</p>
+<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:11px">
+<sc-for list="{{ t.chips }}" as="ch" hint-placeholder-count="3">
+<span style="padding:4px 10px;background:#fff;border-radius:20px;font:600 13px/1.3 Poppins,sans-serif;color:#2A2620">{{ ch.t }}</span>
+</sc-for>
+</div>
+<button type="button" onClick="{{ irResponder }}" style="margin-top:13px;width:100%;height:46px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:12px;font:700 15.5px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#B8F000">Puedo ayudar</button>
+</div>
+</div>
+</sc-for>
+<button type="button" onClick="{{ irTablero }}" style="width:100%;padding:15px;background:#fff;border:1.5px dashed #C4BCA9;border-radius:13px;font:700 15.5px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#FBFDF0">Ver el tablero completo · 14 más</button>
+</div>
+<div style="padding:16px 20px 0">
+<div style="padding:14px 15px;background:#FEF6DE;border-radius:14px">
+<p style="margin:0;font-size:14.5px;line-height:1.5;text-wrap:pretty">Una necesidad se borra sola a las 72 horas, con todo lo que lleva dentro. Las donaciones se quedan mientras quien publicó las deje.</p>
+</div>
+</div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ es31 }}">
+<div style="padding:12px 20px 20px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">PRODUCTOS</p>
+<h1 style="margin:8px 0 0;font:900 28px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Hecho en<br>el barrio</h1>
+<div style="display:flex;align-items:center;gap:10px;margin-top:16px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:13px;padding:14px 15px">
+<span style="color:#6F5A4A;font-size:16px">⌕</span>
+<span style="font-size:16px;color:#6F5A4A">Buscar un producto</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
+<sc-for list="{{ productos }}" as="p" hint-placeholder-count="4">
+<button type="button" onClick="{{ p.ir }}" style="padding:0;background:#fff;border:0;border-radius:15px;box-shadow:4px 4px 0 {{ p.color }};overflow:hidden;cursor:pointer;font-family:inherit;text-align:left" style-active="transform:translate(2px,2px);box-shadow:2px 2px 0 {{ p.color }}">
+<span style="display:flex;height:92px;align-items:center;justify-content:center;background:#EFE7D8;background-image:repeating-linear-gradient(135deg,rgba(29,29,27,.07) 0 1px,transparent 1px 10px)">
+<span style="padding:3px 8px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:4px;font:700 9.5px/1.3 Montserrat,sans-serif;letter-spacing:.085em">FOTO</span>
+</span>
+<span style="display:block;padding:11px 12px 13px">
+<span style="display:block;font:900 16px/1.15 Montserrat,sans-serif">{{ p.nombre }}</span>
+<span style="display:block;margin-top:4px;font-size:13.5px;color:#6F5A4A">{{ p.quien }}</span>
+<span style="display:block;margin-top:8px;font:700 15px/1 Poppins,sans-serif">{{ p.precio }}</span>
+</span>
+</button>
+</sc-for>
+</div>
+<div style="margin-top:18px;padding:14px 15px;background:#FEF6DE;border:0;border-radius:14px">
+<p style="margin:0;font-size:14.5px;line-height:1.5;text-wrap:pretty">AquíVe no vende nada y no cobra comisión. El precio y la entrega los acuerdan ustedes dos, por fuera.</p>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es32 }}">
+<div style="padding:12px 20px 20px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">FUNDACIÓN NODO SOCIAL</p>
+<h1 style="margin:8px 0 0;font:900 28px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Entregas</h1>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:16px">
+<sc-for list="{{ colasAliado }}" as="c" hint-placeholder-count="4">
+<button type="button" onClick="{{ c.ir }}" style="text-align:left;padding:0;background:#fff;border:0;border-radius:14px;box-shadow:4px 4px 0 {{ c.color }};overflow:hidden;cursor:pointer;font-family:inherit" style-active="transform:translate(2px,2px);box-shadow:2px 2px 0 {{ c.color }}">
+<span style="display:block;padding:13px 14px 14px">
+<span style="display:block;font:900 28px/1 Montserrat,sans-serif">{{ c.n }}</span>
+<span style="display:block;margin-top:6px;font:600 15px/1.25 Poppins,sans-serif">{{ c.nombre }}</span>
+<span style="display:block;margin-top:4px;font-size:13px;line-height:1.35;color:#6F5A4A">{{ c.detalle }}</span>
+</span>
+</button>
+</sc-for>
+</div>
+<h2 style="margin:24px 0 0;font:900 20px/1.1 Montserrat,sans-serif">Conversaciones abiertas</h2>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:13px">
+<sc-for list="{{ hilos }}" as="h" hint-placeholder-count="3">
+<button type="button" onClick="{{ h.ir }}" style="width:100%;text-align:left;padding:0;background:#fff;border:0;border-radius:15px;box-shadow:4px 4px 0 {{ h.color }};overflow:hidden;cursor:pointer;font-family:inherit" style-active="transform:translate(2px,2px);box-shadow:2px 2px 0 {{ h.color }}">
+<span style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;background:{{ h.color }}">
+<span style="font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:{{ h.tinta }}">{{ h.codigo }}</span>
+<span style="padding:2px 8px;background:{{ h.fondoEstado }};border:0;border-radius:10px;font:700 10.5px/1.35 Poppins,sans-serif">{{ h.estado }}</span>
+</span>
+<span style="display:block;padding:13px 14px 14px">
+<span style="display:block;font:900 17px/1.2 Montserrat,sans-serif">{{ h.que }}</span>
+<span style="display:block;margin-top:5px;font-size:14.5px;color:#3A362F">{{ h.quienes }}</span>
+<span style="display:flex;align-items:center;gap:8px;margin-top:11px;padding-top:10px;border-top:1px solid #EFE9DE">
+<span style="flex:1;font-size:13.5px;color:#6F5A4A">{{ h.reloj }}</span>
+<span style="flex:none;font:700 14px/1 Poppins,sans-serif;color:#2860A8">Abrir ›</span>
+</span>
+</span>
+</button>
+</sc-for>
+</div>
+<div style="margin-top:18px;padding:14px 15px;background:#FEF6DE;border:0;border-radius:14px">
+<p style="margin:0;font-size:14.5px;line-height:1.5;text-wrap:pretty">Un hilo con conversación abierta se auto-renueva, con techo duro de 5 días desde que se publicó. Al llegar al techo se cierra y se borra igual.</p>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es33 }}">
+<div style="display:flex;flex-direction:column;min-height:100%">
+<div style="flex:none;padding:9px 18px 12px;background:#F5EEE2">
+<div style="display:flex;align-items:center;gap:10px">
+<button type="button" onClick="{{ irEntregas }}" style="background:none;border:0;padding:0;font-size:20px;cursor:pointer">‹</button>
+<div style="flex:1;min-width:0">
+<p style="margin:0;font:900 17px/1.1 Montserrat,sans-serif">Solicitud 4F2A</p>
+<p style="margin:3px 0 0;font-size:13.5px;color:#3A362F">Jorge ofrece · tú coordinas · quien pide es anónimo</p>
+</div>
+<span style="flex:none;padding:4px 9px;background:#B8F000;border:0;border-radius:11px;font:700 10.5px/1.4 Poppins,sans-serif">ACORDADA</span>
+</div>
+</div>
+<div style="flex:1;padding:16px 18px;display:flex;flex-direction:column;gap:11px">
+<div style="align-self:center;padding:6px 13px;background:#38B58C;border:0;border-radius:20px;font:600 12px/1.3 Poppins,sans-serif;text-align:center">Los tres están en este hilo. Nadie puede escribirse por aparte.</div>
+<sc-for list="{{ mensajesHilo }}" as="m" hint-placeholder-count="4">
+<div style="align-self:{{ m.lado }};max-width:86%">
+<p style="margin:0 0 4px;font:700 10.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A;text-align:{{ m.alinea }}">{{ m.quien }}</p>
+<div style="padding:12px 14px;background:{{ m.fondo }};border:0;border-radius:{{ m.radio }};font-size:16px;line-height:1.45">{{ m.texto }}</div>
+</div>
+</sc-for>
+<div style="align-self:center;margin-top:4px;padding:11px 13px;background:#E86F87;border:0;border-radius:13px;max-width:92%">
+<p style="margin:0;font-size:14px;line-height:1.45;text-align:center">Se bloqueó un mensaje: llevaba un número de teléfono. El contacto no pasa por aquí mientras haya un tercero coordinando.</p>
+</div>
+</div>
+<div style="flex:none;padding:0 18px 12px">
+<button type="button" onClick="{{ irDatoSensible }}" style="width:100%;padding:14px;background:#1D1D1B;border:0;border-radius:13px;font:700 15.5px/1 Poppins,sans-serif;color:#B8F000;cursor:pointer" style-hover="background:#000">Registrar la entrega · ver identidad</button>
+<div style="display:flex;align-items:center;gap:11px;margin-top:11px;padding:13px 15px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:14px">
+<span style="flex:1;font-size:16px;color:#6F5A4A">Escribe un mensaje</span>
+<span style="flex:none;width:36px;height:36px;border-radius:50%;background:#B8F000;border:0;display:flex;align-items:center;justify-content:center;font-size:14px">➤</span>
+</div>
+<p style="margin:9px 0 0;font-size:13px;line-height:1.4;color:#6F5A4A">Este hilo muere con la solicitud. No es un archivo y no queda copia.</p>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es34 }}">
+<div style="padding:10px 20px 20px">
+<button type="button" onClick="{{ irHilo }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Volver al hilo</button>
+<h1 style="margin:12px 0 0;font:900 27px/1.06 Montserrat,sans-serif;letter-spacing:-.015em">Datos de<br>la entrega</h1>
+<p style="margin:13px 0 0;font-size:16.5px;line-height:1.5;color:#3A362F;text-wrap:pretty">Se destapan de uno en uno y hay que escribir para qué. La lectura queda en la bitácora y al recargar la pantalla desaparece.</p>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:20px">
+<sc-for list="{{ datosSensibles }}" as="d" hint-placeholder-count="3">
+<div style="background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:15px;padding:15px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+<span style="font:700 11px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">{{ d.etiqueta }}</span>
+<span style="padding:3px 9px;background:{{ d.fondoEstado }};border:0;border-radius:11px;font:700 10.5px/1.4 Poppins,sans-serif">{{ d.estado }}</span>
+</div>
+<p style="margin:12px 0 0;font-size:20px;line-height:1.2;font-weight:{{ d.peso }};font-family:{{ d.tipografia }};letter-spacing:{{ d.espaciado }};color:{{ d.tintaValor }}">{{ d.valor }}</p>
+<sc-if value="{{ d.abierto }}" hint-placeholder-val="{{ true }}">
+<p style="margin:11px 0 0;font-size:13.5px;line-height:1.45;color:#6F5A4A">Motivo escrito: «{{ d.motivo }}». Quedó en la bitácora a nombre tuyo.</p>
+</sc-if>
+<sc-if value="{{ d.cerrado }}">
+<button type="button" onClick="{{ irDatoSensible }}" style="margin-top:13px;width:100%;height:46px;background:#B8F000;border:0;border-radius:12px;font:700 15px/1 Poppins,sans-serif;cursor:pointer">Destapar y escribir el motivo</button>
+</sc-if>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:16px;padding:14px 15px;background:#E86F87;border:0;border-radius:14px">
+<p style="margin:0;font-size:14.5px;line-height:1.5;text-wrap:pretty">Solo hay CC, CE, PEP y PPT. Documentos de menores no existen aquí: la base no los acepta.</p>
+</div>
+<div style="margin-top:16px;background:#fff;border:0;border-radius:15px;box-shadow:4px 4px 0 #38B58C;padding:15px">
+<p style="margin:0;font:900 17px/1.15 Montserrat,sans-serif">Cerrar la entrega</p>
+<p style="margin:8px 0 0;font-size:15px;line-height:1.45;color:#3A362F">Al cerrarla se exporta la planilla para la fundación y el hilo entra en cuenta atrás. La planilla la custodian ustedes, no AquíVe.</p>
+<button type="button" onClick="{{ irEntregas }}" style="margin-top:13px;width:100%;height:48px;background:#38B58C;border:0;border-radius:12px;font:700 15.5px/1 Poppins,sans-serif;cursor:pointer">Registrar y exportar</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es35 }}">
+<div style="padding:12px 20px 20px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">MODERACIÓN</p>
+<h1 style="margin:8px 0 0;font:900 28px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Quién está<br>esperando</h1>
+<p style="margin:11px 0 0;font-size:15.5px;line-height:1.45;color:#3A362F">Cuatro colas, ordenadas por cuánto lleva esperando la persona.</p>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:18px">
+<sc-for list="{{ colasAdmin }}" as="c" hint-placeholder-count="4">
+<button type="button" onClick="{{ c.ir }}" style="width:100%;text-align:left;display:flex;align-items:center;gap:13px;padding:15px;background:#fff;border:0;border-radius:15px;box-shadow:4px 4px 0 {{ c.color }};cursor:pointer;font-family:inherit" style-active="transform:translate(2px,2px);box-shadow:2px 2px 0 {{ c.color }}">
+<span style="flex:none;width:52px;height:52px;border-radius:13px;background:{{ c.color }};border:0;display:flex;align-items:center;justify-content:center;font:900 22px/1 Montserrat,sans-serif;color:{{ c.tinta }}">{{ c.n }}</span>
+<span style="flex:1;min-width:0">
+<span style="display:block;font:900 17.5px/1.15 Montserrat,sans-serif">{{ c.nombre }}</span>
+<span style="display:block;margin-top:4px;font-size:14px;line-height:1.4;color:#3A362F">{{ c.detalle }}</span>
+</span>
+<span style="flex:none;color:#6F5A4A">›</span>
+</button>
+</sc-for>
+</div>
+<div style="margin-top:18px;padding:14px 15px;background:#FEF6DE;border:0;border-radius:14px">
+<p style="margin:0;font-size:14.5px;line-height:1.5;text-wrap:pretty">Ocultar una reseña es moderación reversible. Un reporte por extorsión termina en borrado de verdad.</p>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es36 }}">
+<div style="padding:10px 20px 20px">
+<button type="button" onClick="{{ irColas }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Colas</button>
+<p style="margin:12px 0 0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">MATRÍCULA 3 DE 12</p>
+<h1 style="margin:8px 0 0;font:900 27px/1.06 Montserrat,sans-serif;letter-spacing:-.015em">Camilo Ospina</h1>
+<p style="margin:9px 0 0;font-size:16px;color:#3A362F">Nutricionista · Cali · esperando 3 días</p>
+<div style="margin-top:18px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:15px;padding:16px">
+<div style="display:flex;flex-direction:column;gap:14px">
+<sc-for list="{{ datosMatricula }}" as="d" hint-placeholder-count="3">
+<div>
+<p style="margin:0;font:700 11px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">{{ d.etiqueta }}</p>
+<p style="margin:8px 0 0;font:600 17px/1.3 Poppins,sans-serif">{{ d.valor }}</p>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:16px;padding:13px 14px;background:#F5EEE2;border:0;border-radius:11px">
+<p style="margin:0;font-size:14.5px;line-height:1.45">Abre el registro de la entidad y busca el número a mano. No hay consulta automática, y no la inventes: el sello solo puede decir que el número existe.</p>
+<p style="margin:10px 0 0;font:600 14px/1 Poppins,sans-serif;color:#2860A8">rethus.minsalud.gov.co</p>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:11px;margin-top:16px">
+<button type="button" onClick="{{ irColas }}" style="width:100%;height:54px;background:#B8F000;border:0;border-radius:13px;box-shadow:3px 3px 0 #1D1D1B;font:700 16.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">El número aparece · poner sello</button>
+<button type="button" onClick="{{ irColas }}" style="width:100%;height:54px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:13px;font:600 16.5px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#FBFDF0">No aparece · dejar sin sello</button>
+<button type="button" onClick="{{ irColas }}" style="width:100%;height:54px;background:#E86F87;border:0;border-radius:13px;font:600 16.5px/1 Poppins,sans-serif;cursor:pointer">Suspender el perfil</button>
+</div>
+<p style="margin:14px 0 0;font-size:14.5px;line-height:1.5;color:#6F5A4A;text-wrap:pretty">Sin sello el perfil se muestra con advertencia visible, no escondido. «Sin verificar» y «no aplica» no son lo mismo y la ficha lo dice.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ es37 }}">
+<div style="padding:10px 20px 20px">
+<button type="button" onClick="{{ irInicio }}" style="display:flex;align-items:center;gap:7px;background:none;border:0;padding:6px 0;font:600 15px/1 Poppins,sans-serif;cursor:pointer">‹ Atrás</button>
+<h1 style="margin:12px 0 0;font:900 28px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Ayuda con<br>la plataforma</h1>
+<p style="margin:13px 0 0;font-size:16.5px;line-height:1.5;color:#3A362F;text-wrap:pretty">Escríbenos y te respondemos el mismo día. También puedes revisar lo que más nos preguntan.</p>
+<div style="display:flex;flex-direction:column;gap:2px;margin-top:20px;background:#1D1D1B;border:0;border-radius:15px;overflow:hidden">
+<sc-for list="{{ preguntas }}" as="q" hint-placeholder-count="5">
+<button type="button" onClick="{{ irAyuda }}" style="display:flex;align-items:center;gap:12px;padding:16px 15px;background:#fff;border:0;cursor:pointer;font-family:inherit;text-align:left" style-hover="background:#FBFDF0">
+<span style="flex:1;min-width:0;font:600 16px/1.35 Poppins,sans-serif">{{ q.t }}</span>
+<span style="flex:none;color:#2860A8;font-size:15px">→</span>
+</button>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:11px;margin-top:18px">
+<button type="button" onClick="{{ irPqr }}" style="width:100%;height:54px;background:#B8F000;border:0;border-radius:13px;box-shadow:3px 3px 0 #1D1D1B;font:700 16.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">Poner una PQR</button>
+<button type="button" onClick="{{ irContactos }}" style="width:100%;height:54px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:13px;font:600 16.5px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#FBFDF0">Escribir al soporte</button>
+</div>
+<div style="margin-top:18px;padding:14px 15px;background:#E86F87;border:0;border-radius:14px">
+<p style="margin:0;font:900 16px/1.15 Montserrat,sans-serif">Si hay riesgo para alguien ahora</p>
+<p style="margin:8px 0 0;font-size:14.5px;line-height:1.45">Eso no es un reporte: es el <strong>123</strong>. AquíVe no atiende urgencias ni rescates.</p>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es38 }}">
+<div style="padding:12px 20px 20px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">PQR</p>
+<h1 style="margin:8px 0 0;font:900 27px/1.06 Montserrat,sans-serif;letter-spacing:-.015em">Peticiones, quejas<br>y reclamos</h1>
+<p style="margin:12px 0 0;font-size:16.5px;line-height:1.5;color:#3A362F;text-wrap:pretty">Cuéntanos qué pasó. Respondemos en un plazo máximo de cinco días hábiles y te avisamos por el chat.</p>
+<div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:18px">
+<span style="height:46px;padding:0 16px;background:#B8F000;border:0;border-radius:23px;display:flex;align-items:center;font:700 15px/1 Poppins,sans-serif">Petición</span>
+<span style="height:46px;padding:0 16px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:23px;display:flex;align-items:center;font-size:15px">Queja</span>
+<span style="height:46px;padding:0 16px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:23px;display:flex;align-items:center;font-size:15px">Reclamo</span>
+<span style="height:46px;padding:0 16px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:23px;display:flex;align-items:center;font-size:15px">Sugerencia</span>
+</div>
+<div style="margin-top:18px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:15px;padding:16px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">ASUNTO</p>
+<p style="margin:10px 0 0;padding:13px 14px;background:#F5EEE2;border-radius:11px;font-size:16.5px;color:#6F5A4A">Ej. El prestador no llegó a la cita</p>
+<p style="margin:20px 0 0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">DETALLE</p>
+<div style="margin-top:10px;padding:13px 14px;background:#F5EEE2;border:0;border-radius:11px;min-height:100px;font-size:16px;line-height:1.45;color:#6F5A4A">Cuéntanos con fechas lo que ocurrió.</div>
+<p style="margin:9px 0 0;font-size:13.5px;line-height:1.4;color:#6F5A4A">Si vas a nombrar a alguien, usa el código del servicio o de la solicitud. No hace falta su teléfono.</p>
+</div>
+</div>
+<div style="position:sticky;bottom:0;background:#F5EEE2;padding:12px 20px 14px">
+<button type="button" onClick="{{ irAyuda }}" style="width:100%;height:56px;background:#B8F000;border:0;border-radius:14px;box-shadow:3px 3px 0 #1D1D1B;font:700 17.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">Enviar la petición</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ es39 }}">
+<div style="padding:12px 20px 20px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">CONTACTOS</p>
+<h1 style="margin:8px 0 0;font:900 32px/1.02 Montserrat,sans-serif;letter-spacing:-.015em">Hablemos</h1>
+<div style="display:flex;flex-direction:column;gap:2px;margin-top:20px;background:#1D1D1B;border:0;border-radius:15px;overflow:hidden">
+<sc-for list="{{ contactos }}" as="c" hint-placeholder-count="4">
+<div style="padding:15px;background:#fff">
+<p style="margin:0;font:700 11px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">{{ c.etiqueta }}</p>
+<p style="margin:9px 0 0;font:600 17px/1.35 Poppins,sans-serif">{{ c.valor }}</p>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:18px;padding:15px 16px;background:#F4C542;border:0;border-radius:15px;box-shadow:4px 4px 0 #1D1D1B">
+<p style="margin:0;font:900 16.5px/1.15 Montserrat,sans-serif">Nadie de AquíVe te pide dinero</p>
+<p style="margin:9px 0 0;font-size:14.5px;line-height:1.5;text-wrap:pretty">Ni el enlace de tu solicitud. Si algo te lleva a otro lado o te pide pagar, no sigas y repórtalo.</p>
+</div>
+<button type="button" onClick="{{ irAyuda }}" style="margin-top:18px;width:100%;height:54px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:13px;font:600 16.5px/1 Poppins,sans-serif;cursor:pointer" style-hover="background:#FBFDF0">Ayuda con la plataforma</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ es40 }}">
+<div style="padding:12px 20px 20px">
+<p style="margin:0;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">QUIÉNES SOMOS</p>
+<h1 style="margin:8px 0 0;font:900 30px/1.04 Montserrat,sans-serif;letter-spacing:-.015em">Un directorio<br>hecho entre<br>vecinos</h1>
+<p style="margin:14px 0 0;font-size:16.5px;line-height:1.55;color:#3A362F;text-wrap:pretty">Nacimos de una idea simple: en cada barrio ya existe quien sabe hacer lo que otro necesita. La aplicación solo pone a esas dos personas en contacto, sin comisiones por servicio.</p>
+<div style="display:flex;flex-direction:column;gap:2px;margin-top:22px;background:#1D1D1B;border:0;border-radius:15px;overflow:hidden">
+<sc-for list="{{ puntos }}" as="p" hint-placeholder-count="3">
+<div style="display:flex;gap:14px;padding:16px 15px;background:#fff">
+<span style="flex:none;width:34px;height:34px;border-radius:9px;background:{{ p.color }};display:flex;align-items:center;justify-content:center;font:900 14px/1 Montserrat,sans-serif;color:{{ p.tinta }}">{{ p.n }}</span>
+<div style="min-width:0">
+<p style="margin:0;font:900 17px/1.15 Montserrat,sans-serif">{{ p.titulo }}</p>
+<p style="margin:6px 0 0;font-size:15px;line-height:1.45;color:#3A362F">{{ p.texto }}</p>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="margin-top:20px;padding:15px 16px;background:#fff;border:0;border-radius:15px;box-shadow:4px 4px 0 #38B58C">
+<p style="margin:0;font:900 16.5px/1.15 Montserrat,sans-serif">Quién responde por los datos</p>
+<p style="margin:9px 0 0;font-size:15px;line-height:1.5;text-wrap:pretty">La <strong>Fundación Nodo Social</strong> es responsable del tratamiento; AquíVe es encargada. Eso importa cuando quieras corregir o borrar algo tuyo: hay a quién escribirle.</p>
+</div>
+<button type="button" onClick="{{ irInicio }}" style="margin-top:18px;width:100%;height:54px;background:#B8F000;border:0;border-radius:13px;box-shadow:3px 3px 0 #1D1D1B;font:700 16.5px/1 Poppins,sans-serif;cursor:pointer" style-active="transform:translate(2px,2px);box-shadow:1px 1px 0 #1D1D1B">Volver al inicio</button>
+</div>
+</sc-if>
+
+<sc-if value="{{ es05b }}">
+<div style="padding:6px 0 24px;background:#FAF7F1">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 22px 16px">
+<div style="display:flex;align-items:center;gap:10px;min-width:0">
+<img src="docs/marca/isotipo-carrito.png" alt="" style="width:34px;height:34px;object-fit:contain;flex:none;mix-blend-mode:multiply">
+<span style="font:700 16px/1 Montserrat,sans-serif;letter-spacing:.02em;color:#23211D">Aquí&nbsp;Ve</span>
+</div>
+<button type="button" onClick="{{ irLogin }}" style="flex:none;height:34px;padding:0 4px;background:none;border:0;border-bottom:1.5px solid #C6BEAF;font:600 14px/1 Poppins,sans-serif;color:#3E3A33;cursor:pointer" style-hover="border-color:#23211D">Entrar</button>
+</div>
+
+<div style="padding:0 22px">
+<p style="margin:0;font:600 12px/1 Montserrat,sans-serif;letter-spacing:.14em;color:#6F5A4A">JUEVES · BELÉN</p>
+<h1 style="margin:10px 0 0;font:700 30px/1.14 Montserrat,sans-serif;letter-spacing:-.018em;color:#23211D">¿Qué necesitas<br>resolver hoy?</h1>
+<div style="display:flex;align-items:center;gap:11px;margin-top:18px;padding:15px 16px;background:#fff;border-radius:14px;box-shadow:0 1px 2px rgba(35,33,29,.05),0 6px 20px -8px rgba(35,33,29,.1)">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A79E8E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg>
+<span style="flex:1;font-size:15.5px;color:#6F5A4A">Plomero, curaciones, arreglos…</span>
+</div>
+</div>
+
+<div style="margin-top:26px">
+<p style="margin:0;padding:0 22px;font:600 12px/1 Montserrat,sans-serif;letter-spacing:.14em;color:#6F5A4A">OFICIOS</p>
+<div style="display:flex;gap:9px;margin-top:13px;padding:0 22px 4px;overflow-x:auto">
+<sc-for list="{{ categoriasSuaves }}" as="c" hint-placeholder-count="6">
+<button type="button" onClick="{{ c.ir }}" style="flex:none;display:flex;align-items:center;gap:8px;height:40px;padding:0 15px;background:#fff;border:0;border-radius:20px;box-shadow:0 1px 2px rgba(35,33,29,.06);cursor:pointer;font-family:inherit" style-hover="box-shadow:0 1px 2px rgba(35,33,29,.06),0 0 0 1px #23211D">
+<span style="width:7px;height:7px;border-radius:50%;background:{{ c.color }}"></span>
+<span style="font:500 14.5px/1 Poppins,sans-serif;color:#3E3A33">{{ c.nombre }}</span>
+<span style="font:500 13px/1 Poppins,sans-serif;color:#6F5A4A">{{ c.cerca }}</span>
+</button>
+</sc-for>
+</div>
+</div>
+
+<div style="margin-top:26px;padding:0 22px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+<p style="margin:0;font:700 19px/1 Montserrat,sans-serif;letter-spacing:-.01em;color:#23211D">Disponibles hoy</p>
+<button type="button" onClick="{{ irListado }}" style="background:none;border:0;padding:0;font:500 14px/1 Poppins,sans-serif;color:#2860A8;cursor:pointer">Ver 14</button>
+</div>
+<div style="margin-top:14px;background:#fff;border-radius:16px;box-shadow:0 1px 2px rgba(35,33,29,.05),0 8px 24px -12px rgba(35,33,29,.12);overflow:hidden">
+<sc-for list="{{ disponiblesSuaves }}" as="d" hint-placeholder-count="3">
+<button type="button" onClick="{{ d.ir }}" style="display:flex;align-items:center;gap:13px;width:100%;padding:15px 16px;background:none;border:0;border-top:1px solid {{ d.linea }};cursor:pointer;font-family:inherit;text-align:left" style-hover="background:#FBF9F5">
+<span style="flex:none;width:2px;height:34px;border-radius:1px;background:{{ d.color }}"></span>
+<span style="flex:1;min-width:0">
+<span style="display:block;font:600 16px/1.25 Poppins,sans-serif;color:#23211D">{{ d.nombre }}</span>
+<span style="display:block;margin-top:3px;font-size:14px;color:#6F5A4A">{{ d.oficio }} · {{ d.donde }}</span>
+</span>
+<span style="flex:none;text-align:right">
+<span style="display:block;font:600 15px/1 Poppins,sans-serif;color:#23211D">{{ d.precio }}</span>
+<span style="display:block;margin-top:4px;font-size:12.5px;color:#6F5A4A">{{ d.unidad }}</span>
+</span>
+</button>
+</sc-for>
+</div>
+</div>
+
+<div style="margin-top:24px;padding:0 22px">
+<div style="display:flex;align-items:flex-start;gap:14px;padding:18px;background:#F1EDE4;border-radius:16px">
+<span style="flex:none;width:34px;height:34px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7A7469" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+</span>
+<div style="flex:1;min-width:0">
+<p style="margin:0;font:700 16.5px/1.25 Montserrat,sans-serif;letter-spacing:-.005em;color:#23211D">Lo que ya no usas le sirve a alguien</p>
+<p style="margin:7px 0 0;font-size:14.5px;line-height:1.5;color:#5C574E">Publícalo en el muro del barrio. Se acuerda por chat y no pasa dinero por aquí.</p>
+<button type="button" onClick="{{ irMuro }}" style="margin-top:12px;height:42px;padding:0 18px;background:#23211D;border:0;border-radius:21px;font:600 14.5px/1 Poppins,sans-serif;color:#FAF7F1;cursor:pointer" style-hover="background:#3E3A33">Abrir el muro</button>
+</div>
+</div>
+</div>
+
+<div style="margin-top:26px;padding:0 22px">
+<p style="margin:0;font:600 12px/1 Montserrat,sans-serif;letter-spacing:.14em;color:#6F5A4A">LO QUE DICE LA GENTE</p>
+<div style="display:flex;flex-direction:column;gap:16px;margin-top:14px">
+<sc-for list="{{ reviewsSuaves }}" as="r" hint-placeholder-count="2">
+<div>
+<p style="margin:0;font-size:16px;line-height:1.55;color:#3E3A33;text-wrap:pretty">{{ r.texto }}</p>
+<p style="margin:8px 0 0;display:flex;align-items:center;gap:9px;font-size:13.5px;color:#6F5A4A">
+<span style="width:5px;height:5px;border-radius:50%;background:{{ r.color }}"></span>{{ r.oficio }}<span>·</span>{{ r.nota }}
+</p>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ es05c }}">
+<div style="padding:0 0 26px;background:#F7F4ED">
+
+<div style="padding:8px 22px 26px;background:#22201C;border-radius:0 0 26px 26px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0 0">
+<div style="display:flex;align-items:center;gap:10px;min-width:0">
+<span style="flex:none;width:36px;height:36px;border-radius:11px;background:#F7F4ED;display:flex;align-items:center;justify-content:center;overflow:hidden">
+<img src="docs/marca/isotipo-carrito.png" alt="" style="width:30px;height:30px;object-fit:contain;mix-blend-mode:multiply">
+</span>
+<span style="font:800 17px/1 Montserrat,sans-serif;letter-spacing:.03em;color:#F7F4ED">AQUÍ VE</span>
+</div>
+<button type="button" onClick="{{ irLogin }}" style="flex:none;height:36px;padding:0 15px;background:rgba(247,244,237,.12);border:0;border-radius:18px;font:600 14px/1 Poppins,sans-serif;color:#F7F4ED;cursor:pointer" style-hover="background:rgba(247,244,237,.22)">Entrar</button>
+</div>
+<p style="margin:22px 0 0;font:700 12px/1 Montserrat,sans-serif;letter-spacing:.15em;color:#B8F000">JUEVES · BELÉN, CALI</p>
+<h1 style="margin:11px 0 0;font:800 31px/1.12 Montserrat,sans-serif;letter-spacing:-.02em;color:#F7F4ED">Hoy trabajan<br>67 vecinos</h1>
+<div style="display:flex;align-items:center;gap:11px;margin-top:18px;padding:15px 16px;background:#F7F4ED;border-radius:14px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8C8477" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21 21-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></svg>
+<span style="flex:1;font-size:15.5px;color:#6F5A4A">Plomero, curaciones, arreglos…</span>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:20px;padding:0 22px">
+<button type="button" onClick="{{ irCategorias }}" style="padding:0;background:#DCE8F5;border:0;border-radius:16px;overflow:hidden;cursor:pointer;font-family:inherit" style-hover="filter:brightness(.97)">
+<span style="display:flex;height:64px;align-items:center;justify-content:center">
+<span style="width:38px;height:38px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center">
+<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2860A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+</span>
+</span>
+<span style="display:block;padding:0 6px 13px;font:700 14.5px/1 Montserrat,sans-serif;letter-spacing:-.005em;color:#22201C">Servicio</span>
+</button>
+<button type="button" onClick="{{ irProducto }}" style="padding:0;background:#FBEFCF;border:0;border-radius:16px;overflow:hidden;cursor:pointer;font-family:inherit" style-hover="filter:brightness(.97)">
+<span style="display:flex;height:64px;align-items:center;justify-content:center">
+<span style="width:38px;height:38px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center">
+<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#B58A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 10a4 4 0 0 1-8 0"></path><path d="M3.103 6.034h17.794"></path><path d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z"></path></svg>
+</span>
+</span>
+<span style="display:block;padding:0 6px 13px;font:700 14.5px/1 Montserrat,sans-serif;letter-spacing:-.005em;color:#22201C">Producto</span>
+</button>
+<button type="button" onClick="{{ irMuro }}" style="padding:0;background:#F9DEE4;border:0;border-radius:16px;overflow:hidden;cursor:pointer;font-family:inherit" style-hover="filter:brightness(.97)">
+<span style="display:flex;height:64px;align-items:center;justify-content:center">
+<span style="width:38px;height:38px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center">
+<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#C24A65" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path></svg>
+</span>
+</span>
+<span style="display:block;padding:0 6px 13px;font:700 14.5px/1 Montserrat,sans-serif;letter-spacing:-.005em;color:#22201C">Donar</span>
+</button>
+</div>
+
+<div style="margin-top:28px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:0 22px">
+<p style="margin:0;font:800 20px/1 Montserrat,sans-serif;letter-spacing:-.015em;color:#22201C">Disponibles ahora</p>
+<button type="button" onClick="{{ irListado }}" style="background:none;border:0;padding:0;font:600 14px/1 Poppins,sans-serif;color:#2860A8;cursor:pointer">Ver todo</button>
+</div>
+<div style="display:flex;gap:13px;margin-top:14px;padding:0 22px 6px;overflow-x:auto">
+<sc-for list="{{ disponiblesTintados }}" as="d" hint-placeholder-count="3">
+<button type="button" onClick="{{ d.ir }}" style="flex:none;width:196px;padding:0;background:#fff;border:0;border-radius:18px;box-shadow:0 1px 2px rgba(34,32,28,.06),0 10px 28px -14px rgba(34,32,28,.22);overflow:hidden;cursor:pointer;font-family:inherit;text-align:left" style-hover="box-shadow:0 1px 2px rgba(34,32,28,.06),0 14px 32px -14px rgba(34,32,28,.3)">
+<span style="display:block;height:5px;background:{{ d.color }}"></span>
+<span style="display:flex;height:78px;align-items:flex-end;padding:10px 13px;background:{{ d.tinte }}">
+<span style="padding:4px 10px;background:#22201C;border-radius:12px;font:700 10.5px/1.4 Montserrat,sans-serif;letter-spacing:.1em;color:#B8F000">LIBRE HOY</span>
+</span>
+<span style="display:block;padding:13px 14px 15px">
+<span style="display:block;font:800 16.5px/1.2 Montserrat,sans-serif;letter-spacing:-.01em;color:#22201C">{{ d.nombre }}</span>
+<span style="display:block;margin-top:4px;font-size:14px;color:#6B655B">{{ d.oficio }}</span>
+<span style="display:flex;align-items:baseline;gap:6px;margin-top:11px;padding-top:11px;border-top:1px solid #F0ECE3">
+<span style="font:700 16px/1 Poppins,sans-serif;color:#22201C">{{ d.precio }}</span>
+<span style="font-size:12.5px;color:#6F5A4A">{{ d.unidad }}</span>
+</span>
+<span style="display:block;margin-top:6px;font-size:13px;color:#6F5A4A">{{ d.donde }}</span>
+</span>
+</button>
+</sc-for>
+</div>
+</div>
+
+<div style="margin-top:24px;padding:0 22px">
+<div style="position:relative;padding:20px;background:#FBEFCF;border-radius:20px;overflow:hidden">
+<span style="position:absolute;right:-26px;top:-26px;width:120px;height:120px;border-radius:50%;background:rgba(244,197,66,.4)"></span>
+<div style="position:relative">
+<span style="display:inline-flex;align-items:center;gap:7px;padding:5px 11px;background:#22201C;border-radius:13px;font:700 10.5px/1.4 Montserrat,sans-serif;letter-spacing:.1em;color:#B8F000">EL MURO DEL BARRIO</span>
+<p style="margin:13px 0 0;font:800 20px/1.18 Montserrat,sans-serif;letter-spacing:-.015em;color:#22201C;max-width:22ch">Lo que ya no usas le sirve a alguien</p>
+<p style="margin:9px 0 0;font-size:15px;line-height:1.5;color:#4E4A42;max-width:30ch">Publícalo, alguien lo pide y se acuerdan por chat. No pasa dinero por aquí.</p>
+<button type="button" onClick="{{ irMuro }}" style="margin-top:15px;height:46px;padding:0 20px;background:#22201C;border:0;border-radius:23px;font:600 15px/1 Poppins,sans-serif;color:#F7F4ED;cursor:pointer" style-hover="background:#3B372F">Abrir el muro</button>
+</div>
+</div>
+</div>
+
+<div style="margin-top:28px;padding:0 22px">
+<p style="margin:0;font:800 20px/1 Montserrat,sans-serif;letter-spacing:-.015em;color:#22201C">Lo que dice la gente</p>
+<div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
+<sc-for list="{{ reviewsTintadas }}" as="r" hint-placeholder-count="2">
+<div style="padding:16px 17px;background:#fff;border-radius:16px;box-shadow:0 1px 2px rgba(34,32,28,.05)">
+<p style="margin:0;font-size:16px;line-height:1.55;color:#33302A;text-wrap:pretty">{{ r.texto }}</p>
+<div style="display:flex;align-items:center;gap:9px;margin-top:12px;padding-top:12px;border-top:1px solid #F0ECE3">
+<span style="flex:none;width:26px;height:26px;border-radius:50%;background:{{ r.tinte }}"></span>
+<span style="flex:1;min-width:0;font:600 14px/1.2 Poppins,sans-serif;color:#33302A">{{ r.oficio }}</span>
+<span style="flex:none;font:700 14px/1 Poppins,sans-serif;color:#22201C">{{ r.nota }}</span>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ pendiente }}">
+<div style="padding:40px 26px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100%;text-align:center">
+<span style="padding:4px 10px;background:#fff;border:0;box-shadow:0 1px 2px rgba(29,29,27,.13);border-radius:5px;font:700 11px/1.4 Montserrat,sans-serif;letter-spacing:.085em">{{ etiquetaActual }}</span>
+<p style="margin:18px 0 0;font:900 26px/1.08 Montserrat,sans-serif">Entra en el<br>bloque que sigue</p>
+<p style="margin:12px 0 0;max-width:27ch;font-size:15.5px;line-height:1.5;color:#3A362F">Ya está en el mapa de pantallas con su sitio y su color de categoría.</p>
+</div>
+</sc-if>
+
+</div>
+
+<sc-if value="{{ conBarra }}">
+<div style="flex:none;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #D8D0C0;background:#F5EEE2">
+<button type="button" onClick="{{ irInicio }}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:64px;padding:2px 4px 0;background:transparent;border:0;border-top:2px solid {{ navInicioLinea }};cursor:pointer;font-family:inherit;color:{{ navInicioColor }}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path>
+<path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+</svg>
+<span style="font-size:11.5px;line-height:1.05;white-space:nowrap;font-weight:{{ navInicioPeso }}">Inicio</span>
+</button>
+<button type="button" onClick="{{ irCategorias }}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:64px;padding:2px 4px 0;background:transparent;border:0;border-top:2px solid {{ navBuscarLinea }};cursor:pointer;font-family:inherit;color:{{ navBuscarColor }}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="m21 21-4.34-4.34"></path>
+<circle cx="11" cy="11" r="8"></circle>
+</svg>
+<span style="font-size:11.5px;line-height:1.05;white-space:nowrap;font-weight:{{ navBuscarPeso }}">Buscar</span>
+</button>
+<button type="button" onClick="{{ irChat }}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:64px;padding:2px 4px 0;background:transparent;border:0;border-top:2px solid {{ navMensajesLinea }};cursor:pointer;font-family:inherit;color:{{ navMensajesColor }}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+</svg>
+<span style="font-size:11.5px;line-height:1.05;white-space:nowrap;font-weight:{{ navMensajesPeso }}">Mensajes</span>
+</button>
+<button type="button" onClick="{{ irPerfil }}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:64px;padding:2px 4px 0;background:transparent;border:0;border-top:2px solid {{ navPerfilLinea }};cursor:pointer;font-family:inherit;color:{{ navPerfilColor }}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+<circle cx="12" cy="12" r="10"></circle>
+<circle cx="12" cy="10" r="3"></circle>
+<path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"></path>
+</svg>
+<span style="font-size:11.5px;line-height:1.05;white-space:nowrap;font-weight:{{ navPerfilPeso }}">Perfil</span>
+</button>
+</div>
+</sc-if>
+
+<div style="flex:none;display:flex;justify-content:center;padding:8px 0 10px;background:#F5EEE2">
+<span style="width:128px;height:5px;border-radius:3px;background:#1D1D1B"></span>
+</div>
+</div>
+</div>
+</div>
+
+<div style="flex:1;min-width:0;max-width:330px">
+<p style="margin:0 0 6px;font:700 11.5px/1 Montserrat,sans-serif;letter-spacing:.085em;color:#6F5A4A">PANTALLAS</p>
+<p style="margin:0 0 18px;font-size:14px;line-height:1.5;color:#3A362F;text-wrap:pretty">Las 17 del artefacto, más lo que faltaba para cerrar el recorrido: ficha pública, calificación con código, el perfil completo, insumos, fundación y moderación.</p>
+<sc-for list="{{ grupos }}" as="g" hint-placeholder-count="5">
+<div style="margin-bottom:18px">
+<p style="margin:0 0 7px;display:flex;align-items:center;gap:8px;font:700 12px/1 Poppins,sans-serif;letter-spacing:.08em;text-transform:uppercase">
+<span style="width:10px;height:10px;background:{{ g.color }};border:1.5px solid #1D1D1B"></span>{{ g.nombre }}
+</p>
+<div style="display:flex;flex-direction:column;border-left:2px solid #1D1D1B">
+<sc-for list="{{ g.items }}" as="p" hint-placeholder-count="4">
+<button type="button" onClick="{{ p.ir }}" style="display:flex;align-items:center;gap:10px;padding:6px 10px;background:{{ p.fondo }};border:0;border-radius:0 8px 8px 0;font-family:inherit;font-size:14px;text-align:left;cursor:pointer" style-hover="background:#EFE7D8">
+<span style="flex:none;width:20px;font:700 12px/1 Montserrat,sans-serif;color:#6F5A4A">{{ p.num }}</span>
+<span style="min-width:0;font-weight:{{ p.peso }};color:{{ p.color }}">{{ p.nombre }}</span>
+</button>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+// El código de color viene de la sombrilla del isotipo: cuatro gajos, cuatro
+// familias. No es decoración — es lo que deja reconocer una tarjeta de Salud
+// a media pantalla de distancia, y nunca va solo (siempre lleva la palabra).
+const AZUL = '#2860A8'
+const AMARILLO = '#F4C542'
+const VERDE = '#38B58C'
+const ROJO = '#E86F87'
+const LIMA = '#B8F000'
+
+const GRUPOS = [
+  { nombre: 'Entrada', color: LIMA, items: [
+    ['01','Bienvenida'], ['03','Entrar con Google'], ['04','Carné abierto'],
+  ]},
+  { nombre: 'Buscar', color: AZUL, items: [
+    ['05','Inicio'], ['05b','Inicio · suave'], ['05c','Inicio · tintado'], ['05d','Inicio · sin contornos'], ['05e','Inicio · sin contornos + color'], ['06','Categorías'], ['07','Listado'], ['08','Mapa por zonas'], ['09','Ficha del prestador'],
+  ]},
+  { nombre: 'Contratar', color: AZUL, items: [
+    ['10','Pedir el servicio'], ['11','Solicitud enviada'], ['12','Chat'], ['13','Calificar con código'],
+  ]},
+  { nombre: 'Ofrecer', color: AMARILLO, items: [
+    ['14','Formulario de servicios'], ['15','Mi ficha publicada'],
+  ]},
+  { nombre: 'Perfil', color: AMARILLO, items: [
+    ['16','Perfil'], ['17','Mis datos y contacto'], ['18','Mis oficios y precios'], ['19','Disponibilidad y zonas'],
+    ['20','Mis solicitudes'], ['21','Reseñas recibidas'], ['22','Verificaciones'], ['23','Códigos que generé'],
+    ['24','Notificaciones'], ['25','Privacidad y cuenta'],
+  ]},
+  { nombre: 'Insumos', color: VERDE, items: [
+    ['26','Publicar necesidad'], ['27','Tablero de solicitudes'], ['28','Responder'], ['29','Mi solicitud'],
+  ]},
+  { nombre: 'Comunidad', color: ROJO, items: [
+    ['30','Muro · ofrece y necesita'], ['31','Hecho en el barrio'],
+  ]},
+  { nombre: 'Fundación', color: VERDE, items: [
+    ['32','Entregas'], ['33','Hilo acompañado'], ['34','Dato sensible'],
+  ]},
+  { nombre: 'Moderación', color: ROJO, items: [
+    ['35','Colas de trabajo'], ['36','Verificar matrícula'],
+  ]},
+  { nombre: 'Información', color: LIMA, items: [
+    ['37','Ayuda'], ['38','PQR'], ['39','Contactos'], ['40','Quiénes somos'],
+  ]},
+]
+
+const LISTAS = GRUPOS.flatMap((g) => g.items)
+const HECHAS = LISTAS.map((x) => x[0])
+
+// Cuatro celdas, decisión del 26 de agosto de 2026. La emergencia sale de la
+// barra: se entra a ella desde el inicio, así que sus pantallas encienden
+// «Inicio» en vez de tener celda propia.
+const CELDAS = [
+  { clave: 'navInicio', bajo: ['05','05b','05c','05d','05e','26','27','28','29','30','31'] },
+  { clave: 'navBuscar', bajo: ['06', '07', '08', '09'] },
+  { clave: 'navMensajes', bajo: ['12'] },
+  { clave: 'navPerfil', bajo: ['13','15','16','17','18','19','20','21','22','23','24','25','32','35','37','39','40'] },
+]
+
+// Regla 10: destino o flujo, nunca las dos cosas. Un formulario no ofrece
+// cuatro salidas a medio llenar.
+const SIN_BARRA = ['01','03','04','10','11','13','14','26','28','33','34','36']
+
+class Component extends DCLogic {
+  state = { p: '01', sellos: false, muro: 'ofrece' }
+
+  ir = (p) => () => this.setState({ p })
+
+  renderVals() {
+    const p = this.state.p
+    const vals = {}
+    for (const [num] of LISTAS) vals['es' + num] = p === num
+    const actual = LISTAS.find((x) => x[0] === p)
+    return {
+      ...vals,
+      esAcceso: p === '03',
+      pendiente: !HECHAS.includes(p),
+      etiquetaActual: actual ? actual[0] + ' · ' + actual[1].toUpperCase() : '',
+      conBarra: HECHAS.includes(p) && !SIN_BARRA.includes(p),
+      // Color Y línea, como en el componente real: el subrayado se ve aunque
+      // no se distinga el color, y sobrevive al modo de alto contraste.
+      ...CELDAS.reduce((acc, c) => {
+        const activa = c.bajo.includes(p)
+        acc[c.clave + 'Color'] = activa ? AZUL : '#6F5A4A'
+        acc[c.clave + 'Linea'] = activa ? AZUL : 'transparent'
+        acc[c.clave + 'Peso'] = activa ? '600' : '400'
+        return acc
+      }, {}),
+      grupos: GRUPOS.map((g) => ({
+        nombre: g.nombre,
+        color: g.color,
+        items: g.items.map(([num, nombre]) => ({
+          num,
+          nombre,
+          ir: this.ir(num),
+          fondo: p === num ? LIMA : 'transparent',
+          peso: p === num ? '700' : '400',
+          color: HECHAS.includes(num) ? '#1D1D1B' : '#8A8A5C',
+        })),
+      })),
+
+      irBienvenida: this.ir('01'),
+      irLogin: this.ir('03'),
+      irInicio: this.ir('05'),
+      irCategorias: this.ir('06'),
+      irListado: this.ir('07'),
+      irMapa: this.ir('08'),
+      irFicha: this.ir('09'),
+      irPedir: this.ir('10'),
+      irEnviada: this.ir('11'),
+      irChat: this.ir('12'),
+      irCalificar: this.ir('13'),
+      irFormulario: this.ir('14'),
+      irPerfil: this.ir('16'),
+      irOficios: this.ir('18'),
+      irSolicitudes: this.ir('20'),
+      irCodigos: this.ir('23'),
+      irMuro: this.ir('30'),
+      irProducto: this.ir('31'),
+      irAyuda: this.ir('37'),
+
+      // Las dos caras del muro: lo que sobra y lo que falta.
+      muroOfrece: this.state.muro === 'ofrece',
+      muroNecesita: this.state.muro === 'necesita',
+      verOfrece: () => this.setState({ muro: 'ofrece' }),
+      verNecesita: () => this.setState({ muro: 'necesita' }),
+      fondoOfrece: this.state.muro === 'ofrece' ? LIMA : 'transparent',
+      fondoNecesita: this.state.muro === 'necesita' ? LIMA : 'transparent',
+      pesoOfrece: this.state.muro === 'ofrece' ? '700' : '400',
+      pesoNecesita: this.state.muro === 'necesita' ? '700' : '400',
+      cuentaOfrece: this.state.muro === 'ofrece' ? '#fff' : '#EFE9DE',
+      cuentaNecesita: this.state.muro === 'necesita' ? '#fff' : '#EFE9DE',
+      sellosAbiertos: this.state.sellos,
+      galonSellos: this.state.sellos ? '▴' : '▾',
+      alternarSellos: () => this.setState((s) => ({ sellos: !s.sellos })),
+
+      disponibles: [
+        { nombre: 'Marta Ríos', oficio: 'Enfermera a domicilio', precio: 'Desde $80.000', donde: 'Belén · 1,2 km', categoria: 'SALUD', color: AZUL, tinta: '#fff', ir: this.ir('09') },
+        { nombre: 'Costurera Marta', oficio: 'Arreglos de ropa', precio: 'Desde $15.000', donde: 'La América · 2,0 km', categoria: 'CONFECCIÓN', color: AMARILLO, tinta: '#1D1D1B', ir: this.ir('09') },
+        { nombre: 'Tostión La Playa', oficio: 'Café tostado', precio: '$28.000 / libra', donde: 'Belén · 0,8 km', categoria: 'ALIMENTOS', color: VERDE, tinta: '#1D1D1B', ir: this.ir('09') },
+      ],
+      reviews: [
+        { oficio: 'Carpintería Betancur', estrellas: '★★★★☆', texto: 'Hizo el mueble en cuatro días y quedó exacto a la medida.' },
+        { oficio: 'Costurera Marta', estrellas: '★★★★★', texto: 'Arregló tres pantalones el mismo día. Cobra lo justo.' },
+      ],
+      categorias: [
+        { nombre: 'Salud', cerca: 14, ejemplo: 'Curaciones, fisioterapia, cuidado', color: AZUL, ir: this.ir('07') },
+        { nombre: 'Hogar', cerca: 31, ejemplo: 'Plomería, eléctrico, limpieza', color: AMARILLO, ir: this.ir('07') },
+        { nombre: 'Oficios', cerca: 22, ejemplo: 'Carpintería, confección, arreglos', color: AMARILLO, ir: this.ir('07') },
+        { nombre: 'Alimentos', cerca: 18, ejemplo: 'Almuerzos, panadería, tostión', color: VERDE, ir: this.ir('07') },
+        { nombre: 'Educación', cerca: 9, ejemplo: 'Refuerzos, música, informática', color: ROJO, ir: this.ir('07') },
+        { nombre: 'Transporte', cerca: 12, ejemplo: 'Trasteos, acarreos, mensajería', color: AZUL, ir: this.ir('07') },
+      ],
+      personas: [
+        { nombre: 'Marta Ríos', oficio: 'Enfermera a domicilio', precio: '$80.000', unidad: 'por visita', donde: 'Belén · 1,2 km', estrellas: '★★★★★', categoria: 'SALUD', color: AZUL, tinta: '#fff', sello: 'VERIFICADA', fondoSello: '#B8F000', ir: this.ir('09') },
+        { nombre: 'Julián Ocampo', oficio: 'Fisioterapeuta', precio: '$70.000', unidad: 'por sesión', donde: 'Laureles · 2,4 km', estrellas: '★★★☆☆', categoria: 'SALUD', color: AZUL, tinta: '#fff', sello: 'SIN VERIFICAR', fondoSello: '#FEF6DE', ir: this.ir('09') },
+        { nombre: 'Diana Puerta', oficio: 'Cuidadora de adultos', precio: '$55.000', unidad: 'por hora', donde: 'La América · 3,1 km', estrellas: '★★★★☆', categoria: 'SALUD', color: AZUL, tinta: '#fff', sello: 'VERIFICADA', fondoSello: '#B8F000', ir: this.ir('09') },
+        { nombre: 'Camilo Ospina', oficio: 'Nutricionista', precio: '$90.000', unidad: 'por consulta', donde: 'Estadio · 3,8 km', estrellas: '★★★★☆', categoria: 'SALUD', color: AZUL, tinta: '#fff', sello: 'MATRÍCULA', fondoSello: '#B8F000', ir: this.ir('09') },
+      ],
+      pines: [
+        { x: '30%', y: '40%', n: 6, zona: 'Belén', color: AZUL, ir: this.ir('07') },
+        { x: '70%', y: '30%', n: 3, zona: 'Laureles', color: AMARILLO, ir: this.ir('07') },
+        { x: '42%', y: '72%', n: 4, zona: 'La América', color: VERDE, ir: this.ir('07') },
+        { x: '78%', y: '82%', n: 1, zona: 'Estadio', color: ROJO, ir: this.ir('07') },
+      ],
+      oficiosFicha: [
+        { nombre: 'Curaciones', monto: 'Desde $80.000', detalle: 'por trabajo' },
+        { nombre: 'Control de signos vitales', monto: 'Desde $45.000', detalle: 'por visita' },
+        { nombre: 'Acompañamiento a cita médica', monto: 'Desde $50.000', detalle: 'precio solidario · por hora' },
+      ],
+      datosFicha: [
+        { glifo: '◍', valor: 'Comuna 19 · Cali, Valle del Cauca', nota: 'Voy a domicilio · Atiendo en mi local' },
+        { glifo: '▣', valor: 'Lunes a sábado · Mañana y tarde', nota: 'Domingo libre' },
+        { glifo: '▤', valor: 'Efectivo, Nequi, Bre-B', nota: 'El pago se acuerda entre ustedes. AquíVe no lo recibe ni lo intermedia.' },
+      ],
+      criterios: [
+        { nombre: 'Cumplimiento', ancho: '92%', valor: '4,6', pregunta: '¿Hizo lo que acordaron?' },
+        { nombre: 'Trato', ancho: '96%', valor: '4,8', pregunta: '¿Cómo fue el trato?' },
+        { nombre: 'Puntualidad', ancho: '84%', valor: '4,2', pregunta: '¿Llegó a la hora?' },
+      ],
+      resumenPedido: [
+        { clave: 'Servicio', valor: 'Curaciones' },
+        { clave: 'Cuándo', valor: 'Esta semana' },
+        { clave: 'Zona', valor: 'Belén' },
+        { clave: 'Pago', valor: 'Algo, pero poco' },
+      ],
+      mensajes: [
+        { texto: 'Hola, vi tu pedido de curaciones. ¿El jueves a las 3 te sirve?', lado: 'flex-start', fondo: '#fff', radio: '14px 14px 14px 4px' },
+        { texto: 'Sí, perfecto. ¿Llevas los insumos o los compro yo?', lado: 'flex-end', fondo: '#B8F000', radio: '14px 14px 4px 14px' },
+        { texto: 'Yo llevo todo. Son $80.000 por la visita.', lado: 'flex-start', fondo: '#fff', radio: '14px 14px 14px 4px' },
+        { texto: 'De acuerdo. Te espero.', lado: 'flex-end', fondo: '#B8F000', radio: '14px 14px 4px 14px' },
+      ],
+      digitos: [{ c: '7' }, { c: 'K' }, { c: '4' }, { c: 'M' }, { c: '2' }],
+      // 05b: el color de familia baja a marca de 7 px y hairline de 2 px, no a bloque.
+      categoriasSuaves: [
+        { nombre: 'Salud', cerca: 14, color: AZUL, ir: this.ir('07') },
+        { nombre: 'Hogar', cerca: 31, color: AMARILLO, ir: this.ir('07') },
+        { nombre: 'Oficios', cerca: 22, color: AMARILLO, ir: this.ir('07') },
+        { nombre: 'Alimentos', cerca: 18, color: VERDE, ir: this.ir('07') },
+        { nombre: 'Educación', cerca: 9, color: ROJO, ir: this.ir('07') },
+        { nombre: 'Transporte', cerca: 12, color: AZUL, ir: this.ir('07') },
+      ],
+      disponiblesSuaves: [
+        { nombre: 'Marta Ríos', oficio: 'Enfermera a domicilio', donde: 'Belén', precio: '$80.000', unidad: 'por visita', color: AZUL, linea: 'transparent', ir: this.ir('09') },
+        { nombre: 'Costurera Marta', oficio: 'Arreglos de ropa', donde: 'La América', precio: '$15.000', unidad: 'desde', color: AMARILLO, linea: '#EFEAE0', ir: this.ir('09') },
+        { nombre: 'Tostión La Playa', oficio: 'Café tostado', donde: 'Belén', precio: '$28.000', unidad: 'la libra', color: VERDE, linea: '#EFEAE0', ir: this.ir('09') },
+        { nombre: 'Julián Ocampo', oficio: 'Fisioterapeuta', donde: 'Laureles', precio: '$70.000', unidad: 'por sesión', color: AZUL, linea: '#EFEAE0', ir: this.ir('09') },
+      ],
+      // 05c: misma estructura que la 05, pero el color llega como campo tintado
+      // y la jerarquía la carga la banda oscura, no el contorno negro.
+      // 05e: el cartel de la 05d, pero cada familia aporta su pastel de fondo
+      // y su saturado en la cinta y la sombra. Cuatro parejas: azul, amarillo,
+      // verde y rojo, cada una con su versión clara y su versión plena.
+      disponiblesDiversos: [
+        { nombre: 'Marta Ríos', oficio: 'Enfermera a domicilio', precio: 'Desde $80.000', donde: 'Belén · 1,2 km', categoria: 'SALUD', color: AZUL, tinta: '#fff', tinte: '#DCE8F5', ir: this.ir('09') },
+        { nombre: 'Costurera Marta', oficio: 'Arreglos de ropa', precio: 'Desde $15.000', donde: 'La América · 2,0 km', categoria: 'CONFECCIÓN', color: AMARILLO, tinta: '#1D1D1B', tinte: '#FBEFCF', ir: this.ir('09') },
+        { nombre: 'Tostión La Playa', oficio: 'Café tostado', precio: '$28.000 / libra', donde: 'Belén · 0,8 km', categoria: 'ALIMENTOS', color: VERDE, tinta: '#1D1D1B', tinte: '#DCF0E8', ir: this.ir('09') },
+        { nombre: 'Refuerzo escolar', oficio: 'Matemáticas de primaria', precio: '$20.000 / hora', donde: 'Laureles · 1,9 km', categoria: 'EDUCACIÓN', color: ROJO, tinta: '#1D1D1B', tinte: '#F9DEE4', ir: this.ir('09') },
+      ],
+      reviewsDiversas: [
+        { oficio: 'Carpintería Betancur', estrellas: '★★★★☆', texto: 'Hizo el mueble en cuatro días y quedó exacto a la medida.', color: AMARILLO, tinte: '#FBEFCF' },
+        { oficio: 'Costurera Marta', estrellas: '★★★★★', texto: 'Arregló tres pantalones el mismo día. Cobra lo justo.', color: VERDE, tinte: '#DCF0E8' },
+      ],
+      disponiblesTintados: [
+        { nombre: 'Marta Ríos', oficio: 'Enfermera a domicilio', precio: '$80.000', unidad: 'por visita', donde: 'Belén · 1,2 km', color: AZUL, tinte: '#DCE8F5', ir: this.ir('09') },
+        { nombre: 'Costurera Marta', oficio: 'Arreglos de ropa', precio: '$15.000', unidad: 'desde', donde: 'La América · 2,0 km', color: AMARILLO, tinte: '#FBEFCF', ir: this.ir('09') },
+        { nombre: 'Tostión La Playa', oficio: 'Café tostado', precio: '$28.000', unidad: 'la libra', donde: 'Belén · 0,8 km', color: VERDE, tinte: '#DCF0E8', ir: this.ir('09') },
+      ],
+      reviewsTintadas: [
+        { texto: '«Hizo el mueble en cuatro días y quedó exacto a la medida.»', oficio: 'Carpintería Betancur', nota: '4,5', tinte: '#FBEFCF' },
+        { texto: '«Arregló tres pantalones el mismo día. Cobra lo justo.»', oficio: 'Costurera Marta', nota: '5,0', tinte: '#DCF0E8' },
+      ],
+      reviewsSuaves: [
+        { texto: '«Hizo el mueble en cuatro días y quedó exacto a la medida.»', oficio: 'Carpintería Betancur', nota: '4,5', color: AMARILLO },
+        { texto: '«Arregló tres pantalones el mismo día. Cobra lo justo.»', oficio: 'Costurera Marta', nota: '5,0', color: AMARILLO },
+      ],
+      irRegistroListo: this.ir('04'),
+      irVerificaciones: this.ir('22'),
+      progreso: [
+        { color: LIMA }, { color: LIMA }, { color: LIMA }, { color: LIMA }, { color: LIMA },
+        { color: LIMA }, { color: '#4A483F' }, { color: '#4A483F' }, { color: '#4A483F' }, { color: '#4A483F' },
+      ],
+      secciones: [
+        { num: '01', nombre: 'Quién eres', ayuda: 'Nombre y correo vienen de Google. Falta tu teléfono y tu ciudad.', estado: 'LISTO', fondoEstado: LIMA, color: AZUL, tinta: '#fff', ir: this.ir('17') },
+        { num: '02', nombre: 'Bajo qué figura', ayuda: 'Por tu cuenta, independiente o negocio registrado.', estado: 'LISTO', fondoEstado: LIMA, color: AZUL, tinta: '#fff', ir: this.ir('17') },
+        { num: '03', nombre: 'Tus oficios', ayuda: 'Del catálogo, con tu precio desde. Hasta ocho.', estado: '3 DE 8', fondoEstado: LIMA, color: AMARILLO, tinta: '#1D1D1B', ir: this.ir('18') },
+        { num: '04', nombre: 'Fotos de trabajos', ayuda: 'Cerrado hasta que se decida por escrito qué se puede subir.', estado: 'CERRADO', fondoEstado: '#F0E8DA', color: AMARILLO, tinta: '#1D1D1B', ir: this.ir('14') },
+        { num: '05', nombre: 'Días y horas', ayuda: 'Los días que trabajas y en qué franja.', estado: 'LISTO', fondoEstado: LIMA, color: VERDE, tinta: '#1D1D1B', ir: this.ir('19') },
+        { num: '06', nombre: 'Zonas y modalidad', ayuda: 'Comuna o barrio, y si vas a domicilio.', estado: 'LISTO', fondoEstado: LIMA, color: VERDE, tinta: '#1D1D1B', ir: this.ir('19') },
+        { num: '07', nombre: 'Referencias', ayuda: 'Un cliente anterior al que podamos llamar. Va cifrado.', estado: '1 PENDIENTE', fondoEstado: '#FEF6DE', color: ROJO, tinta: '#1D1D1B', ir: this.ir('22') },
+        { num: '08', nombre: 'Tu presentación', ayuda: 'Lo primero que leen. Máximo 300 caracteres.', estado: 'LISTO', fondoEstado: LIMA, color: ROJO, tinta: '#1D1D1B', ir: this.ir('17') },
+        { num: '09', nombre: 'Verificar tu teléfono', ayuda: 'Alguien de la fundación te llama. No hay SMS automático.', estado: 'EN COLA', fondoEstado: '#FEF6DE', color: AZUL, tinta: '#fff', ir: this.ir('22') },
+      ],
+      irResenas: this.ir('21'),
+      irTablero: this.ir('27'),
+      irEntregas: this.ir('32'),
+      irHilo: this.ir('33'),
+      irDatoSensible: this.ir('34'),
+      irColas: this.ir('35'),
+      irPqr: this.ir('38'),
+      irContactos: this.ir('39'),
+      colasAliado: [
+        { n: '3', nombre: 'Por atender', detalle: 'Solicitudes de tu zona sin nadie a cargo', color: AMARILLO, ir: this.ir('32') },
+        { n: '2', nombre: 'Hilos abiertos', detalle: 'Con entrega acordada', color: VERDE, ir: this.ir('33') },
+        { n: '5', nombre: 'Equipo', detalle: '1 esperando aprobación', color: AZUL, ir: this.ir('32') },
+        { n: '12', nombre: 'Entregas del mes', detalle: 'Sobreviven al borrado, sin nombres', color: ROJO, ir: this.ir('32') },
+      ],
+      hilos: [
+        { codigo: '4F2A · BELÉN', que: 'Agua, arroz y tres cobijas', quienes: 'Jorge Betancur ofrece · tú coordinas', estado: 'ACORDADA', fondoEstado: LIMA, reloj: 'Techo duro en 2 días', color: VERDE, tinta: '#1D1D1B', ir: this.ir('33') },
+        { codigo: '9B7K · LA AMÉRICA', que: 'Pañales etapa 3 y jabón', quienes: 'Sin nadie a cargo todavía', estado: 'SIN ALIADO', fondoEstado: '#FEF6DE', reloj: 'Publicada hace 11 horas', color: AMARILLO, tinta: '#1D1D1B', ir: this.ir('33') },
+      ],
+      mensajesHilo: [
+        { quien: 'JORGE (OFRECE)', texto: 'Tengo las garrafas listas. ¿A qué hora abre el acopio?', lado: 'flex-start', alinea: 'left', fondo: '#fff', radio: '14px 14px 14px 4px' },
+        { quien: 'TÚ (FUNDACIÓN)', texto: 'De 8 a 12. Puedes dejarlas en la portería a nombre de la solicitud 4F2A.', lado: 'flex-end', alinea: 'right', fondo: '#B8F000', radio: '14px 14px 4px 14px' },
+        { quien: 'QUIEN PIDE', texto: 'Yo puedo recogerlas por la tarde, gracias.', lado: 'flex-start', alinea: 'left', fondo: '#DFF0FA', radio: '14px 14px 14px 4px' },
+      ],
+      datosSensibles: [
+        { etiqueta: 'NOMBRE DE QUIEN RECIBE', valor: 'Ana María Cifuentes', tipografia: 'Poppins,sans-serif', peso: '600', espaciado: 'normal', estado: 'DESTAPADO', fondoEstado: LIMA, tintaValor: '#1D1D1B', abierto: true, cerrado: false, motivo: 'Confirmar la entrega en el acopio' },
+        { etiqueta: 'DOCUMENTO (CC)', valor: '•••• •••• 47', tipografia: "'Geist Mono',monospace", peso: '500', espaciado: '.1em', estado: 'TAPADO', fondoEstado: '#F0E8DA', tintaValor: '#6F5A4A', abierto: false, cerrado: true, motivo: '' },
+        { etiqueta: 'TELÉFONO', valor: '••• ••• ••••', tipografia: "'Geist Mono',monospace", peso: '500', espaciado: '.1em', estado: 'TAPADO', fondoEstado: '#F0E8DA', tintaValor: '#6F5A4A', abierto: false, cerrado: true, motivo: '' },
+      ],
+      colasAdmin: [
+        { n: '12', nombre: 'Matrículas por revisar', detalle: 'Una persona abre el registro y mira el número a mano', color: AZUL, tinta: '#fff', ir: this.ir('36') },
+        { n: '7', nombre: 'Teléfonos por llamar', detalle: 'Sin OTP y sin proveedor de SMS: se llama', color: VERDE, tinta: '#1D1D1B', ir: this.ir('36') },
+        { n: '2', nombre: 'Hilos sin fundación', detalle: 'Un hilo sin aliado a cargo no acepta mensajes', color: AMARILLO, tinta: '#1D1D1B', ir: this.ir('32') },
+        { n: '4', nombre: 'Reportes', detalle: '1 por extorsión · va a borrado, no a ocultar', color: ROJO, tinta: '#1D1D1B', ir: this.ir('35') },
+      ],
+      datosMatricula: [
+        { etiqueta: 'ENTIDAD DECLARADA', valor: 'ReTHUS · Talento humano en salud' },
+        { etiqueta: 'NÚMERO DE MATRÍCULA', valor: '1144-2019-3387' },
+        { etiqueta: 'PROFESIÓN DECLARADA', valor: 'Nutricionista dietista' },
+      ],
+      preguntas: [
+        { t: '¿Cómo publico mi oficio?' },
+        { t: '¿Cómo se acuerdan los pagos?' },
+        { t: '¿Qué pasa si cancelo un servicio?' },
+        { t: '¿Por qué uno de mis oficios no aparece?' },
+        { t: 'Reportar a alguien' },
+      ],
+      contactos: [
+        { etiqueta: 'WHATSAPP', valor: '300 123 4567' },
+        { etiqueta: 'CORREO', valor: 'hola@aquive.co' },
+        { etiqueta: 'PUNTO DE ENCUENTRO', valor: 'Casa de la cultura, Belén · sábados 10 a. m.' },
+        { etiqueta: 'HABEAS DATA', valor: 'datos@aquive.co · Fundación Nodo Social' },
+      ],
+      puntos: [
+        { n: '01', tinta: '#fff', titulo: 'Gratis para quien ofrece', texto: 'Publicar un oficio no cuesta nada, hoy ni después. No hay plan pago ni posiciones destacadas.', color: AZUL },
+        { n: '02', tinta: '#1D1D1B', titulo: 'Sostenida por donaciones', texto: 'Aportes voluntarios y donaciones entre vecinos. La plataforma no recibe dinero por los servicios.', color: AMARILLO },
+        { n: '03', tinta: '#1D1D1B', titulo: 'Confianza que se puede mirar', texto: 'Teléfono llamado por una persona, referencias comprobadas y códigos de servicio. Ninguna dice «confiable».', color: VERDE },
+      ],
+      irResponder: this.ir('28'),
+      irMiSolicitud: this.ir('29'),
+      irPublicarInsumo: this.ir('26'),
+      insumos: [
+        { nombre: 'Agua embotellada', cantidad: '6 bot.' },
+        { nombre: 'Arroz', cantidad: '2 lb' },
+        { nombre: 'Cobijas', cantidad: '3' },
+      ],
+      tablero: [
+        { codigo: '4F2A', categoria: 'ALIMENTACIÓN', que: 'Agua, arroz y tres cobijas', donde: 'Cali · Belén · hace 4 horas', frescura: 'RECIENTE', fondoFrescura: LIMA, chips: [{ t: 'Agua · 6' }, { t: 'Arroz · 2 lb' }, { t: 'Cobijas · 3' }] },
+        { codigo: '9B7K', categoria: 'ASEO', que: 'Pañales etapa 3 y jabón', donde: 'Cali · La América · hace 11 horas', frescura: 'HOY', fondoFrescura: '#fff', chips: [{ t: 'Pañales · 1 paq.' }, { t: 'Jabón · 2' }] },
+        { codigo: 'C31M', categoria: 'COCINA', que: 'Ollas y una estufa portátil', donde: 'Cali · Comuna 19 · hace 2 días', frescura: 'SIN CONFIRMAR', fondoFrescura: '#FEF6DE', chips: [{ t: 'Ollas · 2' }, { t: 'Estufa · 1' }, { t: 'Pimpinas · 1' }] },
+      ],
+      respuestas: [
+        { nombre: 'Jorge Betancur', cuando: 'Respondió hace 1 hora', mensaje: 'Tengo dos garrafas y tres cobijas. Puedo llevarlas mañana en la mañana.', cubre: [{ t: 'Agua' }, { t: 'Cobijas' }], color: AZUL },
+        { nombre: 'Fundación Nodo Social', cuando: 'Respondió hace 3 horas', mensaje: 'Tenemos arroz y aseo en el acopio de la comuna 19. Podemos coordinar la entrega.', cubre: [{ t: 'Arroz' }], color: VERDE },
+      ],
+      muro: [
+        { quien: 'Luz Marina Tobón', donde: 'Belén · hace 2 h', etiqueta: 'HOGAR', color: AMARILLO, tinta: '#1D1D1B', que: 'Nevera pequeña en buen estado', detalle: 'Funciona bien, la cambiamos por una más grande. Se entrega en el barrio; quien la reciba se encarga del transporte.', pie: 'Sin solicitudes aún' },
+        { quien: 'Colegio San Antonio', donde: 'Laureles · ayer', etiqueta: 'EDUCACIÓN', color: ROJO, tinta: '#1D1D1B', que: '40 cuadernos y útiles escolares', detalle: 'Sobraron de la campaña de útiles. Preferimos entregarlos a familias con niños en primaria.', pie: '2 personas lo pidieron' },
+      ],
+      productos: [
+        { nombre: 'Pan de la esquina', quien: 'Panadería Doña Alba', precio: '$4.500', color: VERDE, ir: this.ir('09') },
+        { nombre: 'Muebles a medida', quien: 'Carpintería Betancur', precio: 'Desde $180.000', color: AMARILLO, ir: this.ir('09') },
+        { nombre: 'Café tostado', quien: 'Tostión La Playa', precio: '$28.000 / libra', color: VERDE, ir: this.ir('09') },
+        { nombre: 'Arreglos de ropa', quien: 'Costurera Marta', precio: 'Desde $15.000', color: AMARILLO, ir: this.ir('09') },
+      ],
+      pestanasLoMio: [
+        { nombre: 'Pedí', cuenta: '3', fondo: LIMA, fondoCuenta: '#fff', peso: '700' },
+        { nombre: 'Me pidieron', cuenta: '2', fondo: 'transparent', fondoCuenta: '#F0E8DA', peso: '400' },
+        { nombre: 'Donaciones', cuenta: '1', fondo: 'transparent', fondoCuenta: '#F0E8DA', peso: '400' },
+      ],
+      misSolicitudes: [
+        { nombre: 'Marta Ríos', servicio: 'CURACIONES', cuando: 'Jue 28, 3:00 p. m.', estado: 'TERMINADO', fondoEstado: '#F0E8DA', pie: 'Te dio el código 7K4M2', accion: 'Calificar', fondoBoton: LIMA, color: AZUL, tinta: '#fff', ir: this.ir('13') },
+        { nombre: 'Julián Ocampo', servicio: 'FISIOTERAPIA', cuando: 'Sáb 30, 10:00 a. m.', estado: 'EN CURSO', fondoEstado: LIMA, pie: '2 mensajes sin leer', accion: 'Abrir chat', fondoBoton: '#fff', color: AZUL, tinta: '#fff', ir: this.ir('12') },
+        { nombre: 'Diana Puerta', servicio: 'CUIDADO', cuando: 'Mar 12', estado: 'CALIFICADO', fondoEstado: '#DFF3EC', pie: 'Le pusiste ★★★★☆', accion: 'Ver ficha', fondoBoton: '#fff', color: ROJO, tinta: '#1D1D1B', ir: this.ir('09') },
+      ],
+      resenasRecibidas: [
+        { estrellas: '★★★★★', cuando: 'HACE 3 DÍAS', texto: 'Llegó a la hora acordada y le explicó todo lo de la curación a mi mamá. Volvería a llamarla.', respondida: false, pendiente: true, replica: '' },
+        { estrellas: '★★★★☆', cuando: 'HACE 2 SEMANAS', texto: 'Muy buena atención. El precio quedó claro desde el principio.', respondida: true, pendiente: false, replica: 'Gracias, cualquier cosa me escriben.' },
+        { estrellas: '★★★☆☆', cuando: 'HACE 1 MES', texto: 'Buen trabajo, aunque se demoró media hora en llegar.', respondida: true, pendiente: false, replica: 'Tiene razón, ese día hubo trancón en la 5.ª. Gracias por decirlo.' },
+      ],
+      verificaciones: [
+        { nombre: 'Teléfono', glifo: '✆', dice: 'Alguien de la fundación llamó al 300 123 4567 y contestaste tú. No hay SMS automático.', estado: 'HECHO', fondoEstado: LIMA, fondoIcono: LIMA, sombra: VERDE, conAccion: false, accion: '' },
+        { nombre: 'Referencias', glifo: '◍', dice: 'Diste dos contactos de clientes anteriores. Uno confirmó; al otro no lo hemos podido llamar.', estado: '1 DE 2', fondoEstado: '#FEF6DE', fondoIcono: AMARILLO, sombra: AMARILLO, conAccion: true, accion: 'Cambiar la referencia pendiente' },
+        { nombre: 'Servicios confirmados', glifo: '⌗', dice: 'Nueve personas usaron el código que les diste al terminar. Es lo único que no depende de nosotros.', estado: '9', fondoEstado: LIMA, fondoIcono: VERDE, sombra: VERDE, conAccion: false, accion: '' },
+        { nombre: 'Matrícula profesional', glifo: '▣', dice: 'Si tienes matrícula de una entidad con registro consultable, una persona revisa que el número exista.', estado: 'NO APLICA', fondoEstado: '#F0E8DA', fondoIcono: '#F0E8DA', sombra: AZUL, conAccion: true, accion: 'Tengo matrícula' },
+      ],
+      codigos: [
+        { codigo: '7K4M2', cuando: 'Dado el 25 de agosto', estado: 'SIN USAR', fondo: '#FEF6DE' },
+        { codigo: 'B39QX', cuando: 'Dado el 24 de agosto', estado: 'SIN USAR', fondo: '#FEF6DE' },
+        { codigo: 'P82LT', cuando: 'Usado el 12 de agosto', estado: 'CALIFICADO', fondo: LIMA },
+        { codigo: 'M40RD', cuando: 'Vencido el 2 de agosto', estado: 'VENCIDO', fondo: '#F0E8DA' },
+      ],
+      avisos: [
+        { nombre: 'Alguien pidió uno de mis oficios', detalle: 'El aviso que de verdad importa si vives de esto.', fondoSwitch: LIMA, lado: 'flex-end' },
+        { nombre: 'Mensaje nuevo en un chat', detalle: 'Solo de chats abiertos por un pedido.', fondoSwitch: LIMA, lado: 'flex-end' },
+        { nombre: 'Alguien usó mi código', detalle: 'Cuando entra una calificación nueva.', fondoSwitch: LIMA, lado: 'flex-end' },
+        { nombre: 'Mi solicitud está por vencer', detalle: 'A los 13 días, para que puedas renovarla.', fondoSwitch: LIMA, lado: 'flex-end' },
+        { nombre: 'Novedades de AquíVe', detalle: 'Cambios en la plataforma. Poco frecuente.', fondoSwitch: '#F0E8DA', lado: 'flex-start' },
+      ],
+      misDatos: [
+        { que: 'Tu ficha pública', vida: 'Permanente. Se va cuando tú la borras.', color: LIMA },
+        { que: 'Tus chats abiertos', vida: 'Mueren con la solicitud que los abrió.', color: AMARILLO },
+        { que: 'Tus referencias', vida: 'Cifradas. Nunca aparecen en una vista pública.', color: ROJO },
+        { que: 'Tu correo', vida: 'No lo guardamos. De tu cuenta solo queda un identificador interno.', color: VERDE },
+      ],
+      autorizaciones: [
+        { nombre: 'Publicar mi nombre, teléfono y oficios', version: 'v3', cuando: 'Aceptada el 14 de agosto de 2026' },
+        { nombre: 'Entregar contactos de referencia', version: 'v2', cuando: 'Aceptada el 18 de agosto de 2026' },
+      ],
+      cifras: [
+        { n: '9', que: 'servicios confirmados' },
+        { n: '4,6', que: 'promedio de 6' },
+        { n: '2', que: 'códigos sin usar' },
+      ],
+      menuPerfil: [
+        { glifo: '✎', nombre: 'Mis datos y contacto', pista: '', colorPista: '#6F5A4A', color: AZUL, tinta: '#fff', ir: this.ir('17') },
+        { glifo: '▤', nombre: 'Mis oficios y precios', pista: '3', colorPista: '#6F5A4A', color: AMARILLO, tinta: '#1D1D1B', ir: this.ir('18') },
+        { glifo: '▣', nombre: 'Cuándo y dónde atiendo', pista: '', colorPista: '#6F5A4A', color: VERDE, tinta: '#1D1D1B', ir: this.ir('19') },
+        { glifo: '◷', nombre: 'Mis solicitudes', pista: '3', colorPista: '#6F5A4A', color: AZUL, tinta: '#fff', ir: this.ir('20') },
+        { glifo: '★', nombre: 'Reseñas recibidas', pista: '1 sin responder', colorPista: '#2860A8', color: AMARILLO, tinta: '#1D1D1B', ir: this.ir('21') },
+        { glifo: '✓', nombre: 'Verificaciones', pista: '1 pendiente', colorPista: '#A83450', color: VERDE, tinta: '#1D1D1B', ir: this.ir('22') },
+        { glifo: '⌗', nombre: 'Códigos que generé', pista: '2 sin usar', colorPista: '#2860A8', color: ROJO, tinta: '#1D1D1B', ir: this.ir('23') },
+        { glifo: '◔', nombre: 'Avisos', pista: '', colorPista: '#6F5A4A', color: AZUL, tinta: '#fff', ir: this.ir('24') },
+        { glifo: '⚿', nombre: 'Privacidad y cuenta', pista: '', colorPista: '#6F5A4A', color: ROJO, tinta: '#1D1D1B', ir: this.ir('25') },
+        { glifo: '▭', nombre: 'Mi ficha publicada', pista: '', colorPista: '#6F5A4A', color: AMARILLO, tinta: '#1D1D1B', ir: this.ir('15') },
+      ],
+      campos: [
+        { etiqueta: 'NOMBRE VISIBLE', sello: 'PÚBLICO', fondoSello: LIMA, valor: 'Marta Ríos' },
+        { etiqueta: 'TELÉFONO / WHATSAPP', sello: 'PÚBLICO', fondoSello: LIMA, valor: '300 123 4567' },
+        { etiqueta: 'CORREO', sello: 'PRIVADO', fondoSello: '#F0E8DA', valor: 'marta@ejemplo.com' },
+        { etiqueta: 'CIUDAD', sello: 'PÚBLICO', fondoSello: LIMA, valor: 'Cali, Valle del Cauca' },
+        { etiqueta: 'PRESENTACIÓN', sello: 'PÚBLICO', fondoSello: LIMA, valor: 'Auxiliar de enfermería con ocho años en atención domiciliaria.' },
+      ],
+      misOficios: [
+        { nombre: 'Curaciones', grupo: 'SALUD', color: AZUL, tinta: '#fff', estado: 'PUBLICADO', fondoEstado: LIMA, modo: 'Precio normal', precio: 'Desde $80.000 por trabajo', nota: 'Aparece en Salud y en las búsquedas de tu zona.' },
+        { nombre: 'Control de signos vitales', grupo: 'SALUD', color: AZUL, tinta: '#fff', estado: 'PUBLICADO', fondoEstado: LIMA, modo: 'Precio normal', precio: 'Desde $45.000 por visita', nota: 'Aparece en Salud y en las búsquedas de tu zona.' },
+        { nombre: 'Cuidado de adulto mayor', grupo: 'CUIDADO · RIESGO ALTO', color: ROJO, tinta: '#1D1D1B', estado: 'ESCONDIDO', fondoEstado: '#FEF6DE', modo: 'Precio solidario', precio: 'Desde $50.000 por hora', nota: 'Falta una referencia confirmada para que aparezca en el directorio.' },
+      ],
+      dias: [
+        { nombre: 'Lunes', horas: '7 a. m. – 5 p. m.', fondoSwitch: LIMA, lado: 'flex-end', colorHoras: '#1D1D1B', tintaNombre: '#1D1D1B' },
+        { nombre: 'Martes', horas: '7 a. m. – 5 p. m.', fondoSwitch: LIMA, lado: 'flex-end', colorHoras: '#1D1D1B', tintaNombre: '#1D1D1B' },
+        { nombre: 'Miércoles', horas: '7 a. m. – 5 p. m.', fondoSwitch: LIMA, lado: 'flex-end', colorHoras: '#1D1D1B', tintaNombre: '#1D1D1B' },
+        { nombre: 'Jueves', horas: '7 a. m. – 5 p. m.', fondoSwitch: LIMA, lado: 'flex-end', colorHoras: '#1D1D1B', tintaNombre: '#1D1D1B' },
+        { nombre: 'Viernes', horas: '7 a. m. – 5 p. m.', fondoSwitch: LIMA, lado: 'flex-end', colorHoras: '#1D1D1B', tintaNombre: '#1D1D1B' },
+        { nombre: 'Sábado', horas: '8 a. m. – 1 p. m.', fondoSwitch: LIMA, lado: 'flex-end', colorHoras: '#1D1D1B', tintaNombre: '#1D1D1B' },
+        { nombre: 'Domingo', horas: 'Libre', fondoSwitch: '#F0E8DA', lado: 'flex-start', colorHoras: '#6F5A4A', tintaNombre: '#6F5A4A' },
+      ],
+      zonas: [
+        { nombre: 'Belén', cuantos: '6 personas', color: AZUL, ir: this.ir('07') },
+        { nombre: 'La América', cuantos: '4 personas', color: VERDE, ir: this.ir('07') },
+        { nombre: 'Laureles', cuantos: '3 personas', color: AMARILLO, ir: this.ir('07') },
+        { nombre: 'Estadio', cuantos: '1 persona', color: ROJO, ir: this.ir('07') },
+      ],
+    }
+  }
+}
+</script>
+</body>
+</html>

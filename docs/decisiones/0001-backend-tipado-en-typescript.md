@@ -58,7 +58,7 @@ apoyada en Postgres a través de un ORM con tipos derivados del esquema.
 | Autenticación | better-auth, con plugin de Expo | Supabase Auth |
 | Tareas programadas | Vercel Cron | `pg_cron` |
 | Cifrado | `node:crypto`, AES-256-GCM | `vault` + `pgcrypto` |
-| Archivos | Vercel Blob, subida directa del cliente | — (no existía) |
+| Archivos | Almacenamiento de Supabase por su endpoint S3, subida directa del cliente | — (no existía) |
 
 ### Reglas que nacen con esta decisión
 

@@ -23,6 +23,8 @@ El ADR se escribe **antes** del código. Si una tarea te obliga a contradecir
 | # | Decisión | Estado |
 | --- | --- | --- |
 | [0001](0001-backend-tipado-en-typescript.md) | Backend tipado en TypeScript sobre Next.js | aceptada |
+| [0002](0002-identidad-visual-carreta.md) | La identidad de la carreta reemplaza a la del gato | aceptada |
+| [0003](0003-nuevo-flujo-alcance-e-imagenes.md) | Flujo nuevo, alcance nuevo y subida de imágenes | **propuesta** |
 
 ## Plantilla
 

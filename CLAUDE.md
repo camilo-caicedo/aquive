@@ -380,7 +380,7 @@ migración está en curso**, así que vas a encontrar código de los dos lados.
 | Autenticación | better-auth, con plugin de Expo |
 | Tareas programadas | cron externo hacia un Route Handler |
 | Cifrado | `node:crypto`, AES-256-GCM |
-| Archivos | almacenamiento de blobs, subida directa del cliente |
+| Archivos | almacenamiento S3 (hoy Supabase), subida directa del cliente |
 | Móvil (previsto) | Expo / React Native consumiendo el mismo contrato |
 
 ### Reglas de arquitectura

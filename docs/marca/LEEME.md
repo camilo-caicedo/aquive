@@ -1,18 +1,27 @@
-# Marca · manual en construcción
+# Marca · identidad adoptada
 
-**Estado: en construcción. Todavía no es la identidad vigente.**
+**Estado: adoptada por el ADR 0002** (`docs/decisiones/0002-identidad-visual-carreta.md`).
 
-La identidad que hoy está en el código es la del gato —`src/components/marca.tsx`,
-Caprasimo y Figtree, papel cálido con terracota y salvia— y sigue siendo la
-vigente hasta que un ADR la reemplace. **No cambies un token, una fuente ni un
-componente por lo que hay en esta carpeta.**
+La identidad de la carreta reemplaza a la del gato. Los tokens, la tabla de
+contraste y las fuentes están decididos en ese ADR — **léelo antes de tocar
+`globals.css` o un componente**, porque la regla que importa no está en el
+manual: solo el negro y el azul son color de texto, los otros cuatro son
+relleno.
+
+El flujo nuevo y el cambio de alcance van aparte, en el ADR 0003, que sigue en
+**propuesta** con tres decisiones pendientes.
 
 ## Qué hay aquí
 
 | Archivo | Qué es |
 | --- | --- |
 | `Manual-de-Marca-AquiVe.pdf` | Manual completo, 11 páginas, exportado del pptx. |
+| `AquiVe-Flujo.dc.html` | Prototipo de las 40 pantallas. Copia del proyecto «Nuevo flujo AquiVe». |
 | `isotipo-carrito.png` | Isotipo suelto. 1033×1033, fondo blanco. |
+
+> El prototipo es un `.dc.html`: corre sobre el runtime de Claude Design
+> (`sc-if`, `{{ }}`, `DCLogic`). **Es referencia visual y de flujo, no código
+> para portar.** Ninguna de esas etiquetas tiene equivalente en el repo.
 
 ## Lo que dice el manual
 
@@ -67,8 +76,9 @@ digitales.** No estirar, no rotar, no recolorear, no poner elementos encima.
 
 ## Choques con el núcleo invariante
 
-Anotados aquí para que se resuelvan en el ADR de adopción, no en medio de una
-tarea de implementación.
+Anotados cuando entró el manual. Los cuatro están resueltos: el 2 y el 3 en el
+ADR 0002, el 4 en el ADR 0003, y el 1 lo resolvió el prototipo. Se dejan
+escritos porque la resolución importa tanto como el choque.
 
 ### 1 · La sombrilla como pin de ubicación (el más grave)
 
@@ -87,9 +97,15 @@ puntual de una persona que trabaja sola en la calle, con su nombre y su
 teléfono al lado, es un dato que sirve para encontrarla. No es lo mismo que
 decir en qué barrio trabaja.
 
-**Esto se decide antes de dibujarlo.** Si el pin es una metáfora gráfica para
-una lista por zonas, no hay problema. Si es un mapa con posiciones, es cambio
-de alcance y va con revisión jurídica.
+**Resuelto por el prototipo.** La pantalla 08 agrega por zona, no por persona, y
+lo dice en pantalla: «Cada globo es una zona, no una persona: dice cuánta gente
+trabaja ahí. Nadie publica su dirección y AquíVe no la guarda.» Eso respeta la
+granularidad de barrio de la regla 1.
+
+Queda una condición, y es de stack: el fondo es un mapa base ilustrado con
+globos por zona, que no necesita librería de mapas ni geocoding. **Si algún día
+se convierte en un mapa de teselas real con posiciones, vuelve a ser el choque
+original** y necesita su propio ADR.
 
 ### 2 · Contraste
 
@@ -132,21 +148,15 @@ El manual cubre la marca del rebusque. Falta decidir qué pasa con el módulo de
 emergencia mientras siga encendido: si adopta la identidad nueva, si conserva la
 actual, o si el rediseño coincide con su apagado.
 
-## Lo que falta para poder implementar
+## Lo que falta de origen
 
 - Logo en **SVG**, no PNG a 1033 px.
 - **Versión simplificada** para menos de 32 px — el manual la exige pero no la
   incluye. Es la que se necesita para favicon e iconos de la PWA.
 - Versión sobre **fondo oscuro** y versión de **una tinta**.
-- Los tokens mapeados: qué color de la paleta ocupa `--primary`, `--ok`,
-  `--accent` y los demás. Hoy son terracota y salvia; la traducción no es obvia.
-- Qué pasa con los assets del gato ya repartidos: `public/icono-192.png`,
-  `public/icono-512.png`, `public/favicon-32.png`, el material impreso y el QR
-  de `difusion/`.
 
-## Cómo se adopta
+El mapeo de tokens ya no falta: está resuelto en el ADR 0002.
 
-Cuando el manual esté cerrado, el cambio va como ADR en `docs/decisiones/`, con
-la tabla de qué reglas duras toca. La accesibilidad y la regla 11 no se tocan.
-El resto de la sección «Identidad visual» de `CLAUDE.md` y las once reglas de
-diseño se reescriben desde ese ADR.
+Qué pasa con los assets del gato ya repartidos —`public/icono-192.png`,
+`public/icono-512.png`, `public/favicon-32.png`, el material impreso y el QR de
+`difusion/`— es parte del plan del ADR 0002, y depende del SVG.
