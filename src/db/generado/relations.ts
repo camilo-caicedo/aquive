@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { catalogoItems, ofrecimientos, perfiles, sugerenciasItem, conversaciones, entregas, organizaciones, entidades, solicitudes, solicitudesContacto, municipios, zonas, invitacionesOrganizacion, identidades, accesosIdentidad, mensajes, servidores, administradores, pushSuscripciones, pushOfertadores, solicitudItems, respuestas, catalogoOficios, referencias, proveedores, accesosReferencia, respuestasServicio, solicitudesServicio, serviciosPrestados, resenas, destapesContacto, proveedorOficios, miembrosOrganizacion } from "./schema";
+import { catalogoItems, ofrecimientos, perfiles, sugerenciasItem, conversaciones, entregas, organizaciones, entidades, solicitudes, solicitudesContacto, municipios, zonas, invitacionesOrganizacion, identidades, accesosIdentidad, mensajes, servidores, administradores, pushSuscripciones, pushOfertadores, solicitudItems, respuestas, catalogoOficios, referencias, proveedores, accesosReferencia, respuestasServicio, solicitudesServicio, serviciosPrestados, resenas, chatsServicio, mensajesServicio, destapesContacto, proveedorOficios, miembrosOrganizacion } from "./schema";
 import { usersInAuth } from "../tipos";
 
 export const ofrecimientosRelations = relations(ofrecimientos, ({one}) => ({
@@ -382,7 +382,7 @@ export const accesosReferenciaRelations = relations(accesosReferencia, ({one}) =
 	}),
 }));
 
-export const respuestasServicioRelations = relations(respuestasServicio, ({one}) => ({
+export const respuestasServicioRelations = relations(respuestasServicio, ({one, many}) => ({
 	proveedore: one(proveedores, {
 		fields: [respuestasServicio.proveedorId],
 		references: [proveedores.id]
@@ -391,6 +391,7 @@ export const respuestasServicioRelations = relations(respuestasServicio, ({one})
 		fields: [respuestasServicio.solicitudId],
 		references: [solicitudesServicio.id]
 	}),
+	chatsServicios: many(chatsServicio),
 }));
 
 export const solicitudesServicioRelations = relations(solicitudesServicio, ({one, many}) => ({
@@ -429,6 +430,21 @@ export const resenasRelations = relations(resenas, ({one}) => ({
 	serviciosPrestado: one(serviciosPrestados, {
 		fields: [resenas.servicioId],
 		references: [serviciosPrestados.id]
+	}),
+}));
+
+export const chatsServicioRelations = relations(chatsServicio, ({one, many}) => ({
+	respuestasServicio: one(respuestasServicio, {
+		fields: [chatsServicio.respuestaId],
+		references: [respuestasServicio.id]
+	}),
+	mensajesServicios: many(mensajesServicio),
+}));
+
+export const mensajesServicioRelations = relations(mensajesServicio, ({one}) => ({
+	chatsServicio: one(chatsServicio, {
+		fields: [mensajesServicio.chatId],
+		references: [chatsServicio.id]
 	}),
 }));
 

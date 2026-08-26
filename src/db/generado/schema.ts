@@ -974,6 +974,38 @@ export const solicitudesServicio = pgTable("solicitudes_servicio", {
 	check("solicitudes_servicio_zona_texto_check", sql`(char_length(zona_texto) >= 2) AND (char_length(zona_texto) <= 60)`),
 ]);
 
+export const chatsServicio = pgTable("chats_servicio", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	respuestaId: uuid("respuesta_id").notNull(),
+	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	cerradoAt: timestamp("cerrado_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	foreignKey({
+			columns: [table.respuestaId],
+			foreignColumns: [respuestasServicio.id],
+			name: "chats_servicio_respuesta_id_fkey"
+		}).onDelete("cascade"),
+	unique("chats_servicio_respuesta_id_key").on(table.respuestaId),
+]);
+
+export const mensajesServicio = pgTable("mensajes_servicio", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	chatId: uuid("chat_id").notNull(),
+	autor: text().notNull(),
+	cuerpo: text().notNull(),
+	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	oculto: boolean().default(false).notNull(),
+}, (table) => [
+	index("idx_mensajes_servicio_chat").using("btree", table.chatId.asc().nullsLast().op("timestamptz_ops"), table.creadoAt.asc().nullsLast().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.chatId],
+			foreignColumns: [chatsServicio.id],
+			name: "mensajes_servicio_chat_id_fkey"
+		}).onDelete("cascade"),
+	check("mensajes_servicio_autor_check", sql`autor = ANY (ARRAY['quien_pide'::text, 'prestador'::text])`),
+	check("mensajes_servicio_cuerpo_check", sql`(char_length(cuerpo) >= 1) AND (char_length(cuerpo) <= 500)`),
+]);
+
 export const destapesContacto = pgTable("destapes_contacto", {
 	solicitudId: uuid("solicitud_id").notNull(),
 	perfilId: uuid("perfil_id").notNull(),

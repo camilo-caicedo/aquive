@@ -5,6 +5,7 @@ import { implement } from '@orpc/server'
 import { contrato } from '@/contrato'
 import { db } from '@/db/cliente'
 import type { Contexto } from './contexto'
+import * as chat from '@/server/chat/hilo'
 import * as moderacion from '@/server/moderacion/comandos'
 import * as servicios from '@/server/servicios/consultas'
 
@@ -30,6 +31,27 @@ export const enrutador = os.router({
   },
   moderacion: {
     reportar: os.moderacion.reportar.handler(({ input }) => moderacion.reportar(db, input)),
+  },
+  chat: {
+    leer: os.chat.leer.handler(({ input, context }) =>
+      chat.leer(db, input.respuesta_id, { token: input.token, usuarioId: context.usuarioId }),
+    ),
+    // El dominio lanza `ChatRechazado` y no sabe qué es un código HTTP; aquí
+    // se traduce. Es la única capa que conoce las dos cosas.
+    escribir: os.chat.escribir.handler(async ({ input, context, errors }) => {
+      try {
+        return await chat.escribir(
+          db,
+          { respuestaId: input.respuesta_id, cuerpo: input.cuerpo },
+          { token: input.token, usuarioId: context.usuarioId },
+        )
+      } catch (e) {
+        if (e instanceof chat.ChatRechazado) {
+          throw errors.RECHAZADO({ data: { motivo: e.message } })
+        }
+        throw e
+      }
+    }),
   },
 })
 

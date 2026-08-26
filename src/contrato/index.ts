@@ -1,3 +1,4 @@
+import { contratoChat } from './chat'
 import { contratoModeracion } from './moderacion'
 import { contratoServicios } from './servicios'
 
@@ -6,6 +7,7 @@ import { contratoServicios } from './servicios'
 export const contrato = {
   servicios: contratoServicios,
   moderacion: contratoModeracion,
+  chat: contratoChat,
 }
 
 export type Contrato = typeof contrato
