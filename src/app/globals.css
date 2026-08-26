@@ -263,6 +263,62 @@
   animation: subir-hoja 0.24s ease-out both;
 }
 
+/* La barra de acción de un flujo, dentro de una hoja modal.
+
+   `position: fixed` se mide contra la VENTANA, así que en una hoja que no
+   llega al borde de la pantalla la barra quedaba flotando a media altura y
+   el formulario le pasaba por debajo.
+
+   No se arregla con `sticky`: pegado abajo, un elemento no puede salirse
+   del fondo de su contenedor, y la barra es el último hijo del contenido,
+   así que desaparecía en cuanto se scrolleaba.
+
+   Tampoco basta con hacer del diálogo el marco de lo fijo: dentro de un
+   contenedor que scrollea, un `fixed` se comporta como un `absolute` y se
+   va con el contenido igual.
+
+   Lo que sí funciona es lo de siempre: la hoja es una columna, el cuerpo
+   es lo único que scrollea y la barra es el último renglón. Va aquí y no
+   en `MarcoFlujo` porque en una pantalla normal el contenedor que scrollea
+   es el documento, y ahí `fixed` es exactamente lo que hace falta. */
+dialog:has([data-marco-flujo]) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+dialog > [data-marco-flujo] {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+dialog [data-flujo='cuerpo'] {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* El hueco existe para que la barra fija no tape el final del formulario.
+   Aquí la barra ya no tapa nada. */
+dialog [data-flujo='hueco'] {
+  display: none;
+}
+
+dialog [data-flujo='barra'] {
+  position: static;
+}
+
+/* Lo fijo de la pantalla de ATRÁS no puede seguir encima de la hoja: es de
+   otra pantalla y ya no se puede tocar. La barra inferior y el encabezado
+   los esconde `[data-marco-flujo]`, que también está dentro del modal;
+   falta la píldora de la acción principal. */
+body:has(dialog[open]) [data-accion-principal] {
+  display: none;
+}
+
 .animar-hoja::backdrop {
   animation: aparecer-fondo 0.24s ease-out both;
 }

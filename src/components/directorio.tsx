@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { AccionPrincipal } from '@/components/accion-principal'
-import { Info, Inbox, ShieldAlert, Stethoscope, CircleAlert, Briefcase, MapPin } from 'lucide-react'
+import { Info, Inbox, ShieldAlert, Stethoscope, CircleAlert, Briefcase, List, MapPin } from 'lucide-react'
 import { servidor } from '@/orpc/local'
 import { AVISO_SERVICIOS, NO_PAGUES_POR_ADELANTADO } from '@/lib/honestidad'
 import { GRUPOS, MODALIDADES, MODOS_PRECIO } from '@/lib/servicios'
@@ -11,7 +11,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { SelectFiltro } from '@/components/select-filtro'
 import { HojaFiltros, GrupoChips } from '@/components/hoja-filtros'
-import { HeroPortada } from '@/components/hero-portada'
+import { MapaDeProveedores } from '@/components/mapa-de-proveedores'
+import { BotonVolver } from '@/components/volver'
 import { VueltaAlDestino } from '@/app/auth/vuelta'
 import type { ModalidadServicio, ModoPrecio } from '@/lib/types'
 
@@ -29,10 +30,17 @@ import type { ModalidadServicio, ModoPrecio } from '@/lib/types'
  * sigue entero y sigue siendo temporal — lo que cambia es cuál de los dos
  * recibe a quien llega.
  *
- * El héroe NO se fue con el tablero: la revisión de marca de Google exige
- * que la portada describa para qué sirve la aplicación. Vive en
- * `HeroPortada` y su texto tiene que seguir coincidiendo palabra por
- * palabra con `metadata.description` del layout.
+ * ⚠ Aquí ya NO va el héroe con el nombre y la descripción de AquíVe. Eso
+ * existía cuando esta pantalla era la portada, y la revisión de marca de
+ * Google exige que `/` describa la aplicación — pero `/` es hoy la
+ * bienvenida para quien no tiene sesión, y un rastreador nunca la tiene,
+ * así que el requisito lo cumple `bienvenida.tsx`. Aquí el héroe solo
+ * empujaba los resultados fuera del primer pantallazo (regla 1).
+ *
+ * El mapa NO es otra pantalla: es esta misma con `?vista=mapa`. Lista y
+ * mapa son dos maneras de leer el mismo resultado con los mismos filtros,
+ * y separarlas obligaba a recargar y a recomponer los filtros para cambiar
+ * de una a otra.
  *
  * Los filtros viven en la URL y no en estado de cliente, igual que en
  * /profesionales: así el enlace de «modistas en la comuna 3» se puede pegar
@@ -48,6 +56,7 @@ export async function Directorio({
     zona?: string
     modalidad?: string
     modo?: string
+    vista?: string
   }>
 }) {
   const params = await searchParams
@@ -100,6 +109,10 @@ export async function Directorio({
 
   const misOficiosEscondidos = miFicha?.oficios_escondidos ?? 0
 
+  // Lista o mapa. Un valor cualquiera que no sea `mapa` es la lista: así
+  // `?vista=` a medio escribir no rompe la pantalla.
+  const vistaMapa = params.vista === 'mapa'
+
   // El href de cada chip es la URL sin ESE filtro. Quitar el municipio se
   // lleva también la zona: una comuna sin su ciudad no filtra nada, y
   // dejarla colgada devolvía una lista vacía sin explicación.
@@ -118,8 +131,11 @@ export async function Directorio({
       if (quitar === 'municipio' && k === 'zona') continue
       sp.set(k, v)
     }
+    // Quitar un filtro no puede devolverte de mapa a lista: estabas
+    // mirando el mapa y sigues mirándolo, con un filtro menos.
+    if (vistaMapa) sp.set('vista', 'mapa')
     const qs = sp.toString()
-    return qs ? `/?${qs}` : '/'
+    return qs ? `/directorio?${qs}` : '/directorio'
   }
 
   const nombreOficio = new Map(oficiosCatalogo.map((o) => [o.id, o.nombre]))
@@ -149,33 +165,93 @@ export async function Directorio({
   // «todavía no hay nadie en el directorio», que sería falso habiendo cuatro.
   const hayFiltro = Object.values(pedidos).some(Boolean)
 
+  // Cuántas personas y dónde, que es la primera pregunta de quien llega.
+  //
+  // ⚠ «cerca de ti» solo cuando hay un lugar elegido. Sin filtro de zona ni
+  // de municipio esta aplicación NO sabe dónde está quien mira —es justo el
+  // dato que no le pide a quien busca— y el titular estaría prometiendo una
+  // cercanía que nadie calculó. Es el mismo motivo por el que las tarjetas
+  // no dicen kilómetros.
+  const lugar = zona ? nombreZona.get(zona) : municipio ? nombreMunicipio.get(municipio) : null
+  const cuantas = `${proveedores.length} ${proveedores.length === 1 ? 'persona' : 'personas'}`
+  const titular = lugar ? `${cuantas} en ${lugar}` : `${cuantas} cerca de ti`
+
+  // De dónde vino: si trae categoría u oficio, la migaja vuelve a las
+  // categorías, que es la puerta por la que se llega aquí desde «Buscar».
+  const deDonde = grupo ? NOMBRE_GRUPO[grupo] : oficio ? nombreOficio.get(oficio) : null
+
+  // El mapa es esta misma pantalla, no otra: mismos filtros, mismo
+  // resultado, leído de otra forma.
+  const enElMapa = proveedores.filter((f) => f.latitud !== null && f.longitud !== null)
+  const fueraDelMapa = proveedores.length - enElMapa.length
+
+  function conVista(vista: 'lista' | 'mapa') {
+    const sp = new URLSearchParams()
+    for (const [k, v] of Object.entries(aplicados)) if (v) sp.set(k, v)
+    if (vista === 'mapa') sp.set('vista', 'mapa')
+    const qs = sp.toString()
+    return qs ? `/directorio?${qs}` : '/directorio'
+  }
+
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       <VueltaAlDestino />
-      <HeroPortada />
 
-      {/* ⚠ Aquí NO va `CabeceraPantalla`. Ese componente se pega al
-          encabezado global con un margen negativo arriba, y en esta
-          pantalla el héroe va delante: el título se metía por debajo de la
-          tarjeta del héroe y quedaba tapado a media palabra.
+      {/* ⚠ Aquí NO va `CabeceraPantalla`: se pega al encabezado global con
+          un margen negativo arriba, y esta pantalla lleva primero la migaja
+          de la categoría. */}
+      <section>
+        {/* La vuelta va SIEMPRE, con categoría o sin ella. Esta pantalla es
+            un destino y no un flujo, así que no lleva la flecha del marco, y
+            sin esto quien llegaba desde el inicio se quedaba sin más salida
+            que la barra de abajo.
 
-          Y tampoco haría falta: el `h1` de esta pantalla es el del héroe,
-          que la revisión de marca de Google exige que describa la
-          aplicación. Dos `h1` en una página además no es un detalle de
-          estilo. Desviación consciente de la regla 8 —el `h1` no repite la
-          etiqueta de la barra— y es la única pantalla donde pasa. */}
-      <section className="mt-8">
-        <h2 className="font-heading text-3xl leading-tight font-extrabold tracking-tight">
-          Servicios
-        </h2>
-        <p className="mt-1 text-base text-muted-foreground">
-          Gente que vive de su oficio y quiere que la encuentren.
-        </p>
+            Vuelve a donde estabas de verdad; el `href` es el destino de
+            reserva para quien entró por un enlace pegado en WhatsApp. */}
+        <BotonVolver
+          href={deDonde ? '/categorias' : '/inicio'}
+          etiqueta={deDonde ?? 'Volver'}
+        />
+        <h1 className="font-heading text-3xl leading-tight font-extrabold tracking-tight">
+          {titular}
+        </h1>
         <HojaFiltros
-          action="/"
+          action="/directorio"
           id="hoja-filtros-servicios"
           titulo="Filtrar oficios"
           aplicados={chipsAplicados}
+          chipsAntes={
+            // La acción de la fila, y por eso va primera y en lima: es lo
+            // único que cambia lo que se está mirando en vez de acotarlo.
+            <Link
+              href={vistaMapa ? conVista('lista') : conVista('mapa')}
+              scroll={false}
+              className="bg-primary text-primary-foreground shadow-boton active:shadow-boton-hundido inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full px-4 text-base font-semibold transition-all active:translate-x-[2px] active:translate-y-[2px]"
+            >
+              {vistaMapa ? (
+                <>
+                  <List className="size-4" aria-hidden="true" />
+                  Ver la lista
+                </>
+              ) : (
+                <>
+                  <MapPin className="size-4" aria-hidden="true" />
+                  Ver el mapa
+                </>
+              )}
+            </Link>
+          }
+          chipsExtra={
+            !miFicha ? (
+              <Link
+                href="/servicios/soy-proveedor"
+                className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
+              >
+                <Briefcase className="size-4" aria-hidden="true" />
+                Ofrecer mi trabajo
+              </Link>
+            ) : undefined
+          }
         >
           <SelectFiltro
             name="oficio"
@@ -211,8 +287,23 @@ export async function Directorio({
             </span>
           </p>
 
-          {/* Las tres listas cortas pasan a chips: un toque en vez de abrir un
-              desplegable, elegir y cerrarlo. */}
+          {/* Las listas cortas pasan a chips: un toque en vez de abrir un
+              desplegable, elegir y cerrarlo.
+
+              La categoría va la primera porque es por donde se entra —desde
+              /categorias— y porque era la única que se podía poner y no
+              quitar: llegabas con ?grupo=salud y la hoja no tenía ni un
+              control para soltarla. */}
+          <GrupoChips
+            name="grupo"
+            label="Categoría"
+            todos="Todas"
+            valorInicial={grupo ?? ''}
+            opciones={Object.entries(GRUPOS).map(([valor, etiqueta]) => ({
+              valor,
+              etiqueta,
+            }))}
+          />
           {(zonas?.length ?? 0) > 0 && (
             <GrupoChips
               name="zona"
@@ -238,40 +329,11 @@ export async function Directorio({
             opciones={MODOS_PRECIO.map((m) => ({ valor: m.valor, etiqueta: m.etiqueta }))}
           />
         </HojaFiltros>
-
-        {/* ⚠ Aquí había también un «Quién está pidiendo». Se fue: esa lista
-            es ahora un destino propio de la barra —«Solicitudes»— y tenerla
-            además aquí eran dos puertas al mismo cuarto. Queda solo lo que
-            no está en la barra: publicar la ficha propia. */}
-        <div className="riel -mx-4 mt-2 flex gap-2 overflow-x-auto px-4">
-          {/* El mapa conserva los filtros: «modistas en la comuna 3» se ve
-              igual en lista y en mapa, y el enlace sigue sirviendo. */}
-          <Link
-            href={chipsAplicados.length > 0 ? `/mapa?${new URLSearchParams(
-              Object.entries(aplicados).filter(([, v]) => Boolean(v)) as [string, string][],
-            ).toString()}` : '/mapa'}
-            className="shadow-canto inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
-          >
-            <MapPin className="size-4" aria-hidden="true" />
-            Ver el mapa
-          </Link>
-          {!miFicha && (
-            <Link
-              href="/servicios/soy-proveedor"
-              className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
-            >
-              <Briefcase className="size-4" aria-hidden="true" />
-              Ofrecer mi trabajo
-            </Link>
-          )}
-        </div>
       </section>
 
-      <p className="text-base text-muted-foreground">
-        Gente que trabaja por su cuenta y negocios pequeños. Acuerdas el precio
-        y el trabajo directamente con la persona: la plataforma no participa ni
-        cobra nada.
-      </p>
+      {/* ⚠ Aquí había también un «Quién está pidiendo». Se fue: esa lista
+          es ahora un destino propio de la barra —«Solicitudes»— y tenerla
+          además aquí eran dos puertas al mismo cuarto. */}
 
 
 
@@ -315,8 +377,6 @@ export async function Directorio({
       )}
 
 
-      <p className="mt-4 text-sm text-muted-foreground">{AVISO_SERVICIOS}</p>
-
       {/* La única puerta a /servicios/confirmar. El código no viaja en
           ningún enlace ni en ningún QR: esto solo lleva al formulario donde
           se escribe a mano. Va ENCIMA de la lista porque quien llega con un
@@ -329,15 +389,45 @@ export async function Directorio({
         </Link>
       </p>
 
-      <p className="mt-4 text-base font-semibold">
-        {proveedores.length}{' '}
-        {proveedores.length === 1 ? 'persona' : 'personas'}
-        {hayFiltro && (
-          <span className="font-normal text-muted-foreground"> con estos filtros</span>
-        )}
-      </p>
+      {/* ⚠ El cuántas ya no va aquí: lo dice el `h1`. Repetirlo debajo de
+          los chips era el mismo número dos veces en el primer pantallazo. */}
 
-      {proveedores.length === 0 ? (
+      {vistaMapa ? (
+        <>
+          <div className="mt-4">
+            <MapaDeProveedores proveedores={enElMapa} />
+          </div>
+
+          {/* Lo que el mapa NO enseña, dicho donde se está mirando el mapa.
+              Sin esto, quien ve seis pines cree que hay seis personas y las
+              otras ocho no existen. */}
+          {fueraDelMapa > 0 && (
+            <p className="mt-4 flex items-start gap-2 text-base text-muted-foreground">
+              <Info className="size-5 shrink-0 translate-y-0.5" aria-hidden="true" />
+              <span>
+                {fueraDelMapa === 1
+                  ? 'Hay 1 persona más que no puso su ubicación en el mapa.'
+                  : `Hay ${fueraDelMapa} personas más que no pusieron su ubicación en el mapa.`}{' '}
+                <Link
+                  href={conVista('lista')}
+                  scroll={false}
+                  className="text-enlace underline underline-offset-4"
+                >
+                  Aparecen en la lista
+                </Link>
+                .
+              </span>
+            </p>
+          )}
+
+          <p className="mt-4 text-sm text-muted-foreground">
+            Cada persona decidió si aparecer aquí y dónde poner su pin. Marcar
+            un punto en el mapa no es una dirección exacta ni una invitación a
+            presentarse sin avisar: el trabajo se acuerda antes, por chat o por
+            teléfono.
+          </p>
+        </>
+      ) : proveedores.length === 0 ? (
         <div className="mt-6 rounded-lg border border-dashed border-border p-8 text-center">
           <Inbox className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
           <p className="mt-2 text-base text-muted-foreground">
@@ -372,7 +462,12 @@ export async function Directorio({
         </ul>
       )}
 
-      <Alert className="mt-6">
+      {/* Debajo de la lista, no encima. Es una advertencia de qué hacer
+          cuando ya se eligió a alguien, y arriba solo empujaba la primera
+          tarjeta fuera del primer pantallazo (regla 1). */}
+      <p className="mt-6 text-sm text-muted-foreground">{AVISO_SERVICIOS}</p>
+
+      <Alert className="mt-4">
         <ShieldAlert className="size-4" aria-hidden="true" />
         <AlertDescription>
           {NO_PAGUES_POR_ADELANTADO}{' '}

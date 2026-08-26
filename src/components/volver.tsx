@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ChevronLeft } from 'lucide-react'
 
 /**
  * La flecha de volver.
@@ -65,14 +65,30 @@ export function RastroDeNavegacion() {
   return null
 }
 
-export function BotonVolver({ href }: { href: string }) {
+export function BotonVolver({
+  href,
+  etiqueta,
+}: {
+  href: string
+  /**
+   * Con qué palabra. Sin ella la flecha va sola y en redondo, que es lo que
+   * lleva un flujo; con ella queda «‹ SALUD», que es lo que lleva una lista
+   * a la que se entró desde una categoría. La palabra dice de DÓNDE vienes,
+   * y una flecha sola en una pantalla de destino no lo dice.
+   */
+  etiqueta?: string
+}) {
   const router = useRouter()
 
   return (
     <Link
       href={href}
-      aria-label="Volver"
-      className="-ml-3 flex size-12 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
+      aria-label={etiqueta ? `Volver a ${etiqueta}` : 'Volver'}
+      className={
+        etiqueta
+          ? 'font-heading -ml-1 inline-flex min-h-12 items-center gap-1 text-xs tracking-[0.085em] text-muted-foreground uppercase transition-colors hover:text-foreground'
+          : '-ml-3 flex size-12 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted'
+      }
       onClick={(e) => {
         // Abrir en otra pestaña, o con el clic central, tiene que seguir
         // abriendo el `href`. Interceptar eso también sería robarle al
@@ -88,7 +104,14 @@ export function BotonVolver({ href }: { href: string }) {
         router.back()
       }}
     >
-      <ArrowLeft className="size-6" aria-hidden="true" />
+      {etiqueta ? (
+        <>
+          <ChevronLeft className="size-4" aria-hidden="true" />
+          {etiqueta}
+        </>
+      ) : (
+        <ArrowLeft className="size-6" aria-hidden="true" />
+      )}
     </Link>
   )
 }

@@ -52,7 +52,17 @@ export default async function FichaPage({
   const aDomicilio = ficha.modalidad.includes('domicilio')
 
   return (
-    <MarcoFlujo titulo={ficha.nombre_visible} volver="/directorio">
+    <MarcoFlujo
+      titulo={ficha.nombre_visible}
+      volver="/directorio"
+      // La columna es nullable y el tipo escrito a mano decía que no. En
+      // la práctica no pasa —la vista exige teléfono verificado, y no se
+      // puede verificar un teléfono que no existe—, pero la ficha no se cae
+      // por eso: se queda sin barra de contacto y ya.
+      accion={
+        ficha.telefono !== null ? <BarraContacto telefono={ficha.telefono} /> : undefined
+      }
+    >
       <div>
         {/* La explicación va pegada a las insignias, que es donde nace la
             duda. Al final de la página, a tres pantallas de aquí, no la
@@ -221,11 +231,6 @@ export default async function FichaPage({
         <BotonReportar tipoObjeto="proveedor" objetoId={ficha.id} />
       </div>
 
-      {/* La columna es nullable y el tipo escrito a mano decía que no. En la
-          práctica no pasa —la vista exige teléfono verificado, y no se puede
-          verificar un teléfono que no existe—, pero la ficha no se cae por
-          eso: se queda sin barra de contacto y ya. */}
-      {ficha.telefono !== null && <BarraContacto telefono={ficha.telefono} />}
     </MarcoFlujo>
   )
 }

@@ -93,13 +93,23 @@ export function MarcoFlujo({
         </div>
       </div>
 
-      <div className="mx-auto max-w-lg px-4 py-4">{children}</div>
+      {/* Los tres `data-flujo` son los ganchos con los que `globals.css`
+          rearma esta pantalla dentro de una hoja modal: cuerpo que scrollea,
+          hueco que sobra y barra que deja de ser `fixed`. En una pantalla
+          normal no hacen nada. */}
+      <div data-flujo="cuerpo" className="mx-auto max-w-lg px-4 py-4">{children}</div>
 
       {accion && (
         <>
-          {/* En flujo, para que la barra no tape el final del formulario. */}
-          <div aria-hidden="true" className="h-24" />
-          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-sm pb-[env(safe-area-inset-bottom)]">
+          {/* En flujo, para que la barra no tape el final del formulario.
+              A la medida de la más alta, que es la de contacto de la ficha:
+              aviso y dos botones. */}
+          <div aria-hidden="true" data-flujo="hueco" className="h-36" />
+          {/* `fixed` contra la ventana en una pantalla normal. Dentro de una
+              hoja modal deja de serlo: la hoja es una columna flex y esta
+              barra es su último renglón, que es lo único que la mantiene
+              abajo cuando el contenedor que scrollea es otro. */}
+          <div data-flujo="barra" className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-sm pb-[env(safe-area-inset-bottom)]">
             <div className="mx-auto max-w-lg px-4 py-3">{accion}</div>
           </div>
         </>

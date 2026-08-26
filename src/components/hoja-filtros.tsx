@@ -109,6 +109,7 @@ export function HojaFiltros({
   titulo,
   aplicados,
   chipsExtra,
+  chipsAntes,
   conteo,
   children,
 }: {
@@ -126,6 +127,13 @@ export function HojaFiltros({
    * sería una tercera capa de navegación (regla 3).
    */
   chipsExtra?: ReactNode
+  /**
+   * Lo que va ANTES del chip «Filtros», que es el sitio de la acción
+   * principal de la fila: cambiar de lista a mapa, por ejemplo. Separado
+   * de `chipsExtra` porque el orden es la mitad del mensaje — lo primero
+   * de una fila que se desplaza es lo único que todo el mundo ve.
+   */
+  chipsAntes?: ReactNode
   /** El conteo de resultados, ya redactado por la página. */
   conteo?: ReactNode
   children: ReactNode
@@ -161,6 +169,7 @@ export function HojaFiltros({
   const cabecera = (
     <div className="mt-3">
       <div className="riel -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+        {chipsAntes}
         {hidratado && (
           <button
             type="button"

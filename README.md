@@ -5,8 +5,8 @@ ofrece, sin intermediarios. Sin comisiones, sin intermediar el pago.
 
 > Esta frase es la misma, palabra por palabra, que la de
 > `src/components/bienvenida.tsx` —que es lo que se sirve en `/` para quien
-> no tiene sesión, y por tanto lo que ve el revisor de Google—, la de
-> `src/components/hero-portada.tsx` y las tres de `src/app/layout.tsx`. Si
+> no tiene sesión, y por tanto lo que ve el revisor de Google— y las tres
+> de `src/app/layout.tsx`. Si
 > dos dejan de coincidir, la revisión de la marca encuentra dos versiones de
 > qué es esto y vuelve a caer.
 

@@ -21,48 +21,44 @@ import { Button } from '@/components/ui/button'
  * va la línea corta con su enlace a «Cómo cuidarte», que es lo que la regla
  * 5 pide de un aviso de encabezado.
  *
- * ⚠ Va fuera del encabezado, como `BarraInferior` y `AccionPrincipal`: el
- * `backdrop-filter` del encabezado convierte al elemento en bloque
- * contenedor de sus descendientes `fixed`.
+ * ⚠ Esto es SOLO el contenido de la barra: va como `accion` de
+ * `MarcoFlujo`, que es quien la fija abajo y quien deja el hueco para que
+ * no tape el final de la ficha. Antes se fijaba a sí misma, y dentro de una
+ * hoja modal —donde el contenedor que scrollea no es el documento— eso la
+ * dejaba flotando a media pantalla con la ficha pasándole por debajo.
+ * Colocarse es trabajo del marco; esta barra solo sabe qué botones lleva.
  */
 export function BarraContacto({ telefono }: { telefono: string }) {
   return (
     <>
-      {/* En flujo, para que la barra no tape el final de la ficha. */}
-      <div aria-hidden="true" className="h-36" />
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-sm pb-[env(safe-area-inset-bottom)]">
-        <div className="mx-auto max-w-2xl px-4 py-2">
-          <p className="text-sm text-muted-foreground">
-            Acuerda el precio antes de empezar y paga cuando el trabajo esté
-            hecho.{' '}
-            <Link href="/seguridad" className="underline">
-              Cómo cuidarte
-            </Link>
-          </p>
-          <div className="mt-2 flex items-center gap-3">
-            <Button
-              className="h-14 flex-1 text-lg"
-              nativeButton={false}
-              render={
-                <a
-                  href={enlaceWhatsapp(telefono)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                />
-              }
-            >
-              <MessageCircle className="size-6" aria-hidden="true" />
-              WhatsApp
-            </Button>
+      <p className="text-sm text-muted-foreground">
+        Acuerda el precio antes de empezar y paga cuando el trabajo esté hecho.{' '}
+        <Link href="/seguridad" className="underline">
+          Cómo cuidarte
+        </Link>
+      </p>
+      <div className="mt-2 flex items-center gap-3">
+        <Button
+          className="h-14 flex-1 text-lg"
+          nativeButton={false}
+          render={
             <a
-              href={`tel:${telefono}`}
-              aria-label={`Llamar al ${telefono}`}
-              className="flex size-14 shrink-0 items-center justify-center rounded-full border border-enlace text-enlace transition-colors hover:bg-accent"
-            >
-              <Phone className="size-6" aria-hidden="true" />
-            </a>
-          </div>
-        </div>
+              href={enlaceWhatsapp(telefono)}
+              target="_blank"
+              rel="noopener noreferrer"
+            />
+          }
+        >
+          <MessageCircle className="size-6" aria-hidden="true" />
+          WhatsApp
+        </Button>
+        <a
+          href={`tel:${telefono}`}
+          aria-label={`Llamar al ${telefono}`}
+          className="flex size-14 shrink-0 items-center justify-center rounded-full border border-enlace text-enlace transition-colors hover:bg-accent"
+        >
+          <Phone className="size-6" aria-hidden="true" />
+        </a>
       </div>
     </>
   )
