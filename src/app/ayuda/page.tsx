@@ -3,11 +3,12 @@ import Link from 'next/link'
 import { ChevronDown, Mail, Phone } from 'lucide-react'
 
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
+import { ComoFunciona } from '@/components/como-funciona'
 import { Button } from '@/components/ui/button'
 import { CORREO_CONTACTO } from '@/lib/config'
 
 export const metadata: Metadata = {
-  title: 'Ayuda con la plataforma',
+  title: 'Ayuda',
   description:
     'Lo que más nos preguntan sobre AquíVe, cómo poner una PQR y cómo escribirle al soporte.',
 }
@@ -119,14 +120,6 @@ export default function AyudaPage() {
         <ul className="space-y-1">
           <li>
             <Link
-              href="/como-funciona"
-              className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4"
-            >
-              Cómo funciona AquíVe
-            </Link>
-          </li>
-          <li>
-            <Link
               href="/seguridad"
               className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4"
             >
@@ -143,6 +136,12 @@ export default function AyudaPage() {
           </li>
         </ul>
       </nav>
+
+      {/* La explicación larga, que antes era su propia pantalla. Va DEBAJO
+          de las preguntas cortas a propósito: quien llega con una duda
+          concreta la resuelve arriba sin bajar, y quien quiere entender el
+          sitio entero sigue leyendo. */}
+      <ComoFunciona />
     </main>
   )
 }

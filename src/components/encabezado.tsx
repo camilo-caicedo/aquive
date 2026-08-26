@@ -59,7 +59,10 @@ export async function Encabezado() {
     // convierte al encabezado en bloque contenedor de los descendientes
     // `fixed` y dejaría la barra pegada debajo del logo.
     <>
-    <header className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm">
+    <header
+      data-encabezado
+      className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm"
+    >
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2">
         {/* La marca va suelta, sin caja: la identidad dice que no se encierra
             en un cuadro con borde cuando ya hay fondo. Antes había un

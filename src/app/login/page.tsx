@@ -1,10 +1,9 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { Mail } from 'lucide-react'
+import { ChevronRight, LifeBuoy, Mail } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
 import { MarcoFlujo } from '@/components/marco-flujo'
 import { BotonGoogle } from './boton-google'
 
@@ -32,8 +31,12 @@ export default async function LoginPage({
 
   return (
     <MarcoFlujo titulo="Entrar" volver="/">
-      <h2 className="font-heading text-3xl leading-tight">
-        Entra con tu cuenta de Google
+      <h2 className="font-heading text-4xl leading-[1.05]">
+        Entra con
+        <br />
+        tu cuenta
+        <br />
+        de Google
       </h2>
       <p className="mt-2 text-base text-muted-foreground">
         Es el único acceso por ahora. Si es tu primera vez, la cuenta se crea
@@ -51,21 +54,21 @@ export default async function LoginPage({
 
       {/* Lo del correo va DENTRO de la tarjeta del botón, que es donde se
           decide, y no como un bloque de aviso suelto arriba (regla 5). */}
-      <div className="shadow-canto mt-6 rounded-2xl bg-card p-4">
-        <p className="flex items-start gap-2 text-base">
-          <Mail className="size-5 shrink-0 translate-y-0.5 text-enlace" aria-hidden="true" />
+      <div className="mt-7">
+        <BotonGoogle destino={volver} />
+
+        <p className="mt-4 flex items-start gap-2 text-base text-muted-foreground">
+          <Mail className="size-5 shrink-0 translate-y-0.5" aria-hidden="true" />
           <span>
-            <strong className="font-semibold">No guardamos tu correo.</strong> De
-            tu cuenta de Google conservamos un identificador interno y nada más.
-            No lo leemos, no lo guardamos y no queda en ningún registro.
+            <strong className="text-foreground font-semibold">
+              No guardamos tu correo.
+            </strong>{' '}
+            De tu cuenta de Google conservamos un identificador interno y nada
+            más. No lo leemos, no lo guardamos y no queda en ningún registro.
           </span>
         </p>
 
-        <div className="mt-4">
-          <BotonGoogle destino={volver} />
-        </div>
-
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-base text-muted-foreground">
           Al continuar aceptas los{' '}
           <Link href="/terminos" className="underline">
             términos
@@ -83,38 +86,45 @@ export default async function LoginPage({
           prototipo las agrupa bajo una pregunta, y con razón: quien llega
           aquí sin cuenta de Google necesita saber de una que no se ha
           equivocado de sitio. */}
-      <section className="mt-8">
+      <section className="bg-accent text-accent-foreground mt-8 rounded-2xl p-5">
         <h2 className="font-heading text-xl">¿No tienes cuenta de Google?</h2>
-        <p className="mt-1 text-base text-muted-foreground">
+        <p className="mt-2 text-base">
           No hace falta cuenta para buscar un servicio ni para pedir algo en el
           muro: eso funciona sin registro. Y si vas a ofrecer tu trabajo pero no
           manejas Google, la fundación te da de alta en persona.
         </p>
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-          <Button
-            variant="outline"
-            className="sm:flex-1"
-            nativeButton={false}
-            render={<Link href="/directorio" />}
-          >
-            Seguir sin cuenta
-          </Button>
-          <Button
-            variant="outline"
-            className="sm:flex-1"
-            nativeButton={false}
-            render={<Link href="/servidores" />}
+        {/* La primera en píldora blanca —es la salida que más gente usa— y
+            la segunda como enlace: es para pocos, y con dos botones iguales
+            quien solo venía a mirar dudaba cuál era el suyo. */}
+        <Link
+          href="/directorio"
+          className="shadow-canto mt-4 inline-flex min-h-12 items-center rounded-full bg-card px-5 text-base font-semibold"
+        >
+          Seguir sin cuenta
+        </Link>
+
+        <p className="mt-4">
+          <Link
+            href="/servidores"
+            className="text-foreground min-h-12 text-base font-medium underline underline-offset-4"
           >
             Alta con la fundación
-          </Button>
-        </div>
+          </Link>
+        </p>
       </section>
 
-      <p className="mt-8 text-base">
-        <Link href="/ayuda" className="text-enlace underline underline-offset-4">
+      {/* Fila con canto, no un enlace suelto: es un destino, y a esta altura
+          de la pantalla un subrayado se pierde. */}
+      <Link
+        href="/ayuda"
+        className="shadow-canto mt-4 flex min-h-14 items-center justify-between gap-3 rounded-2xl bg-card px-5"
+      >
+        <span className="flex items-center gap-3 text-base font-medium">
+          <LifeBuoy className="size-5 shrink-0" aria-hidden="true" />
           Ayuda con la plataforma
-        </Link>
-      </p>
+        </span>
+        <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+      </Link>
     </MarcoFlujo>
   )
 }

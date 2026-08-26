@@ -31,10 +31,7 @@ export function HeroPortada() {
           hace falta igual: alguien que llega por un volante pegado en un
           albergue no tiene de dónde deducirlo. */}
       <p className="mt-3 max-w-prose text-base">
-        AquíVe es una plataforma gratuita que conecta, en Colombia, a quien
-        necesita algo con quien puede darlo: insumos que alguien entrega sin
-        cobrar, servicios de profesionales con matrícula, y el trabajo de
-        gente que vive de su oficio.
+        Una red de vecinos donde quien necesita un servicio encuentra a quien lo ofrece, sin intermediarios. Sin comisiones, sin intermediar el pago.
       </p>
       <p className="mt-2 max-w-prose text-base text-muted-foreground">
         Pedir no exige cuenta. No pedimos tu nombre, tu teléfono ni tu

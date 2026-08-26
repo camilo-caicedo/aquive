@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  Stethoscope,
+  Home,
   PackageCheck,
   MessageSquare,
   Search,
@@ -49,7 +49,7 @@ const ENLACES = [
   // Detrás son módulos distintos —y el primero tiene otro responsable del
   // tratamiento— pero para quien busca es la misma pregunta. Las tres se
   // reparten en `PestanasServicios`.
-  { href: '/', etiqueta: 'Inicio', Icono: Stethoscope },
+  { href: '/', etiqueta: 'Inicio', Icono: Home },
   // Los dos lados del directorio, uno en cada celda: quién presta un
   // servicio y quién está pidiendo uno. Antes el segundo era una sección
   // colgada del primero —/servicios/solicitudes— y no lo encontraba nadie.
@@ -155,10 +155,12 @@ const TAMBIEN: Record<string, string[]> = {
     '/solicitud',
     '/servicios/soy-proveedor',
     '/servicios/mi-perfil',
-    '/ayuda',
-    '/contacto',
-    '/quienes-somos',
   ],
+  // ⚠ Ayuda, contacto y quiénes somos NO cuelgan de ninguna celda, a
+  // propósito. El prototipo los pone bajo «Perfil», pero no son «lo mío»:
+  // son información del sitio, y encender «Perfil» al abrirlos dice que
+  // estás en tu cuenta cuando no lo estás. Sin celda activa la barra no
+  // miente; solo dice que esto no es ninguno de los cuatro destinos.
 }
 
 // Coincidencia exacta para la portada; por prefijo para el resto, para que

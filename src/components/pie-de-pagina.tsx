@@ -74,11 +74,6 @@ export function PieDePagina() {
               </Link>
             </li>
             <li>
-              <Link href="/como-funciona" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
-                Cómo funciona
-              </Link>
-            </li>
-            <li>
               <Link href="/privacidad" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
                 Aviso de privacidad
               </Link>

@@ -275,7 +275,14 @@
 /* --------------------------------------------------------------------
    Regla 10 del sistema de diseño: destino o flujo, nunca las dos cosas.
 
-   Mientras hay un `MarcoFlujo` montado, la barra inferior no se dibuja.
+   Mientras hay un `MarcoFlujo` montado, ni el encabezado ni la barra
+   inferior se dibujan.
+
+   El encabezado se fue con ellos porque `MarcoFlujo` YA pinta su propio
+   volver y su propio `h1`: encima quedaban dos barras de título apiladas,
+   y la de arriba solo repetía el nombre de la aplicación y ofrecía «Entrar»
+   a alguien que está justo entrando. Regla 10: una pantalla de flujo lleva
+   volver y título arriba, y nada más.
    Va en CSS y no en JavaScript para que ya sea correcto en la primera
    pintada del servidor: con estado de cliente, la barra aparecía un
    cuadro y se iba.
@@ -287,6 +294,7 @@
    un hueco muerto debajo de la barra de acción del flujo.
    -------------------------------------------------------------------- */
 
+body:has([data-marco-flujo]) [data-encabezado],
 body:has([data-marco-flujo]) [data-barra-inferior],
 body:has([data-marco-flujo]) [data-pie-de-pagina] {
   display: none;
@@ -366,4 +374,33 @@ body:has([data-accion-principal]) [data-pie-de-pagina] {
 
 .riel::-webkit-scrollbar {
   display: none;
+}
+
+/* --------------------------------------------------------------------
+   La bienvenida no lleva NADA de cromo: ni encabezado, ni barra, ni pie.
+
+   No es estética. Esa pantalla ES la presentación de la aplicación —dice
+   cómo se llama y qué hace— así que un encabezado repitiendo el nombre
+   encima sobra, y una barra inferior ofrece cuatro destinos a quien
+   todavía no ha decidido si entra. La pantalla tiene dos caminos, y son
+   las dos tarjetas.
+
+   Mismo mecanismo que "MarcoFlujo": un atributo y una regla de CSS, para
+   que ya sea correcto en la primera pintada del servidor. Con estado de
+   cliente el encabezado aparecía un cuadro y se iba.
+
+   Fuera de "@layer" a propósito, como los bloques de arriba: lo que no
+   está en ninguna capa gana sobre las utilidades de Tailwind, que es lo
+   que deja neutralizar el relleno inferior que "layout.tsx" le pone al
+   "body" para reservarle sitio a la barra.
+   -------------------------------------------------------------------- */
+
+body:has([data-sin-cromo]) [data-encabezado],
+body:has([data-sin-cromo]) [data-barra-inferior],
+body:has([data-sin-cromo]) [data-pie-de-pagina] {
+  display: none;
+}
+
+body:has([data-sin-cromo]) {
+  padding-bottom: 0;
 }

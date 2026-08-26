@@ -53,7 +53,7 @@ export const metadata: Metadata = {
     siteName: "AquíVe",
     title: "AquíVe",
     description:
-      "AquíVe es una plataforma gratuita que conecta, en Colombia, a quien necesita algo con quien puede darlo: insumos que alguien entrega sin cobrar, servicios de profesionales con matrícula, y el trabajo de gente que vive de su oficio.",
+      "Una red de vecinos donde quien necesita un servicio encuentra a quien lo ofrece, sin intermediarios. Sin comisiones, sin intermediar el pago.",
     url: "https://aquive.co/",
     locale: "es_CO",
   },
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
   // temporal, y el módulo de Servicios —el trabajo de quien vive de su
   // oficio— no aparecía en ninguna descripción.
   description:
-    "AquíVe es una plataforma gratuita que conecta, en Colombia, a quien necesita algo con quien puede darlo: insumos que alguien entrega sin cobrar, servicios de profesionales con matrícula, y el trabajo de gente que vive de su oficio. Pedir ayuda no exige dar datos personales.",
+    "Una red de vecinos donde quien necesita un servicio encuentra a quien lo ofrece, sin intermediarios. Sin comisiones, sin intermediar el pago.",
   manifest: "/manifest.json",
   // Verificación de propiedad del dominio ante Google. Hace falta para que
   // Google apruebe la marca de la pantalla de consentimiento OAuth: sin
@@ -117,7 +117,7 @@ const DATOS_ESTRUCTURADOS = {
   url: "https://aquive.co/",
   inLanguage: "es-CO",
   description:
-    "AquíVe es una plataforma gratuita que conecta, en Colombia, a quien necesita algo con quien puede darlo: insumos que alguien entrega sin cobrar, servicios de profesionales con matrícula, y el trabajo de gente que vive de su oficio.",
+    "Una red de vecinos donde quien necesita un servicio encuentra a quien lo ofrece, sin intermediarios. Sin comisiones, sin intermediar el pago.",
   publisher: {
     "@type": "Organization",
     name: "AquíVe",
