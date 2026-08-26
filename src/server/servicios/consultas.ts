@@ -1,13 +1,18 @@
-import { and, asc, desc, eq, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
 import {
   municipios,
+  municipiosConProveedores,
+  oficiosConProveedores,
+  proveedorOficios,
   proveedorOficiosPublicos,
+  proveedores,
   proveedoresPublicos,
   resenasPublicas,
+  zonas,
 } from '@/db/esquema'
-import type { EnListado, Ficha } from '@/contrato/servicios'
+import type { EnListado, Facetas, Ficha, Filtros, MiFicha } from '@/contrato/servicios'
 
 // Capa de dominio del módulo de Servicios.
 //
@@ -148,55 +153,121 @@ export async function ficha(db: BaseDeDatos, id: string): Promise<Ficha | null> 
   }
 }
 
-export async function listado(
+export async function directorio(
   db: BaseDeDatos,
-  filtros: { oficio?: string; municipio?: string; limite: number; desde: number },
-): Promise<{ filas: EnListado[]; hay_mas: boolean }> {
+  filtros: Filtros,
+): Promise<{ filas: EnListado[]; facetas: Facetas }> {
   const condiciones = []
   if (filtros.municipio) condiciones.push(eq(proveedoresPublicos.municipio, filtros.municipio))
-  // El oficio se busca contra el arreglo agregado de la vista, que ya trae
-  // solo los oficios visibles de cada prestador. Filtrar aquí por la tabla de
-  // oficios traería de vuelta los escondidos por la regla 7.
+  if (filtros.zona) condiciones.push(eq(proveedoresPublicos.zonaId, filtros.zona))
+  // Los arreglos agregados de la vista ya traen solo lo visible de cada
+  // prestador. Cruzar contra la tabla de oficios devolvería los que la regla
+  // de producto 7 esconde.
   if (filtros.oficio) {
-    condiciones.push(sql`${filtros.oficio} = any(${proveedoresPublicos.oficios})`)
+    condiciones.push(sql`${proveedoresPublicos.oficios} @> array[${filtros.oficio}]::text[]`)
+  }
+  if (filtros.modalidad) {
+    condiciones.push(sql`${proveedoresPublicos.modalidad} @> array[${filtros.modalidad}]::text[]`)
+  }
+  if (filtros.modo) {
+    condiciones.push(sql`${proveedoresPublicos.modos} @> array[${filtros.modo}]::text[]`)
+  }
+  const donde = condiciones.length > 0 ? and(...condiciones) : undefined
+
+  const [filas, oficiosCatalogo, municipiosCatalogo, zonasDelMunicipio] = await Promise.all([
+    db
+      .select({
+        id: proveedoresPublicos.id,
+        nombreVisible: proveedoresPublicos.nombreVisible,
+        tipo: proveedoresPublicos.tipo,
+        telefonoVerificado: proveedoresPublicos.telefonoVerificado,
+        municipio: proveedoresPublicos.municipio,
+        municipioNombre: municipios.nombre,
+        zonaNombre: proveedoresPublicos.zonaNombre,
+        zonaTexto: proveedoresPublicos.zonaTexto,
+        modalidad: proveedoresPublicos.modalidad,
+        referenciasConfirmadas: proveedoresPublicos.referenciasConfirmadas,
+        serviciosConfirmados: proveedoresPublicos.serviciosConfirmados,
+        totalResenas: proveedoresPublicos.totalResenas,
+        cumplimiento: proveedoresPublicos.cumplimiento,
+        descripcion: proveedoresPublicos.descripcion,
+      })
+      .from(proveedoresPublicos)
+      .leftJoin(municipios, eq(municipios.codigoDane, proveedoresPublicos.municipio))
+      .where(donde)
+      // Verificados primero, y después quien tiene servicios confirmados. Las
+      // dos son señales comprobadas, no una recomendación: la ficha lo dice.
+      .orderBy(
+        desc(proveedoresPublicos.telefonoVerificado),
+        desc(proveedoresPublicos.serviciosConfirmados),
+        asc(proveedoresPublicos.nombreVisible),
+      ),
+    db
+      .select({
+        id: oficiosConProveedores.id,
+        nombre: oficiosConProveedores.nombre,
+        grupo: oficiosConProveedores.grupo,
+      })
+      .from(oficiosConProveedores)
+      .orderBy(asc(oficiosConProveedores.orden)),
+    db
+      .select({
+        codigo_dane: municipiosConProveedores.codigoDane,
+        nombre: municipiosConProveedores.nombre,
+        departamento: municipiosConProveedores.departamento,
+      })
+      .from(municipiosConProveedores)
+      .orderBy(asc(municipiosConProveedores.nombre)),
+    filtros.municipio
+      ? db
+          .select({ id: zonas.id, nombre: zonas.nombre })
+          .from(zonas)
+          .where(and(eq(zonas.municipio, filtros.municipio), eq(zonas.activa, true)))
+          .orderBy(asc(zonas.orden))
+      : Promise.resolve([]),
+  ])
+
+  // Los oficios de todos los prestadores de la página, en UNA consulta en vez
+  // de una por tarjeta.
+  const ids = filas.map((f) => f.id!).filter(Boolean)
+  const oficios = ids.length
+    ? await db
+        .select({
+          proveedorId: proveedorOficiosPublicos.proveedorId,
+          oficio_id: proveedorOficiosPublicos.oficioId,
+          nombre: proveedorOficiosPublicos.oficioNombre,
+          grupo: proveedorOficiosPublicos.grupo,
+          modo: proveedorOficiosPublicos.modo,
+          precio_desde: proveedorOficiosPublicos.precioDesde,
+          unidad: proveedorOficiosPublicos.unidad,
+        })
+        .from(proveedorOficiosPublicos)
+        .where(inArray(proveedorOficiosPublicos.proveedorId, ids))
+        .orderBy(asc(proveedorOficiosPublicos.oficioNombre))
+    : []
+
+  const porProveedor = new Map<string, EnListado['oficios']>()
+  for (const o of oficios) {
+    const lista = porProveedor.get(o.proveedorId!) ?? []
+    lista.push({
+      oficio_id: o.oficio_id!,
+      nombre: o.nombre ?? '',
+      grupo: o.grupo,
+      modo: (o.modo ?? 'normal') as EnListado['oficios'][number]['modo'],
+      precio_desde: aNumeroONulo(o.precio_desde),
+      unidad: o.unidad as EnListado['oficios'][number]['unidad'],
+    })
+    porProveedor.set(o.proveedorId!, lista)
   }
 
-  // Se pide una fila de más en vez de contar el total: `count(*)` sobre una
-  // vista con agregados cuesta lo mismo que traer la página entera, y para
-  // pintar «hay más» no hace falta saber cuántos.
-  const filas = await db
-    .select({
-      id: proveedoresPublicos.id,
-      nombreVisible: proveedoresPublicos.nombreVisible,
-      tipo: proveedoresPublicos.tipo,
-      telefonoVerificado: proveedoresPublicos.telefonoVerificado,
-      municipio: proveedoresPublicos.municipio,
-      zonaNombre: proveedoresPublicos.zonaNombre,
-      zonaTexto: proveedoresPublicos.zonaTexto,
-      modalidad: proveedoresPublicos.modalidad,
-      referenciasConfirmadas: proveedoresPublicos.referenciasConfirmadas,
-      serviciosConfirmados: proveedoresPublicos.serviciosConfirmados,
-      totalResenas: proveedoresPublicos.totalResenas,
-      cumplimiento: proveedoresPublicos.cumplimiento,
-    })
-    .from(proveedoresPublicos)
-    .where(condiciones.length > 0 ? and(...condiciones) : undefined)
-    // Quien tiene servicios confirmados primero: es la única señal que no
-    // depende de nosotros (regla de producto 5).
-    .orderBy(desc(proveedoresPublicos.serviciosConfirmados), asc(proveedoresPublicos.nombreVisible))
-    .limit(filtros.limite + 1)
-    .offset(filtros.desde)
-
-  const hay_mas = filas.length > filtros.limite
-
   return {
-    hay_mas,
-    filas: filas.slice(0, filtros.limite).map((f) => ({
+    filas: filas.map((f) => ({
       id: f.id!,
       nombre_visible: f.nombreVisible ?? '',
       tipo: f.tipo ?? 'persona',
       telefono_verificado: f.telefonoVerificado ?? false,
       municipio: f.municipio ?? '',
+      municipio_nombre: f.municipioNombre ?? null,
       zona_nombre: f.zonaNombre,
       zona_texto: f.zonaTexto,
       modalidad: (f.modalidad ?? []) as EnListado['modalidad'],
@@ -204,6 +275,62 @@ export async function listado(
       servicios_confirmados: aNumero(f.serviciosConfirmados),
       total_resenas: aNumero(f.totalResenas),
       cumplimiento: aNumeroONulo(f.cumplimiento),
+      descripcion: f.descripcion,
+      oficios: porProveedor.get(f.id!) ?? [],
     })),
+    facetas: {
+      oficios: oficiosCatalogo.map((o) => ({
+        id: o.id!,
+        nombre: o.nombre ?? '',
+        grupo: o.grupo,
+      })),
+      municipios: municipiosCatalogo.map((m) => ({
+        codigo_dane: m.codigo_dane!,
+        nombre: m.nombre ?? '',
+        departamento: m.departamento,
+      })),
+      zonas: zonasDelMunicipio.map((z) => ({ id: z.id, nombre: z.nombre })),
+    },
+  }
+}
+
+/**
+ * La ficha propia de quien está en sesión.
+ *
+ * Se lee de `proveedores` —la tabla, no la vista— a propósito: una ficha
+ * suspendida no sale en la vista pública, y es justo la que hay que poder
+ * mirar para saber que está suspendida. Devuelve lo mínimo que la portada
+ * necesita, no el perfil entero: quien quiere editarlo va a su pantalla.
+ */
+export async function miFicha(
+  db: BaseDeDatos,
+  usuarioId: string | null,
+): Promise<MiFicha | null> {
+  if (!usuarioId) return null
+
+  const [mia] = await db
+    .select({ id: proveedores.id, suspendido: proveedores.suspendido })
+    .from(proveedores)
+    .where(eq(proveedores.perfilId, usuarioId))
+    .limit(1)
+
+  if (!mia) return null
+
+  // Cuántos de sus oficios esconde la regla de producto 7: los que tiene
+  // declarados menos los que la vista pública deja ver.
+  const [{ declarados }] = await db
+    .select({ declarados: sql<number>`count(*)::int` })
+    .from(proveedorOficios)
+    .where(eq(proveedorOficios.proveedorId, mia.id))
+
+  const [{ visibles }] = await db
+    .select({ visibles: sql<number>`count(*)::int` })
+    .from(proveedorOficiosPublicos)
+    .where(eq(proveedorOficiosPublicos.proveedorId, mia.id))
+
+  return {
+    id: mia.id,
+    suspendido: mia.suspendido,
+    oficios_escondidos: Math.max(0, declarados - visibles),
   }
 }

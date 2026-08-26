@@ -80,6 +80,9 @@ export const EnListado = z.object({
   tipo: z.string(),
   telefono_verificado: z.boolean(),
   municipio: z.string(),
+  // El nombre resuelto, no solo el código. Antes la pantalla se traía los
+  // 1.100 municipios del país para hacer el cruce en memoria.
+  municipio_nombre: z.string().nullable(),
   zona_nombre: z.string().nullable(),
   zona_texto: z.string().nullable(),
   modalidad: z.array(Modalidad),
@@ -87,33 +90,94 @@ export const EnListado = z.object({
   servicios_confirmados: z.number(),
   total_resenas: z.number(),
   cumplimiento: z.number().nullable(),
+  descripcion: z.string().nullable(),
+  // Los oficios de ESTE prestador, con su precio. Vienen dentro y no en una
+  // consulta aparte por tarjeta.
+  oficios: z.array(OficioDeProveedor),
 })
 
 export type EnListado = z.infer<typeof EnListado>
 
+/**
+ * Los filtros del directorio. Viven en la URL, así que el enlace se comparte.
+ *
+ * Cada uno lleva `.catch(undefined)`: un filtro mal formado se DESCARTA en
+ * vez de rechazar la petición. Un filtro no es una frontera de seguridad, y
+ * alguien que edita la URL a mano —o un enlace de WhatsApp que llegó
+ * cortado— tiene que ver el directorio completo, no una pantalla de error.
+ * Lo que sí sigue siendo estricto es todo lo demás: un `id` inválido en la
+ * ficha sí es un 400, porque ahí no hay nada razonable que enseñar.
+ */
+export const Filtros = z.object({
+  oficio: z.string().optional().catch(undefined),
+  // Cinco dígitos, código DANE. Se valida aquí y no en la pantalla: la
+  // aplicación de Expo no va a repetir la expresión regular.
+  municipio: z
+    .string()
+    .regex(/^[0-9]{5}$/)
+    .optional()
+    .catch(undefined),
+  zona: z.uuid().optional().catch(undefined),
+  modalidad: Modalidad.optional().catch(undefined),
+  modo: Modo.optional().catch(undefined),
+})
+
+export type Filtros = z.infer<typeof Filtros>
+
+/** Lo que llena los desplegables y los chips. Solo lo que tiene gente detrás. */
+export const Facetas = z.object({
+  oficios: z.array(
+    z.object({ id: z.string(), nombre: z.string(), grupo: z.string().nullable() }),
+  ),
+  municipios: z.array(
+    z.object({
+      codigo_dane: z.string(),
+      nombre: z.string(),
+      departamento: z.string().nullable(),
+    }),
+  ),
+  // Solo se ofrecen cuando ya hay municipio: un desplegable con las comunas
+  // de Cali mezcladas con los barrios de otra ciudad no significa nada.
+  zonas: z.array(z.object({ id: z.uuid(), nombre: z.string() })),
+})
+
+export type Facetas = z.infer<typeof Facetas>
+
+export const MiFicha = z.object({
+  id: z.uuid(),
+  suspendido: z.boolean(),
+  oficios_escondidos: z.number(),
+})
+
+export type MiFicha = z.infer<typeof MiFicha>
+
 export const contratoServicios = {
   /** La ficha pública de un prestador. Pantalla 09. */
-  ficha: oc
-    .input(z.object({ id: z.uuid() }))
-    .output(Ficha.nullable()),
+  ficha: oc.input(z.object({ id: z.uuid() })).output(Ficha.nullable()),
 
   /**
-   * El directorio. Pantallas 06 y 07.
+   * El directorio con sus facetas. Pantallas 05, 06 y 07.
    *
-   * El filtro por oficio y municipio va aquí y no en la interfaz: la regla
-   * de producto 7 —los oficios de riesgo alto no se publican sin teléfono
-   * verificado y una referencia confirmada— la sostiene la consulta, y una
-   * lista que se filtrara en el cliente tendría que traerse antes las filas
-   * que precisamente no debe enseñar.
+   * Va todo en una llamada a propósito. Antes eran siete consultas sueltas
+   * desde la pantalla —las fichas, sus oficios, el catálogo, los municipios,
+   * las zonas—, y cada una era algo que la aplicación de Expo habría tenido
+   * que acordarse de repetir en el mismo orden.
+   *
+   * El filtrado va aquí y no en la interfaz: la regla de producto 7 —los
+   * oficios de riesgo alto no aparecen sin teléfono verificado y una
+   * referencia confirmada— la sostiene la consulta. Una lista que se filtrara
+   * en el cliente tendría que traerse antes las filas que no debe enseñar.
    */
-  listado: oc
-    .input(
-      z.object({
-        oficio: z.string().optional(),
-        municipio: z.string().optional(),
-        limite: z.number().int().min(1).max(50).default(20),
-        desde: z.number().int().min(0).default(0),
-      }),
-    )
-    .output(z.object({ filas: z.array(EnListado), hay_mas: z.boolean() })),
+  directorio: oc
+    .input(Filtros)
+    .output(z.object({ filas: z.array(EnListado), facetas: Facetas })),
+
+  /**
+   * La ficha propia de quien está en sesión, o null.
+   *
+   * Es lo que convierte «Ofrecer mi trabajo» en «Mi ficha»: sin esto, quien
+   * ya publicó no tiene por dónde volver y el botón le sigue ofreciendo crear
+   * una que ya existe.
+   */
+  miFicha: oc.output(MiFicha.nullable()),
 }

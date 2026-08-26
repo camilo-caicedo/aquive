@@ -1,5 +1,6 @@
 import { RPCHandler } from '@orpc/server/fetch'
 
+import { contextoDeLaPeticion } from '@/orpc/contexto'
 import { enrutador } from '@/orpc/servidor'
 
 // El borde HTTP, y lo único que sabe de peticiones en toda la cadena.
@@ -14,7 +15,9 @@ const manejador = new RPCHandler(enrutador)
 async function atender(peticion: Request): Promise<Response> {
   const { response } = await manejador.handle(peticion, {
     prefix: '/api/rpc',
-    context: {},
+    // El borde resuelve la sesión y la mete en el contexto. Nada más allá de
+    // aquí vuelve a tocar una cookie.
+    context: await contextoDeLaPeticion(),
   })
 
   return response ?? new Response('No encontrado', { status: 404 })

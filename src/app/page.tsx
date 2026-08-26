@@ -2,9 +2,8 @@ import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { AccionPrincipal } from '@/components/accion-principal'
 import { Info, Inbox, ShieldAlert, Stethoscope, CircleAlert, Briefcase } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { servidor } from '@/orpc/local'
 import { AVISO_SERVICIOS, NO_PAGUES_POR_ADELANTADO } from '@/lib/honestidad'
-import { listarMunicipios, mapaDeNombres } from '@/lib/municipios'
 import { GRUPOS, MODALIDADES, MODOS_PRECIO } from '@/lib/servicios'
 import { TarjetaProveedor } from '@/components/tarjeta-proveedor'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -14,7 +13,7 @@ import { HojaFiltros, GrupoChips } from '@/components/hoja-filtros'
 import { PestanasServicios } from '@/components/pestanas-servicios'
 import { HeroPortada } from '@/components/hero-portada'
 import { VueltaAlDestino } from '@/app/auth/vuelta'
-import type { MiProveedor, ModalidadServicio, ModoPrecio } from '@/lib/types'
+import type { ModalidadServicio, ModoPrecio } from '@/lib/types'
 
 /**
  * La portada: el directorio del rebusque.
@@ -47,17 +46,44 @@ export default async function InicioPage({
   }>
 }) {
   const params = await searchParams
-  const supabase = await createClient()
 
-  // Mismo cuidado que en /servidores: el municipio se valida antes de
-  // llegar a un filtro de PostgREST. Cinco dígitos y nada más.
-  const municipio =
-    params.municipio && /^[0-9]{5}$/.test(params.municipio) ? params.municipio : null
-  const zona =
-    params.zona &&
-    /^[0-9a-f-]{36}$/.test(params.zona)
-      ? params.zona
-      : null
+  // Una sola llamada por el contrato (ADR 0001, regla 2). Antes eran siete
+  // consultas sueltas desde aquí —las fichas, sus oficios, el catálogo de
+  // oficios, los municipios con gente, los 1.100 municipios del país para
+  // cruzar nombres, las zonas y mi propia ficha—, y cada una era algo que la
+  // aplicación de Expo habría tenido que acordarse de repetir en el mismo
+  // orden. La validación de los filtros también se fue: la hace el contrato,
+  // así que un municipio que no sean cinco dígitos ya no llega a la consulta.
+  const pedidos = {
+    oficio: params.oficio || undefined,
+    municipio: params.municipio || undefined,
+    zona: params.zona || undefined,
+    modalidad: MODALIDADES.some((m) => m.valor === params.modalidad)
+      ? (params.modalidad as ModalidadServicio)
+      : undefined,
+    modo: MODOS_PRECIO.some((m) => m.valor === params.modo)
+      ? (params.modo as ModoPrecio)
+      : undefined,
+  }
+
+  const [directorio, miFicha] = await Promise.all([
+    servidor.servicios.directorio(pedidos),
+    servidor.servicios.miFicha(),
+  ])
+
+  const proveedores = directorio.filas
+  const { oficios: oficiosCatalogo, municipios: municipiosLista, zonas } = directorio.facetas
+
+  // Lo que quedó aplicado de verdad: el contrato descarta en silencio un
+  // filtro mal formado, así que los chips tienen que leerse de ahí y no de la
+  // URL, o se pintaría un chip que no está filtrando nada.
+  const oficio = params.oficio && oficiosCatalogo.some((o) => o.id === params.oficio)
+    ? params.oficio
+    : null
+  const municipio = params.municipio && /^[0-9]{5}$/.test(params.municipio)
+    ? params.municipio
+    : null
+  const zona = zonas.some((z) => z.id === params.zona) ? (params.zona as string) : null
   const modalidad = MODALIDADES.some((m) => m.valor === params.modalidad)
     ? (params.modalidad as ModalidadServicio)
     : null
@@ -65,62 +91,13 @@ export default async function InicioPage({
     ? (params.modo as ModoPrecio)
     : null
 
-  let query = supabase
-    .from('proveedores_publicos')
-    .select('*')
-    // Verificados primero. Es el único dato comprobado que hay, y no es
-    // una recomendación: la ficha lo explica.
-    .order('telefono_verificado', { ascending: false })
-    .order('servicios_confirmados', { ascending: false })
-    .order('nombre_visible')
-
-  if (params.oficio) query = query.contains('oficios', [params.oficio])
-  if (municipio) query = query.eq('municipio', municipio)
-  if (zona) query = query.eq('zona_id', zona)
-  if (modalidad) query = query.contains('modalidad', [modalidad])
-  if (modo) query = query.contains('modos', [modo])
-
-  const [
-    { data: proveedores },
-    { data: oficiosCatalogo },
-    { data: municipiosLista },
-    todos,
-    { data: mio },
-  ] = await Promise.all([
-    query,
-    supabase.from('oficios_con_proveedores').select('*').order('orden'),
-    supabase.from('municipios_con_proveedores').select('*').order('nombre'),
-    listarMunicipios(supabase),
-    // Sin sesión devuelve null y no cuesta nada. Con sesión es lo que
-    // convierte «Ofrecer mi trabajo» en «Mi ficha»: quien ya la publicó
-    // no tenía por dónde volver a ella, y el botón le seguía ofreciendo
-    // crear una que ya existe.
-    supabase.rpc('mi_proveedor', {}),
-  ])
-
-  const miFicha = (mio as MiProveedor | null) ?? null
-  const misOficiosEscondidos =
-    miFicha?.oficios.filter((o) => !o.publicado).length ?? 0
-
-  const nombreMunicipio = mapaDeNombres(todos ?? [])
-
-  // Las zonas solo se ofrecen cuando ya se filtró por municipio: un
-  // desplegable con las comunas de Cali mezcladas con los barrios de otra
-  // ciudad no significa nada.
-  const { data: zonas } = municipio
-    ? await supabase
-        .from('zonas')
-        .select('*')
-        .eq('municipio', municipio)
-        .eq('activa', true)
-        .order('orden')
-    : { data: null }
+  const misOficiosEscondidos = miFicha?.oficios_escondidos ?? 0
 
   // El href de cada chip es la URL sin ESE filtro. Quitar el municipio se
   // lleva también la zona: una comuna sin su ciudad no filtra nada, y
   // dejarla colgada devolvía una lista vacía sin explicación.
   const aplicados: Record<string, string | null> = {
-    oficio: params.oficio ?? null,
+    oficio,
     municipio,
     zona,
     modalidad,
@@ -137,12 +114,13 @@ export default async function InicioPage({
     return qs ? `/?${qs}` : '/'
   }
 
-  const nombreOficio = new Map((oficiosCatalogo ?? []).map((o) => [o.id, o.nombre]))
-  const nombreZona = new Map((zonas ?? []).map((z) => [z.id, z.nombre]))
+  const nombreOficio = new Map(oficiosCatalogo.map((o) => [o.id, o.nombre]))
+  const nombreZona = new Map(zonas.map((z) => [z.id, z.nombre]))
+  const nombreMunicipio = new Map(municipiosLista.map((m) => [m.codigo_dane, m.nombre]))
 
   const chipsAplicados = (
     [
-      ['oficio', params.oficio ? nombreOficio.get(params.oficio) : null],
+      ['oficio', oficio ? nombreOficio.get(oficio) : null],
       ['municipio', municipio ? nombreMunicipio.get(municipio) : null],
       ['zona', zona ? nombreZona.get(zona) : null],
       ['modalidad', MODALIDADES.find((m) => m.valor === modalidad)?.etiqueta ?? null],
@@ -156,24 +134,11 @@ export default async function InicioPage({
       href: sinFiltro(clave),
     }))
 
-  // Los oficios de cada proveedor, con precio, en una sola consulta en
-  // vez de una por tarjeta. Sale de la vista que aplica la regla S.
-  const ids = (proveedores ?? []).map((p) => p.id)
-  const { data: oficiosProveedor } = ids.length
-    ? await supabase
-        .from('proveedor_oficios_publicos')
-        .select('*')
-        .in('proveedor_id', ids)
-    : { data: null }
-
-  const porProveedor = new Map<string, NonNullable<typeof oficiosProveedor>>()
-  for (const o of oficiosProveedor ?? []) {
-    const lista = porProveedor.get(o.proveedor_id) ?? []
-    lista.push(o)
-    porProveedor.set(o.proveedor_id, lista)
-  }
-
-  const hayFiltro = !!(params.oficio || municipio || zona || modalidad || modo)
+  // Con lo que se le PIDIÓ a la consulta, no con lo que se pudo pintar como
+  // chip. Un ?oficio=inventado sí filtra —y no encuentra nada—, así que la
+  // lista vacía tiene que decir «nadie coincide con estos filtros» y no
+  // «todavía no hay nadie en el directorio», que sería falso habiendo cuatro.
+  const hayFiltro = Object.values(pedidos).some(Boolean)
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
@@ -211,7 +176,7 @@ export default async function InicioPage({
             opciones={(oficiosCatalogo ?? []).map((o) => ({
               valor: o.id,
               etiqueta: o.nombre,
-              detalle: GRUPOS[o.grupo],
+              detalle: o.grupo ? GRUPOS[o.grupo as keyof typeof GRUPOS] : undefined,
             }))}
           />
           <SelectFiltro
@@ -223,7 +188,7 @@ export default async function InicioPage({
             opciones={(municipiosLista ?? []).map((m) => ({
               valor: m.codigo_dane,
               etiqueta: m.nombre,
-              detalle: m.departamento,
+              detalle: m.departamento ?? undefined,
             }))}
           />
 
@@ -344,14 +309,14 @@ export default async function InicioPage({
       </p>
 
       <p className="mt-4 text-base font-semibold">
-        {proveedores?.length ?? 0}{' '}
-        {proveedores?.length === 1 ? 'persona' : 'personas'}
+        {proveedores.length}{' '}
+        {proveedores.length === 1 ? 'persona' : 'personas'}
         {hayFiltro && (
           <span className="font-normal text-muted-foreground"> con estos filtros</span>
         )}
       </p>
 
-      {!proveedores || proveedores.length === 0 ? (
+      {proveedores.length === 0 ? (
         <div className="mt-6 rounded-lg border border-dashed border-border p-8 text-center">
           <Inbox className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
           <p className="mt-2 text-base text-muted-foreground">
@@ -381,12 +346,7 @@ export default async function InicioPage({
       ) : (
         <ul className="mt-6 space-y-3">
           {proveedores.map((p) => (
-            <TarjetaProveedor
-              key={p.id}
-              proveedor={p}
-              nombreMunicipio={nombreMunicipio.get(p.municipio)}
-              oficios={porProveedor.get(p.id) ?? []}
-            />
+            <TarjetaProveedor key={p.id} proveedor={p} />
           ))}
         </ul>
       )}

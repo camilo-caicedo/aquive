@@ -2,9 +2,7 @@ import Link from 'next/link'
 import { InsigniasProveedor } from '@/components/insignias-proveedor'
 import { Button } from '@/components/ui/button'
 import { precioLegible, zonaLegible, etiquetaModalidad } from '@/lib/servicios'
-import type { Database, ModoPrecio, UnidadPrecio } from '@/lib/types'
-
-type ProveedorPublico = Database['public']['Views']['proveedores_publicos']['Row']
+import type { EnListado } from '@/contrato/servicios'
 
 /**
  * La tarjeta del directorio. No lleva el teléfono ni un botón de WhatsApp:
@@ -16,24 +14,14 @@ type ProveedorPublico = Database['public']['Views']['proveedores_publicos']['Row
  * enlace subrayado del tamaño del texto, al final de la tarjeta, y no se
  * leía como la salida de la tarjeta sino como una nota más.
  */
-export function TarjetaProveedor({
-  proveedor,
-  nombreMunicipio,
-  oficios,
-}: {
-  proveedor: ProveedorPublico
-  nombreMunicipio?: string
-  /** Los oficios de ESTE proveedor, con su precio. Vienen de la página. */
-  oficios: {
-    oficio_id: string
-    oficio_nombre: string
-    modo: ModoPrecio
-    precio_desde: number | null
-    unidad: UnidadPrecio | null
-  }[]
-}) {
+// Un solo argumento, y sale del contrato. Antes eran tres —la fila cruda de
+// la vista, el nombre del municipio y los oficios— y la pantalla tenía que
+// acordarse de cruzar los tres; ahora vienen juntos porque la consulta ya los
+// devuelve juntos.
+export function TarjetaProveedor({ proveedor }: { proveedor: EnListado }) {
+  const oficios = proveedor.oficios
   const zona = zonaLegible(proveedor.zona_nombre, proveedor.zona_texto)
-  const donde = [zona, nombreMunicipio]
+  const donde = [zona, proveedor.municipio_nombre]
     .filter(Boolean)
     .concat(
       proveedor.modalidad.length > 0
@@ -87,7 +75,7 @@ export function TarjetaProveedor({
             key={o.oficio_id}
             className="flex flex-col gap-0.5 text-base sm:flex-row sm:items-baseline sm:justify-between sm:gap-3"
           >
-            <span className="min-w-0">{o.oficio_nombre}</span>
+            <span className="min-w-0">{o.nombre}</span>
             <span className="text-muted-foreground sm:shrink-0 sm:text-right">
               {precioLegible(o.modo, o.precio_desde, o.unidad)}
             </span>
@@ -109,9 +97,12 @@ export function TarjetaProveedor({
         <p className="mt-3 line-clamp-2 text-base">{proveedor.descripcion}</p>
       )}
 
+      {/* Ni borde ni letra en lima: sobre blanco da 1,35:1 y el botón
+          desaparecía. El lima es el relleno de la acción principal de la
+          pantalla, y en una lista de veinte tarjetas ninguna lo es. */}
       <Button
         variant="outline"
-        className="mt-4 w-full border-primary text-primary"
+        className="mt-4 w-full"
         nativeButton={false}
         render={<Link href={`/servicios/${proveedor.id}`} />}
       >

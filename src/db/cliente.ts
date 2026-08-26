@@ -1,9 +1,55 @@
 import 'server-only'
 
+import dns from 'node:dns'
+import { Socket, type LookupFunction } from 'node:net'
 import { Pool } from 'pg'
 import { drizzle } from 'drizzle-orm/node-postgres'
 
 import * as esquema from './esquema'
+
+// El pooler de Supabase falla la resolución de nombre de forma intermitente
+// —`ENOTFOUND` en una petición y bien en la siguiente—, y cuando pasa el error
+// que se ve arriba es «Failed query: select ...», que manda a depurar la
+// consulta equivocada. Ya costó una tarde.
+//
+// El reintento va aquí, en el socket, porque `pg` no acepta un `lookup` propio
+// pero sí una fábrica de `stream`. No es solo de desarrollo: un fallo de DNS a
+// mitad de una petición es un 500 para quien está buscando a una modista, y la
+// consulta que iba a hacerse era perfectamente válida.
+const lookupConReintento: LookupFunction = (hostname, opciones, callback) => {
+  let intentos = 0
+  const probar = () => {
+    dns.lookup(hostname, opciones as dns.LookupOneOptions, (err, address, family) => {
+      if (!err || intentos >= 3) {
+        ;(callback as (e: NodeJS.ErrnoException | null, a: string, f: number) => void)(
+          err,
+          address,
+          family,
+        )
+        return
+      }
+      intentos++
+      setTimeout(probar, 120 * intentos)
+    })
+  }
+  probar()
+}
+
+/** Un socket normal, con la única diferencia de que reintenta el DNS. */
+function socketResistente(): Socket {
+  const socket = new Socket()
+  const conectar = socket.connect.bind(socket)
+  // `pg` llama `stream.connect(port, host)`; se le añade el `lookup` por el
+  // camino, que es la forma de opciones que sí lo acepta.
+  socket.connect = ((...args: unknown[]) => {
+    const [puerto, anfitrion] = args as [number, string]
+    if (typeof puerto === 'number' && typeof anfitrion === 'string') {
+      return conectar({ port: puerto, host: anfitrion, lookup: lookupConReintento })
+    }
+    return (conectar as (...a: unknown[]) => Socket)(...args)
+  }) as Socket['connect']
+  return socket
+}
 
 // El acceso a Postgres del runtime. Regla 3 de arquitectura del ADR 0001:
 // ningún acceso a datos desde el navegador. `server-only` lo hace un error de
@@ -41,6 +87,7 @@ const pool =
     max: 10,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 10_000,
+    stream: socketResistente,
   })
 
 if (process.env.NODE_ENV !== 'production') globalThis.__poolAquive = pool
