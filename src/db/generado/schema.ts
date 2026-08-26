@@ -1080,7 +1080,7 @@ export const entidadesPublicas = pgView("entidades_publicas", {	id: uuid(),
 	enlaces: jsonb(),
 	pie: text(),
 	cobertura: text(),
-	municipios: text(),
+	municipios: text().array(),
 	orden: integer(),
 }).as(sql`SELECT id, nombre, subtitulo, descripcion, enlaces, pie, cobertura, municipios, orden FROM entidades e WHERE activa`);
 
@@ -1096,7 +1096,7 @@ export const municipiosConServidores = pgView("municipios_con_servidores", {	cod
 
 export const servidoresPublicos = pgView("servidores_publicos", {	id: uuid(),
 	nombreVisible: text("nombre_visible"),
-	municipios: text(),
+	municipios: text().array(),
 	contactoPublico: text("contacto_publico"),
 	contactoTipo: text("contacto_tipo"),
 	descripcion: text(),
@@ -1104,7 +1104,7 @@ export const servidoresPublicos = pgView("servidores_publicos", {	id: uuid(),
 	entidadMatricula: text("entidad_matricula"),
 	numeroMatricula: text("numero_matricula"),
 	verificado: boolean(),
-	servicios: text(),
+	servicios: text().array(),
 }).as(sql`SELECT p.id, p.nombre_visible, p.municipios, p.contacto_publico, p.contacto_tipo, p.descripcion, sv.profesion, sv.entidad_matricula, sv.numero_matricula, sv.verificado, sv.servicios FROM perfiles p JOIN servidores sv ON sv.perfil_id = p.id WHERE p.tipo = 'servidor'::text AND p.suspendido = false AND p.acepto_publicacion = true`);
 
 export const solicitudesPublicas = pgView("solicitudes_publicas", {	id: uuid(),
@@ -1121,8 +1121,8 @@ export const solicitudesPublicas = pgView("solicitudes_publicas", {	id: uuid(),
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	numRespuestas: bigint("num_respuestas", { mode: "number" }),
 	items: jsonb(),
-	itemIds: text("item_ids"),
-	sugerenciaIds: uuid("sugerencia_ids"),
+	itemIds: text("item_ids").array(),
+	sugerenciaIds: uuid("sugerencia_ids").array(),
 	flujo: text(),
 	notaAdmin: text("nota_admin"),
 }).as(sql`SELECT s.id, s.codigo, s.municipio, (m.nombre || ', '::text) || m.departamento AS municipio_nombre, s.barrio, s.categoria, s.nota, s.creada_at, s.confirmada_at, s.expira_at, EXTRACT(epoch FROM now() - s.confirmada_at) / 3600::numeric AS horas_sin_confirmar, (( SELECT count(*) AS count FROM respuestas r WHERE r.solicitud_id = s.id)) + (( SELECT count(*) AS count FROM conversaciones c WHERE c.solicitud_id = s.id)) AS num_respuestas, ( SELECT COALESCE(jsonb_agg(jsonb_build_object('nombre', COALESCE(c.nombre, sg.nombre_propuesto), 'cantidad', si.cantidad, 'unidad', COALESCE(c.unidad, sg.unidad_sugerida, 'unidad'::text), 'por_confirmar', si.sugerencia_id IS NOT NULL) ORDER BY (COALESCE(c.orden, 9999))), '[]'::jsonb) AS "coalesce" FROM solicitud_items si LEFT JOIN catalogo_items c ON c.id = si.item_id LEFT JOIN sugerencias_item sg ON sg.id = si.sugerencia_id WHERE si.solicitud_id = s.id) AS items, ( SELECT COALESCE(array_agg(si.item_id) FILTER (WHERE si.item_id IS NOT NULL), '{}'::text[]) AS "coalesce" FROM solicitud_items si WHERE si.solicitud_id = s.id) AS item_ids, ( SELECT COALESCE(array_agg(si.sugerencia_id) FILTER (WHERE si.sugerencia_id IS NOT NULL), '{}'::uuid[]) AS "coalesce" FROM solicitud_items si WHERE si.solicitud_id = s.id) AS sugerencia_ids, s.flujo, s.nota_admin FROM solicitudes s JOIN municipios m ON m.codigo_dane = s.municipio WHERE estado_activo(s.estado) AND s.expira_at > now()`);
@@ -1139,7 +1139,7 @@ export const municipiosConSolicitudes = pgView("municipios_con_solicitudes", {	c
 
 export const ofertadoresPublicos = pgView("ofertadores_publicos", {	id: uuid(),
 	nombreVisible: text("nombre_visible"),
-	municipios: text(),
+	municipios: text().array(),
 	descripcion: text(),
 	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }),
 	items: jsonb(),
@@ -1201,14 +1201,14 @@ export const proveedoresPublicos = pgView("proveedores_publicos", {	id: uuid(),
 	zonaId: uuid("zona_id"),
 	zonaNombre: text("zona_nombre"),
 	zonaTexto: text("zona_texto"),
-	modalidad: text(),
-	dias: text(),
-	franjas: text(),
-	mediosPago: text("medios_pago"),
+	modalidad: text().array(),
+	dias: text().array(),
+	franjas: text().array(),
+	mediosPago: text("medios_pago").array(),
 	descripcion: text(),
 	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }),
-	oficios: text(),
-	grupos: text(),
+	oficios: text().array(),
+	grupos: text().array(),
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	referenciasConfirmadas: bigint("referencias_confirmadas", { mode: "number" }),
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
@@ -1218,7 +1218,7 @@ export const proveedoresPublicos = pgView("proveedores_publicos", {	id: uuid(),
 	puntualidad: numeric(),
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	totalResenas: bigint("total_resenas", { mode: "number" }),
-	modos: text(),
+	modos: text().array(),
 }).as(sql`SELECT p.id, p.nombre_visible, p.tipo, p.telefono, p.telefono_verificado, p.municipio, p.zona_id, z.nombre AS zona_nombre, p.zona_texto, p.modalidad, p.dias, p.franjas, p.medios_pago, p.descripcion, p.creado_at, COALESCE(ofi.oficios, '{}'::text[]) AS oficios, COALESCE(ofi.grupos, '{}'::text[]) AS grupos, COALESCE(ref.confirmadas, 0::bigint) AS referencias_confirmadas, COALESCE(sp.confirmados, 0::bigint) AS servicios_confirmados, res.cumplimiento, res.trato, res.puntualidad, COALESCE(res.total, 0::bigint) AS total_resenas, COALESCE(ofi.modos, '{}'::text[]) AS modos FROM proveedores p LEFT JOIN zonas z ON z.id = p.zona_id JOIN LATERAL ( SELECT array_agg(DISTINCT pop.oficio_id) AS oficios, array_agg(DISTINCT pop.grupo) AS grupos, array_agg(DISTINCT pop.modo) AS modos FROM proveedor_oficios_publicos pop WHERE pop.proveedor_id = p.id) ofi ON ofi.oficios IS NOT NULL LEFT JOIN LATERAL ( SELECT count(*) AS confirmadas FROM referencias r WHERE r.proveedor_id = p.id AND r.estado = 'confirmada'::text) ref ON true LEFT JOIN LATERAL ( SELECT count(*) AS confirmados FROM servicios_prestados s WHERE s.proveedor_id = p.id AND s.confirmado_at IS NOT NULL) sp ON true LEFT JOIN LATERAL ( SELECT count(*) AS total, round(avg(r.cumplimiento), 1) AS cumplimiento, round(avg(r.trato), 1) AS trato, round(avg(r.puntualidad), 1) AS puntualidad FROM resenas r WHERE r.proveedor_id = p.id AND NOT r.oculta) res ON true WHERE NOT p.suspendido AND p.acepto_publicacion AND p.telefono_verificado`);
 
 export const oficiosConProveedores = pgView("oficios_con_proveedores", {	id: text(),

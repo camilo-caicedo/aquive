@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { CalendarDays, MapPin, Wallet, ChevronDown, Info } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { servidor } from '@/orpc/local'
 import {
   DESLINDE_CALIDAD,
   NO_PAGUES_POR_ADELANTADO,
@@ -22,7 +22,6 @@ import { BarraContacto } from '@/components/barra-contacto'
 import { MarcoFlujo } from '@/components/marco-flujo'
 import { CriteriosResena } from '@/components/criterios-resena'
 import { BotonReportar } from '@/components/boton-reportar'
-import type { FichaProveedor } from '@/lib/types'
 
 export const metadata = { title: 'Ficha del proveedor' }
 
@@ -32,20 +31,21 @@ export default async function FichaPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-  const supabase = await createClient()
 
-  // Una sola llamada. `ficha_proveedor` lee de la vista pública, así que
-  // la regla S y el filtro de suspendidos se aplican en un solo sitio y
-  // esta pantalla no puede olvidarse de ninguno de los dos.
-  const { data } = await supabase.rpc('ficha_proveedor', { p_id: id })
-  const ficha = data as FichaProveedor | null
+  // Una sola llamada, y por el contrato (ADR 0001, regla 2). La consulta lee
+  // de `proveedores_publicos`, así que la regla de producto 7 y el filtro de
+  // suspendidos se aplican en un solo sitio y esta pantalla no puede
+  // olvidarse de ninguno de los dos.
+  //
+  // El municipio viene dentro: era una segunda consulta desde aquí, y la
+  // aplicación de Expo habría tenido que acordarse de repetirla.
+  const ficha = await servidor.servicios.ficha({ id })
   if (!ficha) notFound()
 
-  const { data: municipio } = await supabase
-    .from('municipios')
-    .select('nombre, departamento')
-    .eq('codigo_dane', ficha.municipio)
-    .maybeSingle()
+  const municipio =
+    ficha.municipio_nombre === null
+      ? null
+      : { nombre: ficha.municipio_nombre, departamento: ficha.municipio_departamento }
 
   const zona = zonaLegible(ficha.zona_nombre, ficha.zona_texto)
   const dias = diasLegibles(ficha.dias)
@@ -221,7 +221,11 @@ export default async function FichaPage({
         <BotonReportar tipoObjeto="proveedor" objetoId={ficha.id} />
       </div>
 
-      <BarraContacto telefono={ficha.telefono} />
+      {/* La columna es nullable y el tipo escrito a mano decía que no. En la
+          práctica no pasa —la vista exige teléfono verificado, y no se puede
+          verificar un teléfono que no existe—, pero la ficha no se cae por
+          eso: se queda sin barra de contacto y ya. */}
+      {ficha.telefono !== null && <BarraContacto telefono={ficha.telefono} />}
     </MarcoFlujo>
   )
 }
