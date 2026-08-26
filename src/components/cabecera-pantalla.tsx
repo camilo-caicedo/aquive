@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { BotonVolver } from '@/components/volver'
 
 /**
  * El título de una pantalla de destino, pegado al encabezado.
@@ -21,6 +20,10 @@ import { ArrowLeft } from 'lucide-react'
  * vez conservan la barra inferior, porque no son un formulario del que se
  * pueda salir a medio llenar.
  *
+ * Su valor es el padre de la ruta, y es a donde se va cuando NO hay
+ * historia detrás. Habiéndola, la flecha vuelve a la pantalla anterior de
+ * verdad. Lo explica `BotonVolver`.
+ *
  * Los márgenes negativos existen porque el `<main>` ya trae `px-4`: la
  * línea de abajo tiene que llegar a los dos bordes de la pantalla.
  */
@@ -38,13 +41,7 @@ export function CabeceraPantalla({
     <div className="-mx-4 -mt-6 mb-4 border-b border-border px-4 pt-2 pb-3">
       <div className="flex items-center gap-1">
         {volver && (
-          <Link
-            href={volver}
-            aria-label="Volver"
-            className="-ml-3 flex size-12 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-          >
-            <ArrowLeft className="size-6" aria-hidden="true" />
-          </Link>
+          <BotonVolver href={volver} />
         )}
         <h1 className="font-heading text-3xl leading-tight">{titulo}</h1>
       </div>

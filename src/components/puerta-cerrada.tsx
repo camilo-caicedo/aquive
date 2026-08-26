@@ -62,7 +62,7 @@ export function PuertaCerrada({
       {/* La salida. Quien viene a pedir ayuda no necesita nada de esto. */}
       <p className="mt-3 text-base text-muted-foreground">
         ¿Solo querías mirar?{' '}
-        <Link href="/" className="underline">
+        <Link href="/ayudas" className="underline">
           Volver al tablero
         </Link>
       </p>

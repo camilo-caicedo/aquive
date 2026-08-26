@@ -124,7 +124,7 @@ export function ChatServicio({
             maxLength={500}
             rows={2}
             placeholder="Escribe un mensaje"
-            className="bg-background focus-visible:ring-ring min-h-14 flex-1 resize-none rounded-2xl px-4 py-3 text-base focus-visible:ring-2 focus-visible:outline-none"
+            className="bg-card border border-input focus-visible:ring-ring min-h-14 flex-1 resize-none rounded-2xl px-4 py-3 text-base focus-visible:ring-2 focus-visible:outline-none"
           />
           <button
             type="submit"

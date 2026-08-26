@@ -354,7 +354,7 @@ export function FormularioPublicar({
     // de acción son del paso, y el paso solo lo sabe este componente.
     <MarcoFlujo
       titulo="Pedir ayuda"
-      volver="/"
+      volver="/inicio"
       pasos={NOMBRES_PASO}
       pasoActual={paso - 1}
       accion={acciones}

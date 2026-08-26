@@ -17,7 +17,7 @@ export default function ConfirmarPage() {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ''
 
   return (
-    <MarcoFlujo titulo="Calificar un trabajo" volver="/servicios">
+    <MarcoFlujo titulo="Calificar un trabajo" volver="/inicio">
       {/* Sin introducción: quien llega aquí ya tiene el papel en la mano.
           Lo que hacía falta decir —que no pide cuenta y que el código sirve
           una vez— se dice bajo el campo y al final, no antes de él. */}

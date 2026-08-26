@@ -219,7 +219,7 @@ export function CamposReferencia({
             <div>
               <Label>¿Qué le hiciste?</Label>
               <Select value={oficioId} onValueChange={(v) => setOficioId(v ?? '')}>
-                <SelectTrigger aria-label="Oficio de la referencia" className="mt-1 bg-background">
+                <SelectTrigger aria-label="Oficio de la referencia" className="mt-1">
                   <SelectValue placeholder="Sin especificar">
                     {(v: string) =>
                       oficios.find((o) => o.id === v)?.nombre ?? 'Sin especificar'

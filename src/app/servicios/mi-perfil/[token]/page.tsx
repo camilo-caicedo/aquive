@@ -84,7 +84,7 @@ export default async function MiPerfilPage({
 
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
-      <CabeceraPantalla titulo="Mi ficha" volver="/servicios" />
+      <CabeceraPantalla titulo="Mi ficha" volver="/inicio" />
       <p className="text-base text-muted-foreground">
         Esto es lo que aparece de ti en el directorio. Puedes cambiarlo o
         borrarlo cuando quieras, sin pedirle permiso a nadie.

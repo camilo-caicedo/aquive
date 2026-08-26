@@ -44,7 +44,7 @@ export function FormularioRespuesta({
             escribirá al contacto de tu perfil.
           </AlertDescription>
         </Alert>
-        <Button variant="outline" className="w-full" nativeButton={false} render={<Link href="/" />}>
+        <Button variant="outline" className="w-full" nativeButton={false} render={<Link href="/ayudas" />}>
           Ver otras solicitudes
         </Button>
       </div>

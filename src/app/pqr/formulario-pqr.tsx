@@ -153,7 +153,7 @@ export function FormularioPqr() {
           onChange={(e) => setAsunto(e.target.value)}
           maxLength={140}
           placeholder="Ej. El prestador no llegó a la cita"
-          className="bg-background focus-visible:ring-ring mt-2 min-h-14 w-full rounded-2xl px-4 text-base focus-visible:ring-2 focus-visible:outline-none"
+          className="bg-card border border-input focus-visible:ring-ring mt-2 min-h-14 w-full rounded-2xl px-4 text-base focus-visible:ring-2 focus-visible:outline-none"
         />
         <p className="mt-1 text-sm text-muted-foreground">{asunto.length}/140</p>
       </div>
@@ -172,7 +172,7 @@ export function FormularioPqr() {
           maxLength={1000}
           rows={6}
           placeholder="Cuéntanos con fechas lo que ocurrió."
-          className="bg-background focus-visible:ring-ring mt-2 w-full resize-none rounded-2xl px-4 py-3 text-base focus-visible:ring-2 focus-visible:outline-none"
+          className="bg-card border border-input focus-visible:ring-ring mt-2 w-full resize-none rounded-2xl px-4 py-3 text-base focus-visible:ring-2 focus-visible:outline-none"
         />
         <p className="mt-1 text-sm text-muted-foreground">{detalle.length}/1000</p>
       </div>

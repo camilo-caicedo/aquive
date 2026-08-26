@@ -32,6 +32,13 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       { source: '/servidores', destination: '/entidades', permanent: true },
+      // La otra puerta vieja: `/servicios` a secas es el directorio, y
+      // lleva meses en carteles de albergues. Redirigía a `/` desde una
+      // página, y desde que `/` da la bienvenida eso mandaba a la pantalla
+      // de entrada a quien venía siguiendo un cartel. Las rutas de debajo
+      // —/servicios/[id], /servicios/publicar— no se tocan: `source` sin
+      // comodín solo calza la ruta exacta.
+      { source: '/servicios', destination: '/directorio', permanent: true },
     ]
   },
   experimental: {

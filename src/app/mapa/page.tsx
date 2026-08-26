@@ -46,7 +46,7 @@ export default async function MapaPage({
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <CabeceraPantalla titulo="Mapa" volver={consulta ? `/?${consulta}` : '/'} />
+      <CabeceraPantalla titulo="Mapa" volver={consulta ? `/directorio?${consulta}` : '/directorio'} />
 
       <p className="text-base text-muted-foreground">
         {enElMapa.length} {enElMapa.length === 1 ? 'persona' : 'personas'} en el mapa

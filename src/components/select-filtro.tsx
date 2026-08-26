@@ -78,7 +78,7 @@ export function SelectFiltro({
         name={name}
         defaultValue={valorInicial}
         aria-label={label}
-        className={`h-12 w-full rounded-lg border border-input bg-background px-3 text-base ${envoltura}`}
+        className={`h-12 w-full rounded-full border border-input bg-card px-3 text-base ${envoltura}`}
       >
         <option value="">{placeholder}</option>
         {opciones.map((o) => (
@@ -110,7 +110,7 @@ export function SelectFiltro({
               botón queda sin valor visible ni chevron. */}
           <ComboboxTrigger
             aria-label={label}
-            className={`bg-background ${envoltura}`}
+            className={`bg-card ${envoltura}`}
           >
             <ComboboxValue />
           </ComboboxTrigger>
@@ -141,7 +141,7 @@ export function SelectFiltro({
     <>
       <input type="hidden" name={name} value={valor} />
       <Select value={valor} onValueChange={(v) => setValor(v ?? '')}>
-        <SelectTrigger aria-label={label} className={`bg-background ${envoltura}`}>
+        <SelectTrigger aria-label={label} className={`bg-card ${envoltura}`}>
           <SelectValue placeholder={placeholder}>
             {(v: string) => opciones.find((o) => o.valor === v)?.etiqueta ?? placeholder}
           </SelectValue>

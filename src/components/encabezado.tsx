@@ -72,7 +72,7 @@ export async function Encabezado() {
 
             El PNG no tiene canal alfa, así que el isotipo va en su círculo
             blanco; suelto sobre el crema se vería un cuadrado. */}
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
+        <Link href="/inicio" className="flex shrink-0 items-center gap-2.5">
           <span className="size-10 shrink-0 overflow-hidden rounded-full bg-card p-1">
             <Image
               src={isotipo}

@@ -30,7 +30,7 @@ export default async function CategoriasPage({
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <CabeceraPantalla titulo="Categorías" volver="/" />
+      <CabeceraPantalla titulo="Categorías" volver="/inicio" />
       <p className="text-base text-muted-foreground">
         Cada color es un lado de la sombrilla.
       </p>
@@ -68,7 +68,7 @@ export default async function CategoriasPage({
 
       <p className="mt-6 text-base text-muted-foreground">
         ¿Ya sabes a quién buscas?{' '}
-        <Link href="/" className="text-enlace underline underline-offset-4">
+        <Link href="/directorio" className="text-enlace underline underline-offset-4">
           <Search className="mr-1 inline size-4" aria-hidden="true" />
           Buscar en el directorio
         </Link>

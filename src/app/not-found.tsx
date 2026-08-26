@@ -15,7 +15,7 @@ export default function NoEncontrado() {
         detalle="Puede que el enlace esté mal escrito, o que la solicitud ya se haya borrado. Las solicitudes se borran solas a las 72 horas."
         accion={
           <>
-            <Button nativeButton={false} render={<Link href="/" />}>
+            <Button nativeButton={false} render={<Link href="/ayudas" />}>
               Ver solicitudes abiertas
             </Button>
             <Button variant="outline" nativeButton={false} render={<Link href="/publicar" />}>

@@ -92,7 +92,7 @@ export default function QuienesSomosPage() {
       </p>
 
       <div className="mt-6">
-        <Button className="w-full sm:w-auto" nativeButton={false} render={<Link href="/" />}>
+        <Button className="w-full sm:w-auto" nativeButton={false} render={<Link href="/inicio" />}>
           Volver al inicio
         </Button>
       </div>

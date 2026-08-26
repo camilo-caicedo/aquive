@@ -49,7 +49,7 @@ export default async function ZonasPage({
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <CabeceraPantalla titulo="Dónde hay gente" volver="/" />
+      <CabeceraPantalla titulo="Dónde hay gente" volver="/categorias" />
       <p className="text-base text-muted-foreground">
         {total} {total === 1 ? 'persona' : 'personas'} en {zonas.length}{' '}
         {zonas.length === 1 ? 'zona' : 'zonas'}

@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { BotonVolver } from '@/components/volver'
 
 /**
  * El caparazón de las pantallas de flujo: publicar, responder, calificar,
@@ -33,7 +32,8 @@ export function MarcoFlujo({
   subtitulo?: ReactNode
   /** Estado en palabras, a la derecha del título: «Acordada». */
   sello?: ReactNode
-  /** A dónde vuelve. Sin esto no se dibuja el botón. */
+  /** A dónde vuelve cuando no hay historia detrás. Sin esto no se dibuja
+   *  la flecha. Ver `BotonVolver`. */
   volver?: string
   /** Los pasos, con nombre. «Paso 3 de 5» no dice de qué. */
   pasos?: string[]
@@ -51,13 +51,7 @@ export function MarcoFlujo({
         <div className="mx-auto max-w-lg px-4 pt-2 pb-3">
           <div className="flex items-start gap-1">
             {volver && (
-              <Link
-                href={volver}
-                aria-label="Volver"
-                className="-ml-3 flex size-12 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-              >
-                <ArrowLeft className="size-6" aria-hidden="true" />
-              </Link>
+              <BotonVolver href={volver} />
             )}
             <div className="min-w-0 flex-1 py-2.5">
               <h1 className="font-heading text-2xl leading-tight">{titulo}</h1>

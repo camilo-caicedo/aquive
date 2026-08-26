@@ -917,7 +917,7 @@ export function FormularioRegistro({
   return (
     <MarcoFlujo
       titulo="Crear mi perfil"
-      volver="/"
+      volver="/inicio"
       pasos={['Qué ofreces', 'Cómo te ubican', 'Publicar']}
       pasoActual={paso - 1}
       accion={

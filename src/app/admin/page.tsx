@@ -46,7 +46,7 @@ export default async function AdminPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <CabeceraPantalla titulo="Administración" volver="/">
+      <CabeceraPantalla titulo="Administración" volver="/inicio">
         <p className="mt-1 text-base text-muted-foreground">
           {esperando === 0
             ? 'Nada esperando a nadie'

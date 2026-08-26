@@ -52,7 +52,7 @@ const ROLES: Rol[] = [
       'Cuando te terminen el trabajo, pídele el código y califícalo. Solo puede calificar quien tiene ese código, y sirve una sola vez.',
     ],
     ojo: 'Acuerda el precio antes de empezar y paga cuando el trabajo esté hecho. Nadie de AquíVe te va a pedir plata por adelantado, y quien te la pida no es de aquí.',
-    accion: { href: '/', texto: 'Ver el directorio' },
+    accion: { href: '/directorio', texto: 'Ver el directorio' },
     abierto: true,
   },
   {

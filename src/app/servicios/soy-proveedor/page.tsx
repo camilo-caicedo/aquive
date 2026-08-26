@@ -27,7 +27,7 @@ export default async function SoyProveedorPage() {
   // volver: al entrar caía en la portada y había que buscar esto otra vez.
   if (!user) {
     return (
-      <MarcoFlujo titulo="Ofrecer mi trabajo" volver="/servicios">
+      <MarcoFlujo titulo="Ofrecer mi trabajo" volver="/inicio">
         <PuertaCerrada
           titulo="Para publicar tu ficha hace falta una cuenta"
           porque="Tu ficha lleva tu nombre y tu teléfono, y se queda publicada hasta que tú la borres: tiene que poder volver a ella solo quien la creó."

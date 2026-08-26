@@ -8,6 +8,16 @@ import { rpc } from '@/orpc/cliente'
 import { MarcoFlujo } from '@/components/marco-flujo'
 import { SubirImagen } from '@/components/subir-imagen'
 import { Button } from '@/components/ui/button'
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxInput,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxTrigger,
+  ComboboxValue,
+} from '@/components/ui/combobox'
 import { CATEGORIAS_MURO, NOMBRE_CATEGORIA_MURO, type Cara } from '@/contrato/comunidad'
 
 /**
@@ -17,17 +27,26 @@ import { CATEGORIAS_MURO, NOMBRE_CATEGORIA_MURO, type Cara } from '@/contrato/co
  * con su nombre y tiene que aceptarlo; quien NECESITA no da un solo dato y se
  * lleva un token, igual que una solicitud de insumos.
  */
+type MunicipioMuro = {
+  codigo_dane: string
+  nombre: string
+  departamento: string | null
+}
+
 export function FormularioMuro({
   cara,
   municipios,
 }: {
   cara: Cara
-  municipios: { codigo_dane: string; nombre: string; departamento: string | null }[]
+  municipios: MunicipioMuro[]
 }) {
   const [categoria, setCategoria] = useState<(typeof CATEGORIAS_MURO)[number]>('hogar')
   const [titulo, setTitulo] = useState('')
   const [detalle, setDetalle] = useState('')
   const [municipio, setMunicipio] = useState('')
+  // El Combobox trabaja con el objeto, no con el código: el estado sigue
+  // siendo el código porque es lo que se envía.
+  const municipioElegido = municipios.find((m) => m.codigo_dane === municipio)
   const [imagenId, setImagenId] = useState<string | null>(null)
   const [acepto, setAcepto] = useState(false)
   const [enviando, setEnviando] = useState(false)
@@ -162,7 +181,7 @@ export function FormularioMuro({
           onChange={(e) => setTitulo(e.target.value)}
           maxLength={140}
           placeholder={ofrece ? 'Nevera pequeña en buen estado' : 'Una cama sencilla'}
-          className="bg-background focus-visible:ring-ring mt-2 min-h-14 w-full rounded-2xl px-4 text-base focus-visible:ring-2 focus-visible:outline-none"
+          className="bg-card border border-input focus-visible:ring-ring mt-2 min-h-14 w-full rounded-2xl px-4 text-base focus-visible:ring-2 focus-visible:outline-none"
         />
       </div>
 
@@ -179,7 +198,7 @@ export function FormularioMuro({
           onChange={(e) => setDetalle(e.target.value)}
           maxLength={300}
           rows={3}
-          className="bg-background focus-visible:ring-ring mt-2 w-full resize-none rounded-2xl px-4 py-3 text-base focus-visible:ring-2 focus-visible:outline-none"
+          className="bg-card border border-input focus-visible:ring-ring mt-2 w-full resize-none rounded-2xl px-4 py-3 text-base focus-visible:ring-2 focus-visible:outline-none"
         />
         <p className="mt-1 text-sm text-muted-foreground">
           {detalle.length}/300 · Sin teléfonos ni correos: se acuerda por aquí.
@@ -193,20 +212,41 @@ export function FormularioMuro({
         >
           Municipio
         </label>
-        <select
-          id="municipio"
-          value={municipio}
-          onChange={(e) => setMunicipio(e.target.value)}
-          className="bg-background focus-visible:ring-ring mt-2 min-h-14 w-full rounded-2xl px-4 text-base focus-visible:ring-2 focus-visible:outline-none"
+        <Combobox
+          items={municipios}
+          value={municipioElegido ?? null}
+          onValueChange={(m: MunicipioMuro | null) =>
+            setMunicipio(m?.codigo_dane ?? '')
+          }
+          itemToStringLabel={(m: MunicipioMuro) =>
+            m.departamento ? `${m.nombre} · ${m.departamento}` : m.nombre
+          }
+          isItemEqualToValue={(a: MunicipioMuro, b: MunicipioMuro) =>
+            a.codigo_dane === b.codigo_dane
+          }
         >
-          <option value="">Elige uno</option>
-          {municipios.map((m) => (
-            <option key={m.codigo_dane} value={m.codigo_dane}>
-              {m.nombre}
-              {m.departamento ? ` · ${m.departamento}` : ''}
-            </option>
-          ))}
-        </select>
+          <ComboboxTrigger id="municipio" aria-label="Municipio" className="mt-2">
+            <ComboboxValue placeholder="Elige uno" />
+          </ComboboxTrigger>
+          <ComboboxContent>
+            <ComboboxInput showTrigger={false} placeholder="Escribe para buscar" />
+            <ComboboxEmpty>No encontramos ese lugar.</ComboboxEmpty>
+            <ComboboxList>
+              {(m: MunicipioMuro) => (
+                <ComboboxItem key={m.codigo_dane} value={m}>
+                  <span className="flex min-w-0 flex-col">
+                    <span>{m.nombre}</span>
+                    {m.departamento && (
+                      <span className="text-sm text-muted-foreground">
+                        {m.departamento}
+                      </span>
+                    )}
+                  </span>
+                </ComboboxItem>
+              )}
+            </ComboboxList>
+          </ComboboxContent>
+        </Combobox>
         <p className="mt-1 text-sm text-muted-foreground">
           El municipio basta. No pedimos tu dirección.
         </p>

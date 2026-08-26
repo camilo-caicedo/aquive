@@ -252,7 +252,7 @@ export function FormularioPublicarServicio({
                 a.codigo_dane === b.codigo_dane
               }
             >
-              <ComboboxTrigger aria-label="Municipio" className="mt-1 bg-background">
+              <ComboboxTrigger aria-label="Municipio" className="mt-1">
                 <ComboboxValue placeholder="Elige el municipio" />
               </ComboboxTrigger>
               <ComboboxContent>
@@ -280,7 +280,7 @@ export function FormularioPublicarServicio({
                 <div className="mt-2">
                   <Label>Comuna o corregimiento</Label>
                   <Select value={zonaId} onValueChange={(v) => setZonaId(v ?? '')}>
-                    <SelectTrigger aria-label="Comuna" className="mt-1 bg-background">
+                    <SelectTrigger aria-label="Comuna" className="mt-1">
                       <SelectValue placeholder="Sin especificar">
                         {(v: string) =>
                           zonasDelMunicipio.find((z) => z.id === v)?.nombre ?? 'Sin especificar'

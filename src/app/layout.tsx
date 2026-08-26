@@ -5,6 +5,7 @@ import { CORREO_CONTACTO } from "@/lib/config";
 import { Encabezado } from "@/components/encabezado";
 import { AvisoPruebas } from "@/components/aviso-pruebas";
 import { PieDePagina } from "@/components/pie-de-pagina";
+import { RastroDeNavegacion } from "@/components/volver";
 
 // Cuerpo (ADR 0002). Reemplaza a Figtree.
 //
@@ -149,6 +150,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Saltar al contenido
         </a>
+        <RastroDeNavegacion />
         <AvisoPruebas />
         <Encabezado />
         <div id="contenido" className="flex-1">

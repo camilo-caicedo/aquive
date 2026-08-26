@@ -52,7 +52,7 @@ export default async function FichaPage({
   const aDomicilio = ficha.modalidad.includes('domicilio')
 
   return (
-    <MarcoFlujo titulo={ficha.nombre_visible} volver="/servicios">
+    <MarcoFlujo titulo={ficha.nombre_visible} volver="/directorio">
       <div>
         {/* La explicación va pegada a las insignias, que es donde nace la
             duda. Al final de la página, a tres pantallas de aquí, no la

@@ -35,7 +35,7 @@ export default async function ResponderPage({
         <p className="mt-2 text-base text-muted-foreground">
           Ya fue atendida, venció o el código no existe.
         </p>
-        <Button variant="outline" nativeButton={false} render={<Link href="/" />} className="mt-4">
+        <Button variant="outline" nativeButton={false} render={<Link href="/ayudas" />} className="mt-4">
           Ver otras solicitudes
         </Button>
       </main>
@@ -52,7 +52,7 @@ export default async function ResponderPage({
   // hacia Google —nunca en la URL, ver `src/lib/destino.ts`— y vuelve aquí.
   if (!user) {
     return (
-      <MarcoFlujo titulo="Ofrecer ayuda" volver="/">
+      <MarcoFlujo titulo="Ofrecer ayuda" volver="/inicio">
         <PuertaCerrada
           titulo="Para responder hace falta una cuenta"
           porque="Quien pidió esto va a ver tu nombre y tu contacto, así que hace falta una cuenta. Son dos minutos y se puede borrar en cualquier momento."
@@ -79,7 +79,7 @@ export default async function ResponderPage({
 
   if (!perfil) {
     return (
-      <MarcoFlujo titulo="Ofrecer ayuda" volver="/">
+      <MarcoFlujo titulo="Ofrecer ayuda" volver="/inicio">
         <PuertaCerrada
           titulo="Para responder necesitas un perfil"
           porque="Quien pidió va a ver tu nombre y tu contacto, así que hace falta una cuenta. Son dos minutos y se puede borrar en cualquier momento."
@@ -173,7 +173,7 @@ export default async function ResponderPage({
     )
 
   return (
-    <MarcoFlujo titulo="Ofrecer ayuda" volver="/">
+    <MarcoFlujo titulo="Ofrecer ayuda" volver="/inicio">
       {/* En modo lectura: qué se pide, dónde y cuándo. El código va al
           final y en pequeño — sirve para nombrar la solicitud por teléfono,
           no para decidir. */}

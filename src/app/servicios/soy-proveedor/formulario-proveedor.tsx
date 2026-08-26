@@ -523,7 +523,7 @@ export function FormularioProveedor({
           >
             <ComboboxTrigger
               aria-label="Municipio donde trabajas"
-              className="mt-1 bg-background"
+              className="mt-1"
             >
               <ComboboxValue placeholder="Elige tu municipio" />
             </ComboboxTrigger>
@@ -569,7 +569,7 @@ export function FormularioProveedor({
                 <div className="mt-2">
                   <Label>Comuna o corregimiento</Label>
                   <Select value={zonaId} onValueChange={(v) => setZonaId(v ?? '')}>
-                    <SelectTrigger aria-label="Comuna o corregimiento" className="mt-1 bg-background">
+                    <SelectTrigger aria-label="Comuna o corregimiento" className="mt-1">
                       <SelectValue placeholder="Sin especificar">
                         {(v: string) =>
                           zonasDelMunicipio.find((z) => z.id === v)?.nombre ?? 'Sin especificar'
@@ -1068,7 +1068,7 @@ export function FormularioProveedor({
   return (
     <MarcoFlujo
       titulo="Arma tu carné"
-      volver="/"
+      volver="/inicio"
       accion={
         <Button className="w-full" onClick={guardar} disabled={!puedeGuardar}>
           <Check className="size-5" aria-hidden="true" />

@@ -30,7 +30,7 @@ export default async function LoginPage({
   if (user) redirect('/registro')
 
   return (
-    <MarcoFlujo titulo="Entrar" volver="/">
+    <MarcoFlujo titulo="Entrar" volver="/inicio">
       <h2 className="font-heading text-4xl leading-[1.05]">
         Entra con
         <br />

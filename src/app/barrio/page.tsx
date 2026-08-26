@@ -54,7 +54,7 @@ export default async function BarrioPage({
           name="q"
           defaultValue={params.q ?? ''}
           placeholder="Buscar un producto"
-          className="bg-background focus-visible:ring-ring min-h-12 flex-1 rounded-full px-5 text-base focus-visible:ring-2 focus-visible:outline-none"
+          className="bg-card border border-input focus-visible:ring-ring min-h-12 flex-1 rounded-full px-5 text-base focus-visible:ring-2 focus-visible:outline-none"
         />
         <button
           type="submit"

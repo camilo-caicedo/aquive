@@ -81,7 +81,7 @@ export default async function ListoPage() {
           Completar mi ficha
         </Link>
         <Link
-          href="/"
+          href="/inicio"
           className="shadow-canto flex min-h-12 items-center justify-center rounded-full bg-card px-5 text-base font-semibold"
         >
           Ir al inicio

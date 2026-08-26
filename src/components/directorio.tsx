@@ -350,7 +350,7 @@ export async function Directorio({
               variant="outline"
               className="mt-4"
               nativeButton={false}
-              render={<Link href="/" />}
+              render={<Link href="/directorio" />}
             >
               Ver todos
             </Button>

@@ -77,7 +77,7 @@ export default async function ListoPage() {
             detalle: 'Así apareces en las coincidencias. Opcional.',
           },
           {
-            href: '/',
+            href: '/ayudas',
             Icono: HandHeart,
             titulo: 'Ver quién necesita ayuda',
             detalle: 'En tus municipios y en el resto del país.',
