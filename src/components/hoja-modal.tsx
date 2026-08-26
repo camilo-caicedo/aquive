@@ -35,27 +35,41 @@ export function HojaModal({
   const ref = useRef<HTMLDialogElement>(null)
 
   useEffect(() => {
-    const dialogo = ref.current
-    if (!dialogo?.open) dialogo?.showModal()
-    // Sin esto la lista de atrás sigue moviéndose bajo el dedo mientras la
-    // hoja está abierta, y al cerrar aparece en otro sitio.
-    const previo = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = previo
+    const abrir = () => {
+      const dialogo = ref.current
+      if (dialogo && !dialogo.open) dialogo.showModal()
     }
+    abrir()
+
+    // ⚠ `pageshow` no es paranoia. Desde la hoja se puede salir del sitio
+    // —«Entrar con Google» se lleva el navegador entero— y al volver con la
+    // flecha atrás la página se restaura de la caché sin re-montar nada.
+    // El navegador NO conserva la capa superior en esa caché, así que el
+    // diálogo vuelve cerrado: la hoja desaparece, la URL sigue diciendo que
+    // está abierta y no queda nada que tocar.
+    window.addEventListener('pageshow', abrir)
+    return () => window.removeEventListener('pageshow', abrir)
   }, [])
 
   // Cerrar es volver: la entrada anterior de la historia es la lista, así
-  // que la URL y lo que se ve vuelven juntos. Vale para la equis, para
-  // `Escape` y para tocar el fondo, porque los tres terminan en `close`.
+  // que la URL y lo que se ve vuelven juntos.
+  //
+  // ⚠ Va en `cancel` y en el clic del fondo, y NO en `close`. `close` lo
+  // dispara también el navegador —al restaurar de la caché, al descargar la
+  // página—, y ahí un `router.back()` es una navegación que nadie pidió.
+  // Estos dos solo ocurren cuando alguien los provoca.
+  const cerrar = () => router.back()
+
   return (
     <dialog
       ref={ref}
       aria-label={etiqueta}
-      onClose={() => router.back()}
+      onCancel={(e) => {
+        e.preventDefault()
+        cerrar()
+      }}
       onClick={(e) => {
-        if (e.target === ref.current) ref.current?.close()
+        if (e.target === ref.current) cerrar()
       }}
       className="animar-hoja m-0 mt-auto max-h-[92dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-3xl bg-background p-0 text-foreground backdrop:bg-foreground/40 sm:mx-auto sm:my-auto sm:max-h-[88dvh] sm:rounded-3xl"
     >

@@ -1,11 +1,9 @@
 'use client'
 
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { ContenedorHoja } from '@/components/contenedor-hoja'
+import { useHidratado } from '@/components/hidratado'
 
-const sinSuscripcion = () => () => {}
-const enCliente = () => true
-const enServidor = () => false
 
 /**
  * Una hoja inferior para hacer algo sin salir de la lista: escribir una
@@ -41,7 +39,7 @@ export function HojaAccion({
   /** El pie fijo de la hoja: normalmente el botón que envía. */
   pie?: (cerrar: () => void) => ReactNode
 }) {
-  const hidratado = useSyncExternalStore(sinSuscripcion, enCliente, enServidor)
+  const hidratado = useHidratado()
   const [panel, setPanel] = useState<HTMLDivElement | null>(null)
   const [generacion, setGeneracion] = useState(0)
 

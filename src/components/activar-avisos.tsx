@@ -1,14 +1,12 @@
 'use client'
 
-import { useState, useSyncExternalStore } from 'react'
+import { useState } from 'react'
 import { Bell, BellRing, Share } from 'lucide-react'
 import { activarAvisosDeSolicitud, enPantallaDeInicio, esIOS } from '@/lib/avisos'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useHidratado } from '@/components/hidratado'
 
-const sinSuscripcion = () => () => {}
-const enCliente = () => true
-const enServidor = () => false
 
 type Estado = 'cargando' | 'inicial' | 'activando' | 'activo' | 'ios' | 'error'
 
@@ -46,7 +44,7 @@ export function ActivarAvisos({
   // no hay hidratación no se puede saber si esto es un iPhone. Mismo patrón
   // que `select-filtro.tsx`, y no un efecto que llame a `setState`: eso
   // dispara un render en cascada y el lint lo rechaza con razón.
-  const hidratado = useSyncExternalStore(sinSuscripcion, enCliente, enServidor)
+  const hidratado = useHidratado()
   const [tocado, setTocado] = useState<Estado | null>(null)
 
   const estado: Estado = tocado

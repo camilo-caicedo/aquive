@@ -319,6 +319,19 @@ body:has(dialog[open]) [data-accion-principal] {
   display: none;
 }
 
+/* Sin esto la lista de atrás sigue moviéndose bajo el dedo mientras la hoja
+   está abierta, y al cerrar aparece en otro sitio.
+
+   ⚠ En CSS y no en un efecto que ponga `overflow: hidden` al `body`. Ese
+   efecto solo lo deshace su limpieza, y desde una hoja se puede salir del
+   sitio —«Entrar con Google»—: al volver con la flecha atrás la página se
+   restaura de la caché sin re-montar nada, la limpieza nunca corre y el
+   `body` se queda bloqueado para siempre. Esta regla deja de aplicar en
+   cuanto el diálogo se cierra, lo cierre quien lo cierre. */
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
 .animar-hoja::backdrop {
   animation: aparecer-fondo 0.24s ease-out both;
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useSyncExternalStore } from 'react'
+import { useState } from 'react'
 import { useContenedorHoja } from '@/components/contenedor-hoja'
 import {
   Combobox,
@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useHidratado } from '@/components/hidratado'
 
 export interface OpcionFiltro {
   valor: string
@@ -27,9 +28,6 @@ export interface OpcionFiltro {
   detalle?: string
 }
 
-const sinSuscripcion = () => () => {}
-const enCliente = () => true
-const enServidor = () => false
 
 /**
  * Select de filtro que se degrada de verdad.
@@ -55,7 +53,7 @@ export function SelectFiltro({
   valorInicial: string
   conBusqueda?: boolean
 }) {
-  const hidratado = useSyncExternalStore(sinSuscripcion, enCliente, enServidor)
+  const hidratado = useHidratado()
   // Dentro de una hoja de filtros la lista se monta en la hoja y no en el
   // `body`, o queda debajo de la capa superior del navegador.
   const contenedor = useContenedorHoja()

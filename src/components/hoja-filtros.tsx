@@ -1,16 +1,14 @@
 'use client'
 
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { SlidersHorizontal, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FormularioFiltros } from '@/components/formulario-filtros'
 import { ContenedorHoja } from '@/components/contenedor-hoja'
 import type { OpcionFiltro } from '@/components/select-filtro'
+import { useHidratado } from '@/components/hidratado'
 
-const sinSuscripcion = () => () => {}
-const enCliente = () => true
-const enServidor = () => false
 
 export interface ChipAplicado {
   /** El parámetro que quita, solo para la `key`. */
@@ -94,10 +92,8 @@ export function GrupoChips({
  *
  * Sin JavaScript la hoja no se abre, así que ni se dibuja el chip que la
  * abriría: en su lugar queda el formulario de siempre, visible, con su
- * botón «Filtrar». La detección es `useSyncExternalStore`, el mismo patrón
- * que ya usa `SelectFiltro` para degradarse a `<select>` nativo, que es la
- * forma sancionada de decir «esto solo en cliente» sin desajustar la
- * hidratación.
+ * botón «Filtrar». La detección es `useHidratado`, el mismo gancho que usa
+ * `SelectFiltro` para degradarse a `<select>` nativo.
  *
  * La hoja es el `popover` nativo, igual que el panel de `BotonAvisos`:
  * cerrar al tocar fuera, `Escape` y el manejo de foco los da el navegador.
@@ -138,13 +134,13 @@ export function HojaFiltros({
   conteo?: ReactNode
   children: ReactNode
 }) {
-  const hidratado = useSyncExternalStore(sinSuscripcion, enCliente, enServidor)
+  const hidratado = useHidratado()
   // El elemento en estado y no en `useRef`: hay dos cosas que solo pueden
   // hacerse cuando existe de verdad —oír su `toggle` y dárselo a los
   // desplegables como contenedor del portal— y con una `ref` el componente
   // no se entera de que ha aparecido. En la primera pintada del cliente
-  // `useSyncExternalStore` devuelve todavía la instantánea del servidor,
-  // así que la hoja ni siquiera está en el árbol.
+  // `useHidratado` devuelve todavía `false`, así que la hoja ni siquiera
+  // está en el árbol.
   const [panel, setPanel] = useState<HTMLDivElement | null>(null)
   // Al cerrar sin aplicar, los controles vuelven a lo que dice la URL. Sin
   // esto, quien marca «Agua», se arrepiente y toca fuera, reabre la hoja y
