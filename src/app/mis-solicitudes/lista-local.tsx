@@ -196,7 +196,7 @@ export function ListaLocal() {
             {/* El enlace es la llave: aquí también, no solo dentro. */}
             <Button variant="outline" onClick={() => copiar(s.token)}>
               {copiado === s.token ? (
-                <Check className="size-5 text-ok" aria-hidden="true" />
+                <Check className="size-5 text-foreground" aria-hidden="true" />
               ) : (
                 <Link2 className="size-5" aria-hidden="true" />
               )}

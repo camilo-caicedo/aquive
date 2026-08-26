@@ -78,7 +78,7 @@ export default async function ConversacionPage({
         <span
           className={`rounded-full px-3 py-1 text-sm font-medium ${
             hilo.estado === 'abierta' || hilo.estado === 'acordada' || hilo.estado === 'entregada'
-              ? 'bg-ok-suave text-ok'
+              ? 'bg-ok-suave text-foreground'
               : 'bg-accent text-accent-foreground'
           }`}
         >

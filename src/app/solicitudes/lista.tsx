@@ -114,7 +114,7 @@ export function ListaSolicitudesServicio({
               // Compacto: ya respondió, así que lo único que queda por saber
               // es cuánta competencia hay. El párrafo entero de antes ocupaba
               // tres líneas para decir eso.
-              <p className="flex shrink-0 items-center gap-1.5 text-base text-ok">
+              <p className="flex shrink-0 items-center gap-1.5 text-base text-foreground">
                 <Check className="size-5 shrink-0" aria-hidden="true" />
                 Ya respondiste
               </p>

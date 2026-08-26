@@ -1,26 +1,34 @@
 import type { Metadata, Viewport } from "next";
-import { Figtree, Caprasimo, Geist_Mono } from "next/font/google";
+import { Poppins, Montserrat, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CORREO_CONTACTO } from "@/lib/config";
 import { Encabezado } from "@/components/encabezado";
 import { AvisoPruebas } from "@/components/aviso-pruebas";
 import { PieDePagina } from "@/components/pie-de-pagina";
 
-// Cuerpo. Reemplaza a Geist: misma legibilidad en Android viejo, curvas
-// más humanas.
-const figtree = Figtree({
-  variable: "--font-figtree",
+// Cuerpo (ADR 0002). Reemplaza a Figtree.
+//
+// PENDIENTE DE PRUEBA: Poppins es geométrica y confunde `I`, `l` y `1` en
+// tamaños chicos. El piso del proyecto es 16 px en un teléfono viejo, y eso
+// hay que verlo en un aparato real, no en un emulador. Si falla, el
+// reemplazo es Archivo —la tercera opción del manual— y es este bloque, no
+// más.
+const poppins = Poppins({
+  variable: "--font-poppins",
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
 });
 
-// Solo títulos (h1 y h2). Un solo peso, y nunca en párrafos ni en botones.
-const caprasimo = Caprasimo({
-  variable: "--font-caprasimo",
-  weight: "400",
+// Titulares y etiquetas (ADR 0002). Reemplaza a Caprasimo. Los pesos altos
+// son los que le dan la presencia de cartel que pide el manual; en etiquetas
+// va en mayúsculas con letter-spacing, no aquí.
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
+  weight: ["600", "700", "800", "900"],
   subsets: ["latin"],
 });
 
-// Se queda: es la que muestra los códigos de solicitud.
+// Se queda: códigos de servicio, ID de carné y valores enmascarados.
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -93,7 +101,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#8c491a",
+  // El crema del fondo, no el lima: esto pinta la barra del sistema, y el
+  // lima es la acción de una pantalla, no el color de la aplicación.
+  themeColor: "#f5eee2",
 };
 
 // Datos estructurados: el nombre y el propósito en el formato que lee una
@@ -121,7 +131,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${figtree.variable} ${caprasimo.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${poppins.variable} ${montserrat.variable} ${geistMono.variable} h-full antialiased`}
     >
       {/* El hueco de abajo es para `BarraInferior`, que va fija en el
           teléfono: sin él tapa el final de cada página y el pie entero. */}

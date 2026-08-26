@@ -232,7 +232,7 @@ export default async function ResponderPage({
            sería hacerle repetir lo que ya escribió. Lo que hace falta es
            llevarlo a la conversación, que vive en su panel. */
         <div className="mt-4 rounded-xl border border-ok/30 bg-ok-suave p-4">
-          <p className="text-base text-ok">
+          <p className="text-base text-foreground">
             Ya estás en la conversación de esta solicitud
             {miHilo.aliado
               ? `, con ${miHilo.aliado} de la fundación.`

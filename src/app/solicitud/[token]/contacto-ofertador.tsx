@@ -146,7 +146,7 @@ export function ContactoOfertador({
 
       {aliado && (
         <div className="mt-5 flex items-start gap-3 border-t border-border pt-4">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-ok-suave text-ok">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-ok-suave text-foreground">
             <Building2 className="size-5" aria-hidden="true" />
           </span>
           <div className="min-w-0 flex-1">

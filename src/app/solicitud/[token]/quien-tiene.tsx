@@ -89,7 +89,7 @@ export function QuienTiene({
           dice antes, para que nadie toque un botón que va a fallar. */}
       {acompanada && (
         <div className="mt-3 rounded-2xl border border-ok/30 bg-ok-suave p-4">
-          <p className="flex items-start gap-2 text-base text-ok">
+          <p className="flex items-start gap-2 text-base text-foreground">
             <Building2 className="size-5 shrink-0 translate-y-0.5" aria-hidden="true" />
             <span>
               {organizacion ?? 'Una fundación'} está acompañando esta solicitud.
@@ -118,7 +118,7 @@ export function QuienTiene({
               </div>
             </div>
 
-            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-ok/30 bg-ok-suave px-3 py-1 text-sm font-semibold text-ok">
+            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-ok/30 bg-ok-suave px-3 py-1 text-sm font-semibold text-foreground">
               <Check className="size-4" aria-hidden="true" />
               {o.coincidencias === 1
                 ? '1 de las cosas que pides'
@@ -132,7 +132,7 @@ export function QuienTiene({
                     key={it.nombre}
                     className={
                       it.calza
-                        ? 'inline-flex items-center gap-1.5 rounded-full bg-ok-suave px-3.5 py-1.5 text-sm font-semibold text-ok'
+                        ? 'inline-flex items-center gap-1.5 rounded-full bg-ok-suave px-3.5 py-1.5 text-sm font-semibold text-foreground'
                         : 'rounded-full bg-muted px-3.5 py-1.5 text-sm text-foreground'
                     }
                   >
@@ -152,7 +152,7 @@ export function QuienTiene({
             )}
 
             {o.puede_trasladarse && (
-              <p className="mt-3 flex items-center gap-1.5 text-base text-ok">
+              <p className="mt-3 flex items-center gap-1.5 text-base text-foreground">
                 <Truck className="size-4 shrink-0" aria-hidden="true" />
                 Puede trasladarse a entregar
               </p>

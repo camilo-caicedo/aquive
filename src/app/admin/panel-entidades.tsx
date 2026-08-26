@@ -511,7 +511,7 @@ function FilaEntidad({
             <span
               className={
                 entidad.activa
-                  ? 'inline-flex shrink-0 items-center rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-ok'
+                  ? 'inline-flex shrink-0 items-center rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-foreground'
                   : 'inline-flex shrink-0 items-center rounded-full border border-primary/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground'
               }
             >

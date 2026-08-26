@@ -246,7 +246,7 @@ export default async function ServidoresPage({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-lg font-bold">{s.nombre_visible}</span>
                 {s.verificado ? (
-                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-ok">
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-foreground">
                     <span aria-hidden="true">✓</span> Matrícula verificada
                   </span>
                 ) : (

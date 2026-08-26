@@ -107,7 +107,7 @@ export function PanelCoincidencias({ coincidencias }: { coincidencias: Coinciden
             )}
 
             {c.ya_hay_hilo ? (
-              <p className="mt-3 text-base text-ok">Ya están en conversación</p>
+              <p className="mt-3 text-base text-foreground">Ya están en conversación</p>
             ) : invitando === clave ? (
               <div className="mt-3 space-y-2">
                 <Textarea

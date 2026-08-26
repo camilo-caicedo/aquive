@@ -15,7 +15,7 @@ export const ETIQUETA_ESTADO: Record<EstadoConversacion, string> = {
  *  color: el sello lleva su texto (regla 9). */
 function claseEstado(estado: EstadoConversacion) {
   return estado === 'abierta' || estado === 'acordada' || estado === 'entregada'
-    ? 'bg-ok-suave text-ok'
+    ? 'bg-ok-suave text-foreground'
     : 'bg-accent text-accent-foreground'
 }
 

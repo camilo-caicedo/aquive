@@ -105,7 +105,7 @@ export function PanelSolicitudes({ solicitudes }: { solicitudes: SolicitudPorAte
           {s.nota && <p className="mt-2 text-base text-muted-foreground">«{s.nota}»</p>}
 
           {s.puede_recoger && (
-            <p className="mt-2 text-base text-ok">Puede ir a recoger al acopio.</p>
+            <p className="mt-2 text-base text-foreground">Puede ir a recoger al acopio.</p>
           )}
 
           {abriendo === s.solicitud_id ? (

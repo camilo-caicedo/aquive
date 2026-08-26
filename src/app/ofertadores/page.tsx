@@ -197,7 +197,7 @@ export default async function OfertadoresPage({
               {/* Solo cuando es que sí. No marcarlo no afirma que no pueda
                   moverse, y no hay etiqueta para eso. */}
               {o.puede_trasladarse && (
-                <p className="mt-3 flex items-center gap-1.5 text-base text-ok">
+                <p className="mt-3 flex items-center gap-1.5 text-base text-foreground">
                   <Truck className="size-4 shrink-0" aria-hidden="true" />
                   Puede trasladarse a entregar
                 </p>

@@ -41,7 +41,7 @@ export default async function ListoPage() {
     <MarcoFlujo titulo="Listo" volver="/registro">
       <span
         aria-hidden="true"
-        className="flex size-14 items-center justify-center rounded-full bg-ok-suave text-ok"
+        className="flex size-14 items-center justify-center rounded-full bg-ok-suave text-foreground"
       >
         <Check className="size-7" />
       </span>

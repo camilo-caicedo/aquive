@@ -122,7 +122,7 @@ export function PanelReferencias({
                   className={
                     'shrink-0 rounded-full px-3 py-1 text-sm font-medium ' +
                     (r.estado === 'confirmada'
-                      ? 'bg-ok-suave text-ok'
+                      ? 'bg-ok-suave text-foreground'
                       : r.estado === 'pendiente'
                         ? 'bg-accent text-accent-foreground'
                         : 'bg-muted text-muted-foreground')

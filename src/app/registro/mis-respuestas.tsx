@@ -45,7 +45,7 @@ export function MisRespuestas({ respuestas }: { respuestas: MiRespuesta[] }) {
             </p>
 
             {r.flujo === 'acompanado' && r.tiene_hilo && (
-              <p className="mt-1 flex items-center gap-1.5 text-sm text-ok">
+              <p className="mt-1 flex items-center gap-1.5 text-sm text-foreground">
                 <HeartHandshake className="size-4 shrink-0" aria-hidden="true" />
                 Una fundación acompaña esta entrega
               </p>

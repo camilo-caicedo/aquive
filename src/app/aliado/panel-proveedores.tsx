@@ -508,7 +508,7 @@ export function PanelProveedores({
                   {p.nombre_visible}
                 </Link>
                 {p.telefono_verificado ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-ok">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-foreground">
                     <BadgeCheck className="size-4" aria-hidden="true" />
                     Verificado
                   </span>

@@ -101,7 +101,7 @@ function FilaSolicitud({ s }: { s: SolicitudAdmin }) {
 
       {cerrada ? (
         <>
-          <p className="mt-3 flex items-center gap-1.5 text-sm text-ok">
+          <p className="mt-3 flex items-center gap-1.5 text-sm text-foreground">
             <CheckCircle2 className="size-4 shrink-0" aria-hidden="true" />
             Marcada como entregada. Ya no sale en el tablero.
           </p>

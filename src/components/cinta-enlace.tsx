@@ -87,7 +87,7 @@ export function CintaEnlace({
           onClick={copiar}
         >
           {copiado ? (
-            <Check className="size-5 text-ok" aria-hidden="true" />
+            <Check className="size-5 text-foreground" aria-hidden="true" />
           ) : (
             <Copy className="size-5" aria-hidden="true" />
           )}
@@ -111,7 +111,7 @@ export function CintaEnlace({
           className="inline-flex min-h-12 items-center gap-1.5 text-sm underline underline-offset-4"
         >
           {guardado ? (
-            <Check className="size-4 shrink-0 text-ok" aria-hidden="true" />
+            <Check className="size-4 shrink-0 text-foreground" aria-hidden="true" />
           ) : (
             <Bookmark className="size-4 shrink-0" aria-hidden="true" />
           )}

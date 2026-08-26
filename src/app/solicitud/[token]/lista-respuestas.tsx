@@ -28,7 +28,7 @@ export function ListaRespuestas({ respuestas }: { respuestas: Respuesta[] }) {
             <span className="text-lg font-bold">{r.nombre}</span>
             {r.tipo === 'servidor' &&
               (r.verificado ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-ok/30 bg-ok-suave px-2 py-0.5 text-sm font-medium text-ok">
+                <span className="inline-flex items-center gap-1 rounded-full border border-ok/30 bg-ok-suave px-2 py-0.5 text-sm font-medium text-foreground">
                   <BadgeCheck className="size-4" aria-hidden="true" />
                   Matrícula verificada
                 </span>
@@ -47,7 +47,7 @@ export function ListaRespuestas({ respuestas }: { respuestas: Respuesta[] }) {
           {/* Lo dijo al responder, para que no haya que preguntarlo. Solo se
               muestra cuando es que sí: no marcarlo no afirma que no pueda. */}
           {r.puede_llevar && (
-            <p className="mt-2 flex items-center gap-1.5 text-base text-ok">
+            <p className="mt-2 flex items-center gap-1.5 text-base text-foreground">
               <Truck className="size-4 shrink-0" aria-hidden="true" />
               Puede llevártelo
             </p>

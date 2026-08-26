@@ -66,7 +66,7 @@ export async function Encabezado() {
             alfiler de mapa aquí, y ese alfiler prometía un mapa que AquíVe
             no es. */}
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <Marca className="size-9 text-primary" />
+          <Marca className="size-9 text-foreground" />
           <span className="font-heading text-2xl leading-none">AquíVe</span>
         </Link>
 

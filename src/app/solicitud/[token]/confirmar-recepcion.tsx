@@ -49,7 +49,7 @@ export function ConfirmarRecepcion({
 
   if (listo) {
     return (
-      <p className="mt-2 flex items-center gap-1.5 text-base text-ok">
+      <p className="mt-2 flex items-center gap-1.5 text-base text-foreground">
         <PackageCheck className="size-5 shrink-0" aria-hidden="true" />
         Confirmaste que recibiste. Gracias.
       </p>

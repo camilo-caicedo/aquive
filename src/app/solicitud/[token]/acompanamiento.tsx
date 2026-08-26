@@ -56,7 +56,7 @@ export function Acompanamiento({
     return (
       <section className="mt-8">
         <div className="rounded-xl border border-ok/30 bg-ok-suave p-4">
-          <p className="flex items-start gap-2 text-base text-ok">
+          <p className="flex items-start gap-2 text-base text-foreground">
             <HeartHandshake className="size-5 shrink-0 translate-y-0.5" aria-hidden="true" />
             <span>
               {organizacion ?? 'Una fundación'} está acompañando esta
