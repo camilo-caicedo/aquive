@@ -1,23 +1,19 @@
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { Plus, Info, Inbox, Briefcase } from 'lucide-react'
 import { AccionPrincipal } from '@/components/accion-principal'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
-import { Info, Inbox, Briefcase } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { ENTIDADES_MATRICULA } from '@/lib/config'
 import { enlaceWhatsapp } from '@/lib/contacto'
-import { AVISO_CONTACTO, AVISO_CONTACTO_VERIFICADO, AVISO_ENTIDADES } from '@/lib/honestidad'
-import { listarMunicipios, mapaDeNombres } from '@/lib/municipios'
-import { ListaEntidades } from './lista-entidades'
+import { AVISO_CONTACTO, AVISO_CONTACTO_VERIFICADO } from '@/lib/honestidad'
 import { BotonReportar } from '@/components/boton-reportar'
 import type { EntidadMatricula, AreaServicio } from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { SelectFiltro } from '@/components/select-filtro'
 import { HojaFiltros } from '@/components/hoja-filtros'
-import { PestanasServicios } from '@/components/pestanas-servicios'
 
-export const metadata = { title: 'Quién ofrece servicios' }
+export const metadata = { title: 'Profesionales' }
 
 const AREAS: Record<AreaServicio, string> = {
   ingenieria: 'Ingeniería',
@@ -31,60 +27,39 @@ function etiquetaEntidad(valor: EntidadMatricula) {
   return ENTIDADES_MATRICULA.find((e) => e.valor === valor)?.etiqueta ?? valor
 }
 
-export default async function ServidoresPage({
+/**
+ * El directorio de profesionales con matrícula.
+ *
+ * Tiene ruta propia y NO comparte pestañas con entidades ni con oficios,
+ * aunque las tres listas se parezcan. Cada tira de la portada lleva a su
+ * lista y a nada más: llegar buscando un ingeniero y aterrizar en una barra
+ * de tres pestañas obliga a leer cuál de las tres estaba activa antes de
+ * poder mirar el primer resultado.
+ *
+ * Antes esto era `/servidores?ver=profesionales`, que sigue funcionando
+ * porque redirige aquí.
+ */
+export default async function ProfesionalesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ municipio?: string; servicio?: string; ver?: string }>
+  searchParams: Promise<{ municipio?: string; servicio?: string }>
 }) {
   const params = await searchParams
   const supabase = await createClient()
 
-  // Entidades es la pestaña por defecto: son las que el administrador
-  // revisó una por una, y quien busca ayuda las lee primero.
-  const verProfesionales = params.ver === 'profesionales'
-
   // El municipio entra en una cadena de filtros de PostgREST por
   // interpolación, así que se valida ANTES: un código DANE son cinco
-  // dígitos y nada más. Sin esto, `?municipio=x},nombre.ilike.*a*,{y` mete
-  // términos arbitrarios en el OR — hoy no hay columna oculta que sondear,
-  // pero la habría el día que alguien agregue una a la vista, y ese día
-  // nadie va a volver a mirar esta línea.
+  // dígitos y nada más.
   const municipioCrudo = Array.isArray(params.municipio)
     ? params.municipio[0]
     : params.municipio
   const municipio =
     municipioCrudo && /^[0-9]{5}$/.test(municipioCrudo) ? municipioCrudo : null
 
-  // Cada pestaña consulta lo suyo y nada más, igual que los dos modos de la
-  // portada. Sin esto, entrar al directorio traía media base de datos.
-  const [{ data: municipios }, { data: catalogoServicios }] = verProfesionales
-    ? await Promise.all([
-        supabase.from('municipios_con_servidores').select('*').order('nombre'),
-        supabase.from('catalogo_servicios').select('*').eq('activo', true).order('orden'),
-      ])
-    : [{ data: null }, { data: null }]
-
-  // El filtro por municipio devuelve las entidades locales de ese municipio
-  // Y TODAS las nacionales: una entidad nacional también atiende ahí. Es lo
-  // que más fácil se implementa mal.
-  const consultaEntidades = supabase
-    .from('entidades_publicas')
-    .select('*')
-    .order('orden')
-    .order('nombre')
-
-  const [{ data: entidades }, { data: municipiosEntidades }, todosLosMunicipios] =
-    verProfesionales
-      ? [{ data: null }, { data: null }, null]
-      : await Promise.all([
-          municipio
-            ? consultaEntidades.or(`cobertura.eq.nacional,municipios.cs.{${municipio}}`)
-            : consultaEntidades,
-          supabase.from('municipios_con_entidades').select('*').order('nombre'),
-          listarMunicipios(supabase),
-        ])
-
-  const nombreMunicipio = mapaDeNombres(todosLosMunicipios ?? [])
+  const [{ data: municipios }, { data: catalogoServicios }] = await Promise.all([
+    supabase.from('municipios_con_servidores').select('*').order('nombre'),
+    supabase.from('catalogo_servicios').select('*').eq('activo', true).order('orden'),
+  ])
 
   const nombreServicio = new Map((catalogoServicios ?? []).map((s) => [s.id, s.nombre]))
 
@@ -98,20 +73,17 @@ export default async function ServidoresPage({
   if (municipio) query = query.contains('municipios', [municipio])
   if (params.servicio) query = query.contains('servicios', [params.servicio])
 
-  const { data: servidores } = verProfesionales ? await query : { data: null }
-  const listaMunicipios = verProfesionales ? municipios : municipiosEntidades
-  const hayFiltro = !!(municipio || (verProfesionales && params.servicio))
-  const mostrarFiltros = (listaMunicipios?.length ?? 0) > 0 || hayFiltro
+  const { data: servidores } = await query
+  const hayFiltro = !!(municipio || params.servicio)
+  const mostrarFiltros = (municipios?.length ?? 0) > 0 || hayFiltro
 
-  // El href de un chip es la URL sin ESE filtro, conservando la pestaña:
-  // quitar el municipio desde Profesionales no puede devolver a Entidades.
+  // El href de un chip es la URL sin ESE filtro.
   function sinFiltro(quitar: 'municipio' | 'servicio') {
     const sp = new URLSearchParams()
-    if (verProfesionales) sp.set('ver', 'profesionales')
     if (municipio && quitar !== 'municipio') sp.set('municipio', municipio)
     if (params.servicio && quitar !== 'servicio') sp.set('servicio', params.servicio)
     const qs = sp.toString()
-    return qs ? `/servidores?${qs}` : '/servidores'
+    return qs ? `/profesionales?${qs}` : '/profesionales'
   }
 
   const chipsAplicados = [
@@ -120,14 +92,13 @@ export default async function ServidoresPage({
           {
             clave: 'municipio',
             etiqueta:
-              (listaMunicipios ?? []).find((m) => m.codigo_dane === municipio)?.nombre ??
-              nombreMunicipio.get(municipio) ??
+              (municipios ?? []).find((m) => m.codigo_dane === municipio)?.nombre ??
               'Un municipio',
             href: sinFiltro('municipio'),
           },
         ]
       : []),
-    ...(verProfesionales && params.servicio
+    ...(params.servicio
       ? [
           {
             clave: 'servicio',
@@ -140,34 +111,26 @@ export default async function ServidoresPage({
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      {/* Las tres listas viven bajo un solo destino de la navegación. La
-          tercera, Oficios, es otro módulo con otro responsable; aquí solo es
-          un enlace. */}
-      <CabeceraPantalla titulo="Servicios">
-        <PestanasServicios activa={verProfesionales ? 'profesionales' : 'entidades'} />
+      <CabeceraPantalla titulo="Profesionales">
         {mostrarFiltros && (
           <HojaFiltros
-            action="/servidores"
-            id="hoja-filtros-servidores"
-            titulo={verProfesionales ? 'Filtrar profesionales' : 'Filtrar entidades'}
+            action="/profesionales"
+            id="hoja-filtros-profesionales"
+            titulo="Filtrar profesionales"
             aplicados={chipsAplicados}
           >
-            {/* Un GET reemplaza el query string entero: sin esto, filtrar te
-                devuelve a la pestaña de entidades. */}
-            {verProfesionales && <input type="hidden" name="ver" value="profesionales" />}
             <SelectFiltro
               name="municipio"
               label="Filtrar por municipio"
               placeholder="Todos los municipios"
               valorInicial={municipio ?? ''}
               conBusqueda
-              opciones={(listaMunicipios ?? []).map((m) => ({
+              opciones={(municipios ?? []).map((m) => ({
                 valor: m.codigo_dane,
                 etiqueta: m.nombre,
                 detalle: m.departamento,
               }))}
             />
-            {verProfesionales && (
             <SelectFiltro
               name="servicio"
               label="Filtrar por servicio"
@@ -180,16 +143,15 @@ export default async function ServidoresPage({
                 detalle: AREAS[s.area],
               }))}
             />
-            )}
 
             {/* La lista de municipios está recortada a los que tienen a alguien
                 registrado; si no se dice, parece que faltan municipios. */}
             <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
               <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
               <span>
-                {verProfesionales
-                  ? `La lista de municipios solo muestra los ${listaMunicipios?.length ?? 0} donde ya hay profesionales registrados. La de servicios los muestra todos, aunque nadie los ofrezca todavía.`
-                  : `La lista solo muestra los ${listaMunicipios?.length ?? 0} municipios con entidades locales. Las de cobertura nacional salen siempre, filtres por donde filtres.`}
+                La lista de municipios solo muestra los {municipios?.length ?? 0}{' '}
+                donde ya hay profesionales registrados. La de servicios los
+                muestra todos, aunque nadie los ofrezca todavía.
               </span>
             </p>
           </HojaFiltros>
@@ -197,26 +159,11 @@ export default async function ServidoresPage({
       </CabeceraPantalla>
 
       <p className="text-base text-muted-foreground">
-        Organizaciones que prestan servicios, y profesionales con matrícula. El
-        contacto ocurre por fuera: la plataforma no participa.
+        Personas con matrícula profesional. Cada quien declara la suya; el
+        contacto ocurre por fuera y la plataforma no participa.
       </p>
 
-      {/* Mismo criterio que el tablero: sin nadie registrado y sin filtros,
-          los desplegables solo estorban. */}
-      {mostrarFiltros && (
-      <>
-      </>
-      )}
-
-      {!verProfesionales ? (
-        <>
-          <p className="mt-4 text-sm text-muted-foreground">{AVISO_ENTIDADES}</p>
-          <ListaEntidades
-            entidades={entidades ?? []}
-            nombreMunicipio={nombreMunicipio}
-          />
-        </>
-      ) : !servidores || servidores.length === 0 ? (
+      {!servidores || servidores.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center">
           <Inbox className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
           <p className="mt-2 text-base text-muted-foreground">
@@ -229,7 +176,7 @@ export default async function ServidoresPage({
               variant="outline"
               className="mt-4"
               nativeButton={false}
-              render={<Link href="/servidores" />}
+              render={<Link href="/profesionales" />}
             >
               Ver todos
             </Button>
@@ -299,8 +246,7 @@ export default async function ServidoresPage({
 
               {/* Arena y no lima, aunque sea la acción de la tarjeta: en una
                   lista de veinte fichas ninguna de las veinte es la acción
-                  principal de la pantalla (regla 1). El mismo criterio que
-                  usa `TarjetaProveedor` en el directorio de oficios. */}
+                  principal de la pantalla (regla 1). */}
               <Button
                 variant="secondary"
                 className="mt-3 w-full"
@@ -328,8 +274,6 @@ export default async function ServidoresPage({
         </ul>
       )}
 
-      {/* Habla del sello de matrícula, que solo existe en esta pestaña. */}
-      {verProfesionales && (
       <Alert className="mt-6">
         <AlertDescription>
           Un sello de matrícula verificada significa únicamente que ese número
@@ -337,11 +281,8 @@ export default async function ServidoresPage({
           antecedentes ni intenciones.
         </AlertDescription>
       </Alert>
-      )}
 
-      {/* Puente al otro lado del sitio. Estaba en la portada, que se lo
-          quedaba entero para explicar dos cosas que no eran suyas; aquí es
-          donde de verdad se busca. Lo que importa de este texto es la
+      {/* Puente al otro lado del sitio. Lo que importa de este texto es la
           diferencia de vida útil, que es lo que sostiene la promesa de
           borrado del tablero. */}
       <section className="mt-8 flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-canto sm:flex-row sm:items-center sm:p-5">
@@ -351,14 +292,17 @@ export default async function ServidoresPage({
         <div className="flex-1">
           <h2 className="font-heading text-2xl">¿Necesitas contratar a alguien?</h2>
           <p className="mt-1 text-base text-muted-foreground">
-            Comida, arreglos de ropa, trasteos, aseo, reparaciones. Gente que vive de su trabajo y quiere que la encuentren: a diferencia de las solicitudes del tablero, estas fichas no se borran solas. Tú acuerdas el precio directamente con la persona.
+            Comida, arreglos de ropa, trasteos, aseo, reparaciones. Gente que
+            vive de su trabajo y quiere que la encuentren: a diferencia de las
+            solicitudes del tablero, estas fichas no se borran solas. Tú
+            acuerdas el precio directamente con la persona.
           </p>
         </div>
         <Button
           variant="outline"
           className="w-full sm:w-auto"
           nativeButton={false}
-          render={<Link href="/" />}
+          render={<Link href="/directorio" />}
         >
           Ver oficios
         </Button>

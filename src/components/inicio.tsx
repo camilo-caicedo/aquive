@@ -4,6 +4,7 @@ import { Heart, ShoppingBag, Wrench } from 'lucide-react'
 import { servidor } from '@/orpc/local'
 import { GRUPOS, precioLegible, zonaLegible } from '@/lib/servicios'
 import { CINTA, SOMBRA_CARTEL, TINTA_CINTA, familiaDe } from '@/lib/familias'
+import { TiraEntidades, TiraProfesionales } from '@/components/inicio-tiras'
 import type { GrupoOficio } from '@/lib/types'
 
 /**
@@ -159,80 +160,9 @@ export async function Inicio({ municipio }: { municipio?: string }) {
         </Link>
       </section>
 
-      {/* Sustituye a «Lo que dice la gente». Las reseñas de la portada eran
-          elogios sueltos sin nada que hacer con ellos; esto lleva a dos
-          directorios que existen y que casi nadie encuentra. */}
-      {(profesionales.length > 0 || entidades.length > 0) && (
-        <section className="mt-8">
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="font-heading text-2xl">Profesionales y entidades</h2>
-            <Link
-              href="/servidores"
-              className="text-enlace shrink-0 text-base underline underline-offset-4"
-            >
-              Ver todo
-            </Link>
-          </div>
-          <p className="mt-1 text-base text-muted-foreground">
-            Con matrícula que alguien revisó, y organizaciones que trabajan en
-            la zona.
-          </p>
+      <TiraProfesionales profesionales={profesionales} />
 
-          <ul className="riel -mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-2">
-            {profesionales.map((p) => (
-              <li key={p.id} className="w-56 shrink-0">
-                <Link
-                  href="/servidores?ver=profesionales"
-                  className="shadow-canto block h-full rounded-2xl bg-card p-4"
-                >
-                  <p className="font-heading truncate text-base">
-                    {p.nombre_visible}
-                  </p>
-                  {p.profesion && (
-                    <p className="mt-0.5 truncate text-base text-muted-foreground">
-                      {p.profesion}
-                    </p>
-                  )}
-                  {/* El sello no va solo: lleva la palabra, porque el color no
-                      puede ser lo único que diga que está comprobado. */}
-                  <p className="mt-2">
-                    {p.verificado ? (
-                      <span className="bg-ok-suave text-foreground inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-medium">
-                        Matrícula revisada
-                      </span>
-                    ) : (
-                      <span className="bg-accent text-accent-foreground inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-medium">
-                        Sin revisar
-                      </span>
-                    )}
-                  </p>
-                </Link>
-              </li>
-            ))}
-
-            {entidades.map((e) => (
-              <li key={e.id} className="w-56 shrink-0">
-                <Link
-                  href="/servidores?ver=entidades"
-                  className="shadow-canto block h-full rounded-2xl bg-card p-4"
-                >
-                  <p className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase">
-                    Entidad
-                  </p>
-                  <p className="font-heading mt-1 truncate text-base">
-                    {e.nombre}
-                  </p>
-                  {e.subtitulo && (
-                    <p className="mt-0.5 line-clamp-2 text-base text-muted-foreground">
-                      {e.subtitulo}
-                    </p>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <TiraEntidades entidades={entidades} />
     </main>
   )
 }

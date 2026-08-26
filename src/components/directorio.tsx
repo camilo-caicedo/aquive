@@ -11,7 +11,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { SelectFiltro } from '@/components/select-filtro'
 import { HojaFiltros, GrupoChips } from '@/components/hoja-filtros'
-import { PestanasServicios } from '@/components/pestanas-servicios'
 import { HeroPortada } from '@/components/hero-portada'
 import { VueltaAlDestino } from '@/app/auth/vuelta'
 import type { ModalidadServicio, ModoPrecio } from '@/lib/types'
@@ -36,7 +35,7 @@ import type { ModalidadServicio, ModoPrecio } from '@/lib/types'
  * palabra con `metadata.description` del layout.
  *
  * Los filtros viven en la URL y no en estado de cliente, igual que en
- * /servidores: así el enlace de «modistas en la comuna 3» se puede pegar
+ * /profesionales: así el enlace de «modistas en la comuna 3» se puede pegar
  * en un grupo de WhatsApp, que es como esto se va a difundir de verdad.
  */
 export async function Directorio({
@@ -172,7 +171,6 @@ export async function Directorio({
         <p className="mt-1 text-base text-muted-foreground">
           Gente que vive de su oficio y quiere que la encuentren.
         </p>
-        <PestanasServicios activa="oficios" />
         <HojaFiltros
           action="/"
           id="hoja-filtros-servicios"
@@ -406,7 +404,7 @@ export async function Directorio({
           variant="outline"
           className="w-full sm:w-auto"
           nativeButton={false}
-          render={<Link href="/servidores?ver=profesionales" />}
+          render={<Link href="/profesionales" />}
         >
           Ver profesionales
         </Button>

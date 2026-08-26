@@ -105,7 +105,7 @@ export default async function LoginPage({
 
         <p className="mt-4">
           <Link
-            href="/servidores"
+            href="/entidades"
             className="text-foreground min-h-12 text-base font-medium underline underline-offset-4"
           >
             Alta con la fundación

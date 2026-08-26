@@ -14,6 +14,26 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // `/servidores` era una pantalla con tres pestañas y ahora cada lista
+  // tiene ruta propia. La URL vieja está pegada en WhatsApp y en volantes,
+  // así que se redirige.
+  //
+  // ⚠ Va aquí y no en una página con `permanentRedirect`: un redirect
+  // desde un Server Component responde 200 con la instrucción dentro del
+  // HTML, así que un rastreador o la vista previa de WhatsApp se lleva una
+  // página en blanco. Esto emite un 308 de verdad, y Next arrastra solo el
+  // query string a la ruta nueva.
+  async redirects() {
+    return [
+      {
+        source: '/servidores',
+        has: [{ type: 'query', key: 'ver', value: 'profesionales' }],
+        destination: '/profesionales',
+        permanent: true,
+      },
+      { source: '/servidores', destination: '/entidades', permanent: true },
+    ]
+  },
   experimental: {
     // El enrutador de Next reutiliza la respuesta anterior al navegar con
     // Link. Aquí eso es peligroso: las solicitudes se borran de verdad a

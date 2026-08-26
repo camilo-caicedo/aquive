@@ -44,12 +44,13 @@ const ENLACES = [
   // reactivación económica. El módulo de emergencia no se retira —sigue
   // entero en /solicitudes— pero deja de ser lo primero que se ve.
   //
-  // Un solo destino para las tres listas de «quién puede hacer algo por
-  // mí»: oficios del rebusque, profesionales con matrícula y entidades.
-  // Detrás son módulos distintos —y el primero tiene otro responsable del
-  // tratamiento— pero para quien busca es la misma pregunta. Las tres se
-  // reparten en `PestanasServicios`.
-  { href: '/', etiqueta: 'Inicio', Icono: Home },
+  // ⚠ Apunta a /inicio y NO a `/`. La portada decide a quién le sirve qué:
+  // sin sesión y sin filtros da la bienvenida, y eso está bien para quien
+  // llega escribiendo la dirección. Como celda de la barra estaba mal —
+  // tocar «Inicio» dentro de la aplicación devolvía a la bienvenida, que es
+  // la única pantalla del sitio que quien está adentro ya leyó. /inicio da
+  // el inicio siempre, haya sesión o no.
+  { href: '/inicio', etiqueta: 'Inicio', Icono: Home },
   // Los dos lados del directorio, uno en cada celda: quién presta un
   // servicio y quién está pidiendo uno. Antes el segundo era una sección
   // colgada del primero —/servicios/solicitudes— y no lo encontraba nadie.
@@ -104,8 +105,8 @@ function celdas(coordinacion: Coordinacion) {
 
 // Rutas que marcan una celda sin colgar de ella.
 //
-// Las tres listas de servicios están repartidas en dos rutas —/servicios
-// para los oficios, /servidores para profesionales y entidades— y las dos
+// Las tres listas de servicios tienen ruta propia —/directorio para los
+// oficios, /profesionales y /entidades para las otras dos— y las tres
 // tienen que dejar la misma celda encendida. Sin esto, tocar
 // «Profesionales» apaga la navegación entera y parece que uno se salió del
 // sitio.
@@ -123,11 +124,12 @@ const TAMBIEN: Record<string, string[]> = {
   // Lo que se entra a MIRAR desde el inicio: la emergencia entera y la
   // comunidad. Ninguna de las dos gasta celda, y sus pantallas encienden
   // «Inicio» en vez de apagar las cuatro.
-  '/': [
-    '/inicio',
+  '/inicio': [
+    '/',
     '/directorio',
     '/servicios',
-    '/servidores',
+    '/profesionales',
+    '/entidades',
     '/ayudas',
     '/ofertadores',
     '/publicar',
@@ -169,7 +171,7 @@ const TAMBIEN: Record<string, string[]> = {
 //
 // ⚠ La portada mira TAMBIEN igual que las demás. Antes cortocircuitaba con
 // `return ruta === '/'`, y desde que el directorio vive ahí eso apagaba la
-// celda entera al entrar a una ficha de servicios o a /servidores: la
+// celda entera al entrar a una ficha de servicios o a /profesionales: la
 // barra parecía de otra aplicación justo al dar el primer paso dentro del
 // módulo que ahora recibe a todo el mundo.
 // ⚠ Por segmentos y no por `startsWith` a secas. Con la comparación de
@@ -184,6 +186,9 @@ function bajo(ruta: string, base: string) {
  * Cuánto de específica es la coincidencia de esta celda con la ruta, o -1
  * si no coincide.
  *
+ * La portada entra por TAMBIEN como una base más: `bajo(ruta, '/')` solo
+ * es cierto para `/` exacto, así que no se traga el sitio entero.
+ *
  * ⚠ Gana la MÁS LARGA, y eso no es refinamiento: hay rutas que caen bajo
  * dos celdas a la vez. `/servicios/soy-proveedor` está debajo de
  * `/servicios`, que cuelga de la portada, y a la vez es la pestaña «Mi
@@ -191,8 +196,8 @@ function bajo(ruta: string, base: string) {
  * sí, se encendían las dos celdas.
  */
 function cuanCalza(ruta: string, href: string) {
-  const bases = [...(TAMBIEN[href] ?? []), ...(href === '/' ? [] : [href])]
-  let mejor = href === '/' && ruta === '/' ? 1 : -1
+  const bases = [...(TAMBIEN[href] ?? []), href]
+  let mejor = -1
   for (const base of bases) {
     if (bajo(ruta, base) && base.length > mejor) mejor = base.length
   }

@@ -9,7 +9,7 @@ import { BadgeCheck, Store, Users } from 'lucide-react'
  *
  * `Sin verificar` se pinta y no se omite, con el mismo peso visual que el
  * resto: un perfil sin insignias tiene que leerse como «nadie lo revisó»,
- * no como «no aplica». Mismo criterio que la matrícula en /servidores.
+ * no como «no aplica». Mismo criterio que la matrícula en /profesionales.
  */
 export function InsigniasProveedor({
   telefonoVerificado,

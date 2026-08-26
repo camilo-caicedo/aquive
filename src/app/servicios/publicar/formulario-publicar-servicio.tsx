@@ -224,7 +224,7 @@ export function FormularioPublicarServicio({
 
           <p className="text-sm text-muted-foreground">
             ¿Buscas un ingeniero, un médico o un abogado? Esos van en{' '}
-            <Link href="/servidores?ver=profesionales" className="underline">
+            <Link href="/profesionales" className="underline">
               profesionales con matrícula
             </Link>
             .

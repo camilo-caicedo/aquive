@@ -316,8 +316,6 @@ export function FormularioRegistro({
       return
     }
 
-    // Con el parámetro: /servidores abre la pestaña de entidades, y quien
-    // acaba de registrarse como servidor espera verse a sí mismo.
     // A los avisos, no al tablero. Es el segundo en que la persona acaba de
     // decir que quiere ayudar, así que es cuando más sentido tiene pedirlos
     // y menos se rechazan. Antes caía en el tablero y los avisos se quedaban
