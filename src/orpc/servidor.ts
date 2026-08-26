@@ -79,6 +79,25 @@ export const enrutador = os.router({
         throw e
       }
     }),
+    // Moderar imágenes es decidir qué se publica, así que el permiso se
+    // comprueba en el procedimiento y no en la pantalla: esconder el botón
+    // deja el endpoint abierto a cualquiera con sesión.
+    colaDeImagenes: os.comunidad.colaDeImagenes.handler(async ({ context }) =>
+      (await imagenes.esAdmin(db, context.usuarioId)) ? imagenes.cola(db) : [],
+    ),
+    moderarImagen: os.comunidad.moderarImagen.handler(async ({ input, context, errors }) => {
+      if (!(await imagenes.esAdmin(db, context.usuarioId))) {
+        throw errors.RECHAZADO({ data: { motivo: 'No tienes permiso para moderar.' } })
+      }
+      try {
+        return await imagenes.moderar(db, input, context.usuarioId!)
+      } catch (e) {
+        if (e instanceof imagenes.ImagenRechazada) {
+          throw errors.RECHAZADO({ data: { motivo: e.message } })
+        }
+        throw e
+      }
+    }),
     procesarImagen: os.comunidad.procesarImagen.handler(async ({ input, errors }) => {
       try {
         return await imagenes.procesar(db, input.imagen_id)

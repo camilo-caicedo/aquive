@@ -147,6 +147,39 @@ export const contratoComunidad = {
     )
     .output(z.object({ imagen_id: z.uuid(), url: z.string(), ruta: z.string() })),
 
+  /** La cola del admin: lo que nadie ha mirado, lo más viejo primero. */
+  colaDeImagenes: oc.output(
+    z.array(
+      z.object({
+        id: z.uuid(),
+        objeto_tipo: z.enum(['muro', 'producto']),
+        objeto_id: z.uuid().nullable(),
+        url: z.string(),
+        ancho: z.number().nullable(),
+        alto: z.number().nullable(),
+        subida_at: z.string(),
+      }),
+    ),
+  ),
+
+  /**
+   * Aprobar o rechazar una imagen.
+   *
+   * Rechazar BORRA el archivo, no lo marca. Guardar un archivo que se rechazó
+   * por tener a un menor identificable sería lo contrario de haberlo
+   * rechazado.
+   */
+  moderarImagen: oc
+    .errors(errores)
+    .input(
+      z.object({
+        imagen_id: z.uuid(),
+        aprobar: z.boolean(),
+        motivo: z.string().trim().max(200).optional(),
+      }),
+    )
+    .output(z.object({ ok: z.literal(true) })),
+
   /**
    * Avisar de que la subida terminó, para que el servidor la limpie.
    *

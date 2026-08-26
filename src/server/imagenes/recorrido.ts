@@ -4,7 +4,7 @@ import { and, asc, eq, isNull, lt } from 'drizzle-orm'
 import sharp from 'sharp'
 
 import type { BaseDeDatos } from '@/db/cliente'
-import { imagenes } from '@/db/esquema'
+import { administradores, imagenes } from '@/db/esquema'
 import * as almacen from './almacen'
 
 // El recorrido de una imagen, de la regla de producto 8.
@@ -180,4 +180,21 @@ export async function barrerHuerfanas(db: BaseDeDatos) {
   }
 
   return { borradas: viejas.length }
+}
+
+/**
+ * ¿Es admin?
+ *
+ * Se comprueba aquí y no en la pantalla. Una pantalla de admin que solo
+ * esconde el botón deja el procedimiento abierto a cualquiera con sesión, y
+ * moderar imágenes es decidir qué se publica.
+ */
+export async function esAdmin(db: BaseDeDatos, usuarioId: string | null) {
+  if (!usuarioId) return false
+  const [fila] = await db
+    .select({ id: administradores.userId })
+    .from(administradores)
+    .where(eq(administradores.userId, usuarioId))
+    .limit(1)
+  return Boolean(fila)
 }

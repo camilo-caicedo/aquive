@@ -107,6 +107,26 @@ actuales hacen. Van antes de publicar cualquiera de las dos:
       en el barrio»: aparecen su nombre y su foto, así que necesita casilla
       explícita y versión guardada, igual que el prestador.
 
+## Contradicciones dentro de los textos legales actuales
+
+Encontradas el 26 de agosto de 2026 al repasar las pantallas. **No son
+desactualización: son dos frases del mismo documento que no pueden ser ciertas
+a la vez.** Tienen efecto legal y hay que resolverlas antes de publicar nada.
+
+- [ ] **El documento de identidad.** `privacidad` y `terminos` §4b dicen
+      «guardamos tu nombre, **tu documento** y un teléfono, cifrados».
+      `privacidad` afirma en negrita, más abajo, «**No pedimos ni guardamos
+      números de documento**». Una de las dos es falsa. `CLAUDE.md` y el
+      esquema dicen que `identidades` sí lo guarda.
+- [ ] **«No guardamos ningún dato tuyo».** El título del régimen de emergencia
+      lo afirma, y dos párrafos después el mismo documento explica el contacto
+      opcional y el flujo acompañado con nombre y teléfono cifrados. El título
+      se contradice consigo mismo.
+- [ ] **Quién opera y quién responde.** `terminos` dice «operado por
+      {RESPONSABLE}» mientras `privacidad` ya nombra a la fundación como
+      responsable del tratamiento. Puede ser correcto —operador y responsable
+      no son lo mismo— pero conviene revisarlo junto.
+
 ## Bloquean el mapa (ADR 0004)
 
 - [ ] **Texto de autorización de ubicación**, revisado por abogado, en
