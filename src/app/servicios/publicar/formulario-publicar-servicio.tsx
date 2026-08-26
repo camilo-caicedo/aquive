@@ -172,7 +172,7 @@ export function FormularioPublicarServicio({
               aria-current={i + 1 === paso ? 'step' : undefined}
               className={`block truncate border-t-2 pt-1.5 ${
                 i + 1 === paso
-                  ? 'border-primary font-semibold text-foreground'
+                  ? 'border-enlace font-semibold text-foreground'
                   : i + 1 < paso
                     ? 'border-ok text-muted-foreground'
                     : 'border-border text-muted-foreground'
@@ -204,7 +204,7 @@ export function FormularioPublicarServicio({
                           onClick={() => setOficioId(o.id)}
                           className={`inline-flex min-h-12 items-center rounded-full border px-4 text-base transition-colors ${
                             oficioId === o.id
-                              ? 'border-primary bg-secondary font-semibold text-secondary-foreground'
+                              ? 'border-enlace bg-secondary font-semibold text-secondary-foreground'
                               : 'border-border bg-card hover:bg-muted'
                           }`}
                         >
@@ -331,7 +331,7 @@ export function FormularioPublicarServicio({
                   onClick={() => setUrgencia(u.valor)}
                   className={`inline-flex min-h-12 items-center rounded-full border px-4 text-base transition-colors ${
                     urgencia === u.valor
-                      ? 'border-primary bg-secondary font-semibold text-secondary-foreground'
+                      ? 'border-enlace bg-secondary font-semibold text-secondary-foreground'
                       : 'border-border bg-card hover:bg-muted'
                   }`}
                 >
@@ -359,7 +359,7 @@ export function FormularioPublicarServicio({
                   onClick={() => setPago(c.valor)}
                   className={`inline-flex min-h-12 items-center rounded-full border px-4 text-left text-base transition-colors ${
                     pago === c.valor
-                      ? 'border-primary bg-secondary font-semibold text-secondary-foreground'
+                      ? 'border-enlace bg-secondary font-semibold text-secondary-foreground'
                       : 'border-border bg-card hover:bg-muted'
                   }`}
                 >

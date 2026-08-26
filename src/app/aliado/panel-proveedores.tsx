@@ -68,7 +68,7 @@ function Chip({
       onClick={onClick}
       className={`inline-flex min-h-12 items-center rounded-full border px-4 text-base transition-colors ${
         activo
-          ? 'border-primary bg-primary text-primary-foreground'
+          ? 'border-enlace bg-primary text-primary-foreground'
           : 'border-border bg-card hover:bg-muted'
       }`}
     >
@@ -513,7 +513,7 @@ export function PanelProveedores({
                     Verificado
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-enlace/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
                     Sin verificar
                   </span>
                 )}

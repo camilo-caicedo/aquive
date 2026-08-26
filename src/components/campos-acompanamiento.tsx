@@ -87,7 +87,7 @@ export function CamposAcompanamiento({
             {aliados.map((a) => (
               <label
                 key={a.id}
-                className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-border p-3 has-checked:border-primary has-checked:bg-accent"
+                className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-border p-3 has-checked:border-enlace has-checked:bg-accent"
               >
                 <input
                   type="radio"

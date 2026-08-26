@@ -33,7 +33,7 @@ export function ListaRespuestas({ respuestas }: { respuestas: Respuesta[] }) {
                   Matrícula verificada
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 rounded-full border border-primary/25 bg-accent px-2 py-0.5 text-sm font-medium text-accent-foreground">
+                <span className="inline-flex items-center gap-1 rounded-full border border-enlace/25 bg-accent px-2 py-0.5 text-sm font-medium text-accent-foreground">
                   <TriangleAlert className="size-4" aria-hidden="true" />
                   Sin verificar
                 </span>

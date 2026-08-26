@@ -119,7 +119,7 @@ export function RegistrarEntrega({
                     <span
                       aria-hidden="true"
                       className={`flex size-8 shrink-0 items-center justify-center rounded-full border-2 ${
-                        activo ? 'border-primary bg-primary text-primary-foreground' : 'border-border'
+                        activo ? 'border-enlace bg-primary text-primary-foreground' : 'border-border'
                       }`}
                     >
                       {activo && <Check className="size-5" />}
@@ -156,7 +156,7 @@ export function RegistrarEntrega({
           alAbrir={pedirPlanilla}
         >
           {planilla && motivo && (
-        <div className="mt-3 rounded-lg border border-primary/25 bg-accent p-3 text-accent-foreground">
+        <div className="mt-3 rounded-lg border border-enlace/25 bg-accent p-3 text-accent-foreground">
           <p className="text-base font-medium">{planilla.nombre}</p>
           <p className="text-base">
             {planilla.documento_tipo} {planilla.documento}

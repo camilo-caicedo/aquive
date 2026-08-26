@@ -16,7 +16,7 @@ const alertVariants = cva(
         // Terracota tenue, no el ámbar de Tailwind: sobre el papel cálido del
         // fondo aquel se leía como de otra paleta.
         warning:
-          "border-primary/25 bg-accent text-accent-foreground *:data-[slot=alert-description]:text-accent-foreground",
+          "border-enlace/25 bg-accent text-accent-foreground *:data-[slot=alert-description]:text-accent-foreground",
       },
     },
     defaultVariants: {

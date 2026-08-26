@@ -66,7 +66,7 @@ export default async function FichaPage({
         />
       </div>
 
-      <details className="group mt-4 rounded-2xl bg-card shadow-sm">
+      <details className="group mt-4 rounded-2xl bg-card shadow-canto">
         <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 px-4 text-base font-medium [&::-webkit-details-marker]:hidden">
           <Info className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
           <span className="flex-1">Qué comprobamos y qué no</span>
@@ -85,7 +85,7 @@ export default async function FichaPage({
         <p className="mt-4 text-base text-muted-foreground">{ficha.descripcion}</p>
       )}
 
-      <h2 className="font-heading mt-6 text-2xl">Qué hace</h2>
+      <h2 className="font-heading mt-6 text-2xl font-extrabold tracking-tight">Qué hace</h2>
       <ul className="mt-3 space-y-2">
         {ficha.oficios.map((o) => (
           <li
@@ -151,14 +151,14 @@ export default async function FichaPage({
       {/* Los textos largos se quedan aquí, donde hay sitio para leerlos;
           la línea corta y los dos botones van en la barra fija de abajo,
           que es donde se decide (regla 5). */}
-      <div className="mt-6 rounded-xl bg-card p-4 shadow-sm">
+      <div className="mt-6 rounded-xl bg-card p-4 shadow-canto">
         <p className="text-sm text-muted-foreground">{NO_PAGUES_POR_ADELANTADO}</p>
         {aDomicilio && (
           <p className="mt-2 text-sm text-muted-foreground">{SEGURIDAD_DOMICILIO}</p>
         )}
       </div>
 
-      <h2 className="font-heading mt-8 text-2xl">Qué dice quien lo contrató</h2>
+      <h2 className="font-heading mt-8 text-2xl font-extrabold tracking-tight">Qué dice quien lo contrató</h2>
 
       {ficha.total_resenas === 0 ? (
         <p className="mt-3 text-base text-muted-foreground">
@@ -193,7 +193,7 @@ export default async function FichaPage({
             {ficha.resenas
               .filter((r) => r.comentario || r.replica)
               .map((r) => (
-                <li key={r.id} className="rounded-2xl bg-card p-3 shadow-sm">
+                <li key={r.id} className="rounded-2xl bg-card p-3 shadow-canto">
                   {r.comentario && <p className="text-base">{r.comentario}</p>}
                   {r.replica && (
                     <p className="mt-2 border-l-2 border-border pl-3 text-base text-muted-foreground">

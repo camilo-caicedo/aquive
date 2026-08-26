@@ -5,6 +5,7 @@ import { implement } from '@orpc/server'
 import { contrato } from '@/contrato'
 import { db } from '@/db/cliente'
 import type { Contexto } from './contexto'
+import * as moderacion from '@/server/moderacion/comandos'
 import * as servicios from '@/server/servicios/consultas'
 
 // El enrutador: pega el contrato con la capa de dominio. Aquí y solo aquí se
@@ -24,6 +25,9 @@ export const enrutador = os.router({
     miFicha: os.servicios.miFicha.handler(({ context }) =>
       servicios.miFicha(db, context.usuarioId),
     ),
+  },
+  moderacion: {
+    reportar: os.moderacion.reportar.handler(({ input }) => moderacion.reportar(db, input)),
   },
 })
 

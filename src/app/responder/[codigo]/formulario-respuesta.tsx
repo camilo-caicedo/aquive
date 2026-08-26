@@ -102,7 +102,7 @@ export function FormularioRespuesta({
       {/* Viene marcada si ya lo dijo en su perfil, y se puede desmarcar: se
           puede tener carro y no poder ese día. Así la logística deja de ser
           la primera pregunta de cada conversación. */}
-      <label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-border p-3 has-checked:border-primary has-checked:bg-accent">
+      <label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-border p-3 has-checked:border-enlace has-checked:bg-accent">
         <input
           type="checkbox"
           checked={puedeLlevar}

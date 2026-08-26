@@ -40,7 +40,7 @@ export function PanelFlujoDos({ datos }: { datos: PanelFlujo2 }) {
             {datos.sin_aliado.map((h) => (
               <li
                 key={h.id}
-                className="rounded-2xl border border-primary/25 bg-accent p-3 text-accent-foreground"
+                className="rounded-2xl border border-enlace/25 bg-accent p-3 text-accent-foreground"
               >
                 <p className="font-mono text-base font-bold">{h.codigo}</p>
                 <p className="text-sm">

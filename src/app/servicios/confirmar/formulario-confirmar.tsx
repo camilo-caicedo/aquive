@@ -133,7 +133,7 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
           // Grande y monoespaciada porque se copia de un papel carácter por
           // carácter; alineada a la izquierda y no centrada, para que al
           // escribir el cursor no salte de sitio en cada letra.
-          className="mt-1 h-16 border-primary/40 px-5 font-mono text-2xl tracking-[0.2em] uppercase"
+          className="mt-1 h-16 border-enlace/40 px-5 font-mono text-2xl tracking-[0.2em] uppercase"
         />
         {/* Se dice al escribir cuántos faltan. Antes el botón se quedaba
             apagado sin explicar por qué, y desde un papel mal fotocopiado

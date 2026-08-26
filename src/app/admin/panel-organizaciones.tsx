@@ -374,7 +374,7 @@ function FichaOrganizacion({
           className={
             organizacion.activa
               ? 'inline-flex shrink-0 items-center rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-base font-medium text-foreground'
-              : 'inline-flex shrink-0 items-center rounded-full border border-primary/25 bg-accent px-2.5 py-0.5 text-base font-medium text-accent-foreground'
+              : 'inline-flex shrink-0 items-center rounded-full border border-enlace/25 bg-accent px-2.5 py-0.5 text-base font-medium text-accent-foreground'
           }
         >
           {organizacion.activa ? 'Activa' : 'Suspendida'}

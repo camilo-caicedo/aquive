@@ -161,7 +161,7 @@ export default async function CatalogoPage({
               {/* La regla S en una etiqueta: un oficio de riesgo alto no se
                   publica sin teléfono verificado y una referencia. */}
               {o.riesgo === 'alto' && (
-                <span className="shrink-0 rounded-full border border-primary/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
+                <span className="shrink-0 rounded-full border border-enlace/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
                   Riesgo alto
                 </span>
               )}

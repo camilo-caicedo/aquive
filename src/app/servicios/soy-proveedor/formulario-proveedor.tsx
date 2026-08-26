@@ -82,7 +82,7 @@ function Chip({
       onClick={onClick}
       className={`inline-flex min-h-12 items-center rounded-full border px-4 text-base transition-colors ${
         activo
-          ? 'border-primary bg-primary text-primary-foreground'
+          ? 'border-enlace bg-primary text-primary-foreground'
           : 'border-border bg-card hover:bg-muted'
       }`}
     >
@@ -305,7 +305,7 @@ export function FormularioProveedor({
           aparece y lleva a arreglarlo. Un párrafo que explica la regla S y
           deja a la persona sin saber qué tocar no sirve de nada. */}
       {proveedor?.oficios.some((o) => !o.publicado) && (
-        <div className="flex items-start gap-3 rounded-2xl border border-primary/30 bg-accent p-4 text-accent-foreground">
+        <div className="flex items-start gap-3 rounded-2xl border border-enlace/30 bg-accent p-4 text-accent-foreground">
           <EyeOff className="size-5 shrink-0 translate-y-0.5" aria-hidden="true" />
           <div className="min-w-0 flex-1">
             <p className="text-base font-semibold">

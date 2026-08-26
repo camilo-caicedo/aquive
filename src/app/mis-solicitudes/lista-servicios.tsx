@@ -75,7 +75,7 @@ export function ListaServicios() {
             // inventar un tono que no esté en los tokens.
             className="flex min-h-16 items-center gap-3 rounded-2xl bg-secondary p-4 transition-colors hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)]"
           >
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card text-primary">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-card text-enlace">
               <Briefcase className="size-5" aria-hidden="true" />
             </span>
             <span className="min-w-0 flex-1">

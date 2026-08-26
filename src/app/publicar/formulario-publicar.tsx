@@ -511,7 +511,7 @@ export function FormularioPublicar({
                       key={item.id}
                       className={`flex min-h-14 items-center gap-2 rounded-full pr-2 pl-4 transition-colors ${
                         sel
-                          ? 'border border-primary bg-accent'
+                          ? 'border border-enlace bg-accent'
                           : 'border border-border bg-card'
                       }`}
                     >
@@ -570,7 +570,7 @@ export function FormularioPublicar({
                           className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground"
                         >
                           {sel ? (
-                            <Check className="size-5 text-primary" aria-hidden="true" />
+                            <Check className="size-5 text-enlace" aria-hidden="true" />
                           ) : (
                             <Plus className="size-5" aria-hidden="true" />
                           )}
@@ -583,7 +583,7 @@ export function FormularioPublicar({
                   'sugerencia' in s ? (
                     <li
                       key={`sugerencia-${indice}`}
-                      className="flex items-center gap-2 rounded-lg border border-primary bg-accent p-2"
+                      className="flex items-center gap-2 rounded-lg border border-enlace bg-accent p-2"
                     >
                       <span className="min-h-12 flex-1 px-2 py-2 text-base font-semibold text-accent-foreground">
                         {s.sugerencia}{' '}
@@ -658,7 +658,7 @@ export function FormularioPublicar({
                   type="button"
                   disabled={numSugerencias >= MAX_SUGERENCIAS || seleccionados.length >= 12}
                   onClick={() => setMostrarSugerencia(true)}
-                  className="mt-2 inline-flex min-h-12 items-center gap-1.5 text-base text-primary underline underline-offset-4 disabled:opacity-50 disabled:no-underline"
+                  className="mt-2 inline-flex min-h-12 items-center gap-1.5 text-base text-enlace underline underline-offset-4 disabled:opacity-50 disabled:no-underline"
                 >
                   <Plus className="size-4 shrink-0" aria-hidden="true" />
                   No encuentro lo que necesito
@@ -710,7 +710,7 @@ export function FormularioPublicar({
             <button
               type="button"
               onClick={() => setPaso(2)}
-              className="mt-2 inline-flex min-h-12 items-center text-base text-primary underline underline-offset-4"
+              className="mt-2 inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4"
             >
               Cambiar
             </button>
@@ -737,7 +737,7 @@ export function FormularioPublicar({
               se guarda ni se pregunta. Tampoco sale en el tablero: solo lo
               ven quien va a responder y la fundación, que es para quienes
               sirve. */}
-          <label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-border p-3 has-checked:border-primary has-checked:bg-accent">
+          <label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-border p-3 has-checked:border-enlace has-checked:bg-accent">
             <input
               type="checkbox"
               checked={puedeRecoger}
@@ -868,7 +868,7 @@ export function FormularioPublicar({
               <button
                 type="button"
                 onClick={() => setConAliado(true)}
-                className="flex min-h-12 items-center gap-1.5 text-left text-base text-primary underline"
+                className="flex min-h-12 items-center gap-1.5 text-left text-base text-enlace underline"
               >
                 <HeartHandshake className="size-4 shrink-0" aria-hidden="true" />
                 Quiero que una fundación coordine la entrega

@@ -189,7 +189,7 @@ function Miembro({
         miembro.estado === 'activo'
           ? 'flex items-center gap-3 rounded-2xl bg-card p-4 shadow-sm'
           : miembro.estado === 'pendiente'
-            ? 'flex items-center gap-3 rounded-2xl border border-primary/40 bg-accent p-4'
+            ? 'flex items-center gap-3 rounded-2xl border border-enlace/40 bg-accent p-4'
             : 'flex items-center gap-3 rounded-2xl border border-dashed border-border p-4'
       }
     >

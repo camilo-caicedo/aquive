@@ -131,7 +131,7 @@ export function ListaSolicitudesServicio({
                   <Button
                     {...props}
                     variant="outline"
-                    className="shrink-0 border-primary text-primary"
+                    className="shrink-0 border-enlace text-enlace"
                     onClick={() => {
                       setAbierta(s.id)
                       setError(null)

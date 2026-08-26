@@ -156,7 +156,9 @@ export default async function InicioPage({
           estilo. Desviación consciente de la regla 8 —el `h1` no repite la
           etiqueta de la barra— y es la única pantalla donde pasa. */}
       <section className="mt-8">
-        <h2 className="font-heading text-3xl leading-tight">Servicios</h2>
+        <h2 className="font-heading text-3xl leading-tight font-extrabold tracking-tight">
+          Servicios
+        </h2>
         <p className="mt-1 text-base text-muted-foreground">
           Gente que vive de su oficio y quiere que la encuentren.
         </p>
@@ -264,8 +266,8 @@ export default async function InicioPage({
         <div
           className={`mt-4 flex items-center gap-3 rounded-2xl px-4 py-3 ${
             miFicha.suspendido || misOficiosEscondidos > 0
-              ? 'border border-primary/30 bg-accent text-accent-foreground'
-              : 'bg-card shadow-sm'
+              ? 'bg-accent text-accent-foreground shadow-canto'
+              : 'bg-card shadow-canto'
           }`}
         >
           {(miFicha.suspendido || misOficiosEscondidos > 0) && (
@@ -367,12 +369,14 @@ export default async function InicioPage({
           donde de verdad se busca. Lo que importa de este texto es la
           diferencia de vida útil, que es lo que sostiene la promesa de
           borrado del tablero. */}
-      <section className="mt-8 flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:p-5">
+      <section className="mt-8 flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-canto sm:flex-row sm:items-center sm:p-5">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
           <Stethoscope className="size-6" aria-hidden="true" />
         </span>
         <div className="flex-1">
-          <h2 className="font-heading text-2xl">¿Necesitas un profesional?</h2>
+          <h2 className="font-heading text-2xl font-extrabold tracking-tight">
+            ¿Necesitas un profesional?
+          </h2>
           <p className="mt-1 text-base text-muted-foreground">
             Psicología, revisión de tu casa, atención médica, asesoría jurídica. Cada quien declara su matrícula; a algunos ya les revisamos que ese número exista en el registro, y esos aparecen de primeros.
           </p>

@@ -93,7 +93,7 @@ export function PanelHilos({
             onClick={() => setCola(c.clave)}
             className={`inline-flex min-h-12 shrink-0 items-center gap-1.5 rounded-full border px-4 text-base transition-colors ${
               cola === c.clave
-                ? 'border-primary bg-accent font-medium text-accent-foreground'
+                ? 'border-enlace bg-accent font-medium text-accent-foreground'
                 : 'border-border bg-card text-foreground'
             }`}
           >

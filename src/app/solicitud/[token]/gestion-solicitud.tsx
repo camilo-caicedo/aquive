@@ -85,7 +85,7 @@ export function GestionSolicitud({ token }: { token: string }) {
       </Button>
 
       {estado === 'confirmando' ? (
-        <div className="rounded-lg border-2 border-primary p-3">
+        <div className="rounded-lg border-2 border-enlace p-3">
           <p className="text-base">
             Al confirmar, tu solicitud y sus respuestas se borran para siempre.
             No se pueden recuperar.

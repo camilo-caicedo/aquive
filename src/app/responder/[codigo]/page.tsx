@@ -208,7 +208,7 @@ export default async function ResponderPage({
           Solo se muestra si esta persona lo dejó, y solo aquí: no sale en
           el tablero ni en ninguna otra pantalla. */}
       {hayContacto && (
-        <div className="mt-4 rounded-2xl border border-primary/30 bg-accent p-4">
+        <div className="mt-4 rounded-2xl border border-enlace/30 bg-accent p-4">
           <p className="flex items-center gap-2 text-base font-medium text-accent-foreground">
             <PhoneCall className="size-5 shrink-0" aria-hidden="true" />
             Dejó un contacto directo

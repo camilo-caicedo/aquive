@@ -86,7 +86,7 @@ export function MarcoFlujo({
                     aria-current={i === pasoActual ? 'step' : undefined}
                     className={`mt-1.5 block truncate text-sm ${
                       i === pasoActual
-                        ? 'font-semibold text-primary'
+                        ? 'font-semibold text-enlace'
                         : 'text-muted-foreground'
                     }`}
                   >

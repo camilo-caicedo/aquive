@@ -54,7 +54,7 @@ export default async function ListoPage() {
       </p>
 
       {/* La única acción de la pantalla, con la razón antes del botón. */}
-      <div className="mt-6 rounded-2xl border border-primary/40 bg-accent p-4 text-accent-foreground">
+      <div className="mt-6 rounded-2xl border border-enlace/40 bg-accent p-4 text-accent-foreground">
         <p className="flex items-center gap-2 text-lg font-semibold">
           <BellRing className="size-5 shrink-0" aria-hidden="true" />
           Falta lo que hace que sirva

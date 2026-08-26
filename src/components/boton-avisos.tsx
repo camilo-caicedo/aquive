@@ -314,7 +314,7 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
                   >
                     <span
                       className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${
-                        i < nuevos ? 'bg-background text-primary' : 'bg-muted text-muted-foreground'
+                        i < nuevos ? 'bg-background text-enlace' : 'bg-muted text-muted-foreground'
                       }`}
                     >
                       <Icono className="size-4" aria-hidden="true" />

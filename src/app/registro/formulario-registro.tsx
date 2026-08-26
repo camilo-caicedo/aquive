@@ -383,14 +383,14 @@ export function FormularioRegistro({
                 aria-checked={o.marcado}
                 onClick={o.alternar}
                 className={`flex min-h-16 w-full items-center gap-3 rounded-2xl border p-3 text-left transition-colors ${
-                  o.marcado ? 'border-primary bg-accent' : 'border-border bg-card'
+                  o.marcado ? 'border-enlace bg-accent' : 'border-border bg-card'
                 }`}
               >
                 <span
                   aria-hidden="true"
                   className={`flex size-8 shrink-0 items-center justify-center rounded-full border-2 ${
                     o.marcado
-                      ? 'border-primary bg-primary text-primary-foreground'
+                      ? 'border-enlace bg-primary text-primary-foreground'
                       : 'border-border'
                   }`}
                 >
@@ -548,7 +548,7 @@ export function FormularioRegistro({
             es el punto: la logística era lo que más se repetía en el chat. Se
             puede desmarcar en una respuesta concreta — se puede tener carro y
             no poder ese día. */}
-        <label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-border p-3 has-checked:border-primary has-checked:bg-accent">
+        <label className="flex min-h-12 cursor-pointer items-start gap-3 rounded-xl border border-border p-3 has-checked:border-enlace has-checked:bg-accent">
           <input
             type="checkbox"
             checked={puedeTrasladarse}
@@ -861,7 +861,7 @@ export function FormularioRegistro({
       >
         {/* Texto exacto de docs/legal/PLANTILLAS.md sección 3. La marca
             de tiempo que lo acompaña es la prueba de la autorización. */}
-        <label className="flex cursor-pointer gap-3 rounded-lg border-2 border-border bg-muted/40 p-4 has-checked:border-primary">
+        <label className="flex cursor-pointer gap-3 rounded-lg border-2 border-border bg-muted/40 p-4 has-checked:border-enlace">
           <input
             type="checkbox"
             checked={autorizo}

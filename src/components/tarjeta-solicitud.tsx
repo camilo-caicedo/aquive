@@ -66,7 +66,7 @@ export function TarjetaSolicitud({
   return (
     <li
       className={`animar-entrada overflow-hidden rounded-2xl bg-card shadow-sm transition-shadow hover:shadow-md ${
-        coincidencias ? 'border border-primary/40' : ''
+        coincidencias ? 'border border-enlace/40' : ''
       }`}
     >
       {/* La coincidencia va arriba y a lo ancho, no como un chip perdido en
@@ -158,7 +158,7 @@ export function TarjetaSolicitud({
         </p>
         <Button
           variant="outline"
-          className="shrink-0 border-primary text-primary"
+          className="shrink-0 border-enlace text-enlace"
           nativeButton={false}
           render={<Link href={`/responder/${solicitud.codigo}`} />}
         >

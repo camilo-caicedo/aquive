@@ -47,6 +47,12 @@
      (crema dentro de tarjeta blanca). Como subrayado único daba 2:1. */
   --input: #e2d9c8;
   --ring: #2860a8; /* foco en azul */
+  /* Azul de énfasis: enlaces, iconos que acompañan texto, bordes que tienen
+     que verse. Es el MISMO azul de la familia, con otro nombre porque aquí
+     no está diciendo «confección»: está diciendo «esto se puede tocar».
+     Existe porque --primary dejó de servir para eso — el lima es relleno, y
+     como color de letra sobre claro da 1,35:1. */
+  --enlace: #2860a8;
 
   /* Los cuatro gajos de la sombrilla. Codifican familias de oficio y
      SIEMPRE van con la palabra al lado: el color no informa solo. */
@@ -78,6 +84,7 @@
   --font-mono: var(--font-geist-mono);
   --color-ok: var(--ok);
   --color-ok-suave: var(--ok-suave);
+  --color-enlace: var(--enlace);
   --color-familia-azul: var(--familia-azul);
   --color-familia-amarillo: var(--familia-amarillo);
   --color-familia-verde: var(--familia-verde);
@@ -116,6 +123,22 @@
      tarjeta está encima. Va en los elementos blancos, no en los de color:
      esos ya se separan del fondo por sí solos. */
   --shadow-canto: 0 1px 2px rgb(29 29 27 / 0.13);
+
+  /* La sombra desplazada del cartel pintado: dura, sin difuminar, en el
+     color de la familia del oficio. Es lo que carga la identidad ahora que
+     no hay contornos negros, y lo que deja reconocer una tarjeta de Salud a
+     media pantalla. Nunca va sola: la palabra del grupo va siempre encima
+     (regla de interfaz 9). */
+  --shadow-cartel-azul: 4px 4px 0 var(--familia-azul);
+  --shadow-cartel-amarillo: 4px 4px 0 var(--familia-amarillo);
+  --shadow-cartel-verde: 4px 4px 0 var(--familia-verde);
+  --shadow-cartel-rojo: 4px 4px 0 var(--familia-rojo);
+
+  /* El botón de acción, que se hunde al pulsarlo. La sombra es tinta y no
+     color: el relleno ya es lima, y dos colores en un botón de 48 px
+     compiten. */
+  --shadow-boton: 3px 3px 0 var(--foreground);
+  --shadow-boton-hundido: 1px 1px 0 var(--foreground);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);

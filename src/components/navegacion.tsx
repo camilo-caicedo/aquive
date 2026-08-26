@@ -197,7 +197,7 @@ export function Navegacion({ coordinacion = null }: { coordinacion?: Coordinacio
                 // distinga el color, y sobrevive al alto contraste.
                 className={`flex min-h-12 shrink-0 items-center gap-1.5 rounded-t-lg border-b-2 px-3 text-base transition-colors ${
                   activa
-                    ? 'border-primary font-semibold text-foreground'
+                    ? 'border-enlace font-semibold text-foreground'
                     : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
@@ -266,7 +266,7 @@ export function BarraInferior({ coordinacion = null }: { coordinacion?: Coordina
                 // igual que la de la fila de escritorio apunta hacia abajo.
                 className={`flex min-h-16 flex-col items-center justify-center gap-1 border-t-2 px-1 pt-0.5 transition-colors ${
                   activa
-                    ? 'border-primary text-primary'
+                    ? 'border-enlace text-enlace'
                     : 'border-transparent text-muted-foreground'
                 }`}
               >

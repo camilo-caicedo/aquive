@@ -76,7 +76,7 @@ export function ListaEntidades({
                     <li key={`${enlace.etiqueta}|${enlace.url}`}>
                       <Button
                         variant="outline"
-                        className="w-full border-primary text-primary"
+                        className="w-full border-enlace text-enlace"
                         nativeButton={false}
                         render={
                           <a

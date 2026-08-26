@@ -75,7 +75,7 @@ export function CintaEnlace({
   }
 
   return (
-    <div className="rounded-2xl border border-primary/30 bg-accent p-3 text-accent-foreground">
+    <div className="rounded-2xl border border-enlace/30 bg-accent p-3 text-accent-foreground">
       <div className="flex items-center gap-3">
         <Link2 className="size-5 shrink-0" aria-hidden="true" />
         <p className="min-w-0 flex-1 text-base">

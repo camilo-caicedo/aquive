@@ -74,7 +74,7 @@ export function HeroPortada() {
             dice que se abre, y juntos se leían como un solo control. */}
         <summary className="flex min-h-12 cursor-pointer list-none items-start gap-2.5 text-base font-medium [&::-webkit-details-marker]:hidden">
           <ShieldCheck
-            className="size-5 shrink-0 translate-y-0.5 text-primary"
+            className="size-5 shrink-0 translate-y-0.5 text-enlace"
             aria-hidden="true"
           />
           <span className="min-w-0 flex-1">
@@ -91,14 +91,14 @@ export function HeroPortada() {
             cierto de todo. Si la diferencia no se entiende aquí, la
             existencia del directorio desmiente la promesa de borrado. */}
         <p className="mt-3 flex items-start gap-1.5 text-sm text-muted-foreground">
-          <Timer className="size-4 shrink-0 translate-y-0.5 text-primary" aria-hidden="true" />
+          <Timer className="size-4 shrink-0 translate-y-0.5 text-enlace" aria-hidden="true" />
           Las solicitudes de insumos se borran solas a las 72 horas, con todo
           lo que llevan dentro. El directorio de servicios es lo contrario:
           esas fichas se quedan mientras la persona quiera, y las borra
           cuando quiera.
         </p>
         <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
-          <ShieldCheck className="size-4 shrink-0 translate-y-0.5 text-primary" aria-hidden="true" />
+          <ShieldCheck className="size-4 shrink-0 translate-y-0.5 text-enlace" aria-hidden="true" />
           El contacto ocurre por fuera de la plataforma. Nunca vemos tu
           teléfono ni tus conversaciones.
         </p>
@@ -109,7 +109,7 @@ export function HeroPortada() {
             saber quien duda antes de tocarlo. Y es cierto: el callback usa
             solo `user.id` y descarta el correo. */}
         <p className="mt-2 flex items-start gap-1.5 text-sm text-muted-foreground">
-          <LogIn className="size-4 shrink-0 translate-y-0.5 text-primary" aria-hidden="true" />
+          <LogIn className="size-4 shrink-0 translate-y-0.5 text-enlace" aria-hidden="true" />
           Quien pide ayuda no necesita cuenta. Quien quiere ayudar entra con
           su cuenta de Google para poder responder solicitudes y sostener su
           perfil; de esa cuenta solo guardamos un identificador interno, y el
@@ -120,11 +120,11 @@ export function HeroPortada() {
             pie de página, a una portada entera de distancia de la única
             pantalla donde alguien se hace estas preguntas. */}
         <p className="mt-3 text-sm">
-          <Link href="/como-funciona" className="text-primary underline underline-offset-4">
+          <Link href="/como-funciona" className="text-enlace underline underline-offset-4">
             Cómo funciona
           </Link>
           {' · '}
-          <Link href="/privacidad" className="text-primary underline underline-offset-4">
+          <Link href="/privacidad" className="text-enlace underline underline-offset-4">
             Aviso de privacidad
           </Link>
         </p>

@@ -250,7 +250,7 @@ export default async function ServidoresPage({
                     <span aria-hidden="true">✓</span> Matrícula verificada
                   </span>
                 ) : (
-                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-primary/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
+                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-enlace/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
                     <span aria-hidden="true">!</span> Sin verificar
                   </span>
                 )}

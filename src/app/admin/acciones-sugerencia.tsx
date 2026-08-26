@@ -55,7 +55,7 @@ export function AccionesSugerencia({ sugerencia }: { sugerencia: SugerenciaPendi
   return (
     <div className="mt-3 space-y-3">
       {sugerencia.parecidos.length > 0 ? (
-        <div className="rounded-lg border border-primary/25 bg-accent p-3">
+        <div className="rounded-lg border border-enlace/25 bg-accent p-3">
           <p className="text-sm font-medium text-accent-foreground">
             Ya existe algo parecido
           </p>

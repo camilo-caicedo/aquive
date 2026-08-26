@@ -70,7 +70,7 @@ export function GrupoChips({
                 acción principal y de nada más (regla 2). Lo marcado se
                 distingue por borde, fondo Y peso de letra, para que no
                 dependa solo del color (regla 9). */}
-            <span className="inline-flex min-h-12 items-center rounded-full border border-border bg-card px-4 text-base transition-colors peer-checked:border-primary peer-checked:bg-secondary peer-checked:font-semibold peer-checked:text-secondary-foreground peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50">
+            <span className="inline-flex min-h-12 items-center rounded-full border border-border bg-card px-4 text-base transition-colors peer-checked:border-enlace peer-checked:bg-secondary peer-checked:font-semibold peer-checked:text-secondary-foreground peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50">
               {o.etiqueta}
             </span>
           </label>
@@ -165,7 +165,7 @@ export function HojaFiltros({
           <button
             type="button"
             popoverTarget={id}
-            className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-primary bg-accent px-4 text-base font-medium text-accent-foreground"
+            className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-enlace bg-accent px-4 text-base font-medium text-accent-foreground"
           >
             <SlidersHorizontal className="size-4" aria-hidden="true" />
             Filtros

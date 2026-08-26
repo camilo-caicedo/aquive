@@ -187,7 +187,7 @@ export function ListaLocal() {
           <div className="mt-3 flex items-center gap-2">
             <Button
               variant="outline"
-              className="border-primary text-primary"
+              className="border-enlace text-enlace"
               nativeButton={false}
               render={<Link href={`/solicitud/${s.token}`} />}
             >

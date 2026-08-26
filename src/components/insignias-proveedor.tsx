@@ -38,7 +38,7 @@ export function InsigniasProveedor({
           Teléfono verificado
         </li>
       ) : (
-        <li className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
+        <li className="inline-flex items-center gap-1.5 rounded-full border border-enlace/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
           <span aria-hidden="true">!</span> Sin verificar
         </li>
       ))}

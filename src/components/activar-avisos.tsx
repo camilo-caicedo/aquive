@@ -120,7 +120,7 @@ export function ActivarAvisos({
   if (!destacado) return <div className="space-y-2">{boton}{error}</div>
 
   return (
-    <div className="rounded-xl border border-primary/30 bg-accent p-4">
+    <div className="rounded-xl border border-enlace/30 bg-accent p-4">
       <p className="text-base font-medium text-accent-foreground">
         ¿Te avisamos cuando alguien responda?
       </p>

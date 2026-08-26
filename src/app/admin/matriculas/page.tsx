@@ -80,7 +80,7 @@ export default async function MatriculasPage() {
                     {perfil?.nombre_visible ?? 'Perfil sin nombre'}
                   </span>
                   {perfil?.suspendido && (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-enlace/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
                       <TriangleAlert className="size-4" aria-hidden="true" />
                       Suspendido
                     </span>
@@ -112,7 +112,7 @@ export default async function MatriculasPage() {
                 ) : (
                   // `OTRA`: sin registro consultable no hay nada que mirar,
                   // y fingir que sí lo hay es peor que decirlo.
-                  <p className="mt-3 rounded-lg border border-primary/25 bg-accent p-3 text-sm text-accent-foreground">
+                  <p className="mt-3 rounded-lg border border-enlace/25 bg-accent p-3 text-sm text-accent-foreground">
                     Esa entidad no tiene registro consultable. Sin registro no
                     se puede verificar: el perfil se queda sin sello, y sin
                     sello no ha sido revisado en absoluto.

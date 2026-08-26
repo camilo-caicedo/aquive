@@ -174,7 +174,7 @@ export function PanelServicios({
                   aria-current={activa ? 'page' : undefined}
                   className={`flex min-h-11 items-center gap-3 rounded-2xl px-4 py-2.5 transition-colors ${
                     activa
-                      ? 'border border-primary/25 bg-accent text-accent-foreground'
+                      ? 'border border-enlace/25 bg-accent text-accent-foreground'
                       : 'bg-card shadow-sm hover:bg-muted'
                   }`}
                 >

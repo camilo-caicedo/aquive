@@ -57,7 +57,7 @@ export function ColaTrabajo({ grupos }: { grupos: GrupoColas[] }) {
                     href={c.href}
                     className={`flex min-h-14 items-center gap-3 rounded-2xl px-4 py-2.5 transition-colors ${
                       esperando
-                        ? 'border border-primary/25 bg-accent text-accent-foreground'
+                        ? 'border border-enlace/25 bg-accent text-accent-foreground'
                         : 'bg-card shadow-sm hover:bg-muted'
                     }`}
                   >

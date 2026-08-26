@@ -41,9 +41,9 @@ export default async function LoginPage({
       {/* Lo del correo va DENTRO de la tarjeta del botón, que es donde se
           decide, y no como un bloque de aviso suelto arriba (regla 5). La
           tarjeta lleva borde terracota porque es la acción de la pantalla. */}
-      <div className="mt-6 rounded-2xl border border-primary/40 bg-card p-4">
+      <div className="mt-6 rounded-2xl border border-enlace/40 bg-card p-4">
         <p className="flex items-start gap-2 text-base">
-          <Mail className="size-5 shrink-0 translate-y-0.5 text-primary" aria-hidden="true" />
+          <Mail className="size-5 shrink-0 translate-y-0.5 text-enlace" aria-hidden="true" />
           <span>
             <strong className="font-semibold">No guardamos tu correo.</strong> De
             tu cuenta de Google conservamos un identificador interno y nada más.
