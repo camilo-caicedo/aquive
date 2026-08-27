@@ -3,7 +3,6 @@ import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { Bienvenida } from '@/components/bienvenida'
 import { Directorio } from '@/components/directorio'
-import { Inicio } from '@/components/inicio'
 
 /**
  * La portada, y la decisión de qué es la portada.
@@ -73,6 +72,9 @@ export default async function PortadaPage({
   const params = await searchParams
   const hayFiltros = Object.values(params).some(Boolean)
 
+  // Los filtros ganan sobre todo lo demás, con sesión o sin ella: ese
+  // enlace lo compartió alguien con una búsqueda hecha, y devolverle una
+  // presentación tira a la basura lo que lo hacía útil.
   if (hayFiltros) return <Directorio searchParams={searchParams} />
 
   const supabase = await createClient()
@@ -80,7 +82,9 @@ export default async function PortadaPage({
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (!user) return <Bienvenida />
-
-  return <Inicio />
+  // La bienvenida para todo el mundo (ADR 0010). La sesión ya no decide QUÉ
+  // pantalla se sirve, solo cómo se ve: con ella la bienvenida conserva el
+  // encabezado y la barra, y deja de ofrecer entrar. El inicio de siempre
+  // vive en /inicio, que es a donde lleva la barra.
+  return <Bienvenida conSesion={!!user} />
 }

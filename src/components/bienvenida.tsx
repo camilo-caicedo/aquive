@@ -33,9 +33,13 @@ import { FranjaSombrilla } from '@/components/franja-sombrilla'
  * `DATOS_ESTRUCTURADOS.description` y el README. Si cambias una, cambian las
  * cinco en el mismo commit.
  */
-export function Bienvenida() {
+export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
   return (
-    <div data-sin-cromo className="min-h-dvh">
+    // ⚠ `data-sin-cromo` SOLO sin sesión. Esa marca esconde encabezado,
+    // barra inferior y pie desde `globals.css`, y desde el ADR 0010 esta es
+    // la pantalla a la que lleva el logo: dejarla sin cromo con sesión sería
+    // llevar a alguien a un sitio sin salida.
+    <div data-sin-cromo={conSesion ? undefined : true} className="min-h-dvh">
       <FranjaSombrilla />
 
       <main className="mx-auto flex max-w-md flex-col px-5 py-8">
@@ -89,28 +93,35 @@ export function Bienvenida() {
         </Link>
 
         <Link
-          href="/login"
+          href={conSesion ? '/servicios/soy-proveedor' : '/login'}
           className="shadow-cartel-amarillo mt-4 block rounded-2xl bg-card p-5 transition-transform hover:-translate-y-0.5"
         >
           <span className="font-heading block text-xl">Ofrezco mi trabajo</span>
           <span className="mt-1.5 block text-base text-muted-foreground">
-            Entra con Google, publica tu oficio y aparece cuando alguien busque
-            cerca.
+            {conSesion
+              ? 'Publica tu oficio, tus precios y tu zona, y aparece cuando alguien busque cerca.'
+              : 'Entra con Google, publica tu oficio y aparece cuando alguien busque cerca.'}
           </span>
         </Link>
 
         {/* La salida honesta, y no en letra pequeña. El subrayado es lima
-            porque aquí es un trazo, no letra: la palabra va en tinta. */}
-        <p className="mt-8 text-center text-base text-muted-foreground">
-          Buscar y pedir no necesita cuenta.
-          <br />
-          <Link
-            href="/login"
-            className="decoration-primary text-foreground mt-1 inline-block font-semibold underline decoration-2 underline-offset-4"
-          >
-            Entrar con Google
-          </Link>
-        </p>
+            porque aquí es un trazo, no letra: la palabra va en tinta.
+
+            ⚠ Decía «Buscar y pedir no necesita cuenta», y pedir sí la
+            necesita desde el ADR 0006. Prometer en la portada algo que la
+            pantalla siguiente desmiente es peor que no prometer nada. */}
+        {!conSesion && (
+          <p className="mt-8 text-center text-base text-muted-foreground">
+            Mirar quién hay cerca no necesita cuenta.
+            <br />
+            <Link
+              href="/login"
+              className="decoration-primary text-foreground mt-1 inline-block font-semibold underline decoration-2 underline-offset-4"
+            >
+              Entrar con Google
+            </Link>
+          </p>
+        )}
 
         <p className="mt-6 text-center text-base">
           <Link href="/ayudas" className="text-enlace underline underline-offset-4">

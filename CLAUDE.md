@@ -43,6 +43,7 @@ archivo, y detrás de él:
 | `docs/decisiones/0006-*.md` | **Cuenta para todo** |
 | `docs/decisiones/0007-*.md` | Se retira el flujo acompañado |
 | `docs/decisiones/0008-*.md` | El aliado es un centro de acopio |
+| `docs/decisiones/0010-*.md` | La portada es siempre la bienvenida |
 | `docs/marca/AquiVe-Flujo.dc.html` | Prototipo de las 40 pantallas |
 | `docs/marca/Manual-de-Marca-AquiVe.pdf` | Manual de marca |
 | `docs/PENDIENTES-LEGALES.md` | Bloqueantes que no son código |
@@ -382,16 +383,20 @@ portar**.
 **Barra inferior: `Inicio · Buscar · Mensajes · Perfil`.** Cuatro celdas, las del
 prototipo.
 
-**La portada depende de la sesión.** Quien llega sin sesión ve la **bienvenida**
-(pantalla 01); con sesión, el directorio. Y si la URL trae filtros
-—`/?oficio=…`— se sirve el directorio aunque no haya sesión: ese enlace viene
-de alguien que compartió una búsqueda, y enseñarle una bienvenida tira a la
-basura lo que lo hacía útil. El directorio tiene además URL propia,
-`/directorio`, que es la que indexa el buscador.
+**La portada es la bienvenida**, con sesión y sin ella (ADR 0010). El logo
+del encabezado lleva ahí, que es lo que se espera al tocar una marca. Con
+sesión la misma pantalla conserva encabezado y barra —sin ellos no tendría
+salida—, «Ofrezco mi trabajo» lleva a publicar la ficha en vez de a entrar, y
+desaparece «Entrar con Google». El inicio de siempre vive en `/inicio`.
+
+Y si la URL trae filtros —`/?oficio=…`— se sirve el directorio, con sesión o
+sin ella: ese enlace viene de alguien que compartió una búsqueda, y enseñarle
+una bienvenida tira a la basura lo que lo hacía útil. El directorio tiene
+además URL propia, `/directorio`, que es la que indexa el buscador.
 
 ⚠ La bienvenida lleva el nombre y la frase de descripción **palabra por
-palabra**: un rastreador nunca trae sesión, así que para Google `/` ES la
-bienvenida, y la verificación de marca ya se cayó dos veces por menos.
+palabra**: para Google `/` ES la bienvenida, y la verificación de marca ya se
+cayó dos veces por menos.
 
 `Buscar` lleva a `/categorias`, no a un buscador: es la puerta ancha para quien
 no sabe qué buscar. Comunidad —el muro y los productos— no tiene celda propia:

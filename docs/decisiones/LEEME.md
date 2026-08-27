@@ -30,6 +30,8 @@ El ADR se escribe **antes** del código. Si una tarea te obliga a contradecir
 | [0006](0006-cuenta-para-todo.md) | Cuenta para todo | aceptada |
 | [0007](0007-fuera-el-flujo-acompanado.md) | Se retira el flujo acompañado | aceptada |
 | [0008](0008-el-aliado-es-un-centro-de-acopio.md) | El aliado es un centro de acopio | aceptada |
+| [0009](0009-un-solo-chat.md) | Un solo chat, para toda la aplicación | aceptada |
+| [0010](0010-la-portada-es-la-bienvenida.md) | La portada es siempre la bienvenida | aceptada |
 
 ## Plantilla
 
