@@ -18,6 +18,7 @@ import * as servicios from '@/server/servicios/consultas'
 import * as pedidos from '@/server/servicios/solicitudes'
 import * as ubicacion from '@/server/servicios/ubicacion'
 import * as foto from '@/server/servicios/foto'
+import * as altaAsistida from '@/server/servicios/alta-asistida'
 
 // El enrutador: pega el contrato con la capa de dominio. Aquí y solo aquí se
 // tocan las dos cosas — el contrato no sabe de Postgres y el dominio no sabe
@@ -52,6 +53,16 @@ export const enrutador = os.router({
     misSolicitudes: os.servicios.misSolicitudes.handler(({ context }) =>
       pedidos.mias(db, { usuarioId: context.usuarioId }),
     ),
+    altaAsistida: os.servicios.altaAsistida.handler(async ({ input, context, errors }) => {
+      try {
+        return await altaAsistida.registrar(db, input, { usuarioId: context.usuarioId })
+      } catch (e) {
+        if (e instanceof altaAsistida.AltaRechazada) {
+          throw errors.RECHAZADO({ data: { motivo: e.message } })
+        }
+        throw e
+      }
+    }),
     guardarFoto: os.servicios.guardarFoto.handler(async ({ input, context, errors }) => {
       try {
         return await foto.guardar(db, input, { usuarioId: context.usuarioId })

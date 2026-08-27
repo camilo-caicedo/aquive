@@ -380,6 +380,41 @@ export const contratoServicios = {
   misSolicitudes: oc.output(z.array(MiSolicitudServicio)),
 
   /**
+   * Alta asistida: alguien del equipo de un aliado registra a un prestador
+   * que no tiene cuenta de Google.
+   *
+   * Crea una cuenta de verdad (ADR 0006) y devuelve su código de acceso EN
+   * CLARO. Es la única vez que existe: se guarda solo su `sha256`, y se
+   * canjea en `/entrar/<codigo>`.
+   */
+  altaAsistida: oc
+    .errors(erroresUbicacion)
+    .input(
+      z.object({
+        organizacion_id: z.uuid(),
+        nombre_visible: z.string().trim().min(3).max(60),
+        tipo: z.enum(['persona', 'microempresa']),
+        telefono: z.string().trim().min(7).max(20),
+        municipio: z.string().regex(/^[0-9]{5}$/),
+        zona_id: z.uuid().optional(),
+        zona_texto: z.string().trim().max(60).optional(),
+        modalidad: z.array(z.enum(['domicilio', 'local', 'remoto'])).min(1),
+        oficios: z
+          .array(
+            z.object({
+              oficio_id: z.string().min(1).max(60),
+              modo: z.enum(['gratis', 'aporte', 'solidario', 'normal']),
+            }),
+          )
+          .min(1),
+        autorizacion_version: z.string().trim().min(3).max(60),
+      }),
+    )
+    .output(
+      z.object({ proveedor_id: z.uuid(), perfil_id: z.uuid(), codigo: z.string() }),
+    ),
+
+  /**
    * La foto de mi ficha, con su autorización.
    *
    * `imagen_id` en nulo = quitarla. Quitarla borra el archivo del almacén,

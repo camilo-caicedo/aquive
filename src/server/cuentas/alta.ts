@@ -46,20 +46,30 @@ async function exigirAdmin(db: BaseDeDatos, usuarioId: string | null) {
   }
 }
 
-export async function crear(
+/**
+ * La cuenta en sí: usuario de Auth, perfil y código de acceso.
+ *
+ * Vive aparte de `crear` porque hay DOS puertas de alta asistida y las dos
+ * necesitan exactamente esto: la del admin, y la del aliado que registra a
+ * un prestador en la calle. Lo que cambia entre ellas es quién está
+ * autorizado y qué se crea DESPUÉS; la cuenta se crea igual, y duplicarla
+ * sería duplicar el rollback del final, que es la parte que importa.
+ *
+ * No comprueba permisos. Lo hace quien la llama, que es quien sabe cuáles.
+ */
+export async function crearCuenta(
   db: BaseDeDatos,
   entrada: {
     nombre_visible: string
-    /** Solo para quien va a ofrecer algo. Quien solo pide no lo da. */
     contacto_publico?: string
     contacto_tipo?: 'whatsapp' | 'telefono'
     municipios: string[]
     tipo: 'vecino' | 'ofertador' | 'servidor'
   },
-  llave: { usuarioId: string | null },
+  creadoPor: string | null,
+  /** Qué hacer con la cuenta recién creada, antes de darla por buena. */
+  despues?: (perfilId: string) => Promise<void>,
 ): Promise<{ perfil_id: string; codigo: string }> {
-  await exigirAdmin(db, llave.usuarioId)
-
   // El nombre es lo único libre y va a ser público si esa persona publica
   // algo. Mismo filtro que en todo lo demás (regla de producto 4).
   if (contienePII(entrada.nombre_visible)) {
@@ -100,8 +110,12 @@ export async function crear(
     await db.insert(codigosAcceso).values({
       perfilId: data.user.id,
       codigoHash: hash,
-      creadoPor: llave.usuarioId,
+      creadoPor,
     })
+    // La ficha del prestador, cuando la hay. Va DENTRO del try: si falla,
+    // la limpieza de abajo borra también la cuenta, y no queda alguien con
+    // un código que no lleva a ninguna parte.
+    if (despues) await despues(data.user.id)
   } catch (e) {
     // Sin esto queda un usuario de Auth sin perfil: no puede entrar a
     // nada y nadie sabe que existe. El fallo de la limpieza no se traga
@@ -111,6 +125,23 @@ export async function crear(
   }
 
   return { perfil_id: data.user.id, codigo }
+}
+
+/** El alta que hace un admin desde `/admin/cuentas`. */
+export async function crear(
+  db: BaseDeDatos,
+  entrada: {
+    nombre_visible: string
+    /** Solo para quien va a ofrecer algo. Quien solo pide no lo da. */
+    contacto_publico?: string
+    contacto_tipo?: 'whatsapp' | 'telefono'
+    municipios: string[]
+    tipo: 'vecino' | 'ofertador' | 'servidor'
+  },
+  llave: { usuarioId: string | null },
+): Promise<{ perfil_id: string; codigo: string }> {
+  await exigirAdmin(db, llave.usuarioId)
+  return await crearCuenta(db, entrada, llave.usuarioId)
 }
 
 /** Cuando alguien pierde el papel, o se lo quitan. Invalida el anterior. */

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { BadgeCheck, Copy, Phone, Info } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { rpc } from '@/orpc/cliente'
+import { AUTORIZACION_PROVEEDOR_VERSION } from '@/lib/config'
 import { contienePII, MENSAJE_PII } from '@/lib/validacion'
 import { nombreConDepartamento, type MunicipioBasico } from '@/lib/municipios'
 import { GRUPOS, MODALIDADES, TIPOS_PROVEEDOR } from '@/lib/servicios'
@@ -157,28 +159,33 @@ export function PanelProveedores({
     setGuardando(true)
     setError(null)
 
-    const respuesta = await fetch('/api/servicios/proveedores', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    // Por el contrato, no por una ruta de API con una función de PL/pgSQL
+    // detrás (ADR 0001). Y crea una CUENTA de verdad (ADR 0006): antes esto
+    // hacía una ficha con token y entregaba un enlace a
+    // `/servicios/mi-perfil/<token>`, una ruta que ya no existe.
+    let datos
+    try {
+      datos = await rpc.servicios.altaAsistida({
         organizacion_id: organizacionId,
-        nombre: nombre.trim(),
+        nombre_visible: nombre.trim(),
         tipo,
         telefono: telefono.trim(),
         municipio,
-        zona_id: zonaId || null,
-        zona_texto: zonaTexto.trim() || null,
+        zona_id: zonaId || undefined,
+        zona_texto: zonaTexto.trim() || undefined,
         modalidad,
         // Todos entran en «precio normal» y sin monto: el aliado no puede
-        // inventarle la tarifa a nadie. La persona la pone después desde
-        // su enlace.
-        oficios: elegidos.map((id) => ({ oficio_id: id, modo: 'normal' })),
-      }),
-    })
-
-    const datos = await respuesta.json()
-    if (!respuesta.ok) {
-      setError(datos.error ?? 'No se pudo registrar')
+        // inventarle la tarifa a nadie. La persona la pone después, cuando
+        // entre con su código.
+        oficios: elegidos.map((id) => ({ oficio_id: id, modo: 'normal' as const })),
+        autorizacion_version: AUTORIZACION_PROVEEDOR_VERSION,
+      })
+    } catch (e) {
+      const motivo =
+        e && typeof e === 'object' && 'data' in e
+          ? ((e.data as { motivo?: string } | undefined)?.motivo ?? null)
+          : null
+      setError(motivo ?? 'No se pudo registrar')
       setGuardando(false)
       return
     }
@@ -186,11 +193,11 @@ export function PanelProveedores({
     // Si de verdad se llamo, el sello se pone aqui mismo con la misma
     // RPC que usa el boton de la lista: es una llamada mas, no un argumento
     // nuevo en la de crear.
-    if (llamado && datos.id) await verificar(datos.id, true)
+    if (llamado) await verificar(datos.proveedor_id, true)
 
     setEnlace({
       nombre: nombre.trim(),
-      url: `${origen}/servicios/mi-perfil/${datos.token}`,
+      url: `${origen}/entrar/${encodeURIComponent(datos.codigo)}`,
     })
     setGuardando(false)
     limpiar()
