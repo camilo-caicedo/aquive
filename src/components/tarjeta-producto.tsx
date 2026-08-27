@@ -29,7 +29,11 @@ export function TarjetaProducto({ producto }: { producto: Producto }) {
   const familia = familiaDe(producto.grupos[0] ?? null)
 
   return (
-    <li className={`overflow-hidden rounded-2xl bg-card ${SOMBRA_CARTEL[familia]}`}>
+    // El ancla a la que llega quien tocó este producto en la portada.
+    <li
+      id={`prod-${producto.id}`}
+      className={`overflow-hidden rounded-2xl bg-card ${SOMBRA_CARTEL[familia]}`}
+    >
       {producto.imagen ? (
         <Image
           src={producto.imagen}

@@ -509,3 +509,45 @@ body:has([data-sin-cromo]) [data-pie-de-pagina] {
 body:has([data-sin-cromo]) {
   padding-bottom: 0;
 }
+
+/* --------------------------------------------------------------------
+   Llegar a UNA fila de una lista, no al principio de la lista.
+
+   Las tiras de la portada —profesionales y entidades— enseñan tarjetas de
+   personas y organizaciones concretas, y las tres llevaban al mismo sitio
+   que el «Ver todos» de al lado: al principio del directorio. Quien tocaba
+   una tarjeta tenía que volver a buscar en la lista lo que acababa de
+   señalar con el dedo.
+
+   Ahora cada tarjeta enlaza a su fila por ancla. Ninguna de las dos listas
+   tiene pantalla propia por fila —la fila YA trae todo: teléfono, enlaces,
+   servicios— así que abrirla aparte sería repetirla.
+
+   `scroll-padding-top` porque el encabezado es `sticky`: sin esto la fila
+   queda debajo de él y parece que el enlace no hizo nada. Los dos valores
+   son la altura real del encabezado más un poco de aire, y cambian en el
+   mismo punto en el que la fila de navegación aparece (`sm`, 40rem): 64 px
+   de marca más 8 de franja abajo, y 44 más cuando la navegación se ve.
+   -------------------------------------------------------------------- */
+
+html {
+  scroll-padding-top: 5.5rem;
+}
+
+@media (min-width: 40rem) {
+  html {
+    scroll-padding-top: 8.5rem;
+  }
+}
+
+/* ⚠ Aquí hubo un `[…]:target { outline }` para marcar la fila a la que se
+   llegó. Se quitó: `:target` NO coincide después de una navegación de
+   cliente de Next —solo al abrir el enlace desde cero o al recargar—, así
+   que el contorno aparecía siguiendo un enlace compartido y no aparecía al
+   tocar la tarjeta desde la portada, que es el camino normal. Una marca que
+   sale la mitad de las veces confunde más que ninguna.
+
+   Y no hace falta: con el desplazamiento de arriba la fila queda pegada al
+   encabezado, arriba del todo, que ya dice cuál es. Si algún día se quiere
+   la marca, tiene que ser un componente de cliente que lea el hash, no CSS.
+   */

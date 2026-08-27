@@ -49,8 +49,14 @@ export function TiraProfesionales({
       <ul className="riel -mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-2">
         {profesionales.map((p) => (
           <li key={p.id} className="w-56 shrink-0">
+            {/* A SU fila, no al principio del directorio. Esta tarjeta y el
+                «Ver todos» de arriba llevaban al mismo sitio, así que tocar
+                a alguien en concreto obligaba a volver a buscarlo en la
+                lista. Ninguna de las dos listas tiene pantalla por fila —la
+                fila ya trae teléfono, enlaces y servicios—, así que el
+                destino es la fila dentro de su lista. */}
             <Link
-              href="/profesionales"
+              href={`/profesionales#p-${p.id}`}
               className="shadow-cartel-azul block h-full rounded-2xl bg-card p-4"
             >
               <p className="font-heading truncate text-base">{p.nombre_visible}</p>
@@ -107,7 +113,7 @@ export function TiraEntidades({ entidades }: { entidades: EntidadBreve[] }) {
         {entidades.map((e) => (
           <li key={e.id} className="w-56 shrink-0">
             <Link
-              href="/entidades"
+              href={`/entidades#e-${e.id}`}
               className="shadow-cartel-verde block h-full rounded-2xl bg-card p-4"
             >
               <p className="font-heading truncate text-base">{e.nombre}</p>
@@ -162,7 +168,7 @@ export function TiraProductos({ productos }: { productos: Producto[] }) {
         {productos.map((p) => (
           <li key={p.id} className="w-56 shrink-0">
             <Link
-              href="/barrio"
+              href={`/barrio#prod-${p.id}`}
               className="shadow-cartel-amarillo block h-full overflow-hidden rounded-2xl bg-card"
             >
               {p.imagen ? (

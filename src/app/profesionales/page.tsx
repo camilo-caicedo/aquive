@@ -194,7 +194,11 @@ export default async function ProfesionalesPage({
       ) : (
         <ul className="mt-6 space-y-3">
           {servidores.map((s) => (
-            <li key={s.id} className="animar-entrada rounded-2xl bg-card p-4 shadow-canto">
+            <li
+              key={s.id}
+              id={`p-${s.id}`}
+              className="animar-entrada rounded-2xl bg-card p-4 shadow-canto"
+            >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-lg font-bold">{s.nombre_visible}</span>
                 {s.verificado ? (
