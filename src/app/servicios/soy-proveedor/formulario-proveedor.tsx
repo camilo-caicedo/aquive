@@ -15,7 +15,10 @@ import {
   AUTORIZACION_PROVEEDOR_VERSION,
   AUTORIZACION_FOTO_VERSION,
 } from '@/lib/config'
-import { contienePII, MENSAJE_PII } from '@/lib/validacion'
+import { contienePII, MENSAJE_PII, validarSugerencia } from '@/lib/validacion'
+// Del contrato y no de `lib/types`: es el mismo dato que va a pintar la
+// aplicación de Expo, y una segunda copia se desincroniza (ADR 0001).
+import type { GrupoOficio, OficioPropuesto } from '@/contrato/servicios'
 import { nombreConDepartamento, type MunicipioBasico } from '@/lib/municipios'
 import {
   DIAS,
@@ -210,6 +213,23 @@ function Chip({
   )
 }
 
+/**
+ * Una subcategoría que esta persona escribió y todavía no existe (ADR 0013).
+ *
+ * No lleva `oficio_id` porque no lo tiene: no está en el catálogo. Se
+ * identifica por su nombre dentro de esta pantalla, que basta porque la
+ * lista es de ocho como mucho y no admite repetidos.
+ */
+type PropuestaLocal = {
+  nombre: string
+  grupo: GrupoOficio
+  modo: ModoPrecio
+  precio_desde: number | null
+  unidad: UnidadPrecio | null
+  /** Lo que dijo moderación, si ya dijo algo. */
+  estado?: string
+}
+
 function alternar<T>(lista: T[], valor: T): T[] {
   return lista.includes(valor) ? lista.filter((x) => x !== valor) : [...lista, valor]
 }
@@ -218,6 +238,7 @@ export function FormularioProveedor({
   proveedor,
   municipios,
   oficios,
+  oficiosPropuestos,
   zonas,
   token,
   secciones,
@@ -228,6 +249,12 @@ export function FormularioProveedor({
   proveedor: MiProveedor | null
   municipios: MunicipioBasico[]
   oficios: Oficio[]
+  /**
+   * Las subcategorías que esta persona propuso y todavía no existen en el
+   * catálogo (ADR 0013). Vienen aparte de `proveedor.oficios` porque no
+   * son oficios todavía: no tienen id de catálogo y no se publican.
+   */
+  oficiosPropuestos?: OficioPropuesto[]
   zonas: Zona[]
   /**
    * Solo para quien no tiene cuenta y llegó por su enlace. Va en el
@@ -281,6 +308,41 @@ export function FormularioProveedor({
       unidad: o.unidad,
     })) ?? []
   )
+  // El stepper de la fila 03 (ADR 0013). Con ficha ya publicada nace en
+  // el paso 3: nadie debería recorrer tres pasos para corregir un precio.
+  const [pasoOficios, setPasoOficios] = useState<1 | 2 | 3>(proveedor ? 3 : 1)
+
+  // Las categorías del paso 1. Con ficha, se deducen de lo que ya tiene:
+  // guardarlas en la base sería una segunda fuente de verdad sobre algo
+  // que los oficios ya dicen.
+  const [categorias, setCategorias] = useState<GrupoOficio[]>(() => {
+    const de = new Set<GrupoOficio>()
+    for (const o of proveedor?.oficios ?? []) {
+      const g = oficios.find((c) => c.id === o.oficio_id)?.grupo
+      if (g) de.add(g as GrupoOficio)
+    }
+    for (const pr of oficiosPropuestos ?? []) de.add(pr.grupo)
+    return [...de]
+  })
+
+  // Lo que propuso y todavía no existe. Mismo precio que un oficio de
+  // verdad, para no volver a pedírselo el día que se apruebe.
+  const [propuestas, setPropuestas] = useState<PropuestaLocal[]>(
+    () =>
+      (oficiosPropuestos ?? []).map((pr) => ({
+        nombre: pr.nombre,
+        grupo: pr.grupo,
+        modo: pr.modo,
+        precio_desde: pr.precio_desde,
+        unidad: pr.unidad,
+        estado: pr.estado,
+      })),
+  )
+
+  // Lo que se está escribiendo en la caja de «¿no encuentras lo tuyo?»,
+  // una por categoría: la propuesta nace con su categoría puesta.
+  const [escribiendo, setEscribiendo] = useState<Record<string, string>>({})
+
   // ⚠ Con ficha ya publicada nace en `true`, y no es un atajo: la
   // autorización ya se dio y está guardada con su versión y su fecha. La
   // regla 6 dice que el consentimiento bloquea la publicación, no la
@@ -334,12 +396,55 @@ export function FormularioProveedor({
     municipio !== '' &&
     hayUbicacion &&
     modalidad.length > 0 &&
-    elegidos.length > 0 &&
+    elegidos.length + propuestas.length > 0 &&
     !errorDescripcion &&
     !errorZona &&
     descripcion.length <= 300 &&
     autorizo &&
     !guardando
+
+  /** Cuántas cosas dice que hace, del catálogo o propuestas. */
+  const cuantosOficios = elegidos.length + propuestas.length
+
+  function alternarCategoria(grupo: GrupoOficio) {
+    setCategorias((prev) => {
+      if (!prev.includes(grupo)) return [...prev, grupo]
+      // Quitar una categoría se lleva lo que se eligió dentro. Se avisa
+      // antes con el número, porque perder cuatro oficios sin que nadie
+      // lo diga se lee como que la aplicación los borró sola.
+      const dentro = oficios.filter((o) => o.grupo === grupo).map((o) => o.id)
+      setElegidos((e) => e.filter((x) => !dentro.includes(x.oficio_id)))
+      setPropuestas((ps) => ps.filter((x) => x.grupo !== grupo))
+      return prev.filter((g) => g !== grupo)
+    })
+  }
+
+  /** Cuántas cosas elegidas se perderían al soltar esta categoría. */
+  function cuantasDentro(grupo: GrupoOficio) {
+    const dentro = new Set(oficios.filter((o) => o.grupo === grupo).map((o) => o.id))
+    return (
+      elegidos.filter((e) => dentro.has(e.oficio_id)).length +
+      propuestas.filter((x) => x.grupo === grupo).length
+    )
+  }
+
+  function agregarPropuesta(grupo: GrupoOficio) {
+    const nombre = (escribiendo[grupo] ?? '').trim()
+    if (nombre.length < 2 || validarSugerencia(nombre)) return
+    if (cuantosOficios >= TOPE_OFICIOS) return
+    setPropuestas((prev) =>
+      prev.some((x) => x.nombre.toLowerCase() === nombre.toLowerCase() && x.grupo === grupo)
+        ? prev
+        : [...prev, { nombre, grupo, modo: 'normal', precio_desde: null, unidad: null }],
+    )
+    setEscribiendo((prev) => ({ ...prev, [grupo]: '' }))
+  }
+
+  function cambiarPropuesta(nombre: string, cambio: Partial<PropuestaLocal>) {
+    setPropuestas((prev) =>
+      prev.map((x) => (x.nombre === nombre ? { ...x, ...cambio } : x)),
+    )
+  }
 
   function alternarOficio(id: string) {
     setElegidos((prev) => {
@@ -385,6 +490,31 @@ export function FormularioProveedor({
 
     if (rpcError) {
       setError(rpcError.message)
+      setGuardando(false)
+      return
+    }
+
+    // Las subcategorías propuestas, por el contrato y por lo mismo que la
+    // foto: `guardar_proveedor` escribe la ficha entera de una vez y
+    // funciona, y una escritura nueva no tiene por qué entrar a vivir
+    // dentro de una función grande que ya sirve (ADR 0013).
+    try {
+      await rpc.servicios.guardarOficiosPropuestos({
+        propuestas: propuestas.map((x) => ({
+          nombre: x.nombre,
+          grupo: x.grupo,
+          modo: x.modo,
+          precio_desde: x.precio_desde,
+          unidad: x.unidad,
+        })),
+        oficios_del_catalogo: elegidos.length,
+      })
+    } catch (e) {
+      const motivo =
+        e && typeof e === 'object' && 'data' in e
+          ? ((e.data as { motivo?: string } | undefined)?.motivo ?? null)
+          : null
+      setError(motivo ?? 'No se pudieron guardar los oficios que escribiste.')
       setGuardando(false)
       return
     }
@@ -725,166 +855,431 @@ export function FormularioProveedor({
     oficios: {
       titulo: 'Qué haces y cuánto cobras',
       resumen:
-        elegidos.length === 0
+        cuantosOficios === 0
           ? 'Sin oficios todavía'
-          : `${elegidos.length} ${elegidos.length === 1 ? 'oficio' : 'oficios'}`,
-      falta: elegidos.length === 0,
+          : `${cuantosOficios} ${cuantosOficios === 1 ? 'oficio' : 'oficios'}`,
+      falta: cuantosOficios === 0,
       cuerpo: (
-        <fieldset>
-          <legend className="text-base font-medium">
-            ¿Qué haces? <span className="font-normal text-muted-foreground">(máximo {TOPE_OFICIOS})</span>
-          </legend>
+        <div>
+          {/* Tres pasos, no ochenta y una píldoras (ADR 0013). Con el ADR
+              0012 el catálogo subió a 81 oficios y esta sección los pintaba
+              todos a la vez, en un teléfono, dentro de un formulario que ya
+              tiene diez secciones. */}
+          <ol className="mb-4 grid grid-cols-3 gap-2 text-sm">
+            {['En qué trabajas', 'Qué haces', 'Cuánto cobras'].map((nombre, i) => (
+              <li key={nombre} className="min-w-0">
+                <button
+                  type="button"
+                  // Ir hacia atrás siempre; hacia adelante solo si hay de
+                  // qué hablar en el paso siguiente.
+                  disabled={i + 1 > pasoOficios && categorias.length === 0}
+                  onClick={() => setPasoOficios((i + 1) as 1 | 2 | 3)}
+                  aria-current={i + 1 === pasoOficios ? 'step' : undefined}
+                  className={`block w-full truncate border-t-2 pt-1.5 text-left ${
+                    i + 1 === pasoOficios
+                      ? 'border-enlace font-semibold text-foreground'
+                      : i + 1 < pasoOficios
+                        ? 'border-ok text-muted-foreground'
+                        : 'border-border text-muted-foreground'
+                  }`}
+                >
+                  {nombre}
+                </button>
+              </li>
+            ))}
+          </ol>
 
-          <div className="mt-2 space-y-4">
-            {Object.entries(GRUPOS).map(([grupo, etiqueta]) => {
-              const delGrupo = oficios.filter((o) => o.grupo === grupo)
-              if (delGrupo.length === 0) return null
-              return (
-                <div key={grupo}>
-                  <p className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase">
-                    {etiqueta}
-                  </p>
-                  <div className="mt-1.5 flex flex-wrap gap-2">
-                    {delGrupo.map((o) => (
-                      <Chip
-                        key={o.id}
-                        activo={elegidos.some((e) => e.oficio_id === o.id)}
-                        onClick={() => alternarOficio(o.id)}
-                      >
-                        {o.nombre}
-                      </Chip>
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          {/* ----------------------------------------------- paso 1 */}
+          {pasoOficios === 1 && (
+            <fieldset>
+              <legend className="text-base font-medium">¿En qué trabajas?</legend>
+              <p className="mt-1 text-base text-muted-foreground">
+                Marca todas las que hagas. En el siguiente paso eliges
+                exactamente qué haces dentro de cada una.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {Object.entries(GRUPOS).map(([grupo, etiqueta]) => {
+                  const dentro = cuantasDentro(grupo as GrupoOficio)
+                  return (
+                    <Chip
+                      key={grupo}
+                      activo={categorias.includes(grupo as GrupoOficio)}
+                      onClick={() => {
+                        // Soltar una categoría con cosas dentro avisa antes:
+                        // que desaparezcan cuatro oficios sin que nadie lo
+                        // diga se lee como que la aplicación los borró sola.
+                        if (
+                          dentro > 0 &&
+                          !confirm(
+                            `Si quitas «${etiqueta}» se van también ${dentro} ${
+                              dentro === 1 ? 'cosa que elegiste' : 'cosas que elegiste'
+                            }. ¿Sigo?`,
+                          )
+                        ) {
+                          return
+                        }
+                        alternarCategoria(grupo as GrupoOficio)
+                      }}
+                    >
+                      {etiqueta}
+                      {dentro > 0 ? ` · ${dentro}` : ''}
+                    </Chip>
+                  )
+                })}
+              </div>
 
-          {elegidos.length > 0 && (
-            <ul className="mt-4 space-y-3">
-              {elegidos.map((e) => {
-                const oficio = nombreOficio.get(e.oficio_id)
-                const cobra = e.modo === 'solidario' || e.modo === 'normal'
-                // Lo que la ficha publicada dice de este oficio, y por qué
-                // (pantalla 18): el estado con su motivo, no solo el estado.
-                const publicado = proveedor?.oficios.find(
-                  (o) => o.oficio_id === e.oficio_id
-                )?.publicado
-                return (
-                  <li key={e.oficio_id} className="rounded-2xl bg-card p-3 shadow-canto">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="font-heading text-lg leading-tight">
-                        {oficio?.nombre ?? e.oficio_id}
+              <Button
+                className="mt-4 w-full"
+                disabled={categorias.length === 0}
+                onClick={() => setPasoOficios(2)}
+              >
+                Continuar
+              </Button>
+            </fieldset>
+          )}
+
+          {/* ----------------------------------------------- paso 2 */}
+          {pasoOficios === 2 && (
+            <fieldset>
+              <legend className="text-base font-medium">¿Qué haces exactamente?</legend>
+              <p className="mt-1 text-base text-muted-foreground">
+                Marca lo que de verdad haces, hasta {TOPE_OFICIOS}. Es lo que la
+                gente va a buscar.
+              </p>
+
+              <div className="mt-3 space-y-5">
+                {categorias.map((grupo) => {
+                  const delGrupo = oficios.filter((o) => o.grupo === grupo)
+                  const escrito = escribiendo[grupo] ?? ''
+                  const errorEscrito = escrito.trim()
+                    ? validarSugerencia(escrito.trim())
+                    : null
+                  return (
+                    <div key={grupo}>
+                      <p className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase">
+                        {GRUPOS[grupo as keyof typeof GRUPOS]}
                       </p>
-                      {publicado != null && (
-                        <span
-                          className={`font-heading rounded-full px-3 py-0.5 text-xs tracking-[0.085em] uppercase ${
-                            publicado
-                              ? 'bg-ok-suave text-foreground'
-                              : 'bg-accent text-accent-foreground'
-                          }`}
-                        >
-                          {publicado ? 'Publicado' : 'Escondido'}
-                        </span>
-                      )}
-                    </div>
+                      <div className="mt-1.5 flex flex-wrap gap-2">
+                        {delGrupo.map((o) => (
+                          <Chip
+                            key={o.id}
+                            activo={elegidos.some((e) => e.oficio_id === o.id)}
+                            onClick={() => alternarOficio(o.id)}
+                          >
+                            {o.nombre}
+                          </Chip>
+                        ))}
+                        {propuestas
+                          .filter((x) => x.grupo === grupo)
+                          .map((x) => (
+                            <Chip
+                              key={x.nombre}
+                              activo
+                              onClick={() =>
+                                setPropuestas((prev) =>
+                                  prev.filter((y) => y.nombre !== x.nombre),
+                                )
+                              }
+                            >
+                              {x.nombre} · lo revisamos
+                            </Chip>
+                          ))}
+                      </div>
 
-                    {oficio?.grupo && (
-                      <p className="font-heading mt-0.5 text-xs tracking-[0.085em] text-muted-foreground uppercase">
-                        {GRUPOS[oficio.grupo]}
-                        {oficio.riesgo === 'alto' ? ' · Riesgo alto' : ''}
-                      </p>
-                    )}
-
-                    {publicado === false ? (
-                      <p className="mt-2 rounded-xl bg-accent px-3 py-2 text-base text-accent-foreground">
-                        {proveedor?.telefono_verificado
-                          ? 'Falta una referencia confirmada para que aparezca en el directorio.'
-                          : 'Falta que verifiquemos tu teléfono para que aparezca en el directorio.'}
-                      </p>
-                    ) : (
-                      oficio?.riesgo === 'alto' &&
-                      !proveedor && (
-                        <p className="mt-2 rounded-xl bg-accent px-3 py-2 text-base text-accent-foreground">
-                          Para este oficio hace falta que verifiquemos tu teléfono y
-                          que confirmes una referencia. Hasta entonces no aparece en
-                          el directorio.
-                        </p>
-                      )
-                    )}
-
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {MODOS_PRECIO.map((m) => (
-                        <Chip
-                          key={m.valor}
-                          activo={e.modo === m.valor}
-                          onClick={() =>
-                            cambiarOficio(e.oficio_id, {
-                              modo: m.valor as ModoPrecio,
-                              // Cambiar a gratis o aporte limpia el precio: si
-                              // se dejara puesto, el CHECK de la base rechaza
-                              // el guardado con un mensaje que nadie entiende.
-                              ...(m.valor === 'gratis' || m.valor === 'aporte'
-                                ? { precio_desde: null, unidad: null }
-                                : {}),
-                            })
-                          }
-                        >
-                          {m.etiqueta}
-                        </Chip>
-                      ))}
-                    </div>
-
-                    {cobra && (
+                      {/* ⚠ Siempre a la vista, una por categoría, para que
+                          la propuesta nazca con su categoría puesta. */}
                       <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                         <Input
-                          type="number"
-                          inputMode="numeric"
-                          min={0}
-                          step={1000}
-                          value={e.precio_desde ?? ''}
-                          onChange={(ev) =>
-                            cambiarOficio(e.oficio_id, {
-                              precio_desde:
-                                ev.target.value === '' ? null : Number(ev.target.value),
-                            })
+                          value={escrito}
+                          onChange={(e) =>
+                            setEscribiendo((prev) => ({ ...prev, [grupo]: e.target.value }))
                           }
-                          placeholder="Desde cuánto (opcional)"
-                          aria-label={`Precio desde, ${oficio?.nombre ?? ''}`}
-                          className="min-w-0 flex-1"
+                          maxLength={60}
+                          className="min-w-0 flex-1 bg-background"
+                          aria-label={`¿No encuentras lo tuyo en ${GRUPOS[grupo as keyof typeof GRUPOS]}?`}
+                          placeholder="¿No encuentras lo tuyo? Escríbelo"
                         />
-                        <Select
-                          value={e.unidad ?? ''}
-                          onValueChange={(v) =>
-                            cambiarOficio(e.oficio_id, { unidad: (v || null) as UnidadPrecio | null })
+                        <Button
+                          variant="outline"
+                          className="shrink-0"
+                          disabled={
+                            escrito.trim().length < 2 ||
+                            !!errorEscrito ||
+                            cuantosOficios >= TOPE_OFICIOS
                           }
+                          onClick={() => agregarPropuesta(grupo)}
                         >
-                          <SelectTrigger
-                            aria-label={`Unidad, ${oficio?.nombre ?? ''}`}
-                            className="min-w-0 flex-1 bg-background"
-                          >
-                            <SelectValue placeholder="¿De qué?">
-                              {(v: string) =>
-                                UNIDADES.find((u) => u.valor === v)?.etiqueta ?? '¿De qué?'
-                              }
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {UNIDADES.map((u) => (
-                              <SelectItem key={u.valor} value={u.valor}>
-                                {u.etiqueta}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          Agregar
+                        </Button>
                       </div>
-                    )}
-                  </li>
-                )
-              })}
-            </ul>
+                      {errorEscrito && (
+                        <p className="mt-1 text-sm text-destructive">{errorEscrito}</p>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              <p className="mt-4 text-base text-muted-foreground">
+                {cuantosOficios} de {TOPE_OFICIOS}.
+                {cuantosOficios >= TOPE_OFICIOS
+                  ? ' Quita alguna para poner otra.'
+                  : ''}
+              </p>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => setPasoOficios(1)}>
+                  Volver
+                </Button>
+                <Button
+                  className="flex-1"
+                  disabled={cuantosOficios === 0}
+                  onClick={() => setPasoOficios(3)}
+                >
+                  Continuar
+                </Button>
+              </div>
+            </fieldset>
           )}
-        </fieldset>
+
+          {/* ----------------------------------------------- paso 3 */}
+          {pasoOficios === 3 && (
+            <fieldset>
+              <legend className="text-base font-medium">¿Cuánto cobras?</legend>
+              <p className="mt-1 text-base text-muted-foreground">
+                Di desde cuánto cobras cada cosa. Es información: aquí no se
+                paga nada y nadie te cobra comisión.
+              </p>
+
+              {cuantosOficios === 0 ? (
+                <p className="mt-3 rounded-2xl border border-dashed border-border p-6 text-center text-base text-muted-foreground">
+                  Todavía no has elegido nada.
+                </p>
+              ) : (
+                <ul className="mt-4 space-y-3">
+                  {elegidos.map((e) => {
+                    const oficio = nombreOficio.get(e.oficio_id)
+                    const cobra = e.modo === 'solidario' || e.modo === 'normal'
+                    // Lo que la ficha publicada dice de este oficio, y por qué
+                    // (pantalla 18): el estado con su motivo, no solo el estado.
+                    const publicado = proveedor?.oficios.find(
+                      (o) => o.oficio_id === e.oficio_id
+                    )?.publicado
+                    return (
+                      <li key={e.oficio_id} className="rounded-2xl bg-card p-3 shadow-canto">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="font-heading text-lg leading-tight">
+                            {oficio?.nombre ?? e.oficio_id}
+                          </p>
+                          {publicado != null && (
+                            <span
+                              className={`font-heading rounded-full px-3 py-0.5 text-xs tracking-[0.085em] uppercase ${
+                                publicado
+                                  ? 'bg-ok-suave text-foreground'
+                                  : 'bg-accent text-accent-foreground'
+                              }`}
+                            >
+                              {publicado ? 'Publicado' : 'Escondido'}
+                            </span>
+                          )}
+                        </div>
+
+                        {oficio?.grupo && (
+                          <p className="font-heading mt-0.5 text-xs tracking-[0.085em] text-muted-foreground uppercase">
+                            {GRUPOS[oficio.grupo]}
+                            {oficio.riesgo === 'alto' ? ' · Riesgo alto' : ''}
+                          </p>
+                        )}
+
+                        {publicado === false ? (
+                          <p className="mt-2 rounded-xl bg-accent px-3 py-2 text-base text-accent-foreground">
+                            {proveedor?.telefono_verificado
+                              ? 'Falta una referencia confirmada para que aparezca en el directorio.'
+                              : 'Falta que verifiquemos tu teléfono para que aparezca en el directorio.'}
+                          </p>
+                        ) : (
+                          oficio?.riesgo === 'alto' &&
+                          !proveedor && (
+                            <p className="mt-2 rounded-xl bg-accent px-3 py-2 text-base text-accent-foreground">
+                              Para este oficio hace falta que verifiquemos tu teléfono y
+                              que confirmes una referencia. Hasta entonces no aparece en
+                              el directorio.
+                            </p>
+                          )
+                        )}
+
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {MODOS_PRECIO.map((m) => (
+                            <Chip
+                              key={m.valor}
+                              activo={e.modo === m.valor}
+                              onClick={() =>
+                                cambiarOficio(e.oficio_id, {
+                                  modo: m.valor as ModoPrecio,
+                                  // Cambiar a gratis o aporte limpia el precio: si
+                                  // se dejara puesto, el CHECK de la base rechaza
+                                  // el guardado con un mensaje que nadie entiende.
+                                  ...(m.valor === 'gratis' || m.valor === 'aporte'
+                                    ? { precio_desde: null, unidad: null }
+                                    : {}),
+                                })
+                              }
+                            >
+                              {m.etiqueta}
+                            </Chip>
+                          ))}
+                        </div>
+
+                        {cobra && (
+                          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                            <Input
+                              type="number"
+                              inputMode="numeric"
+                              min={0}
+                              step={1000}
+                              value={e.precio_desde ?? ''}
+                              onChange={(ev) =>
+                                cambiarOficio(e.oficio_id, {
+                                  precio_desde:
+                                    ev.target.value === '' ? null : Number(ev.target.value),
+                                })
+                              }
+                              placeholder="Desde cuánto (opcional)"
+                              aria-label={`Precio desde, ${oficio?.nombre ?? ''}`}
+                              className="min-w-0 flex-1"
+                            />
+                            <Select
+                              value={e.unidad ?? ''}
+                              onValueChange={(v) =>
+                                cambiarOficio(e.oficio_id, { unidad: (v || null) as UnidadPrecio | null })
+                              }
+                            >
+                              <SelectTrigger
+                                aria-label={`Unidad, ${oficio?.nombre ?? ''}`}
+                                className="min-w-0 flex-1 bg-background"
+                              >
+                                <SelectValue placeholder="¿De qué?">
+                                  {(v: string) =>
+                                    UNIDADES.find((u) => u.valor === v)?.etiqueta ?? '¿De qué?'
+                                  }
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {UNIDADES.map((u) => (
+                                  <SelectItem key={u.valor} value={u.valor}>
+                                    {u.etiqueta}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                      </li>
+                    )
+                  })}
+
+                  {/* Las propuestas, con el mismo bloque de precio. Se les
+                      dice que no se publican todavía: es la diferencia con
+                      la solicitud, que sí sale de inmediato (ADR 0013). */}
+                  {propuestas.map((x) => {
+                    const cobra = x.modo === 'solidario' || x.modo === 'normal'
+                    return (
+                      <li key={x.nombre} className="rounded-2xl bg-card p-3 shadow-canto">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="font-heading text-lg leading-tight">{x.nombre}</p>
+                          <span className="font-heading rounded-full bg-accent px-3 py-0.5 text-xs tracking-[0.085em] text-accent-foreground uppercase">
+                            {x.estado === 'rechazada' ? 'No aprobada' : 'En revisión'}
+                          </span>
+                        </div>
+                        <p className="font-heading mt-0.5 text-xs tracking-[0.085em] text-muted-foreground uppercase">
+                          {GRUPOS[x.grupo as keyof typeof GRUPOS]}
+                        </p>
+                        <p className="mt-2 rounded-xl bg-accent px-3 py-2 text-base text-accent-foreground">
+                          Lo escribiste tú. No aparece en el directorio hasta que
+                          alguien lo revise; el resto de tu ficha sí se publica.
+                        </p>
+
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {MODOS_PRECIO.map((m) => (
+                            <Chip
+                              key={m.valor}
+                              activo={x.modo === m.valor}
+                              onClick={() =>
+                                cambiarPropuesta(x.nombre, {
+                                  modo: m.valor as ModoPrecio,
+                                  ...(m.valor === 'gratis' || m.valor === 'aporte'
+                                    ? { precio_desde: null, unidad: null }
+                                    : {}),
+                                })
+                              }
+                            >
+                              {m.etiqueta}
+                            </Chip>
+                          ))}
+                        </div>
+
+                        {cobra && (
+                          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                            <Input
+                              type="number"
+                              inputMode="numeric"
+                              min={0}
+                              step={1000}
+                              value={x.precio_desde ?? ''}
+                              onChange={(ev) =>
+                                cambiarPropuesta(x.nombre, {
+                                  precio_desde:
+                                    ev.target.value === '' ? null : Number(ev.target.value),
+                                })
+                              }
+                              placeholder="Desde cuánto (opcional)"
+                              aria-label={`Precio desde, ${x.nombre}`}
+                              className="min-w-0 flex-1"
+                            />
+                            <Select
+                              value={x.unidad ?? ''}
+                              onValueChange={(v) =>
+                                cambiarPropuesta(x.nombre, {
+                                  unidad: (v || null) as UnidadPrecio | null,
+                                })
+                              }
+                            >
+                              <SelectTrigger
+                                aria-label={`Unidad, ${x.nombre}`}
+                                className="min-w-0 flex-1 bg-background"
+                              >
+                                <SelectValue placeholder="¿De qué?">
+                                  {(v: string) =>
+                                    UNIDADES.find((u) => u.valor === v)?.etiqueta ?? '¿De qué?'
+                                  }
+                                </SelectValue>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {UNIDADES.map((u) => (
+                                  <SelectItem key={u.valor} value={u.valor}>
+                                    {u.etiqueta}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+
+              <Button
+                variant="outline"
+                className="mt-3"
+                onClick={() => setPasoOficios(2)}
+              >
+                Cambiar lo que haces
+              </Button>
+            </fieldset>
+          )}
+        </div>
       ),
     },
 

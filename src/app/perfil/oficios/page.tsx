@@ -16,7 +16,8 @@ export const metadata = { title: 'Mis oficios y precios' }
  * qué oficio ni qué hacer.
  */
 export default async function OficiosPage() {
-  const { proveedor, municipios, oficios, zonas } = await cargarPerfil()
+  const { proveedor, municipios, oficios, oficiosPropuestos, zonas } =
+    await cargarPerfil()
 
   if (!proveedor) redirect('/servicios/soy-proveedor')
 
@@ -27,6 +28,7 @@ export default async function OficiosPage() {
       proveedor={proveedor}
       municipios={municipios}
       oficios={oficios}
+      oficiosPropuestos={oficiosPropuestos}
       zonas={zonas}
       titulo="Mis oficios y precios"
       volver="/perfil"

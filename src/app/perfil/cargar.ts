@@ -2,6 +2,7 @@ import 'server-only'
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { servidor } from '@/orpc/local'
 import { listarMunicipios } from '@/lib/municipios'
 import type { Database, MiProveedor } from '@/lib/types'
 import type { MiReferencia } from '@/components/campos-referencia'
@@ -38,6 +39,7 @@ export async function cargarPerfil() {
     { data: refs },
     { data: servicios },
     { data: perfilOfertador },
+    oficiosPropuestos,
   ] = await Promise.all([
     supabase.rpc('mi_proveedor', {}),
     supabase.from('catalogo_oficios').select('*').eq('activo', true).order('orden'),
@@ -53,6 +55,10 @@ export async function cargarPerfil() {
     // en /registro, y sin esta comprobación esas dos vistas se quedarían sin
     // ninguna puerta al retirar las pestañas viejas.
     supabase.from('perfiles').select('id').eq('id', user.id).maybeSingle(),
+    // Las subcategorías que escribió y todavía no existen (ADR 0013). No
+    // están en `mi_proveedor` porque no son oficios todavía: no tienen id
+    // de catálogo y no se publican.
+    servidor.servicios.oficiosPropuestos(),
   ])
 
   const proveedor = (mio as MiProveedor | null) ?? null
@@ -64,6 +70,7 @@ export async function cargarPerfil() {
     /** Tiene perfil en el módulo de emergencia, que es otro rol. */
     esOfertador: Boolean(perfilOfertador),
     oficios: (oficios ?? []) as Oficio[],
+    oficiosPropuestos,
     zonas: (zonas ?? []) as Zona[],
     municipios: municipios ?? [],
     referencias: (refs as unknown as MiReferencia[]) ?? [],
