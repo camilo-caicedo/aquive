@@ -6,19 +6,36 @@ import { cn } from "@/lib/utils"
 const buttonVariants = cva(
   // AquíVe: `rounded-full` en vez de `rounded-lg` — la identidad usa
   // píldoras. Los altos no cambian: el mínimo táctil de 48px sigue igual.
-  "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-[transform,box-shadow,background-color,border-color,color,opacity] duration-[var(--dur-toque)] ease-[var(--curva-suave)] outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
+        // AquíVe: el prensado de cartel. La sombra dura de 3 px baja a 1 px
+        // mientras el botón se desplaza 2 px hacia ella — el gesto de un
+        // sello sobre papel, que es de donde sale la identidad (ADR 0002).
+        //
+        // ⚠ Estaba copiado a mano en nueve archivos y el botón compartido
+        // hacía un `translate-y-px` de UN píxel, así que un puñado de
+        // botones tenía el gesto bueno y todos los demás uno que no se ve.
+        // Vive aquí, y de aquí lo hereda toda la aplicación.
+        //
+        // Solo en la lima, que es la acción principal —una por pantalla,
+        // regla de interfaz 2—: veinte sombras duras en una pantalla no son
+        // una identidad, son ruido.
+        default:
+          "bg-primary text-primary-foreground shadow-boton hover:bg-primary/80 active:not-aria-[haspopup]:translate-x-[2px] active:not-aria-[haspopup]:translate-y-[2px] active:not-aria-[haspopup]:shadow-boton-hundido",
+        // Las secundarias se hunden encogiendo, sin sombra: dan la misma
+        // respuesta al dedo sin competir con la principal.
         outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+          "border-border bg-background hover:bg-muted hover:text-foreground active:not-aria-[haspopup]:scale-[0.97] aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] active:not-aria-[haspopup]:scale-[0.97] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+        // `ghost` y `link` se quedan solo con color. Son lo secundario de lo
+        // secundario y un gesto ahí compite con la acción de la pantalla.
         ghost:
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
+          "bg-destructive/10 text-destructive hover:bg-destructive/20 active:not-aria-[haspopup]:scale-[0.97] focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-enlace underline-offset-4 hover:underline",
       },
       size: {

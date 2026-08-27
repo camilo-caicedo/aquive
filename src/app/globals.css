@@ -24,6 +24,23 @@
    Un solo tema claro a propósito — el modo oscuro automático rompía el
    contraste de los controles nativos en gama baja. */
 :root {
+  /* El vocabulario de movimiento. Antes cada animación repetía su curva y
+     su duración a mano, en seis sitios, y no coincidían entre sí.
+
+     Nada pasa de 300 ms: el público lee de pie y con prisa, y una espera
+     que se nota es una espera de más.
+
+     ⚠ Van aquí y NO en `@theme inline`: Tailwind poda de `@theme` lo que
+     no se usa como clase de utilidad, y estos se leen con `var()` desde
+     los `@keyframes` y desde valores arbitrarios. Ahí dentro,
+     `--dur-corta` llegaba al navegador vacío. */
+  --curva-entrada: cubic-bezier(0.16, 1, 0.3, 1); /* arranca rápido y frena */
+  --curva-suave: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-toque: 120ms; /* responder a un dedo */
+  --dur-corta: 180ms; /* color, foco, chips */
+  --dur-media: 240ms; /* entradas de tarjeta y de pantalla */
+  --dur-hoja: 300ms; /* hojas y modales */
+
   color-scheme: light;
   --background: #f5eee2; /* crema */
   --foreground: #1d1d1b; /* tinta */
@@ -146,6 +163,7 @@
      compiten. */
   --shadow-boton: 3px 3px 0 var(--foreground);
   --shadow-boton-hundido: 1px 1px 0 var(--foreground);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -249,7 +267,33 @@
 }
 
 .animar-entrada {
-  animation: aparecer 0.28s ease-out both;
+  animation: aparecer var(--dur-media) var(--curva-entrada) both;
+}
+
+/* La pantalla entera al montarse.
+ *
+ * ⚠ Es el sustituto de la transición entre rutas. Lo que se pidió fue
+ * encender `experimental.viewTransition`, y esa bandera NO existe: Next
+ * 16.3 no la tiene en su esquema —solo `transitionIndicator` y
+ * `gestureTransition`, que son otra cosa— y React 19.2.8 no exporta
+ * `unstable_ViewTransition`. Comprobado contra node_modules.
+ *
+ * Con la barra de carga arriba y esto abajo, cambiar de pantalla tiene
+ * principio y final sin tocar ninguna API experimental — que en esta
+ * aplicación ya costó caro una vez (ADR 0005). */
+.animar-pantalla {
+  animation: entrar-pantalla var(--dur-media) var(--curva-entrada) both;
+}
+
+@keyframes entrar-pantalla {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* La hoja que sube. Solo transform y opacidad, como todo lo demás: el
@@ -267,7 +311,7 @@
 }
 
 .animar-hoja {
-  animation: subir-hoja 0.24s ease-out both;
+  animation: subir-hoja var(--dur-hoja) var(--curva-entrada) both;
 }
 
 /* La barra de carga al cambiar de pantalla. Solo `transform`, como todo lo
@@ -291,6 +335,8 @@
 
 .barra-avance {
   animation: avance 8s cubic-bezier(0.1, 0.6, 0.2, 1) forwards;
+  /* La curva de aquí es propia y no un token: no es una entrada, es una
+     espera de duración desconocida que tiene que frenar antes del final. */
 }
 
 /* La barra de acción de un flujo, dentro de una hoja modal.
@@ -363,7 +409,7 @@ body:has(dialog[open]) {
 }
 
 .animar-hoja::backdrop {
-  animation: aparecer-fondo 0.24s ease-out both;
+  animation: aparecer-fondo var(--dur-hoja) var(--curva-suave) both;
 }
 
 @keyframes aparecer-fondo {
@@ -387,8 +433,35 @@ body:has(dialog[open]) {
 .lista-escalonada > *:nth-child(7) { animation-delay: 240ms; }
 .lista-escalonada > *:nth-child(n + 8) { animation-delay: 280ms; }
 
+/* ⚠ La tarjeta se puede tocar desde el primer fotograma, aunque todavía
+   esté entrando. Sin esto, una lista escalonada se siente MÁS lenta que
+   una que aparece de golpe: los primeros toques no hacen nada y quien
+   tiene prisa vuelve a tocar. */
+.lista-escalonada > * {
+  pointer-events: auto;
+}
+
 .punto-urgente {
   animation: latido-suave 2s ease-in-out infinite;
+}
+
+/* --------------------------------------------------------------------
+   El hover, solo donde hay un puntero de verdad.
+
+   ⚠ En un teléfono táctil el estado `:hover` se queda PEGADO después de
+   tocar, hasta que se toca otra cosa. Una tarjeta con `hover:-translate-y`
+   se quedaba levantada sin motivo y se leía como seleccionada.
+
+   Esto lo apaga en cualquier aparato sin puntero fino, sin tener que tocar
+   los cincuenta y siete sitios que usan `hover:`. Tailwind emite el hover
+   como `&:hover`, así que basta con neutralizar el transform ahí.
+   -------------------------------------------------------------------- */
+@media not all and (hover: hover) and (pointer: fine) {
+  .hover\:-translate-y-0\.5:hover,
+  .hover\:-translate-y-1:hover,
+  .hover\:translate-y-0\.5:hover {
+    transform: none;
+  }
 }
 
 /* Quien pidió menos movimiento no recibe ninguno. */
@@ -478,8 +551,8 @@ body:has([data-accion-principal]) [data-pie-de-pagina] {
 
 [popover].hoja-inferior {
   transition:
-    transform 0.22s ease-out,
-    opacity 0.22s ease-out,
+    transform var(--dur-hoja) var(--curva-entrada),
+    opacity var(--dur-hoja) var(--curva-entrada),
     overlay 0.22s allow-discrete,
     display 0.22s allow-discrete;
   transform: translateY(0);
