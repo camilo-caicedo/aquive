@@ -1,9 +1,8 @@
 import Link from 'next/link'
-import { MapPin, MessageSquare, HeartHandshake } from 'lucide-react'
+import { MapPin, MessageSquare, MessagesSquare } from 'lucide-react'
 import { categoria, horasParaVencer } from '@/lib/catalogo'
 import type { MiRespuesta } from '@/lib/types'
 import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 
 /**
  * Lo que respondió quien ofrece ayuda.
@@ -44,28 +43,7 @@ export function MisRespuestas({ respuestas }: { respuestas: MiRespuesta[] }) {
               {r.municipio} — {r.barrio} · {categoria(r.categoria).etiqueta}
             </p>
 
-            {r.flujo === 'acompanado' && r.tiene_hilo && (
-              <p className="bg-ok-suave mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium text-foreground">
-                <HeartHandshake className="size-4 shrink-0" aria-hidden="true" />
-                Una fundación acompaña esta entrega
-              </p>
-            )}
-
             <p className="mt-2 text-base text-muted-foreground">{r.mensaje}</p>
-
-            {/* El caso que se nos escapó dos veces probando: alguien
-                responde, y DESPUÉS quien pidió activa el acompañamiento.
-                Su respuesta se conserva —§7— pero la coordinación ya pasó
-                adentro, y nadie se lo había dicho. */}
-            {r.flujo === 'acompanado' && !r.tiene_hilo && (
-              <Alert className="mt-3">
-                <AlertDescription>
-                  Después de que respondiste, esta persona pidió que una
-                  fundación acompañe la entrega. Ahora se coordina aquí
-                  dentro, con los tres en la misma conversación.
-                </AlertDescription>
-              </Alert>
-            )}
 
             <p className="mt-2 flex items-center gap-1.5 text-base text-muted-foreground">
               <MessageSquare className="size-4 shrink-0" aria-hidden="true" />
@@ -74,29 +52,19 @@ export function MisRespuestas({ respuestas }: { respuestas: MiRespuesta[] }) {
                 : `Otras ${r.num_respuestas - 1} personas también respondieron`}
             </p>
 
-            {/* No hay enlace a la pantalla de quien pidió —solo ella tiene
-                el token— pero sí a la solicitud, que es donde se puede
-                volver a mirar, y donde se abre la conversación. */}
-            {r.tiene_hilo ? (
-              <Button
-                variant="outline"
-                className="mt-3 w-full"
-                nativeButton={false}
-                render={<Link href="/aliado" />}
-              >
-                <MessageSquare className="size-5" aria-hidden="true" />
-                Ver la conversación
-              </Button>
-            ) : (
-              <Button
-                variant={r.flujo === 'acompanado' ? 'default' : 'outline'}
-                className="mt-3 w-full"
-                nativeButton={false}
-                render={<Link href="/ayudas" />}
-              >
-                {r.flujo === 'acompanado' ? 'Abrir la conversación' : 'Ver la solicitud'}
-              </Button>
-            )}
+            {/* La puerta al hilo. Cuelga de la respuesta, así que abrirlo
+                desde aquí es lo que hace que quien pidió lo vea después en
+                su bandeja: antes de esto no había forma de escribirle sin
+                darle un teléfono. */}
+            <Button
+              variant="outline"
+              className="mt-3 w-full"
+              nativeButton={false}
+              render={<Link href={`/chat/insumo/${r.id}`} />}
+            >
+              <MessagesSquare className="size-5" aria-hidden="true" />
+              Escribir a quien pidió
+            </Button>
           </li>
         )
       })}

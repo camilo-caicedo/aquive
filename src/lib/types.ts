@@ -707,11 +707,8 @@ export interface MiRespuesta {
   municipio: string
   barrio: string
   categoria: Categoria
-  flujo: FlujoSolicitud
   expira_at: string
   num_respuestas: number
-  /** Si ya hay conversacion abierta con esta persona en esa solicitud. */
-  tiene_hilo: boolean
 }
 
 // Lo que devuelve `unirse_a_organizacion`.

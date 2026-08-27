@@ -156,14 +156,15 @@ export default function PrivacidadPage() {
 
       <h2 className="font-heading mt-8 text-2xl">Si necesitas un servicio: seguimos sin guardar datos tuyos.</h2>
       <p className="mt-3 text-base">
-        Buscar en el directorio no exige cuenta ni deja rastro tuyo. Si publicas lo que necesitas,
-        guardamos únicamente el oficio, el municipio, la zona, qué tan urgente es, si puedes pagar y
-        una nota opcional de 140 caracteres. Nada de nombre, teléfono, dirección exacta ni quiénes
-        viven contigo.
+        Buscar en el directorio no exige cuenta ni deja rastro tuyo. Publicar lo que necesitas sí
+        pide una cuenta —para que puedas volver a lo tuyo, renovarlo y borrarlo—, pero de la
+        solicitud guardamos únicamente el oficio, el municipio, la zona, qué tan urgente es, si
+        puedes pagar y una nota opcional de 140 caracteres. Nada de nombre, teléfono, dirección
+        exacta ni quiénes viven contigo. Si no tienes cuenta de Google, la fundación te crea una.
       </p>
       <p className="mt-3 text-base">
         Esa solicitud se borra a los 15 días. Puedes renovarla, cerrarla o borrarla antes desde tu
-        enlace secreto, igual que en la ayuda de emergencia. Al borrarla queda un registro anónimo
+        perfil, igual que en la ayuda de emergencia. Al borrarla queda un registro anónimo
         —municipio, oficio y si alguien respondió— que no permite identificar a nadie.
       </p>
       <p className="mt-3 text-base">

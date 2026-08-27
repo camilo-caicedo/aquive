@@ -1,132 +1,251 @@
-import { and, asc, desc, eq, sql } from 'drizzle-orm'
+import { and, asc, eq, sql } from 'drizzle-orm'
+import type { SQL } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
 import {
   catalogoOficios,
-  chatsServicio,
-  mensajesServicio,
+  chats,
+  mensajes as mensajesTabla,
+  productos,
   proveedores,
+  publicacionesMuro,
+  respuestas,
   respuestasServicio,
+  solicitudes,
   solicitudesServicio,
 } from '@/db/esquema'
 import { MENSAJE_CONTACTO, contieneContacto } from '@/lib/validacion'
-import type { Autor, Hilo, HiloEnBandeja, Mensaje } from '@/contrato/chat'
+import type { Autor, Hilo, HiloEnBandeja, Mensaje, Origen } from '@/contrato/chat'
 
-// El chat de Servicios. Capa de dominio: sin `next/*`, sin cookies.
+// El chat, uno solo. Capa de dominio: sin `next/*`, sin cookies.
 //
-// Dos participantes con dos formas de identificarse, y esa asimetría no es
-// accidental. Los dos lados tienen cuenta desde el ADR 0006, así que el
-// papel de cada uno sale de comparar con quién es dueño de qué: de la
-// solicitud, quien pide; de la ficha, el prestador.
+// Un hilo tiene siempre dos lados —quien ofrece y quien pide— y lo único que
+// cambia entre los cuatro módulos es de dónde salen esos dos lados. Eso vive
+// en `partes()`, que es la única función que sabe que existen módulos. Todo
+// lo demás —el filtro, los mensajes, la bandeja— es común.
 
-/** Quién está hablando, decidido por lo que trae y no por lo que dice. */
-async function quienEs(
-  db: BaseDeDatos,
-  respuestaId: string,
-  llave: { usuarioId: string | null },
-): Promise<Autor | null> {
-  if (!llave.usuarioId) return null
+/**
+ * Los dos lados de un hilo.
+ *
+ * Un lado en `null` significa «lo ocupa quien abra el hilo». Pasa cuando el
+ * origen solo identifica a uno: un producto dice quién vende pero no quién
+ * pregunta, y una publicación del muro dice quién dona pero no quién recibe.
+ * Una respuesta —de servicio o de insumo— ya identifica a los dos.
+ */
+type Partes = {
+  ofrece: string | null
+  pide: string | null
+  asunto: string | null
+  nombreOfrece: string | null
+  nombrePide: string | null
+}
 
-  const [fila] = await db
+/** Cómo se llama el otro cuando no publicó su nombre. */
+const ANONIMO: Record<Origen['tipo'], { ofrece: string; pide: string }> = {
+  servicio: { ofrece: 'El prestador', pide: 'Quien pidió el servicio' },
+  insumo: { ofrece: 'Quien puede ayudar', pide: 'Quien pidió el insumo' },
+  producto: { ofrece: 'Quien vende', pide: 'Quien preguntó' },
+  muro: { ofrece: 'Quien lo ofrece', pide: 'Quien lo necesita' },
+}
+
+/** De dónde salen los dos lados. La única función que distingue módulos. */
+async function partes(db: BaseDeDatos, origen: Origen): Promise<Partes | null> {
+  if (origen.tipo === 'servicio') {
+    const [f] = await db
+      .select({
+        ofrece: proveedores.perfilId,
+        pide: solicitudesServicio.perfilId,
+        asunto: catalogoOficios.nombre,
+        nombreOfrece: proveedores.nombreVisible,
+      })
+      .from(respuestasServicio)
+      .innerJoin(
+        solicitudesServicio,
+        eq(solicitudesServicio.id, respuestasServicio.solicitudId),
+      )
+      .innerJoin(proveedores, eq(proveedores.id, respuestasServicio.proveedorId))
+      .leftJoin(catalogoOficios, eq(catalogoOficios.id, solicitudesServicio.oficioId))
+      .where(eq(respuestasServicio.id, origen.id))
+      .limit(1)
+    // Quien pide un servicio no publica su nombre, y no se le inventa uno.
+    return f ? { ...f, nombrePide: null } : null
+  }
+
+  if (origen.tipo === 'insumo') {
+    const [f] = await db
+      .select({
+        ofrece: respuestas.autorId,
+        pide: solicitudes.perfilId,
+        asunto: solicitudes.categoria,
+      })
+      .from(respuestas)
+      .innerJoin(solicitudes, eq(solicitudes.id, respuestas.solicitudId))
+      .where(eq(respuestas.id, origen.id))
+      .limit(1)
+    // En insumos nadie publica nombre: ni quien pide ni quien responde.
+    return f ? { ...f, nombreOfrece: null, nombrePide: null } : null
+  }
+
+  if (origen.tipo === 'producto') {
+    const [f] = await db
+      .select({
+        ofrece: proveedores.perfilId,
+        asunto: productos.nombre,
+        nombreOfrece: proveedores.nombreVisible,
+      })
+      .from(productos)
+      .innerJoin(proveedores, eq(proveedores.id, productos.proveedorId))
+      .where(eq(productos.id, origen.id))
+      .limit(1)
+    return f ? { ...f, pide: null, nombrePide: null } : null
+  }
+
+  const [f] = await db
     .select({
-      dePide: solicitudesServicio.perfilId,
-      delPrestador: proveedores.perfilId,
+      cara: publicacionesMuro.cara,
+      perfil: publicacionesMuro.perfilId,
+      asunto: publicacionesMuro.titulo,
+      nombre: publicacionesMuro.autorNombre,
     })
-    .from(respuestasServicio)
-    .innerJoin(
-      solicitudesServicio,
-      eq(solicitudesServicio.id, respuestasServicio.solicitudId),
-    )
-    .innerJoin(proveedores, eq(proveedores.id, respuestasServicio.proveedorId))
-    .where(eq(respuestasServicio.id, respuestaId))
+    .from(publicacionesMuro)
+    .where(eq(publicacionesMuro.id, origen.id))
     .limit(1)
 
-  if (!fila) return null
+  if (!f) return null
 
-  // El orden importa poco pero la exclusión sí: una cuenta no puede ser los
-  // dos lados del mismo hilo, y si lo fuera —alguien se responde a sí
-  // mismo— vale que sea quien pide, que es el papel con menos permisos.
-  if (fila.dePide === llave.usuarioId) return 'quien_pide'
-  if (fila.delPrestador === llave.usuarioId) return 'prestador'
+  // Las dos caras del muro son el mismo hilo al revés: en «ofrece» el dueño
+  // tiene la cosa, en «necesita» la necesita. Solo la primera lleva nombre
+  // publicado, que es lo que exige el `check` de la tabla.
+  return f.cara === 'ofrece'
+    ? {
+        ofrece: f.perfil,
+        pide: null,
+        asunto: f.asunto,
+        nombreOfrece: f.nombre,
+        nombrePide: null,
+      }
+    : {
+        ofrece: null,
+        pide: f.perfil,
+        asunto: f.asunto,
+        nombreOfrece: null,
+        nombrePide: f.nombre,
+      }
+}
 
+/**
+ * Qué papel juega quien llega, decidido por de qué es dueño y no por lo que
+ * dice. Si un lado está abierto lo ocupa quien no sea el otro, y por eso los
+ * dos lados conocidos se comprueban primero: nadie es sus dos lados.
+ */
+function papel(p: Partes, usuarioId: string | null): Autor | null {
+  if (!usuarioId) return null
+  if (p.ofrece === usuarioId) return 'ofrece'
+  if (p.pide === usuarioId) return 'pide'
+  if (p.ofrece === null) return 'ofrece'
+  if (p.pide === null) return 'pide'
   return null
+}
+
+/** Dónde vive la fila del hilo, según de qué cuelgue. */
+function donde(origen: Origen, iniciadoPor: string | null): SQL {
+  switch (origen.tipo) {
+    case 'servicio':
+      return eq(chats.respuestaServicioId, origen.id)
+    case 'insumo':
+      return eq(chats.respuestaInsumoId, origen.id)
+    case 'producto':
+      return and(eq(chats.productoId, origen.id), eq(chats.iniciadoPor, iniciadoPor!)) as SQL
+    case 'muro':
+      return and(eq(chats.publicacionId, origen.id), eq(chats.iniciadoPor, iniciadoPor!)) as SQL
+  }
+}
+
+function valores(origen: Origen, iniciadoPor: string | null) {
+  switch (origen.tipo) {
+    case 'servicio':
+      return { respuestaServicioId: origen.id }
+    case 'insumo':
+      return { respuestaInsumoId: origen.id }
+    case 'producto':
+      return { productoId: origen.id, iniciadoPor }
+    case 'muro':
+      return { publicacionId: origen.id, iniciadoPor }
+  }
+}
+
+/**
+ * Quién ocupa el lado abierto. `null` cuando el origen ya identifica a los
+ * dos, que es lo que el `check` de la base espera en esas dos columnas.
+ */
+function iniciador(p: Partes, usuarioId: string): string | null {
+  return p.ofrece === null || p.pide === null ? usuarioId : null
 }
 
 /** El hilo, creándolo si es la primera vez que alguien entra. */
 export async function leer(
   db: BaseDeDatos,
-  respuestaId: string,
-  llave: { token?: string; usuarioId: string | null },
+  origen: Origen,
+  llave: { usuarioId: string | null },
 ): Promise<Hilo | null> {
-  const autor = await quienEs(db, respuestaId, llave)
+  const p = await partes(db, origen)
+  if (!p || !llave.usuarioId) return null
+
+  const autor = papel(p, llave.usuarioId)
   if (!autor) return null
 
-  const [contexto] = await db
-    .select({
-      nombrePrestador: proveedores.nombreVisible,
-      oficio: catalogoOficios.nombre,
-    })
-    .from(respuestasServicio)
-    .innerJoin(proveedores, eq(proveedores.id, respuestasServicio.proveedorId))
-    .innerJoin(
-      solicitudesServicio,
-      eq(solicitudesServicio.id, respuestasServicio.solicitudId),
-    )
-    .leftJoin(catalogoOficios, eq(catalogoOficios.id, solicitudesServicio.oficioId))
-    .where(eq(respuestasServicio.id, respuestaId))
-    .limit(1)
+  const iniciadoPor = iniciador(p, llave.usuarioId)
+  const seleccion = { id: chats.id, cerradoAt: chats.cerradoAt }
 
-  // El hilo se crea al abrirlo y no al responder: una respuesta que nadie
-  // abre no tiene por qué dejar una fila vacía en la base.
+  // El hilo se crea al abrirlo y no al publicar: un producto que nadie
+  // pregunta no tiene por qué dejar una fila vacía en la base.
   let [chat] = await db
-    .select({ id: chatsServicio.id, cerradoAt: chatsServicio.cerradoAt })
-    .from(chatsServicio)
-    .where(eq(chatsServicio.respuestaId, respuestaId))
+    .select(seleccion)
+    .from(chats)
+    .where(donde(origen, iniciadoPor))
     .limit(1)
 
   if (!chat) {
     const [creado] = await db
-      .insert(chatsServicio)
-      .values({ respuestaId })
+      .insert(chats)
+      .values(valores(origen, iniciadoPor))
       .onConflictDoNothing()
-      .returning({ id: chatsServicio.id, cerradoAt: chatsServicio.cerradoAt })
+      .returning(seleccion)
     chat =
       creado ??
       (
         await db
-          .select({ id: chatsServicio.id, cerradoAt: chatsServicio.cerradoAt })
-          .from(chatsServicio)
-          .where(eq(chatsServicio.respuestaId, respuestaId))
+          .select(seleccion)
+          .from(chats)
+          .where(donde(origen, iniciadoPor))
           .limit(1)
       )[0]
   }
 
-  const mensajes = await db
+  const filas = await db
     .select({
-      id: mensajesServicio.id,
-      autor: mensajesServicio.autor,
-      cuerpo: mensajesServicio.cuerpo,
-      creado_at: mensajesServicio.creadoAt,
+      id: mensajesTabla.id,
+      autor: mensajesTabla.autor,
+      cuerpo: mensajesTabla.cuerpo,
+      creado_at: mensajesTabla.creadoAt,
     })
-    .from(mensajesServicio)
-    .where(
-      and(eq(mensajesServicio.chatId, chat.id), eq(mensajesServicio.oculto, false)),
-    )
-    .orderBy(asc(mensajesServicio.creadoAt))
+    .from(mensajesTabla)
+    .where(and(eq(mensajesTabla.chatId, chat.id), eq(mensajesTabla.oculto, false)))
+    .orderBy(asc(mensajesTabla.creadoAt))
+
+  const anonimo = ANONIMO[origen.tipo]
 
   return {
     id: chat.id,
-    respuesta_id: respuestaId,
+    origen,
     cerrado: chat.cerradoAt !== null,
-    soy: autor,
-    // Quien pide no tiene nombre publicado y no se le inventa uno: al
-    // prestador se le dice de qué pedido viene el hilo, no quién es.
     con:
-      autor === 'quien_pide'
-        ? (contexto?.nombrePrestador ?? 'El prestador')
-        : 'Quien pidió el servicio',
-    oficio: contexto?.oficio ?? null,
-    mensajes: mensajes.map((m) => ({
+      autor === 'pide'
+        ? (p.nombreOfrece ?? anonimo.ofrece)
+        : (p.nombrePide ?? anonimo.pide),
+    soy: autor,
+    asunto: p.asunto,
+    mensajes: filas.map((m) => ({
       id: m.id,
       autor: m.autor as Autor,
       cuerpo: m.cuerpo,
@@ -147,32 +266,35 @@ export class ChatRechazado extends Error {}
  */
 export async function escribir(
   db: BaseDeDatos,
-  entrada: { respuestaId: string; cuerpo: string },
-  llave: { token?: string; usuarioId: string | null },
+  entrada: { origen: Origen; cuerpo: string },
+  llave: { usuarioId: string | null },
 ): Promise<{ mensaje: Mensaje }> {
-  const autor = await quienEs(db, entrada.respuestaId, llave)
-  if (!autor) throw new ChatRechazado('No puedes escribir en este hilo.')
+  const p = await partes(db, entrada.origen)
+  const autor = p ? papel(p, llave.usuarioId) : null
+  if (!p || !autor || !llave.usuarioId) {
+    throw new ChatRechazado('No puedes escribir en este hilo.')
+  }
 
   const cuerpo = entrada.cuerpo.trim()
   if (contieneContacto(cuerpo)) throw new ChatRechazado(MENSAJE_CONTACTO)
 
   const [chat] = await db
-    .select({ id: chatsServicio.id, cerradoAt: chatsServicio.cerradoAt })
-    .from(chatsServicio)
-    .where(eq(chatsServicio.respuestaId, entrada.respuestaId))
+    .select({ id: chats.id, cerradoAt: chats.cerradoAt })
+    .from(chats)
+    .where(donde(entrada.origen, iniciador(p, llave.usuarioId)))
     .limit(1)
 
   if (!chat) throw new ChatRechazado('El hilo todavía no está abierto.')
   if (chat.cerradoAt !== null) throw new ChatRechazado('Este hilo ya se cerró.')
 
   const [creado] = await db
-    .insert(mensajesServicio)
+    .insert(mensajesTabla)
     .values({ chatId: chat.id, autor, cuerpo })
     .returning({
-      id: mensajesServicio.id,
-      autor: mensajesServicio.autor,
-      cuerpo: mensajesServicio.cuerpo,
-      creado_at: mensajesServicio.creadoAt,
+      id: mensajesTabla.id,
+      autor: mensajesTabla.autor,
+      cuerpo: mensajesTabla.cuerpo,
+      creado_at: mensajesTabla.creadoAt,
     })
 
   return {
@@ -185,12 +307,28 @@ export async function escribir(
   }
 }
 
+type FilaBandeja = {
+  tipo: Origen['tipo']
+  origen_id: string
+  ofrece_id: string | null
+  pide_id: string | null
+  asunto: string | null
+  nombre_ofrece: string | null
+  nombre_pide: string | null
+  ultimo: string | null
+  ultimo_at: string | null
+  mensajes: number
+}
+
 /**
- * La bandeja del prestador.
+ * La bandeja: todos los hilos de quien está en sesión, de los dos lados y de
+ * los cuatro módulos.
  *
- * Solo del lado con cuenta, y eso no es una carencia: quien pide un servicio
- * no tiene cuenta a propósito, así que no existe nadie a quien listarle sus
- * hilos. Los suyos viven en el enlace de su solicitud.
+ * En SQL crudo y no con el constructor de consultas a propósito. Son cuatro
+ * orígenes con cuatro cadenas de `join` distintas que hay que aplanar a una
+ * sola forma de fila; la alternativa —cuatro consultas y mezclar en
+ * TypeScript— sería exactamente la lógica repetida que este cambio vino a
+ * quitar.
  */
 export async function bandeja(
   db: BaseDeDatos,
@@ -198,48 +336,79 @@ export async function bandeja(
 ): Promise<HiloEnBandeja[]> {
   if (!usuarioId) return []
 
-  const filas = await db
-    .select({
-      respuestaId: respuestasServicio.id,
-      oficio: catalogoOficios.nombre,
-      chatId: chatsServicio.id,
-    })
-    .from(chatsServicio)
-    .innerJoin(respuestasServicio, eq(respuestasServicio.id, chatsServicio.respuestaId))
-    .innerJoin(proveedores, eq(proveedores.id, respuestasServicio.proveedorId))
-    .innerJoin(
-      solicitudesServicio,
-      eq(solicitudesServicio.id, respuestasServicio.solicitudId),
+  const { rows } = await db.execute<FilaBandeja>(sql`
+    with hilos as (
+      select
+        c.id,
+        case
+          when c.respuesta_servicio_id is not null then 'servicio'
+          when c.respuesta_insumo_id is not null then 'insumo'
+          when c.producto_id is not null then 'producto'
+          else 'muro'
+        end as tipo,
+        coalesce(
+          c.respuesta_servicio_id, c.respuesta_insumo_id, c.producto_id, c.publicacion_id
+        ) as origen_id,
+        coalesce(
+          pv.perfil_id,
+          ri.autor_id,
+          pp.perfil_id,
+          case when pm.cara = 'ofrece' then pm.perfil_id else c.iniciado_por end
+        ) as ofrece_id,
+        coalesce(
+          ss.perfil_id,
+          si.perfil_id,
+          case when c.producto_id is not null then c.iniciado_por end,
+          case when pm.cara = 'necesita' then pm.perfil_id else c.iniciado_por end
+        ) as pide_id,
+        coalesce(co.nombre, si.categoria, pr.nombre, pm.titulo) as asunto,
+        coalesce(
+          pv.nombre_visible,
+          pp.nombre_visible,
+          case when pm.cara = 'ofrece' then pm.autor_nombre end
+        ) as nombre_ofrece,
+        case when pm.cara = 'necesita' then pm.autor_nombre end as nombre_pide
+      from chats c
+      left join respuestas_servicio rs on rs.id = c.respuesta_servicio_id
+      left join solicitudes_servicio ss on ss.id = rs.solicitud_id
+      left join proveedores pv on pv.id = rs.proveedor_id
+      left join catalogo_oficios co on co.id = ss.oficio_id
+      left join respuestas ri on ri.id = c.respuesta_insumo_id
+      left join solicitudes si on si.id = ri.solicitud_id
+      left join productos pr on pr.id = c.producto_id
+      left join proveedores pp on pp.id = pr.proveedor_id
+      left join publicaciones_muro pm on pm.id = c.publicacion_id
     )
-    .leftJoin(catalogoOficios, eq(catalogoOficios.id, solicitudesServicio.oficioId))
-    .where(eq(proveedores.perfilId, usuarioId))
+    select h.tipo, h.origen_id, h.ofrece_id, h.pide_id, h.asunto,
+           h.nombre_ofrece, h.nombre_pide,
+           u.cuerpo as ultimo, u.creado_at as ultimo_at,
+           coalesce(n.total, 0)::int as mensajes
+    from hilos h
+    left join lateral (
+      select m.cuerpo, m.creado_at from mensajes m
+      where m.chat_id = h.id and not m.oculto
+      order by m.creado_at desc limit 1
+    ) u on true
+    left join lateral (
+      select count(*)::int as total from mensajes m
+      where m.chat_id = h.id and not m.oculto
+    ) n on true
+    where ${usuarioId} in (h.ofrece_id, h.pide_id)
+    order by u.creado_at desc nulls last
+  `)
 
-  const salida: HiloEnBandeja[] = []
-  for (const f of filas) {
-    const [ultimo] = await db
-      .select({ cuerpo: mensajesServicio.cuerpo, creado: mensajesServicio.creadoAt })
-      .from(mensajesServicio)
-      .where(
-        and(eq(mensajesServicio.chatId, f.chatId), eq(mensajesServicio.oculto, false)),
-      )
-      .orderBy(desc(mensajesServicio.creadoAt))
-      .limit(1)
-
-    const [{ n }] = await db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(mensajesServicio)
-      .where(eq(mensajesServicio.chatId, f.chatId))
-
-    salida.push({
-      respuesta_id: f.respuestaId,
-      // Quien pidió no tiene nombre publicado, y no se le inventa uno.
-      con: 'Quien pidió el servicio',
-      oficio: f.oficio ?? null,
-      ultimo: ultimo?.cuerpo ?? null,
-      ultimo_at: ultimo ? String(ultimo.creado) : null,
-      mensajes: Number(n),
-    })
-  }
-
-  return salida.sort((a, b) => (b.ultimo_at ?? '').localeCompare(a.ultimo_at ?? ''))
+  return rows.map((f) => {
+    const anonimo = ANONIMO[f.tipo]
+    return {
+      origen: { tipo: f.tipo, id: f.origen_id },
+      con:
+        f.ofrece_id === usuarioId
+          ? (f.nombre_pide ?? anonimo.pide)
+          : (f.nombre_ofrece ?? anonimo.ofrece),
+      asunto: f.asunto,
+      ultimo: f.ultimo,
+      ultimo_at: f.ultimo_at ? String(f.ultimo_at) : null,
+      mensajes: Number(f.mensajes),
+    }
+  })
 }

@@ -1,12 +1,32 @@
 import { oc } from '@orpc/contract'
 import { z } from 'zod'
 
-// El chat de Servicios. ADR 0003, decisión 1.
+// El chat, uno solo para toda la aplicación.
 //
-// Bilateral: quien pide un servicio y el prestador que respondió. Nada que
-// ver con `conversaciones`, que es el hilo trilateral del flujo acompañado.
+// Nació atado a los pedidos de servicio y era el único que había: productos,
+// donaciones e insumos no tenían ninguno y el contacto era por fuera. Ahora
+// un hilo cuelga de cualquiera de las cuatro cosas que dos personas pueden
+// tener que acordar, y de ahí salen los dos papeles.
+//
+// Los botones de WhatsApp y de llamar se quedan donde están. Quien publica
+// una ficha o un producto puso su teléfono a propósito; el chat es la puerta
+// para quien NO quiere dar el suyo, no un reemplazo de la que ya existe.
 
-export const Autor = z.enum(['quien_pide', 'prestador'])
+/** De qué cuelga un hilo. Muere con ello — regla de producto 3. */
+export const Origen = z.object({
+  tipo: z.enum(['servicio', 'insumo', 'producto', 'muro']),
+  id: z.uuid(),
+})
+
+export type Origen = z.infer<typeof Origen>
+
+/**
+ * Los dos papeles, con los mismos nombres en los cuatro módulos.
+ *
+ * `ofrece` tiene la cosa o el trabajo; `pide` la necesita. Antes eran
+ * `prestador` y `quien_pide`, que solo sabían hablar de servicios.
+ */
+export const Autor = z.enum(['pide', 'ofrece'])
 export type Autor = z.infer<typeof Autor>
 
 export const Mensaje = z.object({
@@ -20,36 +40,24 @@ export type Mensaje = z.infer<typeof Mensaje>
 
 export const Hilo = z.object({
   id: z.uuid(),
-  respuesta_id: z.uuid(),
+  origen: Origen,
   cerrado: z.boolean(),
-  /** Quién es el otro. El prestador tiene nombre público; quien pide, no. */
+  /** Quién es el otro. Tiene nombre solo si lo publicó él mismo. */
   con: z.string(),
   /**
    * De qué lado está quien pidió el hilo.
    *
-   * Lo decide el servidor, que es quien sabe de quién es la solicitud y de
-   * quién la ficha. Antes el cliente lo deducía de si traía token o no;
-   * desde el ADR 0006 las dos partes son cuentas y esa pista no existe.
+   * Lo decide el servidor, que es quien sabe de quién es cada cosa. El
+   * cliente no puede deducirlo: desde el ADR 0006 las dos partes son
+   * cuentas y no hay ninguna pista en lo que trae la petición.
    */
-  soy: z.enum(['quien_pide', 'prestador']),
-  oficio: z.string().nullable(),
+  soy: Autor,
+  /** De qué va: el oficio, el producto, el título del muro, la categoría. */
+  asunto: z.string().nullable(),
   mensajes: z.array(Mensaje),
 })
 
 export type Hilo = z.infer<typeof Hilo>
-
-/**
- * Cómo se entra al hilo.
- *
- * Dos puertas distintas porque hay dos clases de participante, y esa
- * asimetría es del producto, no del código: el prestador tiene cuenta y el
- * hilo le sale de su sesión; quien pide también, desde el ADR 0006 — antes
- * de su solicitud, que es lo único que la plataforma le dio.
- */
-export const Llave = z.union([
-  z.object({ token: z.string().min(20) }),
-  z.object({ respuesta_id: z.uuid() }),
-])
 
 /**
  * Los rechazos del hilo, declarados en el contrato y no improvisados.
@@ -70,9 +78,9 @@ const errores = {
 
 /** Una fila de la bandeja. */
 export const HiloEnBandeja = z.object({
-  respuesta_id: z.uuid(),
+  origen: Origen,
   con: z.string(),
-  oficio: z.string().nullable(),
+  asunto: z.string().nullable(),
   ultimo: z.string().nullable(),
   ultimo_at: z.string().nullable(),
   mensajes: z.number(),
@@ -82,20 +90,14 @@ export type HiloEnBandeja = z.infer<typeof HiloEnBandeja>
 
 export const contratoChat = {
   /**
-   * Los hilos de quien está en sesión, como prestador.
-   *
-   * Solo del lado con cuenta. Quien pide un servicio NO tiene cuenta —esa es
-   * la promesa— así que no hay a quién listarle nada: sus hilos viven en el
-   * enlace de su solicitud, que es lo único que la plataforma le dio. La
-   * pantalla lo dice en vez de enseñar una bandeja vacía.
+   * Los hilos de quien está en sesión, de los dos lados y de los cuatro
+   * módulos. Una sola bandeja porque es una sola clase de cosa: con quién
+   * estás hablando y de qué.
    */
   bandeja: oc.output(z.array(HiloEnBandeja)),
 
-  /** El hilo abierto por una respuesta, con sus mensajes. Pantalla 12. */
-  leer: oc
-    .errors(errores)
-    .input(z.object({ respuesta_id: z.uuid() }))
-    .output(Hilo.nullable()),
+  /** El hilo, con sus mensajes. Se crea al abrirlo. Pantalla 12. */
+  leer: oc.errors(errores).input(z.object({ origen: Origen })).output(Hilo.nullable()),
 
   /**
    * Escribir en el hilo.
@@ -111,11 +113,6 @@ export const contratoChat = {
    */
   escribir: oc
     .errors(errores)
-    .input(
-      z.object({
-        respuesta_id: z.uuid(),
-        cuerpo: z.string().trim().min(1).max(500),
-      }),
-    )
+    .input(z.object({ origen: Origen, cuerpo: z.string().trim().min(1).max(500) }))
     .output(z.object({ mensaje: Mensaje })),
 }

@@ -126,7 +126,7 @@ export function FormularioMuro({
       <p className="text-base text-muted-foreground">
         {ofrece
           ? 'Aparece con tu nombre, para que quien lo necesite sepa con quién habla.'
-          : 'Sin cuenta y sin dar tus datos. Te damos un enlace para volver.'}
+          : 'No aparece tu nombre ni tu teléfono. Quien pueda ayudarte te escribe por el chat de aquí dentro.'}
       </p>
 
       <fieldset className="mt-6">

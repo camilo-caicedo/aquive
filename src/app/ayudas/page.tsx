@@ -154,7 +154,7 @@ export default async function SolicitudesPage({
       <CabeceraPantalla titulo="Ayudas">
         <p className="mt-1 text-base text-muted-foreground">
           Insumos para la emergencia: quién los necesita y quién los tiene.
-          Pedir no exige cuenta.
+          Lo que pides no lleva tu nombre ni tu teléfono.
         </p>
       </CabeceraPantalla>
 

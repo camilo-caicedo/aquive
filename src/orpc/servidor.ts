@@ -271,7 +271,7 @@ export const enrutador = os.router({
   chat: {
     bandeja: os.chat.bandeja.handler(({ context }) => chat.bandeja(db, context.usuarioId)),
     leer: os.chat.leer.handler(({ input, context }) =>
-      chat.leer(db, input.respuesta_id, { usuarioId: context.usuarioId }),
+      chat.leer(db, input.origen, { usuarioId: context.usuarioId }),
     ),
     // El dominio lanza `ChatRechazado` y no sabe qué es un código HTTP; aquí
     // se traduce. Es la única capa que conoce las dos cosas.
@@ -279,7 +279,7 @@ export const enrutador = os.router({
       try {
         return await chat.escribir(
           db,
-          { respuestaId: input.respuesta_id, cuerpo: input.cuerpo },
+          { origen: input.origen, cuerpo: input.cuerpo },
           { usuarioId: context.usuarioId },
         )
       } catch (e) {

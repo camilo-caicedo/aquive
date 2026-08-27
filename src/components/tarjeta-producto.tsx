@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { MessageCircle, Phone } from 'lucide-react'
 
 import { enlaceWhatsapp } from '@/lib/contacto'
+import { BotonChat } from '@/components/boton-chat'
 import { precioDeProducto } from '@/lib/servicios'
 import { SOMBRA_CARTEL, familiaDe } from '@/lib/familias'
 import type { Producto } from '@/contrato/comunidad'
@@ -14,6 +15,10 @@ import type { Producto } from '@/contrato/comunidad'
  * gustan quiere escribir, no leer una ficha. El teléfono es el mismo que esa
  * persona publicó en la suya, y el nombre lleva enlace por si quien compra
  * prefiere mirar antes con quién está hablando.
+ *
+ * Tres controles y no dos: WhatsApp, llamar y el chat de aquí dentro. Los
+ * dos primeros usan el teléfono que quien vende publicó; el tercero existe
+ * para quien pregunta y no quiere entregar el suyo.
  *
  * ⚠ El precio se lee de `precioLegible`, el mismo de los oficios. Es lo que
  * mantiene «Precio solidario: desde $9.000 el plato» diciendo lo mismo en
@@ -85,6 +90,24 @@ export function TarjetaProducto({ producto }: { producto: Producto }) {
             >
               <Phone className="size-5" aria-hidden="true" />
             </a>
+            <BotonChat
+              origen={{ tipo: 'producto', id: producto.id }}
+              etiqueta={`Escribir por AquíVe sobre ${producto.nombre}`}
+            />
+          </div>
+        )}
+
+        {/* Sin teléfono publicado el chat es la única puerta, y entonces sí
+            va ancho: no compite con nada. */}
+        {!producto.telefono && (
+          <div className="mt-3 flex items-center gap-2">
+            <BotonChat
+              origen={{ tipo: 'producto', id: producto.id }}
+              etiqueta={`Escribir por AquíVe sobre ${producto.nombre}`}
+            />
+            <span className="text-sm text-muted-foreground">
+              Escribe por aquí dentro: esta persona no tiene teléfono publicado.
+            </span>
           </div>
         )}
       </div>

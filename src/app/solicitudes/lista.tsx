@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Check } from 'lucide-react'
+import { Check, MessagesSquare } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { contienePII } from '@/lib/validacion'
 import { CAPACIDADES_PAGO, URGENCIAS, zonaLegible } from '@/lib/servicios'
@@ -26,6 +27,8 @@ export interface SolicitudDeServicio {
   creada_at: string
   num_respuestas: number
   ya_respondi: boolean
+  /** De aquí cuelga el hilo. Nulo mientras no haya respondido. */
+  mi_respuesta_id: string | null
 }
 
 const etiquetaUrgencia = (v: UrgenciaServicio) =>
@@ -114,10 +117,26 @@ export function ListaSolicitudesServicio({
               // Compacto: ya respondió, así que lo único que queda por saber
               // es cuánta competencia hay. El párrafo entero de antes ocupaba
               // tres líneas para decir eso.
-              <p className="flex shrink-0 items-center gap-1.5 text-base text-foreground">
-                <Check className="size-5 shrink-0" aria-hidden="true" />
-                Ya respondiste
-              </p>
+              //
+              // Y con el enlace al hilo, que es lo que le faltaba al chat de
+              // servicios para tener puerta: el hilo se crea al abrirlo, y
+              // hasta ahora la única pantalla que enlazaba a uno era la
+              // bandeja, que solo enseña los que ya existen.
+              <div className="flex shrink-0 items-center gap-3">
+                <p className="flex items-center gap-1.5 text-base text-foreground">
+                  <Check className="size-5 shrink-0" aria-hidden="true" />
+                  Ya respondiste
+                </p>
+                {s.mi_respuesta_id && (
+                  <Link
+                    href={`/chat/servicio/${s.mi_respuesta_id}`}
+                    aria-label={`Abrir el chat de la solicitud ${s.codigo}`}
+                    className="border-enlace text-enlace hover:bg-accent flex size-12 shrink-0 items-center justify-center rounded-full border transition-colors"
+                  >
+                    <MessagesSquare className="size-5" aria-hidden="true" />
+                  </Link>
+                )}
+              </div>
             ) : !puedeResponder ? null : (
               // El formulario se abría dentro de la tarjeta y empujaba el
               // resto de la lista hacia abajo: la solicitud que estabas

@@ -4,6 +4,7 @@ import { MessageCircle, Phone, Plus } from 'lucide-react'
 
 import { servidor } from '@/orpc/local'
 import { enlaceWhatsapp } from '@/lib/contacto'
+import { BotonChat } from '@/components/boton-chat'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { AccionPrincipal } from '@/components/accion-principal'
 import { NOMBRE_CATEGORIA_MURO, type Cara } from '@/contrato/comunidad'
@@ -182,13 +183,39 @@ export default async function MuroPage({
                         >
                           <Phone className="size-5" aria-hidden="true" />
                         </a>
+                        <BotonChat
+                          origen={{ tipo: 'muro', id: p.id }}
+                          etiqueta={`Escribir por AquíVe sobre ${p.titulo}`}
+                        />
                       </div>
                     ) : (
-                      <p className="mt-3 text-sm text-muted-foreground">
-                        Esta persona todavía no tiene ficha publicada, así que
-                        aquí no aparece su contacto.
-                      </p>
+                      <div className="mt-3 flex items-center gap-2">
+                        <BotonChat
+                          origen={{ tipo: 'muro', id: p.id }}
+                          etiqueta={`Escribir por AquíVe sobre ${p.titulo}`}
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          Esta persona no tiene ficha publicada, así que su
+                          teléfono no sale aquí. Escríbele por AquíVe.
+                        </span>
+                      </div>
                     ))}
+
+                  {/* La otra cara nunca tuvo contacto: quien necesita algo no
+                      publica nombre ni teléfono, así que hasta ahora no había
+                      forma de decirle «yo te lo consigo». El chat es la única
+                      puerta que se le puede abrir sin publicar sus datos. */}
+                  {p.cara === 'necesita' && (
+                    <div className="mt-3 flex items-center gap-2">
+                      <BotonChat
+                        origen={{ tipo: 'muro', id: p.id }}
+                        etiqueta={`Escribir por AquíVe sobre ${p.titulo}`}
+                      />
+                      <span className="text-sm text-muted-foreground">
+                        Escríbele por AquíVe. No publica su teléfono.
+                      </span>
+                    </div>
+                  )}
                 </div>
               </li>
             )
@@ -198,7 +225,7 @@ export default async function MuroPage({
 
       <p className="mt-6 text-sm text-muted-foreground">
         {cara === 'necesita'
-          ? 'Una necesidad se borra sola a los 15 días, con todo lo que lleva dentro. Publicar no exige cuenta ni dar tus datos.'
+          ? 'Una necesidad se borra sola a los 15 días, con todo lo que lleva dentro. No lleva tu nombre ni tu teléfono: quien pueda ayudarte te escribe por aquí.'
           : 'Las donaciones se quedan mientras quien publicó las deje. Tu nombre aparece porque lo autorizaste, y puedes borrarlas cuando quieras.'}
       </p>
 

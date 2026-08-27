@@ -39,6 +39,7 @@ archivo, y detrás de él:
 | `docs/decisiones/0001-*.md` | Backend en TypeScript, contrato tipado |
 | `docs/decisiones/0002-*.md` | Identidad visual, tokens, tipografía |
 | `docs/decisiones/0003-*.md` | Flujo, alcance, chat e imágenes |
+| `docs/decisiones/0009-*.md` | Un solo chat, para los cuatro módulos |
 | `docs/decisiones/0006-*.md` | **Cuenta para todo** |
 | `docs/decisiones/0007-*.md` | Se retira el flujo acompañado |
 | `docs/decisiones/0008-*.md` | El aliado es un centro de acopio |
@@ -109,18 +110,28 @@ de productos no la infringe.
 
 ### 2 · El chat vive dentro y muere con lo que lo abrió
 
-Hay mensajería interna. Un chat se abre por un pedido de servicio, sirve para
-acordar el trabajo y se borra cuando se borra el pedido.
+Hay mensajería interna, **una sola para toda la aplicación** (ADR 0009). Un
+hilo cuelga de una de cuatro cosas —una respuesta a un pedido de servicio, una
+respuesta a una solicitud de insumos, un producto o una publicación del muro—
+y se borra cuando se borra ella.
 
-- No se archivan conversaciones. No hay bandeja histórica.
+- Son cuatro columnas con `on delete cascade`, no un par «tipo + id»: una
+  llave polimórfica no puede cascadear, y entonces el borrado dependería de
+  que algo se acuerde de cumplirlo.
+- Los dos papeles se llaman igual en los cuatro módulos: **`ofrece`** tiene la
+  cosa o el trabajo, **`pide`** la necesita.
+- Una respuesta ya identifica a los dos lados. Un producto y una publicación
+  solo a uno: el otro lo ocupa quien abra el hilo, y hay uno por persona.
+- No se archivan conversaciones. No hay bandeja histórica. `/mensajes` es una
+  sola lista, de los cuatro orígenes y de los dos lados.
 - El chat **filtra datos de contacto**: `wa.me`, `t.me`, correos, arrobas
   sueltas, números colombianos y dígitos escritos con letras. Sin ese filtro el
   chat es solo una forma más lenta de pedir el número.
-- La ficha del prestador sigue mostrando su teléfono, porque él lo publicó. Lo
-  que el chat protege es a quien contrata, que hoy tendría que llamar y
-  entregar su número para empezar.
-- En el flujo acompañado el hilo es de tres y **no acepta mensajes sin aliado a
-  cargo**. Lo sostiene un trigger, no la interfaz.
+- **Los botones de WhatsApp y de llamar se quedan** donde ya estaban. Quien
+  publicó su teléfono lo hizo queriendo; lo que el chat protege es al otro
+  lado, que tendría que entregar el suyo para empezar.
+- La ficha del prestador **no** abre chat: una ficha no caduca, y un hilo
+  colgado de ella no moriría nunca.
 
 ### 3 · Todo lo que se publica se puede borrar, y borrar es `DELETE`
 
@@ -134,7 +145,7 @@ Nunca `estado = 'eliminada'`.
 | Producto de «Hecho en el barrio» | mientras su dueño lo deje |
 | Ficha de prestador | permanente, hasta que la borre o la suspenda un admin |
 | Cuenta creada por un admin | hasta que su dueño la borre |
-| Chat | con el pedido que lo abrió |
+| Chat | con lo que lo abrió: respuesta, producto o publicación |
 | Código de servicio sin usar | 30 días |
 
 Borrar una fila borra **también sus imágenes en el almacenamiento**.
@@ -357,7 +368,7 @@ portar**.
 | --- | --- | --- |
 | Entrada | 01 Bienvenida, 03 Entrar, 04 Carné | `components/bienvenida.tsx`, `app/login`, `app/servicios/soy-proveedor/listo` |
 | Buscar | 05 Inicio, 06 Categorías, 07 Listado, 08 Zonas + Mapa, 09 Ficha | `app/inicio`, `app/categorias`, `app/zonas`, `app/directorio` (lista y mapa), `app/prestador/[id]` |
-| Contratar | 10 Pedir, 11 Enviada, 12 Chat, 13 Calificar | `app/servicios/publicar`, `app/mensajes`, `app/servicios/chat/[respuesta]`, `app/servicios/confirmar` |
+| Contratar | 10 Pedir, 11 Enviada, 12 Chat, 13 Calificar | `app/servicios/publicar`, `app/mensajes`, `app/chat/[tipo]/[id]`, `app/servicios/confirmar` |
 | Ofrecer | 14 Formulario, 15 Mi ficha | `app/servicios/soy-proveedor` |
 | Perfil | 16–25 | `app/perfil/**`, `app/mis-solicitudes` (20), `app/servicios/mi-perfil/[token]` |
 | Insumos | 26 Publicar, 27 Tablero, 29 Mis solicitudes | `app/publicar`, `app/ayudas`, `app/mis-solicitudes` |

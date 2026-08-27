@@ -17,6 +17,10 @@ const eslintConfig = defineConfig([
     // Lo que sí se revisa es que describa la base, y de eso se encarga
     // `scripts/verificar-esquema.mjs`.
     "src/db/generado/**",
+    // Guion de una sola vez que generó `dane.json`. No es código de la
+    // aplicación y no se ejecuta en ningún build; se quedó en el repositorio
+    // para poder volver a generarlo si cambia el listado del DANE.
+    "gen.js",
   ]),
 ]);
 

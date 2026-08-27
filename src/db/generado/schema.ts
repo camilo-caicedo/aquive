@@ -1,8 +1,26 @@
-import { pgTable, index, uniqueIndex, foreignKey, check, uuid, text, numeric, boolean, timestamp, pgPolicy, jsonb, integer, unique, bigserial, smallint, primaryKey, pgView, bigint } from "drizzle-orm/pg-core"
+import { pgTable, index, foreignKey, check, uuid, text, timestamp, boolean, uniqueIndex, numeric, pgPolicy, jsonb, integer, unique, bigserial, smallint, primaryKey, pgView, bigint } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 import { bytea, usersInAuth } from "../tipos";
 
 
+
+export const mensajes = pgTable("mensajes", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	chatId: uuid("chat_id").notNull(),
+	autor: text().notNull(),
+	cuerpo: text().notNull(),
+	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	oculto: boolean().default(false).notNull(),
+}, (table) => [
+	index("idx_mensajes_servicio_chat").using("btree", table.chatId.asc().nullsLast().op("timestamptz_ops"), table.creadoAt.asc().nullsLast().op("timestamptz_ops")),
+	foreignKey({
+			columns: [table.chatId],
+			foreignColumns: [chats.id],
+			name: "mensajes_chat_id_fkey"
+		}).onDelete("cascade"),
+	check("mensajes_autor_check", sql`autor = ANY (ARRAY['pide'::text, 'ofrece'::text])`),
+	check("mensajes_cuerpo_check", sql`(char_length(cuerpo) >= 1) AND (char_length(cuerpo) <= 500)`),
+]);
 
 export const ofrecimientos = pgTable("ofrecimientos", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
@@ -847,36 +865,47 @@ export const proveedores = pgTable("proveedores", {
 	check("proveedores_zona_texto_check", sql`(char_length(zona_texto) >= 2) AND (char_length(zona_texto) <= 60)`),
 ]);
 
-export const chatsServicio = pgTable("chats_servicio", {
+export const chats = pgTable("chats", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
-	respuestaId: uuid("respuesta_id").notNull(),
+	respuestaServicioId: uuid("respuesta_servicio_id"),
 	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	cerradoAt: timestamp("cerrado_at", { withTimezone: true, mode: 'string' }),
+	respuestaInsumoId: uuid("respuesta_insumo_id"),
+	productoId: uuid("producto_id"),
+	publicacionId: uuid("publicacion_id"),
+	iniciadoPor: uuid("iniciado_por"),
 }, (table) => [
+	uniqueIndex("chats_producto_iniciado_key").using("btree", table.productoId.asc().nullsLast().op("uuid_ops"), table.iniciadoPor.asc().nullsLast().op("uuid_ops")).where(sql`(producto_id IS NOT NULL)`),
+	uniqueIndex("chats_publicacion_iniciado_key").using("btree", table.publicacionId.asc().nullsLast().op("uuid_ops"), table.iniciadoPor.asc().nullsLast().op("uuid_ops")).where(sql`(publicacion_id IS NOT NULL)`),
+	uniqueIndex("chats_respuesta_insumo_key").using("btree", table.respuestaInsumoId.asc().nullsLast().op("uuid_ops")).where(sql`(respuesta_insumo_id IS NOT NULL)`),
 	foreignKey({
-			columns: [table.respuestaId],
+			columns: [table.iniciadoPor],
+			foreignColumns: [perfiles.id],
+			name: "chats_iniciado_por_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.productoId],
+			foreignColumns: [productos.id],
+			name: "chats_producto_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.publicacionId],
+			foreignColumns: [publicacionesMuro.id],
+			name: "chats_publicacion_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.respuestaInsumoId],
+			foreignColumns: [respuestas.id],
+			name: "chats_respuesta_insumo_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.respuestaServicioId],
 			foreignColumns: [respuestasServicio.id],
-			name: "chats_servicio_respuesta_id_fkey"
+			name: "chats_respuesta_servicio_id_fkey"
 		}).onDelete("cascade"),
-	unique("chats_servicio_respuesta_id_key").on(table.respuestaId),
-]);
-
-export const mensajesServicio = pgTable("mensajes_servicio", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	chatId: uuid("chat_id").notNull(),
-	autor: text().notNull(),
-	cuerpo: text().notNull(),
-	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	oculto: boolean().default(false).notNull(),
-}, (table) => [
-	index("idx_mensajes_servicio_chat").using("btree", table.chatId.asc().nullsLast().op("timestamptz_ops"), table.creadoAt.asc().nullsLast().op("timestamptz_ops")),
-	foreignKey({
-			columns: [table.chatId],
-			foreignColumns: [chatsServicio.id],
-			name: "mensajes_servicio_chat_id_fkey"
-		}).onDelete("cascade"),
-	check("mensajes_servicio_autor_check", sql`autor = ANY (ARRAY['quien_pide'::text, 'prestador'::text])`),
-	check("mensajes_servicio_cuerpo_check", sql`(char_length(cuerpo) >= 1) AND (char_length(cuerpo) <= 500)`),
+	unique("chats_respuesta_servicio_id_key").on(table.respuestaServicioId),
+	check("chats_iniciado_por_donde_toca", sql`((producto_id IS NOT NULL) OR (publicacion_id IS NOT NULL)) = (iniciado_por IS NOT NULL)`),
+	check("chats_un_origen", sql`num_nonnulls(respuesta_servicio_id, respuesta_insumo_id, producto_id, publicacion_id) = 1`),
 ]);
 
 export const publicacionesMuro = pgTable("publicaciones_muro", {

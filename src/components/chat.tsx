@@ -4,14 +4,15 @@ import { useEffect, useRef, useState } from 'react'
 import { Send } from 'lucide-react'
 
 import { rpc } from '@/orpc/cliente'
-import type { Hilo, Mensaje } from '@/contrato/chat'
+import type { Hilo, Mensaje, Origen } from '@/contrato/chat'
 
 /**
- * El hilo de un pedido de servicio. Pantalla 12.
+ * El hilo. Pantalla 12, y el mismo para los cuatro módulos.
  *
  * Sirve a los dos lados con el mismo componente. Quién es cada quien lo
- * resuelve el servidor —de quién es la solicitud, de quién la ficha— y lo
- * dice en `hilo.soy`, así que aquí solo cambia de qué lado va cada burbuja.
+ * resuelve el servidor —de quién es la solicitud, el producto o la
+ * publicación— y lo dice en `hilo.soy`, así que aquí solo cambia de qué
+ * lado va cada burbuja.
  *
  * Sin sondeo automático a propósito. Un `setInterval` contra el servidor cada
  * pocos segundos, en un teléfono viejo con datos contados, gasta batería y
@@ -19,11 +20,11 @@ import type { Hilo, Mensaje } from '@/contrato/chat'
  * de actualizar; el aviso de mensaje nuevo llega por push, que es para lo que
  * está.
  */
-export function ChatServicio({
-  respuestaId,
+export function Chat({
+  origen,
   hiloInicial,
 }: {
-  respuestaId: string
+  origen: Origen
   hiloInicial: Hilo
 }) {
   const [mensajes, setMensajes] = useState<Mensaje[]>(hiloInicial.mensajes)
@@ -45,10 +46,7 @@ export function ChatServicio({
     setEnviando(true)
     setRechazo(null)
     try {
-      const { mensaje } = await rpc.chat.escribir({
-        respuesta_id: respuestaId,
-        cuerpo: texto,
-      })
+      const { mensaje } = await rpc.chat.escribir({ origen, cuerpo: texto })
       setMensajes((previos) => [...previos, mensaje])
       setCuerpo('')
     } catch (error) {
@@ -72,7 +70,7 @@ export function ChatServicio({
       <ol className="flex-1 space-y-3" aria-live="polite">
         {mensajes.length === 0 && (
           <li className="text-base text-muted-foreground">
-            Todavía no hay mensajes. Escribe para acordar el trabajo.
+            Todavía no hay mensajes. Escribe para ponerse de acuerdo.
           </li>
         )}
         {mensajes.map((m) => {
@@ -134,9 +132,9 @@ export function ChatServicio({
       )}
 
       <p className="mt-3 text-sm text-muted-foreground">
-        Este chat existe para acordar el trabajo y se borra con el pedido. No se
-        guardan conversaciones y no se pueden compartir teléfonos ni correos por
-        aquí.
+        Este chat existe para ponerse de acuerdo y se borra con lo que lo abrió.
+        No se guardan conversaciones y no se pueden compartir teléfonos ni
+        correos por aquí.
       </p>
     </div>
   )
