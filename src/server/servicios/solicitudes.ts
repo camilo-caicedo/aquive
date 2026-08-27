@@ -1,8 +1,8 @@
 import { and, desc, eq, sql } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
-import { solicitudesServicio, zonas } from '@/db/esquema'
-import { contienePII, validarNota } from '@/lib/validacion'
+import { catalogoOficios, solicitudesServicio, sugerenciasItem, zonas } from '@/db/esquema'
+import { contienePII, validarNota, validarSugerencia } from '@/lib/validacion'
 import type { GrupoOficio, MiSolicitudServicio } from '@/contrato/servicios'
 
 export class SolicitudRechazada extends Error {}
@@ -40,7 +40,10 @@ export async function publicar(
   db: BaseDeDatos,
   entrada: {
     grupo: GrupoOficio
-    detalle: string
+    /** Del catálogo, o propuesta. Exactamente una (ADR 0013). */
+    oficio_id?: string
+    subcategoria_nueva?: string
+    detalle?: string
     municipio: string
     zona_id?: string
     zona_texto?: string
@@ -54,11 +57,52 @@ export async function publicar(
     throw new SolicitudRechazada('Para pedir un servicio necesitas entrar con tu cuenta.')
   }
 
-  // Los TRES campos libres, con su filtro (regla de producto 4). El
-  // detalle es el nuevo, y es el que más se va a escribir: si por ahí se
+  // Los campos libres, con su filtro (regla de producto 4). Si por ahí se
   // cuela un teléfono, el chat deja de tener sentido antes de empezar.
-  const errorDetalle = validarNota(entrada.detalle)
-  if (errorDetalle) throw new SolicitudRechazada(errorDetalle)
+  //
+  // ⚠ El detalle es opcional desde el ADR 0013, así que solo se valida
+  // con algo escrito: llamar a `validarNota('')` no falla, pero validar
+  // lo que la persona no escribió es cómo aparecen mensajes de error sobre
+  // campos vacíos.
+  if (entrada.detalle) {
+    const errorDetalle = validarNota(entrada.detalle)
+    if (errorDetalle) throw new SolicitudRechazada(errorDetalle)
+  }
+
+  // Exactamente una subcategoría. Se repite aquí y no se delega al borde
+  // porque el dominio tiene que servir igual desde React Native, donde no
+  // pasa por el mismo Zod.
+  if (Boolean(entrada.oficio_id) === Boolean(entrada.subcategoria_nueva)) {
+    throw new SolicitudRechazada('Elige qué necesitas de la lista, o escríbelo tú.')
+  }
+
+  // El oficio tiene que existir, estar activo y ser DE ESA CATEGORÍA. Sin
+  // lo último, una llamada a mano puede colgar «Peluquería» de «Arreglos
+  // de la casa» y el filtro del tablero deja de significar nada.
+  if (entrada.oficio_id) {
+    const [oficio] = await db
+      .select({ id: catalogoOficios.id })
+      .from(catalogoOficios)
+      .where(
+        and(
+          eq(catalogoOficios.id, entrada.oficio_id),
+          eq(catalogoOficios.activo, true),
+          eq(catalogoOficios.grupo, entrada.grupo),
+        ),
+      )
+      .limit(1)
+    if (!oficio) {
+      throw new SolicitudRechazada('Eso no está en la lista de esa categoría.')
+    }
+  }
+
+  // Lo que se escribe a mano lleva el mismo control que el ítem de insumos
+  // propuesto: tope de 60 y filtro de PII. Es la tercera puerta por la que
+  // entra texto libre a una pantalla pública.
+  if (entrada.subcategoria_nueva) {
+    const error = validarSugerencia(entrada.subcategoria_nueva)
+    if (error) throw new SolicitudRechazada(error)
+  }
 
   // La zona escrita a mano es por donde más fácil se cuela un teléfono:
   // «comuna 3, llámame al…».
@@ -95,13 +139,32 @@ export async function publicar(
       .limit(1)
     if (ya) continue
 
+    // La propuesta nace aquí, y la solicitud se publica igual (ADR 0011):
+    // quien pide necesita respuesta hoy, no cuando alguien mire la cola.
+    let sugerenciaId: string | null = null
+    if (entrada.subcategoria_nueva) {
+      const [sug] = await db
+        .insert(sugerenciasItem)
+        .values({
+          tipo: 'oficio',
+          nombrePropuesto: entrada.subcategoria_nueva.trim(),
+          grupoSugerido: entrada.grupo,
+          origen: 'solicitante',
+          propuestaPor: llave.usuarioId,
+        })
+        .returning({ id: sugerenciasItem.id })
+      sugerenciaId = sug.id
+    }
+
     const [fila] = await db
       .insert(solicitudesServicio)
       .values({
         codigo,
         perfilId: llave.usuarioId,
         grupo: entrada.grupo,
-        detalle: entrada.detalle.trim(),
+        oficioId: entrada.oficio_id ?? null,
+        sugerenciaId,
+        detalle: entrada.detalle?.trim() ?? null,
         municipio: entrada.municipio,
         zonaId: entrada.zona_id ?? null,
         zonaTexto: entrada.zona_texto ?? null,
@@ -129,6 +192,11 @@ export async function mias(
       id: solicitudesServicio.id,
       codigo: solicitudesServicio.codigo,
       grupo: solicitudesServicio.grupo,
+      // La subcategoría por sus dos caminos: el oficio del catálogo, o el
+      // texto propuesto mientras nadie lo ha mirado. Uno de los dos, nunca
+      // los dos, y en las anteriores al ADR 0013 ninguno.
+      oficio_nombre: catalogoOficios.nombre,
+      propuesta: sugerenciasItem.nombrePropuesto,
       detalle: solicitudesServicio.detalle,
       estado: solicitudesServicio.estado,
       creada_at: solicitudesServicio.creadaAt,
@@ -139,6 +207,10 @@ export async function mias(
       )`,
     })
     .from(solicitudesServicio)
+    // ⚠ LEFT, las dos. Un INNER se traga las solicitudes sin oficio —las
+    // anteriores al ADR 0013 y las que llevan propuesta— sin dar error.
+    .leftJoin(catalogoOficios, eq(catalogoOficios.id, solicitudesServicio.oficioId))
+    .leftJoin(sugerenciasItem, eq(sugerenciasItem.id, solicitudesServicio.sugerenciaId))
     .where(eq(solicitudesServicio.perfilId, llave.usuarioId))
     .orderBy(desc(solicitudesServicio.creadaAt))
 
@@ -146,6 +218,8 @@ export async function mias(
     id: f.id,
     codigo: f.codigo,
     grupo: f.grupo as MiSolicitudServicio['grupo'],
+    subcategoria: f.oficio_nombre ?? f.propuesta ?? null,
+    subcategoria_en_revision: f.oficio_nombre === null && f.propuesta !== null,
     detalle: f.detalle,
     estado: f.estado,
     num_respuestas: Number(f.num_respuestas),

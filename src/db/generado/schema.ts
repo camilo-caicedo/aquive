@@ -124,6 +124,20 @@ export const entidades = pgTable("entidades", {
 	check("entidades_subtitulo_check", sql`(char_length(subtitulo) >= 1) AND (char_length(subtitulo) <= 120)`),
 ]);
 
+export const catalogoOficios = pgTable("catalogo_oficios", {
+	id: text().primaryKey().notNull(),
+	grupo: text().notNull(),
+	nombre: text().notNull(),
+	riesgo: text().default('bajo').notNull(),
+	activo: boolean().default(true).notNull(),
+	orden: integer().default(0).notNull(),
+}, (table) => [
+	pgPolicy("oficios lectura publica", { as: "permissive", for: "select", to: ["public"], using: sql`(activo = true)` }),
+	check("catalogo_oficios_grupo_check", sql`grupo = ANY (ARRAY['comida'::text, 'belleza'::text, 'confeccion'::text, 'transporte'::text, 'aseo'::text, 'cuidado'::text, 'reparacion'::text, 'otros'::text, 'construccion'::text, 'ensenanza'::text, 'eventos'::text, 'digital'::text])`),
+	check("catalogo_oficios_nombre_check", sql`(char_length(TRIM(BOTH FROM nombre)) >= 2) AND (char_length(TRIM(BOTH FROM nombre)) <= 60)`),
+	check("catalogo_oficios_riesgo_check", sql`riesgo = ANY (ARRAY['bajo'::text, 'alto'::text])`),
+]);
+
 export const reportes = pgTable("reportes", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	tipoObjeto: text("tipo_objeto").notNull(),
@@ -174,20 +188,6 @@ export const zonas = pgTable("zonas", {
 	check("zonas_tipo_check", sql`tipo = ANY (ARRAY['comuna'::text, 'corregimiento'::text, 'barrio'::text])`),
 ]);
 
-export const catalogoOficios = pgTable("catalogo_oficios", {
-	id: text().primaryKey().notNull(),
-	grupo: text().notNull(),
-	nombre: text().notNull(),
-	riesgo: text().default('bajo').notNull(),
-	activo: boolean().default(true).notNull(),
-	orden: integer().default(0).notNull(),
-}, (table) => [
-	pgPolicy("oficios lectura publica", { as: "permissive", for: "select", to: ["public"], using: sql`(activo = true)` }),
-	check("catalogo_oficios_grupo_check", sql`grupo = ANY (ARRAY['comida'::text, 'belleza'::text, 'confeccion'::text, 'transporte'::text, 'aseo'::text, 'cuidado'::text, 'reparacion'::text, 'otros'::text])`),
-	check("catalogo_oficios_nombre_check", sql`(char_length(TRIM(BOTH FROM nombre)) >= 2) AND (char_length(TRIM(BOTH FROM nombre)) <= 60)`),
-	check("catalogo_oficios_riesgo_check", sql`riesgo = ANY (ARRAY['bajo'::text, 'alto'::text])`),
-]);
-
 export const sugerenciasItem = pgTable("sugerencias_item", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	nombrePropuesto: text("nombre_propuesto").notNull(),
@@ -203,12 +203,19 @@ export const sugerenciasItem = pgTable("sugerencias_item", {
 	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	esPrueba: boolean("es_prueba").default(false).notNull(),
 	tipo: text().default('item').notNull(),
+	grupoSugerido: text("grupo_sugerido"),
+	oficioResultanteId: text("oficio_resultante_id"),
 }, (table) => [
 	index("idx_sugerencias_estado").using("btree", table.estado.asc().nullsLast().op("text_ops")),
 	foreignKey({
 			columns: [table.itemResultanteId],
 			foreignColumns: [catalogoItems.id],
 			name: "sugerencias_item_item_resultante_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.oficioResultanteId],
+			foreignColumns: [catalogoOficios.id],
+			name: "sugerencias_item_oficio_resultante_fkey"
 		}).onDelete("set null"),
 	foreignKey({
 			columns: [table.propuestaPor],
@@ -225,10 +232,16 @@ export const sugerenciasItem = pgTable("sugerencias_item", {
   WHERE (a.user_id = ( SELECT auth.uid() AS uid))))` }),
 	check("sugerencias_item_categoria_sugerida_check", sql`categoria_sugerida = ANY (ARRAY['alimentacion'::text, 'aseo'::text, 'salud'::text, 'abrigo'::text, 'cocina'::text, 'otros'::text, 'servicios'::text, 'mascotas'::text])`),
 	check("sugerencias_item_estado_check", sql`estado = ANY (ARRAY['pendiente'::text, 'aprobada'::text, 'rechazada'::text, 'fusionada'::text])`),
+	check("sugerencias_item_grupo_sugerido_check", sql`(grupo_sugerido IS NULL) OR (grupo_sugerido = ANY (ARRAY['comida'::text, 'belleza'::text, 'confeccion'::text, 'transporte'::text, 'aseo'::text, 'cuidado'::text, 'reparacion'::text, 'otros'::text, 'construccion'::text, 'ensenanza'::text, 'eventos'::text, 'digital'::text]))`),
 	check("sugerencias_item_nombre_propuesto_check", sql`(char_length(TRIM(BOTH FROM nombre_propuesto)) >= 2) AND (char_length(TRIM(BOTH FROM nombre_propuesto)) <= 60)`),
 	check("sugerencias_item_nota_revision_check", sql`char_length(nota_revision) <= 300`),
 	check("sugerencias_item_origen_check", sql`origen = ANY (ARRAY['solicitante'::text, 'ofertador'::text, 'aliado'::text, 'proveedor'::text])`),
 	check("sugerencias_item_tipo_check", sql`tipo = ANY (ARRAY['item'::text, 'oficio'::text])`),
+	check("sugerencias_item_tipo_coherente", sql`CHECK (
+CASE tipo
+    WHEN 'oficio'::text THEN ((grupo_sugerido IS NOT NULL) AND (categoria_sugerida IS NULL))
+    ELSE (grupo_sugerido IS NULL)
+END)`),
 	check("sugerencias_item_unidad_sugerida_check", sql`(char_length(unidad_sugerida) >= 1) AND (char_length(unidad_sugerida) <= 20)`),
 ]);
 
@@ -806,12 +819,14 @@ export const solicitudesServicio = pgTable("solicitudes_servicio", {
 	esPrueba: boolean("es_prueba").default(false).notNull(),
 	perfilId: uuid("perfil_id").notNull(),
 	grupo: text().notNull(),
-	detalle: text().notNull(),
+	detalle: text(),
 	revisadaAt: timestamp("revisada_at", { withTimezone: true, mode: 'string' }),
+	sugerenciaId: uuid("sugerencia_id"),
 }, (table) => [
 	index("idx_solicitudes_servicio_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
 	index("idx_solicitudes_servicio_sin_revisar").using("btree", table.creadaAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(revisada_at IS NULL)`),
 	index("idx_solicitudes_servicio_vigentes").using("btree", table.municipio.asc().nullsLast().op("text_ops"), table.grupo.asc().nullsLast().op("text_ops")).where(sql`(estado = 'abierta'::text)`),
+	index("solicitudes_servicio_oficio_idx").using("btree", table.oficioId.asc().nullsLast().op("text_ops")).where(sql`(oficio_id IS NOT NULL)`),
 	foreignKey({
 			columns: [table.municipio],
 			foreignColumns: [municipios.codigoDane],
@@ -828,17 +843,24 @@ export const solicitudesServicio = pgTable("solicitudes_servicio", {
 			name: "solicitudes_servicio_perfil_id_fkey"
 		}).onDelete("cascade"),
 	foreignKey({
+			columns: [table.sugerenciaId],
+			foreignColumns: [sugerenciasItem.id],
+			name: "solicitudes_servicio_sugerencia_fkey"
+		}).onDelete("set null"),
+	foreignKey({
 			columns: [table.zonaId],
 			foreignColumns: [zonas.id],
 			name: "solicitudes_servicio_zona_id_fkey"
 		}).onDelete("set null"),
 	unique("solicitudes_servicio_codigo_key").on(table.codigo),
 	check("solicitudes_servicio_capacidad_pago_check", sql`capacidad_pago = ANY (ARRAY['puedo_pagar'::text, 'pago_poco'::text, 'no_puedo_pagar'::text])`),
-	check("solicitudes_servicio_detalle_check", sql`(char_length(btrim(detalle)) >= 3) AND (char_length(btrim(detalle)) <= 80)`),
+	check("solicitudes_servicio_detalle_check", sql`(detalle IS NULL) OR ((char_length(btrim(detalle)) >= 3) AND (char_length(btrim(detalle)) <= 80))`),
+	check("solicitudes_servicio_dice_algo", sql`(num_nonnulls(oficio_id, sugerencia_id) = 1) OR (detalle IS NOT NULL)`),
 	check("solicitudes_servicio_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'resuelta'::text])`),
-	check("solicitudes_servicio_grupo_check", sql`grupo = ANY (ARRAY['comida'::text, 'belleza'::text, 'confeccion'::text, 'transporte'::text, 'aseo'::text, 'cuidado'::text, 'reparacion'::text, 'otros'::text])`),
+	check("solicitudes_servicio_grupo_check", sql`grupo = ANY (ARRAY['comida'::text, 'belleza'::text, 'confeccion'::text, 'transporte'::text, 'aseo'::text, 'cuidado'::text, 'reparacion'::text, 'otros'::text, 'construccion'::text, 'ensenanza'::text, 'eventos'::text, 'digital'::text])`),
 	check("solicitudes_servicio_nota_check", sql`char_length(nota) <= 140`),
 	check("solicitudes_servicio_tiene_zona", sql`num_nonnulls(zona_id, zona_texto) >= 1`),
+	check("solicitudes_servicio_una_subcategoria", sql`num_nonnulls(oficio_id, sugerencia_id) <= 1`),
 	check("solicitudes_servicio_urgencia_check", sql`urgencia = ANY (ARRAY['hoy'::text, 'esta_semana'::text, 'sin_prisa'::text])`),
 	check("solicitudes_servicio_zona_texto_check", sql`(char_length(zona_texto) >= 2) AND (char_length(zona_texto) <= 60)`),
 ]);
@@ -1059,6 +1081,37 @@ export const proveedorOficios = pgTable("proveedor_oficios", {
 	check("proveedor_oficios_unidad_check", sql`unidad = ANY (ARRAY['hora'::text, 'trabajo'::text, 'dia'::text, 'prenda'::text, 'viaje'::text, 'plato'::text, 'unidad'::text])`),
 ]);
 
+export const proveedorOficiosSugeridos = pgTable("proveedor_oficios_sugeridos", {
+	proveedorId: uuid("proveedor_id").notNull(),
+	sugerenciaId: uuid("sugerencia_id").notNull(),
+	modo: text().default('normal').notNull(),
+	precioDesde: numeric("precio_desde"),
+	unidad: text(),
+	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	foreignKey({
+			columns: [table.proveedorId],
+			foreignColumns: [proveedores.id],
+			name: "proveedor_oficios_sugeridos_proveedor_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.sugerenciaId],
+			foreignColumns: [sugerenciasItem.id],
+			name: "proveedor_oficios_sugeridos_sugerencia_id_fkey"
+		}).onDelete("cascade"),
+	primaryKey({ columns: [table.proveedorId, table.sugerenciaId], name: "proveedor_oficios_sugeridos_pkey"}),
+	pgPolicy("pos_lee_su_dueno", { as: "permissive", for: "select", to: ["authenticated"], using: sql`((EXISTS ( SELECT 1
+   FROM proveedores p
+  WHERE ((p.id = proveedor_oficios_sugeridos.proveedor_id) AND (p.perfil_id = auth.uid())))) OR (EXISTS ( SELECT 1
+   FROM administradores a
+  WHERE (a.user_id = auth.uid()))))` }),
+	check("pos_modo_check", sql`modo = ANY (ARRAY['gratis'::text, 'aporte'::text, 'solidario'::text, 'normal'::text])`),
+	check("pos_precio_con_unidad", sql`(precio_desde IS NULL) OR (unidad IS NOT NULL)`),
+	check("pos_precio_rango", sql`(precio_desde IS NULL) OR ((precio_desde >= (0)::numeric) AND (precio_desde <= (99999999)::numeric))`),
+	check("pos_precio_solo_si_cobra", sql`(modo = ANY (ARRAY['solidario'::text, 'normal'::text])) OR (precio_desde IS NULL)`),
+	check("pos_unidad_check", sql`(unidad IS NULL) OR (unidad = ANY (ARRAY['hora'::text, 'trabajo'::text, 'dia'::text, 'prenda'::text, 'viaje'::text, 'plato'::text, 'unidad'::text]))`),
+]);
+
 export const miembrosOrganizacion = pgTable("miembros_organizacion", {
 	organizacionId: uuid("organizacion_id").notNull(),
 	perfilId: uuid("perfil_id").notNull(),
@@ -1134,7 +1187,10 @@ export const solicitudesServicioPublicas = pgView("solicitudes_servicio_publicas
 	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }),
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	numRespuestas: bigint("num_respuestas", { mode: "number" }),
-}).as(sql`SELECT s.id, s.codigo, s.grupo, s.detalle, s.municipio, s.zona_id, z.nombre AS zona_nombre, s.zona_texto, s.urgencia, s.capacidad_pago, s.nota, s.creada_at, s.expira_at, ( SELECT count(*) AS count FROM respuestas_servicio rs WHERE rs.solicitud_id = s.id) AS num_respuestas FROM solicitudes_servicio s LEFT JOIN zonas z ON z.id = s.zona_id WHERE s.estado = 'abierta'::text AND s.expira_at > now()`);
+	oficioId: text("oficio_id"),
+	oficioNombre: text("oficio_nombre"),
+	subcategoriaPropuesta: text("subcategoria_propuesta"),
+}).as(sql`SELECT s.id, s.codigo, s.grupo, s.detalle, s.municipio, s.zona_id, z.nombre AS zona_nombre, s.zona_texto, s.urgencia, s.capacidad_pago, s.nota, s.creada_at, s.expira_at, ( SELECT count(*) AS count FROM respuestas_servicio rs WHERE rs.solicitud_id = s.id) AS num_respuestas, s.oficio_id, o.nombre AS oficio_nombre, sg.nombre_propuesto AS subcategoria_propuesta FROM solicitudes_servicio s LEFT JOIN zonas z ON z.id = s.zona_id LEFT JOIN catalogo_oficios o ON o.id = s.oficio_id LEFT JOIN sugerencias_item sg ON sg.id = s.sugerencia_id WHERE s.estado = 'abierta'::text AND s.expira_at > now()`);
 
 export const municipiosConServidores = pgView("municipios_con_servidores", {	codigoDane: text("codigo_dane"),
 	nombre: text(),

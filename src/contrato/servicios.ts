@@ -259,14 +259,50 @@ export type ZonaConGente = z.infer<typeof ZonaConGente>
  * este teléfono. Con cuenta (ADR 0006) lo suyo se le pregunta al servidor,
  * lo que además arregla que cambiar de teléfono fuera perderlo todo.
  */
+/** Una subcategoría del catálogo: una fila de `catalogo_oficios`. */
+export const Subcategoria = z.object({
+  id: z.string(),
+  nombre: z.string(),
+  grupo: GrupoOficio,
+  /** `alto` esconde la ficha sin teléfono verificado y referencia (regla 7). */
+  riesgo: z.enum(['bajo', 'alto']),
+})
+
+export type Subcategoria = z.infer<typeof Subcategoria>
+
+/**
+ * Una subcategoría que un prestador propuso y todavía no existe (ADR 0013).
+ *
+ * Lleva el precio ya puesto para no volver a pedírselo el día que se
+ * apruebe, y su `estado` para poder decirle a su dueño en qué va.
+ */
+export const OficioPropuesto = z.object({
+  sugerencia_id: z.uuid(),
+  nombre: z.string(),
+  grupo: GrupoOficio,
+  estado: z.string(),
+  modo: z.enum(['gratis', 'aporte', 'solidario', 'normal']),
+  precio_desde: z.number().nullable(),
+  unidad: Unidad.nullable(),
+})
+
+export type OficioPropuesto = z.infer<typeof OficioPropuesto>
+
 export const MiSolicitudServicio = z.object({
   id: z.uuid(),
   /** Cuatro letras y dos dígitos: se dice por teléfono sin deletrear. */
   codigo: z.string(),
-  /** Su categoría, de los ocho gajos. */
+  /** Su categoría, de los doce gajos (ADR 0012). */
   grupo: GrupoOficio,
-  /** Lo que pidió, con sus palabras (ADR 0011). */
-  detalle: z.string(),
+  /**
+   * La subcategoría, que es lo que titula la solicitud desde el ADR 0013.
+   * Nula solo en las anteriores a ese ADR, que solo tienen `detalle`.
+   */
+  subcategoria: z.string().nullable(),
+  /** Si todavía está en la cola de moderación. */
+  subcategoria_en_revision: z.boolean(),
+  /** El contexto que escribió, si lo escribió. Opcional desde el ADR 0013. */
+  detalle: z.string().nullable(),
   estado: z.string(),
   creada_at: z.string(),
   expira_at: z.string(),
@@ -387,24 +423,80 @@ export const contratoServicios = {
   publicarSolicitud: oc
     .errors(erroresUbicacion)
     .input(
-      z.object({
-        // ADR 0011: la categoría es cerrada, el detalle lo escribe quien
-        // pide. El catálogo de oficios sigue siendo cosa de la ficha de
-        // quien ofrece, no de lo que otra persona puede necesitar.
-        grupo: GrupoOficio,
-        detalle: z.string().trim().min(3).max(80),
-        municipio: z.string().regex(/^[0-9]{5}$/),
-        zona_id: z.uuid().optional(),
-        zona_texto: z.string().trim().max(80).optional(),
-        urgencia: z.enum(['hoy', 'esta_semana', 'sin_prisa']),
-        capacidad_pago: z.enum(['puedo_pagar', 'pago_poco', 'no_puedo_pagar']),
-        nota: z.string().trim().max(140).optional(),
-      }),
+      z
+        .object({
+          // ADR 0011: la categoría es cerrada. ADR 0013: debajo va una
+          // subcategoría —del catálogo o propuesta— y el detalle, que era
+          // obligatorio, pasa a ser el contexto opcional.
+          grupo: GrupoOficio,
+          /** Una fila de `catalogo_oficios` de esa misma categoría. */
+          oficio_id: z.string().trim().min(1).max(60).optional(),
+          /** O el texto de quien no encontró lo suyo. Va a moderación. */
+          subcategoria_nueva: z.string().trim().min(2).max(60).optional(),
+          detalle: z.string().trim().min(3).max(80).optional(),
+          municipio: z.string().regex(/^[0-9]{5}$/),
+          zona_id: z.uuid().optional(),
+          zona_texto: z.string().trim().max(80).optional(),
+          urgencia: z.enum(['hoy', 'esta_semana', 'sin_prisa']),
+          capacidad_pago: z.enum(['puedo_pagar', 'pago_poco', 'no_puedo_pagar']),
+          nota: z.string().trim().max(140).optional(),
+        })
+        // Exactamente una: el gemelo en Zod del CHECK
+        // `solicitudes_servicio_una_subcategoria`. Aquí es donde se EXIGE
+        // la subcategoría (ADR 0013); el CHECK de la base solo impide el
+        // estado absurdo.
+        .refine((v) => Boolean(v.oficio_id) !== Boolean(v.subcategoria_nueva), {
+          message: 'Elige qué necesitas de la lista, o escríbelo tú.',
+          path: ['oficio_id'],
+        }),
     )
     .output(z.object({ id: z.uuid(), codigo: z.string() })),
 
   /** Las mías, para el perfil. */
   misSolicitudes: oc.output(z.array(MiSolicitudServicio)),
+
+  // -------------------------------------------------------------------
+  // Subcategorías (ADR 0013)
+  // -------------------------------------------------------------------
+
+  /**
+   * El catálogo de subcategorías activas, para pintar el paso 2.
+   *
+   * Son 81 filas de cuatro campos: unos 6 KB. No justifica paginar ni
+   * filtrar por categoría desde el servidor, y tenerlas todas en el
+   * cliente es lo que deja cambiar de categoría sin ir y volver.
+   */
+  subcategorias: oc.output(z.array(Subcategoria)),
+
+  /** Las que este prestador propuso y todavía no existen. */
+  oficiosPropuestos: oc.output(z.array(OficioPropuesto)),
+
+  /**
+   * Guardar la lista entera de propuestas de la ficha, de una vez.
+   *
+   * Reconcilia: lo que no venga se quita. Va aparte de `guardar_proveedor`
+   * por lo mismo que la foto — esa RPC escribe la ficha entera y funciona,
+   * y una escritura nueva no tiene por qué entrar a vivir dentro de ella.
+   */
+  guardarOficiosPropuestos: oc
+    .errors(erroresUbicacion)
+    .input(
+      z.object({
+        propuestas: z
+          .array(
+            z.object({
+              nombre: z.string().trim().min(2).max(60),
+              grupo: GrupoOficio,
+              modo: z.enum(['gratis', 'aporte', 'solidario', 'normal']),
+              precio_desde: z.number().int().min(0).max(99999999).nullable().optional(),
+              unidad: Unidad.nullable().optional(),
+            }),
+          )
+          .max(8),
+        oficios_del_catalogo: z.number().int().min(0).max(8),
+      }),
+    )
+    .output(z.object({ ok: z.literal(true) })),
 
   /**
    * Borrar mi ficha, con su foto y las de mis productos.

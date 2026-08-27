@@ -16,6 +16,7 @@ import * as moderacion from '@/server/moderacion/comandos'
 import * as pqr from '@/server/pqr/buzon'
 import * as servicios from '@/server/servicios/consultas'
 import * as pedidos from '@/server/servicios/solicitudes'
+import * as propuestos from '@/server/servicios/oficios-propuestos'
 import * as ubicacion from '@/server/servicios/ubicacion'
 import * as foto from '@/server/servicios/foto'
 import * as altaAsistida from '@/server/servicios/alta-asistida'
@@ -53,6 +54,25 @@ export const enrutador = os.router({
     ),
     misSolicitudes: os.servicios.misSolicitudes.handler(({ context }) =>
       pedidos.mias(db, { usuarioId: context.usuarioId }),
+    ),
+
+    // Subcategorías (ADR 0013). El catálogo es público: es lo que hay
+    // dentro de cada categoría, y se ve antes de tener cuenta.
+    subcategorias: os.servicios.subcategorias.handler(() => propuestos.catalogo(db)),
+    oficiosPropuestos: os.servicios.oficiosPropuestos.handler(({ context }) =>
+      propuestos.mios(db, { usuarioId: context.usuarioId }),
+    ),
+    guardarOficiosPropuestos: os.servicios.guardarOficiosPropuestos.handler(
+      async ({ input, context, errors }) => {
+        try {
+          return await propuestos.guardar(db, input, { usuarioId: context.usuarioId })
+        } catch (e) {
+          if (e instanceof propuestos.PropuestaRechazada) {
+            throw errors.RECHAZADO({ data: { motivo: e.message } })
+          }
+          throw e
+        }
+      },
     ),
     altaAsistida: os.servicios.altaAsistida.handler(async ({ input, context, errors }) => {
       try {
