@@ -125,12 +125,22 @@ export function TarjetaProveedor({ proveedor }: { proveedor: EnListado }) {
             esMicroempresa={proveedor.tipo === 'microempresa'}
             serviciosConfirmados={proveedor.servicios_confirmados}
           />
-          {/* Píldora blanca con canto, no un relleno lima: el lima es la
-              acción principal de la pantalla, y en una lista de veinte
-              tarjetas ninguna de las veinte lo es. */}
+          {/* No lleva relleno lima, y eso no cambia: el lima es la acción
+              principal de la pantalla, y en una lista de veinte tarjetas
+              ninguna de las veinte lo es (regla de interfaz 2).
+
+              ⚠ Lo que sí cambia es que era papel BLANCO sobre la tarjeta,
+              que también es papel blanco, y lo único que lo separaba era el
+              canto de 1 px. Reportado como que «no se identifica»: y es
+              cierto, ahí no había un botón, había un rectángulo.
+
+              Ahora lleva borde y tinta azul, que es exactamente lo que ya
+              hacía «Puedo ayudar» en la tarjeta de solicitud —la misma
+              acción, en la otra tarjeta de lista—. Dos listas que se leen
+              igual, y ninguna compite con la acción de la pantalla. */}
           <Link
             href={`/prestador/${proveedor.id}`}
-            className="pulsable shadow-canto ml-auto inline-flex min-h-12 shrink-0 items-center rounded-full bg-card px-5 text-base font-semibold transition-colors hover:bg-primary hover:text-primary-foreground"
+            className="pulsable border-enlace text-enlace hover:bg-accent ml-auto inline-flex min-h-12 shrink-0 items-center rounded-full border px-5 text-base font-semibold transition-colors"
           >
             Ver ficha
           </Link>
