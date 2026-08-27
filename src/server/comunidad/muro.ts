@@ -2,15 +2,18 @@ import { and, desc, eq, ilike, or, sql } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
 import {
+  imagenes,
+  municipios,
   muroPublico,
   perfiles,
   productosPublicos,
   publicacionesMuro,
+  zonas,
 } from '@/db/esquema'
 import { contienePII } from '@/lib/validacion'
 import { urlPublica } from '@/server/imagenes/almacen'
-import { enlazar } from '@/server/imagenes/recorrido'
-import type { Cara, EnMuro, Producto } from '@/contrato/comunidad'
+import { borrarImagenesDe, enlazar } from '@/server/imagenes/recorrido'
+import type { Cara, EnMuro, MiPublicacionMuro, Producto } from '@/contrato/comunidad'
 
 export class MuroRechazado extends Error {}
 
@@ -215,4 +218,104 @@ export async function productos(
       creado_at: f.creadoAt ?? '',
     }),
   )
+}
+
+/**
+ * Lo que yo publiqué en el muro.
+ *
+ * De la TABLA y no de la vista pública, a propósito: aquí hay que ver
+ * también lo que tiene la foto sin aprobar y lo que ya venció. La vista
+ * existe para esconderle eso a quien busca, no a quien lo escribió — mismo
+ * criterio que `productos.mios`.
+ */
+export async function misPublicaciones(
+  db: BaseDeDatos,
+  usuarioId: string | null,
+): Promise<MiPublicacionMuro[]> {
+  if (!usuarioId) return []
+
+  const filas = await db
+    .select({
+      id: publicacionesMuro.id,
+      cara: publicacionesMuro.cara,
+      categoria: publicacionesMuro.categoria,
+      titulo: publicacionesMuro.titulo,
+      detalle: publicacionesMuro.detalle,
+      municipio: publicacionesMuro.municipio,
+      municipioNombre: municipios.nombre,
+      zonaNombre: zonas.nombre,
+      creadaAt: publicacionesMuro.creadaAt,
+      expiraAt: publicacionesMuro.expiraAt,
+      imagen: imagenes.ruta,
+      estadoImagen: imagenes.estado,
+      motivoImagen: imagenes.motivo,
+    })
+    .from(publicacionesMuro)
+    .leftJoin(municipios, eq(municipios.codigoDane, publicacionesMuro.municipio))
+    .leftJoin(zonas, eq(zonas.id, publicacionesMuro.zonaId))
+    .leftJoin(
+      imagenes,
+      and(eq(imagenes.objetoTipo, 'muro'), eq(imagenes.objetoId, publicacionesMuro.id)),
+    )
+    .where(eq(publicacionesMuro.perfilId, usuarioId))
+    .orderBy(desc(publicacionesMuro.creadaAt))
+
+  return filas.map((f) => ({
+    id: f.id,
+    cara: f.cara as Cara,
+    categoria: f.categoria,
+    titulo: f.titulo,
+    detalle: f.detalle,
+    municipio: f.municipio,
+    municipio_nombre: f.municipioNombre,
+    zona_nombre: f.zonaNombre,
+    creada_at: String(f.creadaAt),
+    expira_at: f.expiraAt ? String(f.expiraAt) : null,
+    // La suya, aprobada o no: la URL pública solo existe para la aprobada,
+    // y para las demás basta con saber en qué van.
+    imagen:
+      f.imagen && f.estadoImagen === 'aprobada' ? urlPublica(`${f.imagen}.webp`) : null,
+    estado_imagen: (f.estadoImagen ?? null) as MiPublicacionMuro['estado_imagen'],
+    motivo_imagen: f.motivoImagen,
+  }))
+}
+
+/**
+ * Borrar una publicación propia, con su foto.
+ *
+ * ⚠ Borrado de verdad: la fila se va (regla de producto 3, «Nunca
+ * `estado = 'eliminada'`»). En la cara que ofrece la publicación lleva el
+ * nombre de esa persona y la versión de la autorización que firmó, así que
+ * marcarla como resuelta sería seguir publicando lo que pidió retirar.
+ *
+ * Y borra el objeto del almacén, que `ON DELETE CASCADE` no hace.
+ *
+ * El `where` lleva SIEMPRE el perfil: es lo que impide borrar la
+ * publicación de otro sabiendo su id, y va en la consulta y no en un `if`
+ * de arriba — un `if` se puede saltar reordenando el código, un `where` no.
+ */
+export async function borrarPublicacion(
+  db: BaseDeDatos,
+  id: string,
+  llave: { usuarioId: string | null },
+): Promise<{ ok: true }> {
+  if (!llave.usuarioId) throw new MuroRechazado('Esto no es tuyo.')
+
+  const [mia] = await db
+    .select({ id: publicacionesMuro.id })
+    .from(publicacionesMuro)
+    .where(
+      and(
+        eq(publicacionesMuro.id, id),
+        eq(publicacionesMuro.perfilId, llave.usuarioId),
+      ),
+    )
+    .limit(1)
+
+  if (!mia) throw new MuroRechazado('Esto no es tuyo.')
+
+  await borrarImagenesDe(db, [{ tipo: 'muro', id }])
+  await db.delete(publicacionesMuro).where(eq(publicacionesMuro.id, id))
+
+  return { ok: true }
 }

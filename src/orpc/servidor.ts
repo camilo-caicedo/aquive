@@ -192,6 +192,23 @@ export const enrutador = os.router({
   },
   comunidad: {
     muro: os.comunidad.muro.handler(({ input }) => comunidad.muro(db, input)),
+    misPublicaciones: os.comunidad.misPublicaciones.handler(({ context }) =>
+      comunidad.misPublicaciones(db, context.usuarioId),
+    ),
+    borrarPublicacion: os.comunidad.borrarPublicacion.handler(
+      async ({ input, context, errors }) => {
+        try {
+          return await comunidad.borrarPublicacion(db, input.id, {
+            usuarioId: context.usuarioId,
+          })
+        } catch (e) {
+          if (e instanceof comunidad.MuroRechazado) {
+            throw errors.RECHAZADO({ data: { motivo: e.message } })
+          }
+          throw e
+        }
+      },
+    ),
     productos: os.comunidad.productos.handler(({ input }) => comunidad.productos(db, input)),
     misProductos: os.comunidad.misProductos.handler(({ context }) =>
       productos.mios(db, context.usuarioId),

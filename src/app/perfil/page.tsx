@@ -10,6 +10,7 @@ import {
   KeyRound,
   ListOrdered,
   ShoppingBag,
+  Heart,
   Smartphone,
   Star,
   UserPen,
@@ -142,6 +143,8 @@ export default async function PerfilPage() {
     { data: perfilOfertador },
     misProductos,
     misSolicitudes,
+    misInsumos,
+    misPublicaciones,
   ] = await Promise.all([
       supabase.rpc('mi_proveedor', {}),
       supabase.rpc('mis_servicios', {}),
@@ -158,6 +161,11 @@ export default async function PerfilPage() {
       // Lo que ha pedido. Antes vivía en `localStorage` y por eso el perfil
       // no lo sabía; desde el ADR 0006 cuelga de la cuenta.
       servidor.servicios.misSolicitudes(),
+      // Y lo que ha pedido de insumos. El procedimiento existía desde el
+      // ADR 0006 y no lo llamaba ninguna pantalla: quien publicaba un
+      // insumo no podía verlo, ni renovarlo, ni cerrarlo.
+      servidor.insumos.mias(),
+      servidor.comunidad.misPublicaciones(),
     ])
 
   const proveedor = (mio as MiProveedor | null) ?? null
@@ -207,13 +215,23 @@ export default async function PerfilPage() {
         ]
       : []),
     { href: '/perfil/disponibilidad', Icono: Clock, nombre: 'Cuándo y dónde atiendo' },
+    // ⚠ Faltaba, y con ella faltaba la única salida: `publicaciones_muro`
+    // solo se INSERTABA. La regla de producto 3 dice que una publicación
+    // vive «mientras su dueño la deje», y su dueño no tenía cómo dejarla.
+    {
+      href: '/muro/mios',
+      Icono: Heart,
+      nombre: 'Mis publicaciones del muro',
+      pista:
+        misPublicaciones.length > 0 ? String(misPublicaciones.length) : undefined,
+    },
     {
       href: '/mis-solicitudes',
       Icono: ClipboardList,
       nombre: 'Mis solicitudes',
       pista:
-        misSolicitudes.length > 0
-          ? String(misSolicitudes.length)
+        misSolicitudes.length + misInsumos.length > 0
+          ? String(misSolicitudes.length + misInsumos.length)
           : undefined,
     },
     // Las dos vistas del módulo de emergencia. Solo salen si esa persona

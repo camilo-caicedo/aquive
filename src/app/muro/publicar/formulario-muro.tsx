@@ -125,8 +125,18 @@ export function FormularioMuro({
             </p>
           )}
 
-          <div className="mt-4">
-            <Button nativeButton={false} render={<Link href={`/muro?cara=${cara}`} />}>
+          {/* La vuelta a lo creado, que faltaba: la pantalla ofrecía un
+              solo botón al muro entero, donde había que buscar lo propio
+              entre lo de todos. */}
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button nativeButton={false} render={<Link href="/muro/mios" />}>
+              Ver lo que he publicado
+            </Button>
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href={`/muro?cara=${cara}`} />}
+            >
               Ver el muro
             </Button>
           </div>

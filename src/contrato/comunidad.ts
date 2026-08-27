@@ -137,6 +137,36 @@ const errores = {
   },
 } as const
 
+/**
+ * Una publicación del muro, propia.
+ *
+ * ⚠ Esto no existía, y con ello no existía forma de ver ni de borrar lo que
+ * uno publicó: `publicaciones_muro` solo se INSERTABA. La interfaz prometía
+ * lo contrario en tres sitios —«puedes borrarlas cuando quieras», «la vas a
+ * encontrar en tu perfil»— y la regla de producto 3 dice que vive «mientras
+ * su dueño la deje». Su dueño no tenía cómo dejarla.
+ */
+export const MiPublicacionMuro = z.object({
+  id: z.uuid(),
+  cara: Cara,
+  categoria: z.string(),
+  titulo: z.string(),
+  detalle: z.string().nullable(),
+  municipio: z.string(),
+  municipio_nombre: z.string().nullable(),
+  zona_nombre: z.string().nullable(),
+  creada_at: z.string(),
+  /** Nulo en la cara que ofrece: no caduca sola. */
+  expira_at: z.string().nullable(),
+  /** URL de su foto, o nulo. Sale aunque esté sin aprobar: es su dueña. */
+  imagen: z.string().nullable(),
+  estado_imagen: z.enum(['en_cola', 'aprobada', 'rechazada']).nullable(),
+  /** El motivo, cuando se rechazó. Regla de producto 8, paso 5. */
+  motivo_imagen: z.string().nullable(),
+})
+
+export type MiPublicacionMuro = z.infer<typeof MiPublicacionMuro>
+
 export const contratoComunidad = {
   /** El muro, una cara a la vez. Pantalla 30. */
   muro: oc
@@ -181,6 +211,21 @@ export const contratoComunidad = {
       }),
     )
     .output(z.object({ id: z.uuid() })),
+
+  /** Lo que yo publiqué en el muro, de lo más nuevo a lo más viejo. */
+  misPublicaciones: oc.output(z.array(MiPublicacionMuro)),
+
+  /**
+   * Borrado de verdad, con su foto (regla de producto 3).
+   *
+   * Nunca `estado = 'resuelta'`: la fila se va. En la cara que ofrece lleva
+   * el nombre de esa persona y la versión de la autorización que firmó, así
+   * que dejarla marcada sería seguir publicando lo que pidió retirar.
+   */
+  borrarPublicacion: oc
+    .errors(errores)
+    .input(z.object({ id: z.uuid() }))
+    .output(z.object({ ok: z.literal(true) })),
 
   /** Hecho en el barrio. Pantalla 31. */
   productos: oc
