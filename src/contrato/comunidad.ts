@@ -44,6 +44,9 @@ export const EnMuro = z.object({
   autor_nombre: z.string().nullable(),
   creada_at: z.string(),
   imagen: z.string().nullable(),
+  /** El punto de entrega elegido, si lo hay. */
+  acopio_nombre: z.string().nullable(),
+  acopio_direccion: z.string().nullable(),
   /**
    * Por dónde se le responde a quien ofrece.
    *
@@ -165,6 +168,14 @@ export const contratoComunidad = {
         municipio: z.string().regex(/^[0-9]{5}$/),
         zona_id: z.uuid().optional(),
         imagen_id: z.uuid().optional(),
+        /**
+         * Dónde se entrega, si se elige un centro de acopio (ADR 0008).
+         *
+         * Sirve para no tener que dar la propia dirección: se deja ahí y
+         * quien lo necesita lo recoge ahí. Es coherente con todo lo demás —
+         * esta aplicación no publica dónde vive nadie.
+         */
+        acopio_id: z.uuid().optional(),
         /** Solo para la cara que ofrece: acepta que su nombre sea público. */
         acepto_publicar_nombre: z.boolean().default(false),
       }),

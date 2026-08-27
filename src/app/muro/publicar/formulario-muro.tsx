@@ -35,9 +35,12 @@ type MunicipioMuro = {
 export function FormularioMuro({
   cara,
   municipios,
+  acopios,
 }: {
   cara: Cara
   municipios: MunicipioMuro[]
+  /** Los centros donde se puede dejar (ADR 0008). Vacío = no hay ninguno. */
+  acopios: { id: string; nombre: string; direccion: string | null }[]
 }) {
   const [categoria, setCategoria] = useState<(typeof CATEGORIAS_MURO)[number]>('hogar')
   const [titulo, setTitulo] = useState('')
@@ -46,6 +49,7 @@ export function FormularioMuro({
   // El Combobox trabaja con el objeto, no con el código: el estado sigue
   // siendo el código porque es lo que se envía.
   const municipioElegido = municipios.find((m) => m.codigo_dane === municipio)
+  const [acopioId, setAcopioId] = useState('')
   const [imagenId, setImagenId] = useState<string | null>(null)
   const [acepto, setAcepto] = useState(false)
   const [enviando, setEnviando] = useState(false)
@@ -67,6 +71,7 @@ export function FormularioMuro({
         detalle: detalle.trim() || undefined,
         municipio,
         imagen_id: imagenId ?? undefined,
+        acopio_id: acopioId || undefined,
         acepto_publicar_nombre: acepto,
       })
       setListo(true)
@@ -230,6 +235,37 @@ export function FormularioMuro({
           El municipio basta. No pedimos tu dirección.
         </p>
       </div>
+
+      {/* Solo para quien OFRECE, y solo donde hay centros. Quien pide no
+          entrega nada, así que la pregunta no le toca. */}
+      {ofrece && acopios.length > 0 && (
+        <div className="mt-4">
+          <label
+            htmlFor="acopio"
+            className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase"
+          >
+            Dónde lo entregas (opcional)
+          </label>
+          <select
+            id="acopio"
+            value={acopioId}
+            onChange={(e) => setAcopioId(e.target.value)}
+            className="bg-card border border-input focus-visible:ring-ring mt-2 min-h-14 w-full rounded-2xl px-4 text-base focus-visible:ring-2 focus-visible:outline-none"
+          >
+            <option value="">Lo acuerdo con quien lo necesite</option>
+            {acopios.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.nombre}
+                {a.direccion ? ` · ${a.direccion}` : ''}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Si eliges un punto, lo dejas ahí y quien lo necesite lo recoge ahí.
+            Así no tienes que dar tu dirección ni encontrarte con nadie.
+          </p>
+        </div>
+      )}
 
       <div className="mt-6">
         <SubirImagen objetoTipo="muro" onSubida={setImagenId} />

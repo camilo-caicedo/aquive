@@ -21,13 +21,8 @@ import {
 // eso sigue siendo cierto: es el precio que se paga a cambio de que quien
 // coordina no tenga que entrar a «Lo mío» para llegar a su panel.
 //
-// ⚠ Lo que NO se relaja es la regla 8: se llama «Entregas», por lo que hay
-// dentro, y no «Mi organización», que es un rol. Y no es capricho de
-// estilo — `estado_encabezado.coordinacion` tiene dos valores y esa celda
-// la ven los dos públicos: quien trabaja en una fundación y quien solo
-// ofreció ayuda y tiene conversaciones abiertas. Al segundo, «Mi
-// organización» le mentiría. Lo que los dos vienen a hacer aquí es
-// coordinar una entrega.
+// ⚠ Lo que NO se relaja es la regla 8: se llama «Acopio», por lo que hay
+// dentro, y no «Mi organización», que es un rol.
 //
 // ⚠ Y tampoco cabía: a 360 px cinco celdas dan 68 px útiles, y «Mi
 // organización» a 11,5 px mide unos 86. Con `whitespace-nowrap` se
@@ -79,12 +74,11 @@ const ENLACES = [
 // La quinta, antes de «Lo mío», y distinta según el público — que son dos
 // y no se cruzan nunca:
 //
-//   · `organizacion` — el equipo de una fundación. Su sitio es /aliado, que
-//     además de los hilos tiene el equipo, las solicitudes por atender y
-//     los proveedores. Se llama «Entregas» por lo que se hace ahí.
-//   · `coordinacion` — quien ofreció ayuda en una solicitud acompañada. No
-//     pertenece a ninguna organización: lo suyo son sus conversaciones, y
-//     viven en /coordinacion.
+//   · `organizacion` — el equipo de un centro de acopio. Su sitio es
+//     /aliado, que tiene su equipo y las verificaciones que hace.
+//
+// ⚠ Antes había un segundo valor, `coordinacion`, para quien ofreció ayuda
+// en una solicitud acompañada. Se fue con el ADR 0007.
 //
 // Nadie ve las dos, así que la barra no cambia bajo los pies de nadie.
 // ⚠ Aquí había DOS celdas llamadas «Mensajes» —esta y la de la barra fija—
@@ -93,7 +87,7 @@ const ENLACES = [
 // /mensajes con el resto; queda solo la celda de quien trabaja en una
 // fundación, que no es una bandeja sino su panel de trabajo.
 const QUINTA = {
-  organizacion: { href: '/aliado', etiqueta: 'Entregas', Icono: PackageCheck },
+  organizacion: { href: '/aliado', etiqueta: 'Acopio', Icono: PackageCheck },
 } as const
 
 export type Coordinacion = keyof typeof QUINTA | null

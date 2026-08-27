@@ -170,7 +170,7 @@ export default async function AdminPage() {
                 href: '/admin/bitacora',
                 Icono: ScrollText,
                 etiqueta: 'Bitácora',
-                detalle: 'Quién vio identidades y referencias',
+                detalle: 'Quién vio referencias, y con qué motivo',
               },
             ],
           },

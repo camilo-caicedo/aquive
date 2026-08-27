@@ -2,48 +2,26 @@ import Link from 'next/link'
 import { MessageSquare } from 'lucide-react'
 
 import { servidor } from '@/orpc/local'
-import { createClient } from '@/lib/supabase/server'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
-import { FilaBandeja } from '@/components/fila-bandeja'
-import type { HiloResumen } from '@/lib/types'
 
 export const metadata = { title: 'Mensajes' }
 
 /**
  * La bandeja única. Todos los hilos de una persona, en un sitio.
  *
- * Antes había dos destinos —`/mensajes` para los pedidos de servicio y
- * `/coordinacion` para las entregas acompañadas— y en la barra inferior se
- * veían como dos celdas llamadas «Mensajes». Dos puertas al mismo cuarto:
- * quien tenía las dos no sabía cuál abrir, y ninguna de las dos contenía
- * todos sus mensajes.
+ * ⚠ Antes juntaba dos cosas: los pedidos de servicio y las entregas
+ * acompañadas de una fundación. Las segundas se fueron con el ADR 0007, así
+ * que la bandeja quedó con una sola clase de hilo. El nombre en plural se
+ * queda igual: sigue siendo la lista de con quién estás hablando.
  *
- * Son conversaciones distintas por dentro —una es bilateral y filtra
- * contactos, la otra es de tres con una fundación delante— pero para quien
- * las lee son lo mismo: gente con la que está hablando. Se juntan aquí y se
- * distinguen con un antetítulo, que es todo lo que hace falta.
- *
- * ⚠ Lo que NO aparece: los hilos de quien PIDIÓ un servicio. No tiene cuenta
- * —esa es la promesa— así que no hay forma de saber cuáles son suyos. Viven
- * en el enlace de su solicitud, y la pantalla lo dice en vez de enseñar una
- * bandeja vacía que se leería como «no tienes mensajes».
+ * Desde el ADR 0006 los dos lados tienen cuenta, así que aquí aparecen
+ * los hilos de quien pide Y los de quien presta. Antes los primeros no
+ * podían salir: quien pedía no tenía cuenta y no había forma de saber
+ * cuáles eran suyos.
  */
 export default async function MensajesPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const [hilosServicio, acompanados] = await Promise.all([
-    servidor.chat.bandeja(),
-    // Todavía por RPC: el flujo acompañado no ha pasado al contrato. Es lo
-    // único de esta pantalla que sigue del lado viejo.
-    user
-      ? supabase.rpc('mis_hilos').then((r) => (r.data as unknown as HiloResumen[]) ?? [])
-      : Promise.resolve([] as HiloResumen[]),
-  ])
-
-  const vacio = hilosServicio.length === 0 && acompanados.length === 0
+  const hilosServicio = await servidor.chat.bandeja()
+  const vacio = hilosServicio.length === 0
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
@@ -105,38 +83,6 @@ export default async function MensajesPage() {
             </section>
           )}
 
-          {acompanados.length > 0 && (
-            <section className="mt-8">
-              <h2 className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase">
-                Entregas acompañadas
-              </h2>
-              <p className="mt-1 text-base text-muted-foreground">
-                Con una fundación delante. Los tres están en el hilo.
-              </p>
-              <ul className="mt-2 space-y-3">
-                {acompanados.map((h) => (
-                  <FilaBandeja
-                    key={h.id}
-                    href={`/aliado/conversacion/${h.id}`}
-                    codigo={h.codigo}
-                    lugar={[h.barrio, h.municipio].filter(Boolean).join(' · ')}
-                    quien={
-                      h.directa
-                        ? 'La fundación entrega de su bodega'
-                        : [h.ofertador, h.aliado].filter(Boolean).join(' · ') ||
-                          'Sin asignar'
-                    }
-                    estado={h.estado}
-                    ultimo={
-                      h.mensajes_total === 1
-                        ? '1 mensaje'
-                        : `${h.mensajes_total} mensajes`
-                    }
-                  />
-                ))}
-              </ul>
-            </section>
-          )}
         </>
       )}
 

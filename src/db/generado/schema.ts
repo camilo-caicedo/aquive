@@ -45,15 +45,10 @@ export const entregas = pgTable("entregas", {
 	recibidoAt: timestamp("recibido_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	confirmadaPorSolicitanteAt: timestamp("confirmada_por_solicitante_at", { withTimezone: true, mode: 'string' }),
 	solicitudCodigo: text("solicitud_codigo").notNull(),
-	conversacionId: uuid("conversacion_id"),
 	esPrueba: boolean("es_prueba").default(false).notNull(),
+	origenTipo: text("origen_tipo"),
 }, (table) => [
 	index("idx_entregas_organizacion").using("btree", table.organizacionId.asc().nullsLast().op("timestamptz_ops"), table.recibidoAt.desc().nullsFirst().op("timestamptz_ops")),
-	foreignKey({
-			columns: [table.conversacionId],
-			foreignColumns: [conversaciones.id],
-			name: "entregas_conversacion_id_fkey"
-		}).onDelete("set null"),
 	foreignKey({
 			columns: [table.itemId],
 			foreignColumns: [catalogoItems.id],
@@ -70,6 +65,7 @@ export const entregas = pgTable("entregas", {
 			name: "entregas_sugerencia_id_fkey"
 		}).onDelete("set null"),
 	check("entregas_cantidad_check", sql`(cantidad > (0)::numeric) AND (cantidad <= (9999)::numeric)`),
+	check("entregas_origen_tipo_check", sql`origen_tipo = ANY (ARRAY['muro'::text, 'producto'::text, 'directo'::text])`),
 	check("entregas_uno_u_otro", sql`num_nonnulls(item_id, sugerencia_id) = 1`),
 ]);
 
@@ -250,6 +246,9 @@ export const organizaciones = pgTable("organizaciones", {
 	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	actualizadaAt: timestamp("actualizada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	esPrueba: boolean("es_prueba").default(false).notNull(),
+	telefono: text(),
+	latitud: numeric({ precision: 9, scale:  6 }),
+	longitud: numeric({ precision: 9, scale:  6 }),
 }, (table) => [
 	foreignKey({
 			columns: [table.creadaPor],
@@ -263,7 +262,9 @@ export const organizaciones = pgTable("organizaciones", {
 	check("organizaciones_municipios_check", sql`array_length(municipios, 1) >= 1`),
 	check("organizaciones_nit_check", sql`nit ~ '^[0-9]{5,15}(-[0-9])?$'::text`),
 	check("organizaciones_nombre_check", sql`(char_length(TRIM(BOTH FROM nombre)) >= 3) AND (char_length(TRIM(BOTH FROM nombre)) <= 80)`),
+	check("organizaciones_punto_completo", sql`num_nonnulls(latitud, longitud) <> 1`),
 	check("organizaciones_slug_check", sql`slug ~ '^[a-z0-9-]{3,40}$'::text`),
+	check("organizaciones_telefono_check", sql`(telefono IS NULL) OR ((char_length(telefono) >= 7) AND (char_length(telefono) <= 20))`),
 	check("organizaciones_tipo_check", sql`tipo = ANY (ARRAY['fundacion'::text, 'corporacion'::text, 'entidad_publica'::text, 'junta'::text, 'otra'::text])`),
 ]);
 
@@ -295,139 +296,6 @@ export const invitacionesOrganizacion = pgTable("invitaciones_organizacion", {
 	check("invitaciones_organizacion_rol_otorgado_check", sql`rol_otorgado = ANY (ARRAY['coordinador'::text, 'miembro'::text])`),
 	check("invitaciones_organizacion_usos_check", sql`usos >= 0`),
 	check("invitaciones_organizacion_usos_max_check", sql`(usos_max >= 1) AND (usos_max <= 200)`),
-]);
-
-export const identidades = pgTable("identidades", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	solicitudId: uuid("solicitud_id"),
-	perfilId: uuid("perfil_id"),
-	titularTipo: text("titular_tipo").notNull(),
-	nombreCifrado: bytea("nombre_cifrado").notNull(),
-	documentoTipo: text("documento_tipo"),
-	documentoCifrado: bytea("documento_cifrado"),
-	documentoHash: text("documento_hash"),
-	documentoUltimos4: text("documento_ultimos4"),
-	telefonoCifrado: bytea("telefono_cifrado"),
-	telefonoHash: text("telefono_hash"),
-	autorizacionVersion: text("autorizacion_version").notNull(),
-	autorizacionAt: timestamp("autorizacion_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	esPrueba: boolean("es_prueba").default(false).notNull(),
-}, (table) => [
-	uniqueIndex("identidades_perfil_uniq").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")).where(sql`(perfil_id IS NOT NULL)`),
-	uniqueIndex("identidades_solicitud_uniq").using("btree", table.solicitudId.asc().nullsLast().op("uuid_ops")).where(sql`(solicitud_id IS NOT NULL)`),
-	foreignKey({
-			columns: [table.perfilId],
-			foreignColumns: [perfiles.id],
-			name: "identidades_perfil_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.solicitudId],
-			foreignColumns: [solicitudes.id],
-			name: "identidades_solicitud_id_fkey"
-		}).onDelete("cascade"),
-	check("identidades_autorizacion_version_check", sql`(char_length(TRIM(BOTH FROM autorizacion_version)) >= 3) AND (char_length(TRIM(BOTH FROM autorizacion_version)) <= 40)`),
-	check("identidades_documento_tipo_check", sql`documento_tipo = ANY (ARRAY['CC'::text, 'CE'::text, 'PEP'::text, 'PPT'::text])`),
-	check("identidades_documento_ultimos4_check", sql`documento_ultimos4 ~ '^[A-Z0-9]{1,4}$'::text`),
-	check("identidades_titular_coherente", sql`((titular_tipo = 'solicitante'::text) AND (solicitud_id IS NOT NULL)) OR ((titular_tipo = ANY (ARRAY['ofertador'::text, 'aliado'::text])) AND (perfil_id IS NOT NULL))`),
-	check("identidades_titular_tipo_check", sql`titular_tipo = ANY (ARRAY['solicitante'::text, 'ofertador'::text, 'aliado'::text])`),
-	check("identidades_uno_u_otro", sql`num_nonnulls(solicitud_id, perfil_id) = 1`),
-]);
-
-export const accesosIdentidad = pgTable("accesos_identidad", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	identidadId: uuid("identidad_id"),
-	identidadRef: text("identidad_ref").notNull(),
-	leidaPor: uuid("leida_por"),
-	lectorRef: text("lector_ref").notNull(),
-	rolLector: text("rol_lector").notNull(),
-	motivo: text().notNull(),
-	leidaAt: timestamp("leida_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	esPrueba: boolean("es_prueba").default(false).notNull(),
-}, (table) => [
-	index("idx_accesos_identidad").using("btree", table.identidadId.asc().nullsLast().op("timestamptz_ops"), table.leidaAt.desc().nullsFirst().op("timestamptz_ops")),
-	foreignKey({
-			columns: [table.identidadId],
-			foreignColumns: [identidades.id],
-			name: "accesos_identidad_identidad_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.leidaPor],
-			foreignColumns: [usersInAuth.id],
-			name: "accesos_identidad_leida_por_fkey"
-		}).onDelete("set null"),
-	check("accesos_identidad_motivo_check", sql`(char_length(TRIM(BOTH FROM motivo)) >= 5) AND (char_length(TRIM(BOTH FROM motivo)) <= 200)`),
-	check("accesos_identidad_rol_lector_check", sql`rol_lector = ANY (ARRAY['admin'::text, 'aliado'::text])`),
-]);
-
-export const mensajes = pgTable("mensajes", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	conversacionId: uuid("conversacion_id").notNull(),
-	autorRol: text("autor_rol").notNull(),
-	autorPerfilId: uuid("autor_perfil_id"),
-	cuerpo: text().notNull(),
-	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	oculto: boolean().default(false).notNull(),
-	ocultoPor: uuid("oculto_por"),
-	ocultoAt: timestamp("oculto_at", { withTimezone: true, mode: 'string' }),
-}, (table) => [
-	index("idx_mensajes_conversacion").using("btree", table.conversacionId.asc().nullsLast().op("timestamptz_ops"), table.creadoAt.asc().nullsLast().op("timestamptz_ops")),
-	foreignKey({
-			columns: [table.autorPerfilId],
-			foreignColumns: [perfiles.id],
-			name: "mensajes_autor_perfil_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.conversacionId],
-			foreignColumns: [conversaciones.id],
-			name: "mensajes_conversacion_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.ocultoPor],
-			foreignColumns: [usersInAuth.id],
-			name: "mensajes_oculto_por_fkey"
-		}).onDelete("set null"),
-	check("mensajes_autor_rol_check", sql`autor_rol = ANY (ARRAY['solicitante'::text, 'ofertador'::text, 'aliado'::text, 'admin'::text])`),
-	check("mensajes_cuerpo_check", sql`(char_length(cuerpo) >= 1) AND (char_length(cuerpo) <= 1000)`),
-]);
-
-export const conversaciones = pgTable("conversaciones", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	solicitudId: uuid("solicitud_id").notNull(),
-	ofertadorId: uuid("ofertador_id"),
-	aliadoId: uuid("aliado_id"),
-	organizacionId: uuid("organizacion_id"),
-	estado: text().default('esperando_aliado').notNull(),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	cerradaAt: timestamp("cerrada_at", { withTimezone: true, mode: 'string' }),
-	directa: boolean().default(false).notNull(),
-}, (table) => [
-	uniqueIndex("conversaciones_directa_uniq").using("btree", table.solicitudId.asc().nullsLast().op("uuid_ops")).where(sql`directa`),
-	index("idx_conversaciones_organizacion").using("btree", table.organizacionId.asc().nullsLast().op("uuid_ops"), table.estado.asc().nullsLast().op("text_ops")),
-	index("idx_conversaciones_solicitud").using("btree", table.solicitudId.asc().nullsLast().op("uuid_ops")),
-	foreignKey({
-			columns: [table.aliadoId],
-			foreignColumns: [perfiles.id],
-			name: "conversaciones_aliado_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.ofertadorId],
-			foreignColumns: [perfiles.id],
-			name: "conversaciones_ofertador_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.organizacionId],
-			foreignColumns: [organizaciones.id],
-			name: "conversaciones_organizacion_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.solicitudId],
-			foreignColumns: [solicitudes.id],
-			name: "conversaciones_solicitud_id_fkey"
-		}).onDelete("cascade"),
-	unique("conversaciones_solicitud_id_ofertador_id_key").on(table.solicitudId, table.ofertadorId),
-	check("conversaciones_directa_sin_ofertador", sql`(NOT directa) OR (ofertador_id IS NULL)`),
-	check("conversaciones_estado_check", sql`estado = ANY (ARRAY['esperando_aliado'::text, 'asignada'::text, 'abierta'::text, 'acordada'::text, 'entregada'::text, 'cerrada'::text])`),
 ]);
 
 export const servidores = pgTable("servidores", {
@@ -632,61 +500,6 @@ export const metricas = pgTable("metricas", {
 	pgPolicy("metricas lectura publica", { as: "permissive", for: "select", to: ["public"], using: sql`(es_prueba = false)` }),
 ]);
 
-export const solicitudes = pgTable("solicitudes", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	codigo: text().notNull(),
-	municipio: text().notNull(),
-	barrio: text().notNull(),
-	categoria: text().notNull(),
-	nota: text(),
-	estado: text().default('abierta').notNull(),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	confirmadaAt: timestamp("confirmada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '72:00:00'::interval)`).notNull(),
-	esPrueba: boolean("es_prueba").default(false).notNull(),
-	flujo: text().default('directo').notNull(),
-	organizacionId: uuid("organizacion_id"),
-	acompanamientoAt: timestamp("acompanamiento_at", { withTimezone: true, mode: 'string' }),
-	puedeRecoger: boolean("puede_recoger").default(false).notNull(),
-	notaAdmin: text("nota_admin"),
-	notaAdminAt: timestamp("nota_admin_at", { withTimezone: true, mode: 'string' }),
-	notaAdminPor: uuid("nota_admin_por"),
-	perfilId: uuid("perfil_id").notNull(),
-}, (table) => [
-	index("idx_solicitudes_categoria").using("btree", table.categoria.asc().nullsLast().op("text_ops")),
-	index("idx_solicitudes_expira").using("btree", table.expiraAt.asc().nullsLast().op("timestamptz_ops")),
-	index("idx_solicitudes_municipio").using("btree", table.municipio.asc().nullsLast().op("text_ops")),
-	index("idx_solicitudes_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
-	foreignKey({
-			columns: [table.municipio],
-			foreignColumns: [municipios.codigoDane],
-			name: "solicitudes_municipio_fkey"
-		}),
-	foreignKey({
-			columns: [table.notaAdminPor],
-			foreignColumns: [usersInAuth.id],
-			name: "solicitudes_nota_admin_por_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.organizacionId],
-			foreignColumns: [organizaciones.id],
-			name: "solicitudes_organizacion_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.perfilId],
-			foreignColumns: [perfiles.id],
-			name: "solicitudes_perfil_id_fkey"
-		}).onDelete("cascade"),
-	unique("solicitudes_codigo_key").on(table.codigo),
-	check("solicitudes_barrio_check", sql`(char_length(barrio) >= 2) AND (char_length(barrio) <= 60)`),
-	check("solicitudes_categoria_check", sql`categoria = ANY (ARRAY['alimentacion'::text, 'aseo'::text, 'salud'::text, 'abrigo'::text, 'cocina'::text, 'otros'::text, 'servicios'::text, 'mascotas'::text])`),
-	check("solicitudes_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'en_coordinacion'::text, 'entregada_parcial'::text, 'cumplida'::text])`),
-	check("solicitudes_flujo_check", sql`flujo = ANY (ARRAY['directo'::text, 'acompanado'::text])`),
-	check("solicitudes_flujo_coherente", sql`((flujo = 'directo'::text) AND (organizacion_id IS NULL)) OR ((flujo = 'acompanado'::text) AND (organizacion_id IS NOT NULL))`),
-	check("solicitudes_nota_admin_check", sql`char_length(nota_admin) <= 200`),
-	check("solicitudes_nota_check", sql`char_length(nota) <= 140`),
-]);
-
 export const respuestas = pgTable("respuestas", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	solicitudId: uuid("solicitud_id").notNull(),
@@ -710,6 +523,51 @@ export const respuestas = pgTable("respuestas", {
 	pgPolicy("respuestas insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
 	pgPolicy("respuestas propias", { as: "permissive", for: "select", to: ["authenticated"] }),
 	check("respuestas_mensaje_check", sql`(char_length(mensaje) >= 5) AND (char_length(mensaje) <= 200)`),
+]);
+
+export const solicitudes = pgTable("solicitudes", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	codigo: text().notNull(),
+	municipio: text().notNull(),
+	barrio: text().notNull(),
+	categoria: text().notNull(),
+	nota: text(),
+	estado: text().default('abierta').notNull(),
+	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	confirmadaAt: timestamp("confirmada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '72:00:00'::interval)`).notNull(),
+	esPrueba: boolean("es_prueba").default(false).notNull(),
+	puedeRecoger: boolean("puede_recoger").default(false).notNull(),
+	notaAdmin: text("nota_admin"),
+	notaAdminAt: timestamp("nota_admin_at", { withTimezone: true, mode: 'string' }),
+	notaAdminPor: uuid("nota_admin_por"),
+	perfilId: uuid("perfil_id").notNull(),
+}, (table) => [
+	index("idx_solicitudes_categoria").using("btree", table.categoria.asc().nullsLast().op("text_ops")),
+	index("idx_solicitudes_expira").using("btree", table.expiraAt.asc().nullsLast().op("timestamptz_ops")),
+	index("idx_solicitudes_municipio").using("btree", table.municipio.asc().nullsLast().op("text_ops")),
+	index("idx_solicitudes_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.municipio],
+			foreignColumns: [municipios.codigoDane],
+			name: "solicitudes_municipio_fkey"
+		}),
+	foreignKey({
+			columns: [table.notaAdminPor],
+			foreignColumns: [usersInAuth.id],
+			name: "solicitudes_nota_admin_por_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.perfilId],
+			foreignColumns: [perfiles.id],
+			name: "solicitudes_perfil_id_fkey"
+		}).onDelete("cascade"),
+	unique("solicitudes_codigo_key").on(table.codigo),
+	check("solicitudes_barrio_check", sql`(char_length(barrio) >= 2) AND (char_length(barrio) <= 60)`),
+	check("solicitudes_categoria_check", sql`categoria = ANY (ARRAY['alimentacion'::text, 'aseo'::text, 'salud'::text, 'abrigo'::text, 'cocina'::text, 'otros'::text, 'servicios'::text, 'mascotas'::text])`),
+	check("solicitudes_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'en_coordinacion'::text, 'entregada_parcial'::text, 'cumplida'::text])`),
+	check("solicitudes_nota_admin_check", sql`char_length(nota_admin) <= 200`),
+	check("solicitudes_nota_check", sql`char_length(nota) <= 140`),
 ]);
 
 export const metricasServicio = pgTable("metricas_servicio", {
@@ -1021,6 +879,53 @@ export const mensajesServicio = pgTable("mensajes_servicio", {
 	check("mensajes_servicio_cuerpo_check", sql`(char_length(cuerpo) >= 1) AND (char_length(cuerpo) <= 500)`),
 ]);
 
+export const publicacionesMuro = pgTable("publicaciones_muro", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	cara: text().notNull(),
+	perfilId: uuid("perfil_id").notNull(),
+	autorNombre: text("autor_nombre"),
+	autorizacionVersion: text("autorizacion_version"),
+	autorizacionAt: timestamp("autorizacion_at", { withTimezone: true, mode: 'string' }),
+	categoria: text().notNull(),
+	titulo: text().notNull(),
+	detalle: text(),
+	municipio: text().notNull(),
+	zonaId: uuid("zona_id"),
+	estado: text().default('abierta').notNull(),
+	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }),
+	esPrueba: boolean("es_prueba").default(false).notNull(),
+	acopioId: uuid("acopio_id"),
+}, (table) => [
+	index("idx_muro_abierta").using("btree", table.cara.asc().nullsLast().op("text_ops"), table.municipio.asc().nullsLast().op("text_ops"), table.creadaAt.desc().nullsFirst().op("timestamptz_ops")).where(sql`(estado = 'abierta'::text)`),
+	index("idx_muro_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.acopioId],
+			foreignColumns: [organizaciones.id],
+			name: "publicaciones_muro_acopio_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.municipio],
+			foreignColumns: [municipios.codigoDane],
+			name: "publicaciones_muro_municipio_fkey"
+		}),
+	foreignKey({
+			columns: [table.perfilId],
+			foreignColumns: [perfiles.id],
+			name: "publicaciones_muro_perfil_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.zonaId],
+			foreignColumns: [zonas.id],
+			name: "publicaciones_muro_zona_id_fkey"
+		}).onDelete("set null"),
+	check("muro_ofrece_con_nombre", sql`(cara <> 'ofrece'::text) OR ((perfil_id IS NOT NULL) AND (autor_nombre IS NOT NULL) AND (autorizacion_version IS NOT NULL))`),
+	check("publicaciones_muro_cara_check", sql`cara = ANY (ARRAY['ofrece'::text, 'necesita'::text])`),
+	check("publicaciones_muro_detalle_check", sql`char_length(detalle) <= 300`),
+	check("publicaciones_muro_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'resuelta'::text])`),
+	check("publicaciones_muro_titulo_check", sql`(char_length(titulo) >= 3) AND (char_length(titulo) <= 140)`),
+]);
+
 export const imagenes = pgTable("imagenes", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	objetoTipo: text("objeto_tipo").notNull(),
@@ -1112,47 +1017,6 @@ export const codigosAcceso = pgTable("codigos_acceso", {
 	unique("codigos_acceso_codigo_hash_key").on(table.codigoHash),
 ]);
 
-export const publicacionesMuro = pgTable("publicaciones_muro", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	cara: text().notNull(),
-	perfilId: uuid("perfil_id").notNull(),
-	autorNombre: text("autor_nombre"),
-	autorizacionVersion: text("autorizacion_version"),
-	autorizacionAt: timestamp("autorizacion_at", { withTimezone: true, mode: 'string' }),
-	categoria: text().notNull(),
-	titulo: text().notNull(),
-	detalle: text(),
-	municipio: text().notNull(),
-	zonaId: uuid("zona_id"),
-	estado: text().default('abierta').notNull(),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }),
-	esPrueba: boolean("es_prueba").default(false).notNull(),
-}, (table) => [
-	index("idx_muro_abierta").using("btree", table.cara.asc().nullsLast().op("text_ops"), table.municipio.asc().nullsLast().op("text_ops"), table.creadaAt.desc().nullsFirst().op("timestamptz_ops")).where(sql`(estado = 'abierta'::text)`),
-	index("idx_muro_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
-	foreignKey({
-			columns: [table.municipio],
-			foreignColumns: [municipios.codigoDane],
-			name: "publicaciones_muro_municipio_fkey"
-		}),
-	foreignKey({
-			columns: [table.perfilId],
-			foreignColumns: [perfiles.id],
-			name: "publicaciones_muro_perfil_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.zonaId],
-			foreignColumns: [zonas.id],
-			name: "publicaciones_muro_zona_id_fkey"
-		}).onDelete("set null"),
-	check("muro_ofrece_con_nombre", sql`(cara <> 'ofrece'::text) OR ((perfil_id IS NOT NULL) AND (autor_nombre IS NOT NULL) AND (autorizacion_version IS NOT NULL))`),
-	check("publicaciones_muro_cara_check", sql`cara = ANY (ARRAY['ofrece'::text, 'necesita'::text])`),
-	check("publicaciones_muro_detalle_check", sql`char_length(detalle) <= 300`),
-	check("publicaciones_muro_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'resuelta'::text])`),
-	check("publicaciones_muro_titulo_check", sql`(char_length(titulo) >= 3) AND (char_length(titulo) <= 140)`),
-]);
-
 export const destapesContacto = pgTable("destapes_contacto", {
 	solicitudId: uuid("solicitud_id").notNull(),
 	perfilId: uuid("perfil_id").notNull(),
@@ -1241,17 +1105,6 @@ export const miembrosOrganizacion = pgTable("miembros_organizacion", {
 	check("miembros_organizacion_estado_check", sql`estado = ANY (ARRAY['pendiente'::text, 'activo'::text, 'inactivo'::text])`),
 	check("miembros_organizacion_rol_check", sql`rol = ANY (ARRAY['coordinador'::text, 'miembro'::text])`),
 ]);
-export const vCruces = pgView("v_cruces", {	solicitudId: uuid("solicitud_id"),
-	codigo: text(),
-	municipio: text(),
-	flujo: text(),
-	organizacionId: uuid("organizacion_id"),
-	ofertadorId: uuid("ofertador_id"),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	itemsCoincidentes: bigint("items_coincidentes", { mode: "number" }),
-	detalle: jsonb(),
-}).as(sql`SELECT s.id AS solicitud_id, s.codigo, s.municipio, s.flujo, s.organizacion_id, o.id AS ofertador_id, count(*) AS items_coincidentes, jsonb_agg(jsonb_build_object('nombre', COALESCE(c.nombre, sg.nombre_propuesto), 'cantidad', si.cantidad, 'unidad', COALESCE(c.unidad, sg.unidad_sugerida, 'unidad'::text)) ORDER BY (COALESCE(c.orden, 9999))) AS detalle FROM solicitud_items si JOIN solicitudes s ON s.id = si.solicitud_id JOIN ofrecimientos ofr ON ofr.item_id IS NOT NULL AND ofr.item_id = si.item_id OR ofr.sugerencia_id IS NOT NULL AND ofr.sugerencia_id = si.sugerencia_id JOIN perfiles o ON o.id = ofr.perfil_id LEFT JOIN catalogo_items c ON c.id = si.item_id LEFT JOIN sugerencias_item sg ON sg.id = si.sugerencia_id WHERE si.cubierto = false AND ofr.disponible = true AND estado_activo(s.estado) AND s.expira_at > now() AND (s.municipio = ANY (o.municipios)) AND puede_ofrecer(o.id) GROUP BY s.id, s.codigo, s.municipio, s.flujo, s.organizacion_id, o.id`);
-
 export const entidadesPublicas = pgView("entidades_publicas", {	id: uuid(),
 	nombre: text(),
 	subtitulo: text(),
@@ -1285,26 +1138,6 @@ export const servidoresPublicos = pgView("servidores_publicos", {	id: uuid(),
 	verificado: boolean(),
 	servicios: text().array(),
 }).as(sql`SELECT p.id, p.nombre_visible, p.municipios, p.contacto_publico, p.contacto_tipo, p.descripcion, sv.profesion, sv.entidad_matricula, sv.numero_matricula, sv.verificado, sv.servicios FROM perfiles p JOIN servidores sv ON sv.perfil_id = p.id WHERE p.tipo = 'servidor'::text AND p.suspendido = false AND p.acepto_publicacion = true`);
-
-export const solicitudesPublicas = pgView("solicitudes_publicas", {	id: uuid(),
-	codigo: text(),
-	municipio: text(),
-	municipioNombre: text("municipio_nombre"),
-	barrio: text(),
-	categoria: text(),
-	nota: text(),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }),
-	confirmadaAt: timestamp("confirmada_at", { withTimezone: true, mode: 'string' }),
-	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }),
-	horasSinConfirmar: numeric("horas_sin_confirmar"),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	numRespuestas: bigint("num_respuestas", { mode: "number" }),
-	items: jsonb(),
-	itemIds: text("item_ids").array(),
-	sugerenciaIds: uuid("sugerencia_ids").array(),
-	flujo: text(),
-	notaAdmin: text("nota_admin"),
-}).as(sql`SELECT s.id, s.codigo, s.municipio, (m.nombre || ', '::text) || m.departamento AS municipio_nombre, s.barrio, s.categoria, s.nota, s.creada_at, s.confirmada_at, s.expira_at, EXTRACT(epoch FROM now() - s.confirmada_at) / 3600::numeric AS horas_sin_confirmar, (( SELECT count(*) AS count FROM respuestas r WHERE r.solicitud_id = s.id)) + (( SELECT count(*) AS count FROM conversaciones c WHERE c.solicitud_id = s.id)) AS num_respuestas, ( SELECT COALESCE(jsonb_agg(jsonb_build_object('nombre', COALESCE(c.nombre, sg.nombre_propuesto), 'cantidad', si.cantidad, 'unidad', COALESCE(c.unidad, sg.unidad_sugerida, 'unidad'::text), 'por_confirmar', si.sugerencia_id IS NOT NULL) ORDER BY (COALESCE(c.orden, 9999))), '[]'::jsonb) AS "coalesce" FROM solicitud_items si LEFT JOIN catalogo_items c ON c.id = si.item_id LEFT JOIN sugerencias_item sg ON sg.id = si.sugerencia_id WHERE si.solicitud_id = s.id) AS items, ( SELECT COALESCE(array_agg(si.item_id) FILTER (WHERE si.item_id IS NOT NULL), '{}'::text[]) AS "coalesce" FROM solicitud_items si WHERE si.solicitud_id = s.id) AS item_ids, ( SELECT COALESCE(array_agg(si.sugerencia_id) FILTER (WHERE si.sugerencia_id IS NOT NULL), '{}'::uuid[]) AS "coalesce" FROM solicitud_items si WHERE si.solicitud_id = s.id) AS sugerencia_ids, s.flujo, s.nota_admin FROM solicitudes s JOIN municipios m ON m.codigo_dane = s.municipio WHERE estado_activo(s.estado) AND s.expira_at > now()`);
 
 export const municipiosConOfertadores = pgView("municipios_con_ofertadores", {	codigoDane: text("codigo_dane"),
 	nombre: text(),
@@ -1420,22 +1253,26 @@ export const oficiosConProveedores = pgView("oficios_con_proveedores", {	id: tex
 	orden: integer(),
 }).as(sql`SELECT DISTINCT o.id, o.nombre, o.grupo, o.orden FROM catalogo_oficios o JOIN proveedor_oficios_publicos pop ON pop.oficio_id = o.id`);
 
-export const muroPublico = pgView("muro_publico", {	id: uuid(),
-	cara: text(),
-	categoria: text(),
-	titulo: text(),
-	detalle: text(),
+export const vCruces = pgView("v_cruces", {	solicitudId: uuid("solicitud_id"),
+	codigo: text(),
 	municipio: text(),
-	municipioNombre: text("municipio_nombre"),
-	zonaId: uuid("zona_id"),
-	zonaNombre: text("zona_nombre"),
-	autorNombre: text("autor_nombre"),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }),
-	imagen: text(),
-	proveedorId: uuid("proveedor_id"),
+	ofertadorId: uuid("ofertador_id"),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	itemsCoincidentes: bigint("items_coincidentes", { mode: "number" }),
+	detalle: jsonb(),
+}).as(sql`SELECT s.id AS solicitud_id, s.codigo, s.municipio, o.id AS ofertador_id, count(*) AS items_coincidentes, jsonb_agg(jsonb_build_object('nombre', COALESCE(c.nombre, sg.nombre_propuesto), 'cantidad', si.cantidad, 'unidad', COALESCE(c.unidad, sg.unidad_sugerida, 'unidad'::text)) ORDER BY (COALESCE(c.orden, 9999))) AS detalle FROM solicitud_items si JOIN solicitudes s ON s.id = si.solicitud_id JOIN ofrecimientos ofr ON ofr.item_id IS NOT NULL AND ofr.item_id = si.item_id OR ofr.sugerencia_id IS NOT NULL AND ofr.sugerencia_id = si.sugerencia_id JOIN perfiles o ON o.id = ofr.perfil_id LEFT JOIN catalogo_items c ON c.id = si.item_id LEFT JOIN sugerencias_item sg ON sg.id = si.sugerencia_id WHERE si.cubierto = false AND ofr.disponible = true AND estado_activo(s.estado) AND s.expira_at > now() AND (s.municipio = ANY (o.municipios)) AND puede_ofrecer(o.id) GROUP BY s.id, s.codigo, s.municipio, o.id`);
+
+export const acopiosPublicos = pgView("acopios_publicos", {	id: uuid(),
+	nombre: text(),
+	tipo: text(),
+	slug: text(),
+	municipios: text().array(),
+	direccionAcopio: text("direccion_acopio"),
+	horarioAcopio: text("horario_acopio"),
 	telefono: text(),
-	telefonoVerificado: boolean("telefono_verificado"),
-}).as(sql`SELECT m.id, m.cara, m.categoria, m.titulo, m.detalle, m.municipio, mu.nombre AS municipio_nombre, m.zona_id, z.nombre AS zona_nombre, m.autor_nombre, m.creada_at, ( SELECT i.ruta FROM imagenes i WHERE i.objeto_tipo = 'muro'::text AND i.objeto_id = m.id AND i.estado = 'aprobada'::text ORDER BY i.subida_at LIMIT 1) AS imagen, pp.id AS proveedor_id, pp.telefono, COALESCE(pp.telefono_verificado, false) AS telefono_verificado FROM publicaciones_muro m JOIN municipios mu ON mu.codigo_dane = m.municipio LEFT JOIN zonas z ON z.id = m.zona_id LEFT JOIN proveedores pr ON pr.perfil_id = m.perfil_id LEFT JOIN proveedores_publicos pp ON pp.id = pr.id WHERE m.estado = 'abierta'::text AND (m.expira_at IS NULL OR m.expira_at > now())`);
+	latitud: numeric({ precision: 9, scale:  6 }),
+	longitud: numeric({ precision: 9, scale:  6 }),
+}).as(sql`SELECT id, nombre, tipo, slug, municipios, direccion_acopio, horario_acopio, telefono, latitud, longitud FROM organizaciones o WHERE activa`);
 
 export const productosPublicos = pgView("productos_publicos", {	id: uuid(),
 	proveedorId: uuid("proveedor_id"),
@@ -1453,3 +1290,41 @@ export const productosPublicos = pgView("productos_publicos", {	id: uuid(),
 	telefonoVerificado: boolean("telefono_verificado"),
 	grupos: text().array(),
 }).as(sql`SELECT p.id, p.proveedor_id, pp.nombre_visible AS proveedor_nombre, pp.municipio, pp.zona_nombre, p.nombre, p.detalle, p.modo, p.precio_desde, p.unidad, p.creado_at, ( SELECT i.ruta FROM imagenes i WHERE i.objeto_tipo = 'producto'::text AND i.objeto_id = p.id AND i.estado = 'aprobada'::text ORDER BY i.subida_at LIMIT 1) AS imagen, pp.telefono, pp.telefono_verificado, pp.grupos FROM productos p JOIN proveedores_publicos pp ON pp.id = p.proveedor_id WHERE p.disponible`);
+
+export const muroPublico = pgView("muro_publico", {	id: uuid(),
+	cara: text(),
+	categoria: text(),
+	titulo: text(),
+	detalle: text(),
+	municipio: text(),
+	municipioNombre: text("municipio_nombre"),
+	zonaId: uuid("zona_id"),
+	zonaNombre: text("zona_nombre"),
+	autorNombre: text("autor_nombre"),
+	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }),
+	imagen: text(),
+	proveedorId: uuid("proveedor_id"),
+	telefono: text(),
+	telefonoVerificado: boolean("telefono_verificado"),
+	acopioNombre: text("acopio_nombre"),
+	acopioDireccion: text("acopio_direccion"),
+}).as(sql`SELECT m.id, m.cara, m.categoria, m.titulo, m.detalle, m.municipio, mu.nombre AS municipio_nombre, m.zona_id, z.nombre AS zona_nombre, m.autor_nombre, m.creada_at, ( SELECT i.ruta FROM imagenes i WHERE i.objeto_tipo = 'muro'::text AND i.objeto_id = m.id AND i.estado = 'aprobada'::text ORDER BY i.subida_at LIMIT 1) AS imagen, pp.id AS proveedor_id, pp.telefono, COALESCE(pp.telefono_verificado, false) AS telefono_verificado, ac.nombre AS acopio_nombre, ac.direccion_acopio AS acopio_direccion FROM publicaciones_muro m JOIN municipios mu ON mu.codigo_dane = m.municipio LEFT JOIN zonas z ON z.id = m.zona_id LEFT JOIN proveedores pr ON pr.perfil_id = m.perfil_id LEFT JOIN proveedores_publicos pp ON pp.id = pr.id LEFT JOIN acopios_publicos ac ON ac.id = m.acopio_id WHERE m.estado = 'abierta'::text AND (m.expira_at IS NULL OR m.expira_at > now())`);
+
+export const solicitudesPublicas = pgView("solicitudes_publicas", {	id: uuid(),
+	codigo: text(),
+	municipio: text(),
+	municipioNombre: text("municipio_nombre"),
+	barrio: text(),
+	categoria: text(),
+	nota: text(),
+	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }),
+	confirmadaAt: timestamp("confirmada_at", { withTimezone: true, mode: 'string' }),
+	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }),
+	horasSinConfirmar: numeric("horas_sin_confirmar"),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	numRespuestas: bigint("num_respuestas", { mode: "number" }),
+	items: jsonb(),
+	itemIds: text("item_ids").array(),
+	sugerenciaIds: uuid("sugerencia_ids").array(),
+	notaAdmin: text("nota_admin"),
+}).as(sql`SELECT s.id, s.codigo, s.municipio, (m.nombre || ', '::text) || m.departamento AS municipio_nombre, s.barrio, s.categoria, s.nota, s.creada_at, s.confirmada_at, s.expira_at, EXTRACT(epoch FROM now() - s.confirmada_at) / 3600::numeric AS horas_sin_confirmar, ( SELECT count(*) AS count FROM respuestas r WHERE r.solicitud_id = s.id) AS num_respuestas, ( SELECT COALESCE(jsonb_agg(jsonb_build_object('nombre', COALESCE(c.nombre, sg.nombre_propuesto), 'cantidad', si.cantidad, 'unidad', COALESCE(c.unidad, sg.unidad_sugerida, 'unidad'::text), 'por_confirmar', si.sugerencia_id IS NOT NULL) ORDER BY (COALESCE(c.orden, 9999))), '[]'::jsonb) AS "coalesce" FROM solicitud_items si LEFT JOIN catalogo_items c ON c.id = si.item_id LEFT JOIN sugerencias_item sg ON sg.id = si.sugerencia_id WHERE si.solicitud_id = s.id) AS items, ( SELECT COALESCE(array_agg(si.item_id) FILTER (WHERE si.item_id IS NOT NULL), '{}'::text[]) AS "coalesce" FROM solicitud_items si WHERE si.solicitud_id = s.id) AS item_ids, ( SELECT COALESCE(array_agg(si.sugerencia_id) FILTER (WHERE si.sugerencia_id IS NOT NULL), '{}'::uuid[]) AS "coalesce" FROM solicitud_items si WHERE si.solicitud_id = s.id) AS sugerencia_ids, s.nota_admin FROM solicitudes s JOIN municipios m ON m.codigo_dane = s.municipio WHERE estado_activo(s.estado) AND s.expira_at > now()`);

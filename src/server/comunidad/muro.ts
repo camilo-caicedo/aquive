@@ -52,6 +52,8 @@ export async function muro(
       proveedor_id: f.proveedorId,
       telefono: f.telefono,
       telefono_verificado: f.telefonoVerificado ?? false,
+      acopio_nombre: f.acopioNombre,
+      acopio_direccion: f.acopioDireccion,
     }),
   )
 }
@@ -73,6 +75,7 @@ export async function publicar(
     municipio: string
     zona_id?: string
     imagen_id?: string
+    acopio_id?: string
     acepto_publicar_nombre: boolean
   },
   llave: { usuarioId: string | null },
@@ -118,6 +121,7 @@ export async function publicar(
         detalle: entrada.detalle ?? null,
         municipio: entrada.municipio,
         zonaId: entrada.zona_id ?? null,
+        acopioId: entrada.acopio_id ?? null,
       })
       .returning({ id: publicacionesMuro.id })
 
@@ -143,6 +147,7 @@ export async function publicar(
       detalle: entrada.detalle ?? null,
       municipio: entrada.municipio,
       zonaId: entrada.zona_id ?? null,
+      acopioId: entrada.acopio_id ?? null,
       expiraAt: sql`now() + interval '15 days'`,
     })
     .returning({ id: publicacionesMuro.id })

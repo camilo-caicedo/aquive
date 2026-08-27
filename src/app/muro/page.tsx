@@ -19,10 +19,11 @@ const COLORES: Familia[] = ['amarillo', 'verde', 'rojo', 'azul']
 /**
  * Pantalla 30. Las dos caras del muro: lo que sobra y lo que falta.
  *
- * ⚠ La asimetría entre las caras no es de presentación. Quien OFRECE publica
- * con su nombre, porque aceptó que fuera público. Quien NECESITA no da un
- * solo dato y vuelve con un token — igual que una solicitud de insumos.
- * La base lo sostiene con dos CHECK; aquí solo se pinta.
+ * ⚠ La asimetría entre las caras no es de presentación, y sobrevive al ADR
+ * 0006: las dos son cuentas, pero quien OFRECE aparece con su nombre —
+ * porque aceptó que fuera público— y quien NECESITA no. Lo que cambió es
+ * que ahora se sostiene en no copiar el nombre a la fila, no en no tener
+ * dueño.
  */
 export default async function MuroPage({
   searchParams,
@@ -143,6 +144,22 @@ export default async function MuroPage({
                     </p>
                   )}
 
+                  {/* El punto de entrega, cuando lo hay: es la respuesta a
+                      «¿y dónde lo recojo?», que si no se acuerda por chat
+                      dando una dirección. */}
+                  {p.acopio_nombre && (
+                    <p className="bg-ok-suave text-foreground mt-3 rounded-xl p-3 text-base">
+                      Se entrega en <strong>{p.acopio_nombre}</strong>
+                      {p.acopio_direccion ? ` · ${p.acopio_direccion}` : ''}.{' '}
+                      <Link
+                        href="/acopios"
+                        className="text-enlace underline underline-offset-4"
+                      >
+                        Ver el punto
+                      </Link>
+                    </p>
+                  )}
+
                   {/* El contacto solo existe si esa persona tiene ficha: su
                       autorización del muro cubre el nombre, no el teléfono.
                       Sin ficha se dice, en vez de dejar un botón muerto. */}
@@ -183,6 +200,14 @@ export default async function MuroPage({
         {cara === 'necesita'
           ? 'Una necesidad se borra sola a los 15 días, con todo lo que lleva dentro. Publicar no exige cuenta ni dar tus datos.'
           : 'Las donaciones se quedan mientras quien publicó las deje. Tu nombre aparece porque lo autorizaste, y puedes borrarlas cuando quieras.'}
+      </p>
+
+      <p className="mt-6 text-base">
+        ¿Prefieres dejarlo en un punto?{' '}
+        <Link href="/acopios" className="text-enlace underline underline-offset-4">
+          Mira dónde entregar
+        </Link>
+        : lo dejas ahí y no tienes que dar tu dirección.
       </p>
 
       <AccionPrincipal

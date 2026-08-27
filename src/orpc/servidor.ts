@@ -7,6 +7,7 @@ import { db } from '@/db/cliente'
 import type { Contexto } from './contexto'
 import * as chat from '@/server/chat/hilo'
 import * as comunidad from '@/server/comunidad/muro'
+import * as acopios from '@/server/acopios/consultas'
 import * as cuentas from '@/server/cuentas/alta'
 import * as insumos from '@/server/insumos/solicitudes'
 import * as productos from '@/server/comunidad/productos'
@@ -115,6 +116,9 @@ export const enrutador = os.router({
         throw e
       }
     }),
+  },
+  acopios: {
+    lista: os.acopios.lista.handler(({ input }) => acopios.lista(db, input)),
   },
   cuentas: {
     crear: os.cuentas.crear.handler(async ({ input, context, errors }) => {

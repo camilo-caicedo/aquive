@@ -435,7 +435,7 @@ export function PanelServicios({
           Administración solo ve la bitácora.
         </p>
         <Link
-          href="/admin/bitacora?tipo=referencias"
+          href="/admin/bitacora"
           className="mt-2 inline-flex min-h-12 items-center gap-1.5 text-base underline underline-offset-4"
         >
           Quién ha leído referencias

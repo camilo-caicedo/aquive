@@ -318,7 +318,7 @@ diferencia entre «el código no debería» y «la base no lo acepta».
 | 2 · Eliminar el acceso a datos desde el navegador | en curso — quedan ~28 archivos, casi todos en admin y aliado |
 | 3 · Contrato oRPC con las primeras lecturas | **hecho** — Servicios, chat, comunidad, moderación |
 | 4 · Migrar lecturas, luego escrituras | en curso — las escrituras de solicitudes (servicios e insumos) ya están en el contrato |
-| 5 · Cron y cifrado fuera del motor | el cron de imágenes huérfanas está fuera; **el cifrado se retira con el flujo acompañado** (ADR 0007) |
+| 5 · Cron y cifrado fuera del motor | **hecho** — el cron de imágenes huérfanas está fuera y el cifrado se retiró con el flujo acompañado (ADR 0007) |
 | 6 · better-auth; espacios de trabajo de npm | pendiente |
 | 7 · App Expo sobre el contrato | pendiente |
 
@@ -362,7 +362,7 @@ portar**.
 | Perfil | 16–25 | `app/perfil/**`, `app/mis-solicitudes` (20), `app/servicios/mi-perfil/[token]` |
 | Insumos | 26 Publicar, 27 Tablero, 29 Mis solicitudes | `app/publicar`, `app/ayudas`, `app/mis-solicitudes` |
 | Comunidad | 30 Muro, 31 Hecho en el barrio | `app/muro`, `app/barrio` (con `publicar` y `mios`) |
-| Acopio | Lista pública, panel del centro | `app/acopios`, `app/aliado` |
+| Acopio | Lista pública y mapa, panel del centro | `app/acopios`, `app/aliado` |
 | Moderación | 35 Colas, 36 Matrículas, imágenes | `app/admin`, `app/admin/matriculas`, `app/admin/imagenes` |
 | Información | 37 Ayuda, 38 PQR, 39 Contactos, 40 Quiénes somos | `app/ayuda`, `app/pqr`, `app/contacto`, `app/quienes-somos` |
 

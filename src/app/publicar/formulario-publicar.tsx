@@ -4,20 +4,12 @@ import { useMemo, useState } from 'react'
 import { rpc } from '@/orpc/cliente'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { HeartHandshake, Check, Minus, Plus, ShieldAlert } from 'lucide-react'
+import { Check, Minus, Plus, ShieldAlert } from 'lucide-react'
 import type { Categoria, ItemCatalogoPublico, ItemSolicitudInput } from '@/lib/types'
 import { LIMITE_MUNICIPIOS, nombreConDepartamento, type MunicipioBasico as Municipio } from '@/lib/municipios'
 import { categoria as categoriaInfo, CATEGORIAS } from '@/lib/catalogo'
 import { FECHA_LEGALES } from '@/lib/config'
 import { validarBarrio, validarCorreo, validarNota, validarSugerencia, validarTelefono } from '@/lib/validacion'
-import { createClient } from '@/lib/supabase/client'
-import { AVISO_ALIADO_MUNICIPIO, type AliadoDelMunicipio } from '@/lib/acompanamiento'
-import {
-  CamposAcompanamiento,
-  DATOS_VACIOS,
-  datosCompletos,
-  type DatosAcompanamiento,
-} from '@/components/campos-acompanamiento'
 import { TurnstileWidget } from '@/components/turnstile-widget'
 import { Button } from '@/components/ui/button'
 import { MarcoFlujo } from '@/components/marco-flujo'
@@ -25,7 +17,7 @@ import { SeccionPlegable } from '@/components/seccion-plegable'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
   Combobox,
   ComboboxContent,
@@ -85,37 +77,12 @@ export function FormularioPublicar({
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [puedeRecoger, setPuedeRecoger] = useState(false)
-  const [aliados, setAliados] = useState<AliadoDelMunicipio[]>([])
-  const [nombreMunicipio, setNombreMunicipio] = useState('')
-  // El acompañamiento: se recoge aquí y se activa DESPUÉS de publicar,
-  // porque `activar_acompanamiento` necesita el token y el token no existe
-  // hasta que la solicitud está creada.
-  const [datosAliado, setDatosAliado] = useState<DatosAcompanamiento>(DATOS_VACIOS)
-  const [conAliado, setConAliado] = useState(false)
-
-  // Se pregunta al elegir municipio y no en un efecto: es una consecuencia
-  // de lo que la persona acaba de tocar, no una sincronización. Si la
-  // consulta falla, no pasa nada — la tarjeta no aparece y publicar directo
-  // sigue funcionando igual, que es el camino por defecto.
-  async function elegirMunicipio(m: Municipio | null) {
+  // ⚠ Aquí se preguntaba qué fundación podía acompañar esta solicitud y se
+  // recogían el nombre y el documento de quien pedía, cifrados. Se fue con
+  // el ADR 0007: ya no hay fundaciones aliadas, y con ellas se fue el único
+  // sitio de la aplicación que pedía un documento de identidad.
+  function elegirMunicipio(m: Municipio | null) {
     setMunicipio(m?.codigo_dane ?? '')
-    setNombreMunicipio(m?.nombre ?? '')
-    setAliados([])
-    setDatosAliado(DATOS_VACIOS)
-    if (!m) return
-
-    const supabase = createClient()
-    const { data } = await supabase.rpc('aliados_del_municipio', {
-      p_municipio: m.codigo_dane,
-    })
-    const lista = (data as unknown as AliadoDelMunicipio[] | null) ?? []
-    setAliados(lista)
-    // Con una sola no hay nada que escoger. Con varias no se preselecciona
-    // ninguna: elegir por la persona cuál fundación ve su documento no es
-    // una comodidad, es una decisión que no nos toca.
-    if (lista.length === 1) {
-      setDatosAliado({ ...DATOS_VACIOS, organizacionId: lista[0].id })
-    }
   }
 
   const errorBarrio = barrio ? validarBarrio(barrio) : null
@@ -194,9 +161,6 @@ export function FormularioPublicar({
     turnstileToken !== null &&
     !enviando
 
-  // El quinto paso solo existe donde hay una fundación que ofrecer. Donde
-  // no la hay, el formulario sigue teniendo cuatro.
-  const hayPasoAcompanamiento = aliados.length > 0
   const NOMBRES_PASO = ['Dónde', 'Qué necesitas', 'Revisar']
 
   async function enviar() {
@@ -266,14 +230,10 @@ export function FormularioPublicar({
         <Button
           type="button"
           className="flex-1"
-          disabled={!puedeEnviar || (conAliado && !datosCompletos(datosAliado))}
+          disabled={!puedeEnviar}
           onClick={enviar}
         >
-          {enviando
-            ? 'Publicando…'
-            : conAliado
-              ? 'Publicar con acompañamiento'
-              : 'Publicar solicitud'}
+          {enviando ? 'Publicando…' : 'Publicar solicitud'}
         </Button>
       </div>
     )
@@ -367,24 +327,6 @@ export function FormularioPublicar({
             />
             {errorBarrio && <p className="mt-1 text-sm text-destructive">{errorBarrio}</p>}
           </div>
-          {/* Regla R: esto ANUNCIA, no ofrece un camino alternativo. No hay
-              botón, no hay casilla y no hay nada preseleccionado — el único
-              botón de esta pantalla sigue siendo «Continuar», que publica
-              directo. Los datos se piden después, en la pantalla de la
-              solicitud, y solo si la persona vuelve a decir que sí. */}
-          {aliados.length > 0 && (
-            <Alert>
-              <AlertTitle>
-                {aliados.length === 1
-                  ? `En ${nombreMunicipio} hay una fundación que puede acompañarte`
-                  : `En ${nombreMunicipio} hay ${aliados.length} fundaciones que pueden acompañarte`}
-              </AlertTitle>
-              <AlertDescription>
-                {aliados.map((a) => a.nombre).join(' · ')}. {AVISO_ALIADO_MUNICIPIO}
-              </AlertDescription>
-            </Alert>
-          )}
-
         </div>
       )}
 
@@ -783,62 +725,9 @@ export function FormularioPublicar({
             )}
           </SeccionPlegable>
 
-          {hayPasoAcompanamiento && (
-            <SeccionPlegable
-              titulo="Que una fundación acompañe la entrega (opcional)"
-              resumen={
-                conAliado
-                  ? 'Vas a pedir acompañamiento'
-                  : 'Recibes en su punto de acopio, sin encontrarte con nadie'
-              }
-            >
-            <div>
-              <h2 className="font-heading text-2xl">
-                {aliados.length === 1
-                  ? `${aliados[0].nombre} puede acompañarte`
-                  : `En ${nombreMunicipio} hay fundaciones que pueden acompañarte`}
-              </h2>
-              <p className="mt-2 text-base text-muted-foreground">
-                Coordinan la entrega y la recibes en su punto de acopio, sin
-                tener que encontrarte con nadie que no conozcas. Es opcional: si
-                no quieres, tu solicitud se publica igual y sin ningún dato tuyo.
-              </p>
-            </div>
-
-            {!conAliado ? (
-              <button
-                type="button"
-                onClick={() => setConAliado(true)}
-                className="flex min-h-12 items-center gap-1.5 text-left text-base text-enlace underline"
-              >
-                <HeartHandshake className="size-4 shrink-0" aria-hidden="true" />
-                Quiero que una fundación coordine la entrega
-              </button>
-            ) : (
-              <div className="rounded-2xl bg-card p-4 shadow-canto">
-                <CamposAcompanamiento
-                  aliados={aliados}
-                  datos={datosAliado}
-                  onCambio={setDatosAliado}
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setConAliado(false)
-                    setDatosAliado(
-                      aliados.length === 1
-                        ? { ...DATOS_VACIOS, organizacionId: aliados[0].id }
-                        : DATOS_VACIOS
-                    )
-                  }}
-                  className="mt-4 flex min-h-12 items-center text-base text-muted-foreground underline"
-                >
-                  Mejor no, publicar sin esto
-                </button>
-              </div>
-            )}
-            </SeccionPlegable>
-          )}
+          {/* ⚠ Aquí iba «que una fundación acompañe la entrega». Se fue con
+              el ADR 0007: ya no hay fundaciones aliadas. Era el único sitio
+              del sitio que pedía nombre y documento de quien pide. */}
 
           {/* Al final: es una comprobación de que no eres un robot, no una
               decisión tuya, y en medio partía en dos las tres cosas que sí

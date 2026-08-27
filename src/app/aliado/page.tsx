@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -6,48 +5,42 @@ import { MapPin } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { origenDelSitio } from '@/lib/origen'
 import { listarMunicipios, mapaDeNombres } from '@/lib/municipios'
-import type {
-  AliadoResumen,
-  Coincidencia,
-  HiloResumen,
-  SolicitudPorAtender,
-} from '@/lib/types'
+import type { AliadoResumen } from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Pestanas } from '@/components/pestanas'
 import { PanelEquipo } from './panel-equipo'
-import { PanelHilos } from './panel-hilos'
-import { PanelCoincidencias } from './panel-coincidencias'
-import { PanelSolicitudes } from './panel-solicitudes'
 import { PanelProveedores, type ProveedorDeOrganizacion } from './panel-proveedores'
 import { PanelReferencias, type ReferenciaPorRevisar } from './panel-referencias'
 import { PanelZonas, type ZonaPropuesta } from '@/components/panel-zonas'
 
 export const metadata: Metadata = {
-  title: 'Mi organización',
+  title: 'Mi centro de acopio',
   robots: { index: false, follow: false },
 }
 
-type Vista = 'conversaciones' | 'coincidencias' | 'equipo' | 'proveedores'
+type Vista = 'equipo' | 'proveedores'
 
 /**
- * El panel de una fundación, y solo eso.
+ * El panel de un centro de acopio (ADR 0008).
  *
- * ⚠ Antes esta ruta servía a dos públicos: el equipo de una organización y
- * quien ofreció ayuda en una solicitud acompañada. El segundo aterrizaba
- * en el panel de una fundación que no es la suya, con las colas de
- * `PanelHilos` —conceptos de quien coordina— y con la de por defecto
- * siempre vacía. Ahora se va a `/mensajes`, que es una lista de sus
- * conversaciones y nada más.
+ * ⚠ Antes esto era el panel de una fundación aliada, con las colas del
+ * flujo acompañado: conversaciones de tres, coincidencias y solicitudes por
+ * atender. Se fueron con el ADR 0007. Lo que queda es el trabajo de un
+ * lugar físico: su equipo y las altas que hace de gente sin cuenta.
  *
- * Cada pestaña consulta lo suyo y nada más. Antes se hacían las cuatro
- * consultas siempre, aunque solo se entrara a leer un mensaje.
+ * ⚠ **Un admin entra sin ser miembro de ningún centro.** Es decisión del
+ * responsable: los admins de la aplicación se encargan de todo a nivel
+ * general, así que no puede haber una pantalla que se les cierre por no
+ * pertenecer a una organización.
+ *
+ * Cada pestaña consulta lo suyo y nada más.
  */
 export default async function AliadoPage({
   searchParams,
 }: {
   searchParams: Promise<{ ver?: string; cola?: string }>
 }) {
-  const { ver, cola } = await searchParams
+  const { ver } = await searchParams
   const supabase = await createClient()
   const {
     data: { user },
@@ -55,158 +48,57 @@ export default async function AliadoPage({
 
   if (!user) redirect('/login')
 
-  const { data: esAliado } = await supabase.rpc('soy_aliado')
-  if (!esAliado) redirect('/mensajes')
-
-  const vista: Vista =
-    ver === 'coincidencias' || ver === 'equipo' || ver === 'proveedores'
-      ? ver
-      : 'conversaciones'
-
-  const [
-    { data: hilosData },
-    { data: cruceData },
-    { data: ofrecidasData },
-    { data: propiasData },
-    { data: aliadoData },
-  ] = await Promise.all([
-    vista === 'conversaciones'
-      ? supabase.rpc('mis_hilos')
-      : Promise.resolve({ data: null }),
-    vista === 'coincidencias' && esAliado
-      ? supabase.rpc('coincidencias_para_aliado')
-      : Promise.resolve({ data: null }),
-    vista === 'coincidencias' && esAliado
-      ? supabase.rpc('respuestas_por_coordinar')
-      : Promise.resolve({ data: null }),
-    vista === 'coincidencias' && esAliado
-      ? supabase.rpc('solicitudes_de_mi_organizacion')
-      : Promise.resolve({ data: null }),
-    vista === 'equipo' && esAliado
-      ? supabase.rpc('mi_aliado')
-      : Promise.resolve({ data: null }),
+  const [{ data: esAliado }, { data: admin }] = await Promise.all([
+    supabase.rpc('soy_aliado'),
+    supabase
+      .from('administradores')
+      .select('user_id')
+      .eq('user_id', user.id)
+      .maybeSingle(),
   ])
 
-  const hilos = (hilosData as unknown as HiloResumen[]) ?? []
-  const coincidencias = (cruceData as unknown as Coincidencia[]) ?? []
-  const yaOfrecieron = (ofrecidasData as unknown as Coincidencia[]) ?? []
-  const propias = (propiasData as unknown as SolicitudPorAtender[]) ?? []
-  const organizaciones = (aliadoData as unknown as AliadoResumen[]) ?? []
+  const esAdmin = Boolean(admin)
+  if (!esAliado && !esAdmin) redirect('/')
 
-  const colaActiva =
-    cola === 'ofrecieron' || cola === 'inventario' ? cola : 'propias'
-  const COLAS = [
-    { clave: 'propias', etiqueta: 'Puedes entregarlo tú', cuantas: propias.length },
-    { clave: 'ofrecieron', etiqueta: 'Ya ofrecieron', cuantas: yaOfrecieron.length },
-    { clave: 'inventario', etiqueta: 'Quién lo tiene', cuantas: coincidencias.length },
-  ] as const
+  const vista: Vista = ver === 'proveedores' ? 'proveedores' : 'equipo'
+
+  const { data: aliadoData } = await supabase.rpc('mi_aliado')
+  const organizaciones = (aliadoData as unknown as AliadoResumen[]) ?? []
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       {/* El nombre de la organización, no «Mi organización»: quien
           coordina trabaja en una que se llama de alguna forma, y verla
           nombrada es lo que dice que está en el sitio correcto. */}
+      {/* El nombre del centro, no «Mi centro»: quien atiende trabaja en
+          uno que se llama de alguna forma, y verlo nombrado es lo que dice
+          que está en el sitio correcto. */}
       <CabeceraPantalla
-        titulo={
-          esAliado ? (organizaciones[0]?.organizacion.nombre ?? 'Mi organización') : 'Coordinación'
-        }
+        titulo={organizaciones[0]?.organizacion.nombre ?? 'Centros de acopio'}
       >
-      {esAliado && (
         <div className="mt-3">
           <Pestanas
-            etiqueta="Secciones de tu organización"
+            etiqueta="Secciones del centro"
             pestanas={[
-              {
-                href: '/aliado',
-                etiqueta: 'Conversaciones',
-                activa: vista === 'conversaciones',
-              },
-              {
-                href: '/aliado?ver=coincidencias',
-                etiqueta: 'Solicitudes por atender',
-                activa: vista === 'coincidencias',
-              },
+              { href: '/aliado', etiqueta: 'Mi equipo', activa: vista === 'equipo' },
               {
                 href: '/aliado?ver=proveedores',
                 etiqueta: 'Servicios',
                 activa: vista === 'proveedores',
               },
-              {
-                href: '/aliado?ver=equipo',
-                etiqueta: 'Mi equipo',
-                activa: vista === 'equipo',
-              },
             ]}
           />
         </div>
-      )}
       </CabeceraPantalla>
 
-      {vista === 'conversaciones' && (
-        <section className="mt-6">
-          <PanelHilos hilos={hilos} />
-          {!esAliado && hilos.length === 0 && (
-            <p className="mt-3 text-base text-muted-foreground">
-              Aquí aparecen las conversaciones de las solicitudes que una
-              fundación acompaña. Para entrar al equipo de una organización
-              hace falta el enlace que reparte su coordinador.
-            </p>
-          )}
-          {/* Al pie y no encima de la lista (regla 1): el reloj de la
-              regla 4, dicho una vez, donde no le quita sitio a los hilos. */}
-          <p className="mt-6 rounded-2xl bg-accent p-4 text-base leading-relaxed text-accent-foreground">
-            Un hilo con conversación abierta se renueva solo, con techo duro de
-            5 días desde que se publicó la solicitud. Al llegar al techo se
-            cierra y se borra igual.
-          </p>
-        </section>
+      {esAdmin && !esAliado && (
+        <p className="bg-accent text-accent-foreground mb-4 rounded-2xl p-4 text-base">
+          Estás viendo esto como administrador. No perteneces a ningún centro
+          de acopio, así que hay secciones que van a salir vacías.
+        </p>
       )}
 
-      {vista === 'coincidencias' && (
-        <section className="mt-6">
-          {/* Antes eran tres secciones apiladas con su título y su párrafo:
-              para llegar a la tercera había que bajar dos pantallas, y las
-              tres contestan la misma pregunta —quién puede resolver esto—.
-              Ahora es una sola lista con chips que la acotan, y el chip
-              lleva su número para no entrar a una cola vacía. */}
-          <nav aria-label="Qué cola ver" className="riel -mx-4 flex gap-2 overflow-x-auto px-4">
-            {COLAS.map(({ clave, etiqueta, cuantas }) => {
-              const activa = colaActiva === clave
-              return (
-                <Link
-                  key={clave}
-                  href={clave === 'propias' ? '/aliado?ver=coincidencias' : `/aliado?ver=coincidencias&cola=${clave}`}
-                  aria-current={activa ? 'page' : undefined}
-                  className={`inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border px-4 text-base transition-colors ${
-                    activa
-                      ? 'border-border bg-card font-semibold text-foreground shadow-canto'
-                      : 'border-transparent text-muted-foreground hover:bg-muted'
-                  }`}
-                >
-                  {etiqueta}
-                  <span className="rounded-full bg-muted px-2 text-sm text-muted-foreground">
-                    {cuantas}
-                  </span>
-                </Link>
-              )
-            })}
-          </nav>
-
-          <p className="mt-3 text-base text-muted-foreground">
-            {colaActiva === 'propias'
-              ? 'Solicitudes que acompaña tu organización. Si tienes esto en la bodega, abre la conversación y coordínalo directamente.'
-              : colaActiva === 'ofrecieron'
-                ? 'Respondieron antes de que se pidiera acompañamiento, así que todavía no están en ninguna conversación.'
-                : 'Gente de tus municipios que declaró tener justo lo que pide una solicitud acompañada.'}
-          </p>
-
-          {colaActiva === 'propias' && <PanelSolicitudes solicitudes={propias} />}
-          {colaActiva === 'ofrecieron' && <PanelCoincidencias coincidencias={yaOfrecieron} />}
-          {colaActiva === 'inventario' && <PanelCoincidencias coincidencias={coincidencias} />}
-        </section>
-      )}
-
-      {vista === 'proveedores' && esAliado && <Proveedores />}
+      {vista === 'proveedores' && <Proveedores />}
 
       {vista === 'equipo' && <Equipo organizaciones={organizaciones} miId={user.id} />}
     </main>
@@ -214,8 +106,12 @@ export default async function AliadoPage({
 }
 
 /**
- * El directorio de servicios, desde el lado de la fundación: registrar a
- * quien no tiene cuenta de Google y verificar teléfonos llamando.
+ * El directorio de servicios, desde el lado del centro: verificar teléfonos
+ * llamando.
+ *
+ * ⚠ Registrar a quien no tiene cuenta de Google ya NO se hace aquí: con el
+ * ADR 0006 eso crea una cuenta de verdad y vive en `/admin/cuentas`, que es
+ * de admins. Aquí queda la verificación por llamada (regla de producto 6).
  *
  * Sección aparte y consultas propias, como `Equipo`: son cuatro consultas
  * que no tienen por qué hacerse cuando alguien entra a leer un mensaje.

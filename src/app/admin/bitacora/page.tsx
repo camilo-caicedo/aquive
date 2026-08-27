@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { ScrollText } from 'lucide-react'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { Estado } from '@/components/estado'
@@ -7,7 +6,10 @@ import type { AccesoBitacora } from '@/lib/types'
 
 export const metadata = { title: 'Bitácora' }
 
-type Filtro = 'todo' | 'identidades' | 'referencias'
+// ⚠ Antes había dos: identidades y referencias. Las identidades se fueron
+// con el flujo acompañado (ADR 0007), así que ya no hay nada que filtrar —
+// pero la bitácora se queda, porque `accesos_referencia` sigue vivo y ese
+// rastro sobrevive al dato (mínimo legal 4).
 
 const HOY = 'Hoy'
 
@@ -34,34 +36,18 @@ function hora(iso: string) {
 /**
  * La bitácora de lecturas, unificada.
  *
- * Salía escondida detrás de un botón en dos pantallas distintas —las
- * identidades dentro de Aliados, las referencias dentro de Servicios— y
- * ahora es una fila del índice. Ese es el punto entero: es la evidencia de
+ * Salía escondida detrás de un botón dentro de Servicios y ahora es una
+ * fila del índice. Ese es el punto entero: es la evidencia de
  * diligencia frente a la fundación y frente a la SIC, y un registro de
  * accesos que nadie mira no disuade a nadie.
  *
  * ⚠ Dice quién leyó, cuándo y con qué motivo. Nunca qué leyó, y sobrevive
  * al borrado del dato que registra.
  */
-export default async function BitacoraPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ tipo?: string }>
-}) {
-  const { tipo: crudo } = await searchParams
-  const filtro: Filtro =
-    crudo === 'identidades' || crudo === 'referencias' ? crudo : 'todo'
-
+export default async function BitacoraPage() {
   const supabase = await createClient()
   const { data } = await supabase.rpc('bitacora_accesos')
-  const todas = (data as unknown as AccesoBitacora[] | null) ?? []
-
-  const lista =
-    filtro === 'todo'
-      ? todas
-      : todas.filter((a) =>
-          filtro === 'identidades' ? a.tipo === 'identidad' : a.tipo === 'referencia'
-        )
+  const lista = (data as unknown as AccesoBitacora[] | null) ?? []
 
   // Agrupada por día, en el orden en que ya viene: la RPC ordena por fecha
   // descendente, así que basta con cortar cuando cambia el día.
@@ -73,35 +59,10 @@ export default async function BitacoraPage({
     else grupos.push({ dia: d, filas: [a] })
   }
 
-  const CHIPS: { clave: Filtro; etiqueta: string }[] = [
-    { clave: 'todo', etiqueta: 'Todo' },
-    { clave: 'identidades', etiqueta: 'Identidades' },
-    { clave: 'referencias', etiqueta: 'Referencias' },
-  ]
-
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Bitácora" volver="/admin">
         <p className="mt-1 text-base text-muted-foreground">Últimas lecturas</p>
-        <nav aria-label="Filtrar la bitácora" className="riel -mx-4 mt-3 flex gap-2 overflow-x-auto px-4">
-          {CHIPS.map((c) => {
-            const activo = filtro === c.clave
-            return (
-              <Link
-                key={c.clave}
-                href={c.clave === 'todo' ? '/admin/bitacora' : `/admin/bitacora?tipo=${c.clave}`}
-                aria-current={activo ? 'page' : undefined}
-                className={`inline-flex min-h-12 shrink-0 items-center rounded-full border px-4 text-base transition-colors ${
-                  activo
-                    ? 'border-border bg-card font-semibold text-foreground shadow-canto'
-                    : 'border-transparent text-muted-foreground hover:bg-muted'
-                }`}
-              >
-                {c.etiqueta}
-              </Link>
-            )
-          })}
-        </nav>
       </CabeceraPantalla>
 
       <p className="rounded-2xl bg-accent p-4 text-base leading-relaxed text-accent-foreground">
