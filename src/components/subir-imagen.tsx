@@ -21,7 +21,7 @@ export function SubirImagen({
   objetoTipo,
   onSubida,
 }: {
-  objetoTipo: 'muro' | 'producto'
+  objetoTipo: 'muro' | 'producto' | 'proveedor'
   onSubida: (imagenId: string | null) => void
 }) {
   const [estado, setEstado] = useState<'vacio' | 'subiendo' | 'lista'>('vacio')

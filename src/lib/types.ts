@@ -199,6 +199,15 @@ export interface MiProveedor {
   acepto_mapa: boolean
   mapa_version: string | null
   mapa_at: string | null
+  /** La foto lleva su propia casilla: publicar una cara es otra finalidad
+   *  que publicar un teléfono (v6-b7, mismo criterio que el ADR 0004). */
+  acepto_foto: boolean
+  foto_version: string | null
+  foto_at: string | null
+  /** La ruta del objeto, no la URL. Sale aunque esté en cola o sin permiso:
+   *  aquí se la enseñamos a su dueña, para que pueda quitarla. */
+  foto: string | null
+  foto_estado: 'en_cola' | 'aprobada' | 'rechazada' | null
   oficios: {
     oficio_id: string
     nombre: string

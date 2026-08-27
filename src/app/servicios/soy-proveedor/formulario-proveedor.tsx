@@ -7,10 +7,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { rpc } from '@/orpc/cliente'
+import { SubirImagen } from '@/components/subir-imagen'
 import {
   RESPONSABLE_SERVICIOS,
   NIT_RESPONSABLE_SERVICIOS,
   AUTORIZACION_PROVEEDOR_VERSION,
+  AUTORIZACION_FOTO_VERSION,
 } from '@/lib/config'
 import { contienePII, MENSAJE_PII } from '@/lib/validacion'
 import { nombreConDepartamento, type MunicipioBasico } from '@/lib/municipios'
@@ -84,6 +87,7 @@ export type ClaveSeccion =
   | 'disponibilidad'
   | 'oficios'
   | 'presentacion'
+  | 'foto'
   | 'permiso'
 
 const TODAS: ClaveSeccion[] = [
@@ -95,6 +99,7 @@ const TODAS: ClaveSeccion[] = [
   'disponibilidad',
   'oficios',
   'presentacion',
+  'foto',
   'permiso',
 ]
 
@@ -135,10 +140,9 @@ const FILAS: {
   },
   {
     num: '04',
-    nombre: 'Fotos de trabajos',
-    ayuda: 'Todavía no se pueden subir fotos a una ficha.',
-    claves: [],
-    cerrada: 'Cerrado',
+    nombre: 'Tu foto',
+    ayuda: 'Una sola, y con su permiso aparte. Pasa por revisión antes de verse.',
+    claves: ['foto'],
   },
   {
     num: '05',
@@ -283,6 +287,23 @@ export function FormularioProveedor({
   // edición — pedirlo otra vez para corregir un teléfono convierte la
   // casilla en un trámite y le quita el peso que tiene la primera vez.
   const [autorizo, setAutorizo] = useState(!!proveedor)
+
+  // La foto y su permiso. `fotoNueva` es la que se acaba de subir en esta
+  // sesión; `teniaFoto` es la que ya estaba.
+  //
+  // ⚠ Aquí NO se hereda el permiso de la ficha como se hereda `autorizo`.
+  // Es otra finalidad y otra casilla (v6-b7), y nace en lo que esa persona
+  // marcó para la foto, ni más ni menos.
+  const [fotoNueva, setFotoNueva] = useState<string | null>(null)
+  const [autorizoFoto, setAutorizoFoto] = useState(proveedor?.acepto_foto ?? false)
+  const [quitarFoto, setQuitarFoto] = useState(false)
+  const teniaFoto = !!proveedor?.foto
+  const estadoFoto =
+    proveedor?.foto_estado === 'aprobada'
+      ? 'Publicada'
+      : proveedor?.foto_estado === 'rechazada'
+        ? 'Rechazada'
+        : 'En revisión'
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -366,6 +387,28 @@ export function FormularioProveedor({
       setError(rpcError.message)
       setGuardando(false)
       return
+    }
+
+    // La foto va por el contrato y no por la RPC de la ficha: quitarla
+    // tiene que borrar además el objeto del almacén, y `on delete cascade`
+    // no borra un archivo de un bucket (regla 3). Eso es código.
+    if (fotoNueva || quitarFoto || autorizoFoto !== (proveedor?.acepto_foto ?? false)) {
+      try {
+        await rpc.servicios.guardarFoto(
+          quitarFoto || !autorizoFoto
+            ? { imagen_id: null, autorizacion_version: null }
+            : {
+                imagen_id: fotoNueva,
+                autorizacion_version: AUTORIZACION_FOTO_VERSION,
+              },
+        )
+      } catch {
+        // La ficha ya se guardó. Que falle la foto no puede tirar abajo lo
+        // demás, pero sí hay que decirlo.
+        setError('La ficha se guardó, pero la foto no. Inténtalo otra vez desde «Tu foto».')
+        setGuardando(false)
+        return
+      }
     }
 
     if (secciones) {
@@ -866,6 +909,81 @@ export function FormularioProveedor({
           </p>
           {errorDescripcion && (
             <p className="mt-1 text-sm text-destructive">{errorDescripcion}</p>
+          )}
+        </div>
+      ),
+    },
+
+    foto: {
+      titulo: 'Tu foto',
+      resumen: autorizoFoto
+        ? fotoNueva
+          ? 'Subida, en revisión'
+          : teniaFoto
+            ? estadoFoto
+            : 'Falta subirla'
+        : 'Sin foto',
+      // No falta nunca: una ficha sin foto es una ficha completa. La mitad
+      // del rebusque no va a subir una, y marcarlo en rojo convertiría «no
+      // quise» en «me equivoqué».
+      falta: false,
+      cuerpo: (
+        <div className="space-y-3">
+          <p className="text-base text-muted-foreground">
+            Es opcional. Una foto tuya o de tu negocio ayuda a que te
+            reconozcan, pero se puede publicar la ficha sin ninguna.
+          </p>
+
+          {teniaFoto && !fotoNueva && (
+            <p className="text-base">
+              Ya tienes una foto: <strong>{estadoFoto.toLowerCase()}</strong>.
+              Si subes otra, la anterior se borra.
+            </p>
+          )}
+
+          <SubirImagen objetoTipo="proveedor" onSubida={setFotoNueva} />
+
+          {/* Casilla APARTE de la de publicar la ficha. Publicar una cara es
+              otra finalidad que publicar un teléfono, y el artículo 9 pide
+              autorización por finalidad. Guarda su propia versión y fecha. */}
+          <div className="rounded-2xl bg-background p-4">
+            <label className="flex items-start gap-3 text-base">
+              <input
+                type="checkbox"
+                checked={autorizoFoto}
+                onChange={(e) => setAutorizoFoto(e.target.checked)}
+                className="mt-1 size-5 shrink-0"
+              />
+              <span>
+                Autorizo a {RESPONSABLE_SERVICIOS} a publicar esta foto en mi
+                ficha, de forma <strong>pública</strong> en internet, para que
+                quien busque mi trabajo me reconozca.
+                <br />
+                <br />
+                Entiendo que una persona la revisa antes de que se vea, que
+                puedo quitarla cuando quiera, y que al quitarla{' '}
+                <strong>el archivo se borra</strong>. Es un permiso aparte del
+                de publicar mi ficha.
+              </span>
+            </label>
+          </div>
+
+          {(teniaFoto || fotoNueva) && (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setFotoNueva(null)
+                setAutorizoFoto(false)
+                setQuitarFoto(true)
+              }}
+            >
+              Quitar mi foto
+            </Button>
+          )}
+          {quitarFoto && (
+            <p className="text-base text-muted-foreground">
+              Se borra al guardar.
+            </p>
           )}
         </div>
       ),

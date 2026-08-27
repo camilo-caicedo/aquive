@@ -56,6 +56,14 @@ export const Ficha = z.object({
   franjas: z.array(Franja),
   medios_pago: z.array(MedioDePago),
   descripcion: z.string().nullable(),
+  /**
+   * URL de su foto, o nulo.
+   *
+   * Nulo también cuando la tiene subida pero retiró la autorización: eso lo
+   * decide la vista `proveedores_publicos`, no esta consulta (ADR 0004,
+   * mismo criterio que las coordenadas).
+   */
+  foto: z.string().nullable(),
   creado_at: z.string(),
   // Las tres señales blandas de la regla de producto 6. La ficha las muestra
   // siempre, incluso en cero: un perfil sin nada verificado tiene que verse
@@ -91,6 +99,8 @@ export const EnListado = z.object({
   total_resenas: z.number(),
   cumplimiento: z.number().nullable(),
   descripcion: z.string().nullable(),
+  /** URL de su foto, o nulo si no la tiene o retiró la autorización. */
+  foto: z.string().nullable(),
   // Salen NULL si el prestador no marcó `acepto_mapa`. El filtro vive en la
   // vista pública y no aquí: si se duplica, un día una copia se olvida, y
   // olvidarse significa publicar dónde encontrar a alguien que no lo
@@ -368,6 +378,23 @@ export const contratoServicios = {
 
   /** Las mías, para el perfil. */
   misSolicitudes: oc.output(z.array(MiSolicitudServicio)),
+
+  /**
+   * La foto de mi ficha, con su autorización.
+   *
+   * `imagen_id` en nulo = quitarla. Quitarla borra el archivo del almacén,
+   * no solo la marca: dejar la cara de alguien en una URL pública después
+   * de que dijo que no sería lo contrario de haberlo dicho.
+   */
+  guardarFoto: oc
+    .errors(erroresUbicacion)
+    .input(
+      z.object({
+        imagen_id: z.uuid().nullable(),
+        autorizacion_version: z.string().trim().min(3).max(60).nullable(),
+      }),
+    )
+    .output(z.object({ ok: z.literal(true) })),
 
   /** Renovarla por otros 15 días, o cerrarla. */
   gestionarSolicitud: oc

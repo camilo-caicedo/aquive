@@ -266,7 +266,7 @@ export const contratoComunidad = {
     .errors(errores)
     .input(
       z.object({
-        objeto_tipo: z.enum(['muro', 'producto']),
+        objeto_tipo: z.enum(['muro', 'producto', 'proveedor']),
         tipo: z.string(),
         bytes: z.number().int().positive().max(2 * 1024 * 1024),
       }),
@@ -278,7 +278,7 @@ export const contratoComunidad = {
     z.array(
       z.object({
         id: z.uuid(),
-        objeto_tipo: z.enum(['muro', 'producto']),
+        objeto_tipo: z.enum(['muro', 'producto', 'proveedor']),
         objeto_id: z.uuid().nullable(),
         url: z.string(),
         ancho: z.number().nullable(),

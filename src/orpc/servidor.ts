@@ -17,6 +17,7 @@ import * as pqr from '@/server/pqr/buzon'
 import * as servicios from '@/server/servicios/consultas'
 import * as pedidos from '@/server/servicios/solicitudes'
 import * as ubicacion from '@/server/servicios/ubicacion'
+import * as foto from '@/server/servicios/foto'
 
 // El enrutador: pega el contrato con la capa de dominio. Aquí y solo aquí se
 // tocan las dos cosas — el contrato no sabe de Postgres y el dominio no sabe
@@ -51,6 +52,16 @@ export const enrutador = os.router({
     misSolicitudes: os.servicios.misSolicitudes.handler(({ context }) =>
       pedidos.mias(db, { usuarioId: context.usuarioId }),
     ),
+    guardarFoto: os.servicios.guardarFoto.handler(async ({ input, context, errors }) => {
+      try {
+        return await foto.guardar(db, input, { usuarioId: context.usuarioId })
+      } catch (e) {
+        if (e instanceof foto.FotoRechazada) {
+          throw errors.RECHAZADO({ data: { motivo: e.message } })
+        }
+        throw e
+      }
+    }),
     gestionarSolicitud: os.servicios.gestionarSolicitud.handler(
       async ({ input, context, errors }) => {
         try {

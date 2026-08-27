@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { InsigniasProveedor } from '@/components/insignias-proveedor'
 import { precioLegible, zonaLegible, etiquetaModalidad, GRUPOS } from '@/lib/servicios'
@@ -61,7 +62,24 @@ export function TarjetaProveedor({ proveedor }: { proveedor: EnListado }) {
         </span>
       </div>
 
-      <div className="p-4">
+      <div className="flex gap-3 p-4">
+        {/* La foto solo si la hay Y si esa persona autorizó publicarla — eso
+            lo resuelve la vista, aquí llega en nulo o no llega.
+
+            Sin foto NO se dibuja un hueco ni unas iniciales: la tarjeta sin
+            foto ya es un diseño completo, y la mitad del rebusque no va a
+            subir una nunca. Un marcador de posición convierte «no puso foto»
+            en «le falta algo». */}
+        {proveedor.foto && (
+          <Image
+            src={proveedor.foto}
+            alt=""
+            width={64}
+            height={64}
+            className="size-16 shrink-0 rounded-full object-cover"
+          />
+        )}
+        <div className="min-w-0 flex-1">
         <Link
           href={`/prestador/${proveedor.id}`}
           className="font-heading text-lg leading-tight font-extrabold underline-offset-4 hover:underline"
@@ -116,6 +134,7 @@ export function TarjetaProveedor({ proveedor }: { proveedor: EnListado }) {
           >
             Ver ficha
           </Link>
+        </div>
         </div>
       </div>
     </li>

@@ -14,6 +14,7 @@ import {
   entidadesPublicas,
   zonas,
 } from '@/db/esquema'
+import { urlPublica } from '@/server/imagenes/almacen'
 import { NOMBRE_GRUPO } from '@/contrato/servicios'
 import type {
   Categoria,
@@ -77,6 +78,7 @@ export async function ficha(db: BaseDeDatos, id: string): Promise<Ficha | null> 
       franjas: proveedoresPublicos.franjas,
       mediosPago: proveedoresPublicos.mediosPago,
       descripcion: proveedoresPublicos.descripcion,
+      foto: proveedoresPublicos.foto,
       creadoAt: proveedoresPublicos.creadoAt,
       referenciasConfirmadas: proveedoresPublicos.referenciasConfirmadas,
       serviciosConfirmados: proveedoresPublicos.serviciosConfirmados,
@@ -139,6 +141,7 @@ export async function ficha(db: BaseDeDatos, id: string): Promise<Ficha | null> 
     franjas: (proveedor.franjas ?? []) as Ficha['franjas'],
     medios_pago: (proveedor.mediosPago ?? []) as Ficha['medios_pago'],
     descripcion: proveedor.descripcion,
+    foto: proveedor.foto ? urlPublica(`${proveedor.foto}.webp`) : null,
     creado_at: aFecha(proveedor.creadoAt),
     referencias_confirmadas: aNumero(proveedor.referenciasConfirmadas),
     servicios_confirmados: aNumero(proveedor.serviciosConfirmados),
@@ -207,6 +210,7 @@ export async function directorio(
         totalResenas: proveedoresPublicos.totalResenas,
         cumplimiento: proveedoresPublicos.cumplimiento,
         descripcion: proveedoresPublicos.descripcion,
+        foto: proveedoresPublicos.foto,
         latitud: proveedoresPublicos.latitud,
         longitud: proveedoresPublicos.longitud,
       })
@@ -294,6 +298,7 @@ export async function directorio(
       total_resenas: aNumero(f.totalResenas),
       cumplimiento: aNumeroONulo(f.cumplimiento),
       descripcion: f.descripcion,
+      foto: f.foto ? urlPublica(`${f.foto}.webp`) : null,
       latitud: aNumeroONulo(f.latitud),
       longitud: aNumeroONulo(f.longitud),
       oficios: porProveedor.get(f.id!) ?? [],
@@ -510,6 +515,7 @@ export async function inicio(
         totalResenas: proveedoresPublicos.totalResenas,
         cumplimiento: proveedoresPublicos.cumplimiento,
         descripcion: proveedoresPublicos.descripcion,
+        foto: proveedoresPublicos.foto,
         latitud: proveedoresPublicos.latitud,
         longitud: proveedoresPublicos.longitud,
       })
@@ -599,6 +605,7 @@ export async function inicio(
       total_resenas: aNumero(f.totalResenas),
       cumplimiento: aNumeroONulo(f.cumplimiento),
       descripcion: f.descripcion,
+      foto: f.foto ? urlPublica(`${f.foto}.webp`) : null,
       latitud: aNumeroONulo(f.latitud),
       longitud: aNumeroONulo(f.longitud),
       oficios: porProveedor.get(f.id!) ?? [],

@@ -6,9 +6,18 @@ import { Check, X } from 'lucide-react'
 
 import { rpc } from '@/orpc/cliente'
 
+/** De dónde salió la imagen. Una ficha también puede llevar foto desde
+ *  la migración v6-b7, y ahí el criterio de rechazo pesa más: es la cara
+ *  de una persona. */
+const DE_DONDE: Record<'muro' | 'producto' | 'proveedor', string> = {
+  muro: 'Muro',
+  producto: 'Producto',
+  proveedor: 'Foto de ficha',
+}
+
 type EnCola = {
   id: string
-  objeto_tipo: 'muro' | 'producto'
+  objeto_tipo: 'muro' | 'producto' | 'proveedor'
   objeto_id: string | null
   url: string
   ancho: number | null
@@ -70,7 +79,7 @@ export function ColaDeImagenes({ inicial }: { inicial: EnCola[] }) {
   return (
     <section className="mt-6">
       <p className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase">
-        {actual.objeto_tipo === 'muro' ? 'Muro' : 'Producto'}
+        {DE_DONDE[actual.objeto_tipo]}
         {actual.objeto_id === null && ' · sin publicación todavía'}
       </p>
 

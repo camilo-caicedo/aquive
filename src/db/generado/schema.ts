@@ -775,6 +775,9 @@ export const proveedores = pgTable("proveedores", {
 	aceptoMapa: boolean("acepto_mapa").default(false).notNull(),
 	mapaVersion: text("mapa_version"),
 	mapaAt: timestamp("mapa_at", { withTimezone: true, mode: 'string' }),
+	aceptoFoto: boolean("acepto_foto").default(false).notNull(),
+	fotoVersion: text("foto_version"),
+	fotoAt: timestamp("foto_at", { withTimezone: true, mode: 'string' }),
 }, (table) => [
 	index("idx_proveedores_municipio").using("btree", table.municipio.asc().nullsLast().op("text_ops")).where(sql`((NOT suspendido) AND acepto_publicacion)`),
 	index("idx_proveedores_organizacion").using("btree", table.organizacionId.asc().nullsLast().op("uuid_ops")).where(sql`(organizacion_id IS NOT NULL)`),
@@ -811,6 +814,7 @@ export const proveedores = pgTable("proveedores", {
 	check("proveedores_autorizacion_version_check", sql`(char_length(TRIM(BOTH FROM autorizacion_version)) >= 3) AND (char_length(TRIM(BOTH FROM autorizacion_version)) <= 60)`),
 	check("proveedores_coordenadas_colombia", sql`((latitud IS NULL) AND (longitud IS NULL)) OR (((latitud >= '-4.5'::numeric) AND (latitud <= 13.5)) AND ((longitud >= '-82.0'::numeric) AND (longitud <= '-66.0'::numeric)))`),
 	check("proveedores_descripcion_check", sql`char_length(descripcion) <= 300`),
+	check("proveedores_foto_completa", sql`(NOT acepto_foto) OR ((foto_version IS NOT NULL) AND (foto_at IS NOT NULL))`),
 	check("proveedores_mapa_completo", sql`(NOT acepto_mapa) OR ((latitud IS NOT NULL) AND (longitud IS NOT NULL) AND (mapa_version IS NOT NULL))`),
 	check("proveedores_nombre_visible_check", sql`(char_length(nombre_visible) >= 3) AND (char_length(nombre_visible) <= 60)`),
 	check("proveedores_telefono_check", sql`telefono ~ '^[0-9+()\- ]{7,20}$'::text`),
@@ -971,6 +975,29 @@ export const publicacionesMuro = pgTable("publicaciones_muro", {
 	check("publicaciones_muro_titulo_check", sql`(char_length(titulo) >= 3) AND (char_length(titulo) <= 140)`),
 ]);
 
+export const productos = pgTable("productos", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	proveedorId: uuid("proveedor_id").notNull(),
+	nombre: text().notNull(),
+	detalle: text(),
+	modo: text().default('normal').notNull(),
+	precioDesde: numeric("precio_desde", { precision: 12, scale:  2 }),
+	unidad: text(),
+	disponible: boolean().default(true).notNull(),
+	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("idx_productos_proveedor").using("btree", table.proveedorId.asc().nullsLast().op("uuid_ops")).where(sql`disponible`),
+	foreignKey({
+			columns: [table.proveedorId],
+			foreignColumns: [proveedores.id],
+			name: "productos_proveedor_id_fkey"
+		}).onDelete("cascade"),
+	check("productos_detalle_check", sql`char_length(detalle) <= 300`),
+	check("productos_modo_check", sql`modo = ANY (ARRAY['gratis'::text, 'aporte'::text, 'solidario'::text, 'normal'::text])`),
+	check("productos_nombre_check", sql`(char_length(nombre) >= 2) AND (char_length(nombre) <= 140)`),
+	check("productos_unidad_check", sql`unidad = ANY (ARRAY['unidad'::text, 'libra'::text, 'kilo'::text, 'docena'::text, 'plato'::text, 'trabajo'::text])`),
+]);
+
 export const imagenes = pgTable("imagenes", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	objetoTipo: text("objeto_tipo").notNull(),
@@ -994,30 +1021,7 @@ export const imagenes = pgTable("imagenes", {
 		}).onDelete("set null"),
 	unique("imagenes_ruta_key").on(table.ruta),
 	check("imagenes_estado_check", sql`estado = ANY (ARRAY['en_cola'::text, 'aprobada'::text, 'rechazada'::text])`),
-	check("imagenes_objeto_tipo_check", sql`objeto_tipo = ANY (ARRAY['muro'::text, 'producto'::text])`),
-]);
-
-export const productos = pgTable("productos", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	proveedorId: uuid("proveedor_id").notNull(),
-	nombre: text().notNull(),
-	detalle: text(),
-	modo: text().default('normal').notNull(),
-	precioDesde: numeric("precio_desde", { precision: 12, scale:  2 }),
-	unidad: text(),
-	disponible: boolean().default(true).notNull(),
-	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("idx_productos_proveedor").using("btree", table.proveedorId.asc().nullsLast().op("uuid_ops")).where(sql`disponible`),
-	foreignKey({
-			columns: [table.proveedorId],
-			foreignColumns: [proveedores.id],
-			name: "productos_proveedor_id_fkey"
-		}).onDelete("cascade"),
-	check("productos_detalle_check", sql`char_length(detalle) <= 300`),
-	check("productos_modo_check", sql`modo = ANY (ARRAY['gratis'::text, 'aporte'::text, 'solidario'::text, 'normal'::text])`),
-	check("productos_nombre_check", sql`(char_length(nombre) >= 2) AND (char_length(nombre) <= 140)`),
-	check("productos_unidad_check", sql`unidad = ANY (ARRAY['unidad'::text, 'libra'::text, 'kilo'::text, 'docena'::text, 'plato'::text, 'trabajo'::text])`),
+	check("imagenes_objeto_tipo_check", sql`objeto_tipo = ANY (ARRAY['muro'::text, 'producto'::text, 'proveedor'::text])`),
 ]);
 
 export const pqr = pgTable("pqr", {
@@ -1243,6 +1247,29 @@ export const resenasPublicas = pgView("resenas_publicas", {	id: uuid(),
 	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }),
 }).as(sql`SELECT r.id, r.proveedor_id, r.cumplimiento, r.trato, r.puntualidad, r.comentario, r.replica, r.replica_at, r.creada_at FROM resenas r JOIN proveedores p ON p.id = r.proveedor_id WHERE NOT r.oculta AND NOT p.suspendido AND p.acepto_publicacion`);
 
+export const datosServicios = pgView("datos_servicios", {	municipio: text(),
+	grupo: text(),
+	oficio: text(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	solicitudes: bigint({ mode: "number" }),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	conRespuesta: bigint("con_respuesta", { mode: "number" }),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	resueltas: bigint({ mode: "number" }),
+	horasPromedio: numeric("horas_promedio"),
+}).as(sql`SELECT municipio, grupo, oficio, count(*) AS solicitudes, count(*) FILTER (WHERE hubo_respuesta) AS con_respuesta, count(*) FILTER (WHERE hubo_confirmacion) AS resueltas, round(avg(horas_hasta_respuesta), 1) AS horas_promedio FROM metricas_servicio m WHERE NOT es_prueba GROUP BY municipio, grupo, oficio`);
+
+export const municipiosConProveedores = pgView("municipios_con_proveedores", {	codigoDane: text("codigo_dane"),
+	nombre: text(),
+	departamento: text(),
+}).as(sql`SELECT DISTINCT m.codigo_dane, m.nombre, m.departamento FROM municipios m JOIN proveedores_publicos p ON p.municipio = m.codigo_dane`);
+
+export const oficiosConProveedores = pgView("oficios_con_proveedores", {	id: text(),
+	nombre: text(),
+	grupo: text(),
+	orden: integer(),
+}).as(sql`SELECT DISTINCT o.id, o.nombre, o.grupo, o.orden FROM catalogo_oficios o JOIN proveedor_oficios_publicos pop ON pop.oficio_id = o.id`);
+
 export const proveedoresPublicos = pgView("proveedores_publicos", {	id: uuid(),
 	nombreVisible: text("nombre_visible"),
 	tipo: text(),
@@ -1272,30 +1299,8 @@ export const proveedoresPublicos = pgView("proveedores_publicos", {	id: uuid(),
 	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
 	totalResenas: bigint("total_resenas", { mode: "number" }),
 	modos: text().array(),
-}).as(sql`SELECT p.id, p.nombre_visible, p.tipo, p.telefono, p.telefono_verificado, p.municipio, p.zona_id, z.nombre AS zona_nombre, p.zona_texto, p.modalidad, p.dias, p.franjas, p.medios_pago, p.descripcion, p.creado_at, CASE WHEN p.acepto_mapa THEN p.latitud ELSE NULL::numeric END AS latitud, CASE WHEN p.acepto_mapa THEN p.longitud ELSE NULL::numeric END AS longitud, COALESCE(ofi.oficios, '{}'::text[]) AS oficios, COALESCE(ofi.grupos, '{}'::text[]) AS grupos, COALESCE(ref.confirmadas, 0::bigint) AS referencias_confirmadas, COALESCE(sp.confirmados, 0::bigint) AS servicios_confirmados, res.cumplimiento, res.trato, res.puntualidad, COALESCE(res.total, 0::bigint) AS total_resenas, COALESCE(ofi.modos, '{}'::text[]) AS modos FROM proveedores p LEFT JOIN zonas z ON z.id = p.zona_id JOIN LATERAL ( SELECT array_agg(DISTINCT pop.oficio_id) AS oficios, array_agg(DISTINCT pop.grupo) AS grupos, array_agg(DISTINCT pop.modo) AS modos FROM proveedor_oficios_publicos pop WHERE pop.proveedor_id = p.id) ofi ON ofi.oficios IS NOT NULL LEFT JOIN LATERAL ( SELECT count(*) AS confirmadas FROM referencias r WHERE r.proveedor_id = p.id AND r.estado = 'confirmada'::text) ref ON true LEFT JOIN LATERAL ( SELECT count(*) AS confirmados FROM servicios_prestados s WHERE s.proveedor_id = p.id AND s.confirmado_at IS NOT NULL) sp ON true LEFT JOIN LATERAL ( SELECT count(*) AS total, round(avg(r.cumplimiento), 1) AS cumplimiento, round(avg(r.trato), 1) AS trato, round(avg(r.puntualidad), 1) AS puntualidad FROM resenas r WHERE r.proveedor_id = p.id AND NOT r.oculta) res ON true WHERE NOT p.suspendido AND p.acepto_publicacion AND p.telefono_verificado`);
-
-export const datosServicios = pgView("datos_servicios", {	municipio: text(),
-	grupo: text(),
-	oficio: text(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	solicitudes: bigint({ mode: "number" }),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	conRespuesta: bigint("con_respuesta", { mode: "number" }),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	resueltas: bigint({ mode: "number" }),
-	horasPromedio: numeric("horas_promedio"),
-}).as(sql`SELECT municipio, grupo, oficio, count(*) AS solicitudes, count(*) FILTER (WHERE hubo_respuesta) AS con_respuesta, count(*) FILTER (WHERE hubo_confirmacion) AS resueltas, round(avg(horas_hasta_respuesta), 1) AS horas_promedio FROM metricas_servicio m WHERE NOT es_prueba GROUP BY municipio, grupo, oficio`);
-
-export const municipiosConProveedores = pgView("municipios_con_proveedores", {	codigoDane: text("codigo_dane"),
-	nombre: text(),
-	departamento: text(),
-}).as(sql`SELECT DISTINCT m.codigo_dane, m.nombre, m.departamento FROM municipios m JOIN proveedores_publicos p ON p.municipio = m.codigo_dane`);
-
-export const oficiosConProveedores = pgView("oficios_con_proveedores", {	id: text(),
-	nombre: text(),
-	grupo: text(),
-	orden: integer(),
-}).as(sql`SELECT DISTINCT o.id, o.nombre, o.grupo, o.orden FROM catalogo_oficios o JOIN proveedor_oficios_publicos pop ON pop.oficio_id = o.id`);
+	foto: text(),
+}).as(sql`SELECT p.id, p.nombre_visible, p.tipo, p.telefono, p.telefono_verificado, p.municipio, p.zona_id, z.nombre AS zona_nombre, p.zona_texto, p.modalidad, p.dias, p.franjas, p.medios_pago, p.descripcion, p.creado_at, CASE WHEN p.acepto_mapa THEN p.latitud ELSE NULL::numeric END AS latitud, CASE WHEN p.acepto_mapa THEN p.longitud ELSE NULL::numeric END AS longitud, COALESCE(ofi.oficios, '{}'::text[]) AS oficios, COALESCE(ofi.grupos, '{}'::text[]) AS grupos, COALESCE(ref.confirmadas, 0::bigint) AS referencias_confirmadas, COALESCE(sp.confirmados, 0::bigint) AS servicios_confirmados, res.cumplimiento, res.trato, res.puntualidad, COALESCE(res.total, 0::bigint) AS total_resenas, COALESCE(ofi.modos, '{}'::text[]) AS modos, CASE WHEN p.acepto_foto THEN ( SELECT i.ruta FROM imagenes i WHERE i.objeto_tipo = 'proveedor'::text AND i.objeto_id = p.id AND i.estado = 'aprobada'::text ORDER BY i.subida_at LIMIT 1) ELSE NULL::text END AS foto FROM proveedores p LEFT JOIN zonas z ON z.id = p.zona_id JOIN LATERAL ( SELECT array_agg(DISTINCT pop.oficio_id) AS oficios, array_agg(DISTINCT pop.grupo) AS grupos, array_agg(DISTINCT pop.modo) AS modos FROM proveedor_oficios_publicos pop WHERE pop.proveedor_id = p.id) ofi ON ofi.oficios IS NOT NULL LEFT JOIN LATERAL ( SELECT count(*) AS confirmadas FROM referencias r WHERE r.proveedor_id = p.id AND r.estado = 'confirmada'::text) ref ON true LEFT JOIN LATERAL ( SELECT count(*) AS confirmados FROM servicios_prestados s WHERE s.proveedor_id = p.id AND s.confirmado_at IS NOT NULL) sp ON true LEFT JOIN LATERAL ( SELECT count(*) AS total, round(avg(r.cumplimiento), 1) AS cumplimiento, round(avg(r.trato), 1) AS trato, round(avg(r.puntualidad), 1) AS puntualidad FROM resenas r WHERE r.proveedor_id = p.id AND NOT r.oculta) res ON true WHERE NOT p.suspendido AND p.acepto_publicacion AND p.telefono_verificado`);
 
 export const vCruces = pgView("v_cruces", {	solicitudId: uuid("solicitud_id"),
 	codigo: text(),

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { CalendarDays, MapPin, Wallet, ChevronDown, Info } from 'lucide-react'
@@ -77,7 +78,23 @@ export default async function FichaPage({
         ) : undefined
       }
     >
-      <div>
+      <div className="flex items-center gap-3">
+        {/* La foto, si la hay y si esa persona autorizó publicarla. Va al
+            lado de las insignias y no encima del título: el título ya está
+            en la cabecera del marco, y una foto de 160 px arriba del todo
+            empuja fuera del primer pantallazo lo que se viene a mirar —qué
+            hace y cuánto cobra— (regla de interfaz 1).
+
+            Sin foto no se dibuja nada: ni hueco ni iniciales. */}
+        {ficha.foto && (
+          <Image
+            src={ficha.foto}
+            alt=""
+            width={72}
+            height={72}
+            className="size-18 shrink-0 rounded-full object-cover"
+          />
+        )}
         {/* La explicación va pegada a las insignias, que es donde nace la
             duda. Al final de la página, a tres pantallas de aquí, no la
             leía quien acababa de ver un sello y se preguntaba qué

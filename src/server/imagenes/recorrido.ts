@@ -29,7 +29,7 @@ const LADO_MAXIMO = 1600
 
 export async function firmarSubida(
   db: BaseDeDatos,
-  entrada: { objeto_tipo: 'muro' | 'producto'; tipo: string; bytes: number },
+  entrada: { objeto_tipo: 'muro' | 'producto' | 'proveedor'; tipo: string; bytes: number },
 ) {
   if (!almacen.TIPOS_ACEPTADOS.includes(entrada.tipo as never)) {
     throw new ImagenRechazada('Ese tipo de archivo no es una imagen que aceptemos.')
@@ -119,7 +119,7 @@ export async function cola(db: BaseDeDatos, limite = 30) {
 
   return filas.map((f) => ({
     id: f.id,
-    objeto_tipo: f.objeto_tipo as 'muro' | 'producto',
+    objeto_tipo: f.objeto_tipo as 'muro' | 'producto' | 'proveedor',
     objeto_id: f.objeto_id,
     url: almacen.urlPublica(`${f.ruta}.webp`),
     ancho: f.ancho,

@@ -73,6 +73,10 @@ export const CORREO_HABEAS_DATA_SERVICIOS = CORREO_CONTACTO
 // cuando el texto de `docs/legal/PLANTILLAS.md` cambia, y no antes.
 export const AUTORIZACION_PROVEEDOR_VERSION = 'servicios-proveedor-2026-08-19'
 export const CONSENTIMIENTO_REFERENCIA_VERSION = 'servicios-referencia-2026-08-19'
+// La foto lleva la suya, aparte de la de publicar la ficha: publicar la
+// cara de alguien es otra finalidad que publicar su teléfono, igual que
+// el punto en el mapa (ADR 0004). Quien firmó la de agosto no firmó esta.
+export const AUTORIZACION_FOTO_VERSION = 'servicios-foto-2026-08-27'
 
 export const ENTIDADES_MATRICULA = [
   { valor: 'COPNIA', etiqueta: 'COPNIA — Ingeniería' },
