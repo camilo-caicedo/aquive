@@ -504,40 +504,69 @@ body:has(dialog[open]) {
 /* --------------------------------------------------------------------
    Lo que entra en pantalla al desplazar, aparece.
 
-   ⚠⚠ EMPIEZA VISIBLE. Nada de esto esconde por su cuenta: hace falta
-   `data-listo` en el contenedor, que lo pone el efecto de `revelar.tsx`
-   y SOLO cuando ya tiene el observador montado y lo visible marcado.
+   Guiado por el propio desplazamiento, con `animation-timeline: view()`.
+   **Cero JavaScript.**
 
-   Si el JavaScript no llega —este público entra con señal mala, así que
-   a veces no llega—, si revienta, o si el navegador congela la pestaña
-   antes de que el efecto corra, no hay ninguna regla que ponga
-   `opacity: 0` y la página se ve entera. Lo contrario —esconder en el
-   CSS y devolver con JavaScript— deja la pantalla en blanco con el
-   contenido servido y escondido, y eso aquí no se puede.
+   ⚠ La primera versión de esto era un `IntersectionObserver`. Se retiró
+   después de medir: en una pestaña de navegador en segundo plano el
+   observador **no entregó una sola llamada**, ni siquiera la inicial que
+   el estándar promete al empezar a observar. Un efecto que esconde
+   contenido y depende de que algo así responda es un riesgo que este
+   público no puede pagar — entra con señal mala desde Android de gama
+   baja, y una pantalla en blanco no se distingue de una aplicación rota.
 
-   ⚠ El `transform` acaba en los elementos de la lista, nunca en un
-   contenedor de página: un ancestro con transform se vuelve el bloque
-   contenedor de sus descendientes `position: fixed`. Eso ya desancló una
-   vez la píldora de «Necesito un servicio».
+   Guiado por el desplazamiento no hay nada que responda ni que fallar:
+   es el compositor pintando en función de dónde está la página.
+
+   ⚠ Y todo va dentro de `@supports`. Donde el navegador no lo entienda
+   —Firefox y Safari a día de hoy— no existe ninguna regla que esconda
+   nada: se ve todo, quieto. La animación es un extra, nunca el precio
+   de leer.
+
+   ⚠ Se anima `translate`, la propiedad independiente, y NO `transform`.
+   Una animación guiada por el desplazamiento está siempre viva, así que
+   se queda con la propiedad que anima para siempre; con `transform`,
+   el `scale` de `.pulsable:active` encima no haría nada y la tarjeta
+   dejaría de responder al dedo. Siendo dos propiedades distintas,
+   conviven.
+
+   ⚠ Va en los elementos de la lista, nunca en un contenedor de página:
+   un ancestro con `translate` se vuelve el bloque contenedor de sus
+   descendientes `position: fixed`, y eso ya desancló una vez la píldora
+   de «Necesito un servicio».
    -------------------------------------------------------------------- */
-[data-revelar-lista][data-listo] > *:not([data-dentro]) {
-  /* ⚠ `animation: none` no sobra: las tarjetas ya traen su propia
-     entrada con `.animar-entrada`, y dentro de una lista que se revela
-     eso son DOS sistemas haciendo el mismo trabajo. Dentro manda el
-     revelado; fuera —/ayudas, con `.lista-escalonada`— la tarjeta sigue
-     con la suya. */
-  animation: none;
-  opacity: 0;
-  transform: translateY(16px);
+@keyframes entrar-al-ver {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+  }
+  to {
+    opacity: 1;
+    translate: none;
+  }
 }
 
-[data-revelar-lista][data-listo] > [data-dentro] {
-  animation: none;
-  opacity: 1;
-  transform: none;
-  transition:
-    opacity var(--dur-media) var(--curva-entrada),
-    transform var(--dur-media) var(--curva-entrada);
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .revelar > * {
+      animation: entrar-al-ver linear both;
+      animation-timeline: view();
+      /* Empieza en cuanto asoma y termina cuando lleva un quinto de
+         pantalla subido: lo justo para que se vea llegar sin que haya que
+         esperar a que termine para leerlo. */
+      animation-range: entry 0% cover 20%;
+    }
+
+    /* ⚠ Las tarjetas ya traen su propia entrada con `.animar-entrada`.
+       Dentro de una lista que se revela eso son dos sistemas haciendo el
+       mismo trabajo, y la de la tarjeta corre al cargar aunque esté a
+       tres pantallas de distancia. Manda el revelado. */
+    .revelar > .animar-entrada {
+      animation: entrar-al-ver linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 20%;
+    }
+  }
 }
 
 .punto-urgente {

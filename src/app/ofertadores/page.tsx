@@ -167,7 +167,7 @@ export default async function OfertadoresPage({
           </div>
         </div>
       ) : (
-        <ul className="lista-escalonada mt-6 space-y-3">
+        <ul className="revelar mt-6 space-y-3">
           {ordenados.map((o) => (
             <li
               key={o.id}

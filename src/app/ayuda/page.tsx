@@ -63,7 +63,7 @@ export default function AyudaPage() {
         o pon una PQR y te respondemos.
       </p>
 
-      <ul className="mt-6 space-y-3">
+      <ul className="revelar mt-6 space-y-3">
         {PREGUNTAS.map((p) => (
           <li key={p.t}>
             <details className="group shadow-canto rounded-2xl bg-card">

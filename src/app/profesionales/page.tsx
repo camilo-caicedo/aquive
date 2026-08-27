@@ -192,7 +192,7 @@ export default async function ProfesionalesPage({
           )}
         </div>
       ) : (
-        <ul className="mt-6 space-y-3">
+        <ul className="revelar mt-6 space-y-3">
           {servidores.map((s) => (
             <li
               key={s.id}

@@ -72,7 +72,7 @@ export default async function AcopiosPage({
             </p>
           )}
 
-          <ul className="mt-6 space-y-3">
+          <ul className="revelar mt-6 space-y-3">
             {acopios.map((a) => (
               <li key={a.id} className="shadow-canto rounded-2xl bg-card p-4">
                 <h2 className="font-heading text-lg leading-tight">{a.nombre}</h2>

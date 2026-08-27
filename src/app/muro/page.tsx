@@ -9,7 +9,6 @@ import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { AccionPrincipal } from '@/components/accion-principal'
 import { NOMBRE_CATEGORIA_MURO, type Cara } from '@/contrato/comunidad'
 import { CINTA, SOMBRA_CARTEL, TINTA_CINTA, type Familia } from '@/lib/familias'
-import { RevelarLista } from '@/components/revelar'
 
 export const metadata = { title: 'Muro' }
 
@@ -89,7 +88,7 @@ export default async function MuroPage({
           </Link>
         </div>
       ) : (
-        <RevelarLista className="mt-6 space-y-3">
+        <ul className="revelar mt-6 space-y-3">
           {publicaciones.map((p, i) => {
             const familia = COLORES[i % COLORES.length]
             return (
@@ -221,7 +220,7 @@ export default async function MuroPage({
               </li>
             )
           })}
-        </RevelarLista>
+        </ul>
       )}
 
       <p className="mt-6 text-sm text-muted-foreground">
