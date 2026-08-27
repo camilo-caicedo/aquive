@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Search } from 'lucide-react'
+import { ChevronRight, HandHelping, Search } from 'lucide-react'
 
 import { servidor } from '@/orpc/local'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
@@ -105,6 +105,26 @@ export default async function CategoriasPage({
           )
         })}
       </ul>
+
+      {/* El otro lado de la pantalla. Las tarjetas de arriba son quién
+          puede hacerte algo; esto es quién necesita que se lo hagan, y es
+          por donde entra un prestador a buscar trabajo. Va debajo de las
+          categorías, no entre ellas: son dos preguntas distintas. */}
+      <Link
+        href="/solicitudes"
+        className="shadow-canto mt-6 flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
+      >
+        <span className="bg-familia-verde flex size-10 shrink-0 items-center justify-center rounded-full text-foreground">
+          <HandHelping className="size-5" aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-lg font-medium">Quién está pidiendo</span>
+          <span className="block text-base text-muted-foreground">
+            Si tienes cómo hacerlo, escríbele
+          </span>
+        </span>
+        <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+      </Link>
 
       <p className="mt-6 text-base text-muted-foreground">
         ¿Ya sabes a quién buscas?{' '}

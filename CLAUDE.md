@@ -46,6 +46,7 @@ archivo, y detrás de él:
 | `docs/decisiones/0010-*.md` | La portada es siempre la bienvenida |
 | `docs/decisiones/0011-*.md` | Quien pide escribe qué necesita |
 | `docs/decisiones/0012-*.md` | Doce categorías de oficio, no ocho |
+| `docs/decisiones/0013-*.md` | Categoría y subcategoría, en los dos lados |
 | `docs/marca/AquiVe-Flujo.dc.html` | Prototipo de las 40 pantallas |
 | `docs/marca/Manual-de-Marca-AquiVe.pdf` | Manual de marca |
 | `docs/PENDIENTES-LEGALES.md` | Bloqueantes que no son código |
@@ -194,14 +195,32 @@ Quien **pide** —un servicio o un insumo— publica con cuenta, desde el ADR
 0006. **Tener cuenta no es dar datos**: su nombre no se publica y su solicitud
 no lo lleva.
 
-Y desde el ADR 0011, **quien pide un servicio no elige de un catálogo**: elige
-una de las doce categorías —eran ocho hasta el ADR 0012— y escribe con sus
-palabras qué necesita. El rebusque
-es justo el trabajo que no está en ninguna lista. Se publica de inmediato
-—quien pide necesita respuesta hoy— y entra en la cola «Solicitudes por
-revisar» de `/admin`, donde se marca revisada o se borra.
+Pedir un servicio es **categoría, subcategoría y detalle opcional** (ADR
+0013). La categoría es una de las doce —eran ocho hasta el ADR 0012—; la
+subcategoría es una fila de `catalogo_oficios`, obligatoria, y quien no
+encuentre la suya la escribe: «¿No encuentras lo tuyo? Agrégalo y lo
+revisamos», **siempre a la vista**, no al final de la lista ni detrás de un
+desplegable. El detalle queda para dar contexto.
 
-⚠ Esto reemplaza la asimetría anterior, en la que quien pedía publicaba sin
+⚠ Esto corrige el ADR 0011, que había quitado el catálogo entero de ahí. La
+razón era buena —cuarenta y tantas píldoras juntas, y quien no encontraba la
+suya se iba— pero lo que faltaba no era quitar la lista: era que la salida
+estuviera delante. Ahora lo está, y ya no son cuarenta juntas: primero doce
+categorías, después las siete u ocho de la que se elija.
+
+Lo escrito **se publica de inmediato** —quien pide necesita respuesta hoy— y
+entra en la cola de `/admin`, donde el administrador puede corregir el texto,
+aprobarlo o reemplazarlo por algo que ya exista. Con la **ficha** es distinto,
+y no por gusto: un oficio propuesto no se publica hasta que alguien lo mire,
+porque `proveedor_oficios.oficio_id` es llave foránea contra el catálogo y la
+vista pública hace `join` contra ella. Lo que no está en el catálogo es
+invisible por construcción, no por un filtro que alguien pueda olvidar.
+
+**Solo se sugieren subcategorías, nunca categorías.** Una categoría nueva son
+dos `CHECK`, dos enums de TypeScript y un gajo de la sombrilla que repartir:
+sale de un ADR, no de una pantalla.
+
+⚠ Y esto reemplaza la asimetría anterior, en la que quien pedía publicaba sin
 cuenta y volvía con un token. El ADR 0006 dice qué se pierde con el cambio y
 por qué se aceptó.
 
@@ -248,6 +267,12 @@ asesoría jurídica— no entran en `catalogo_oficios`: van en
 `catalogo_servicios`, que sí la verifica. Fuera de todo: rescate, búsqueda de
 personas, urgencias y atención prehospitalaria, que son competencia de
 bomberos, Defensa Civil y la línea 123.
+
+⚠ Desde el ADR 0013 hay una puerta más por la que puede nacer un oficio: la
+cola de sugerencias de `/admin`. Por eso su `riesgo` **se elige a mano y sin
+valor por defecto**, en la pantalla y en la función: un «cuidar a mi sobrino
+después del colegio» aprobado como bajo porque el formulario traía bajo puesto
+se salta este filtro entero.
 
 ⚠ El ADR 0012 abrió el grupo `construccion` —pintura, estuco, enchape,
 goteras, plomería de fugas, carpintería, rejas, ayudante de obra— y **no movió
@@ -476,9 +501,24 @@ Tipografía: **Montserrat** en titulares y etiquetas, **Poppins** en cuerpo,
 Estilo: sin contornos negros —sombra de 1 px en lo blanco sobre crema—, campos
 de texto rellenos, botones y chips en píldora.
 
-> **Falta el logo en SVG**, y con él la versión simplificada para menos de 32 px
-> que el manual exige. Mientras llega, `marca.tsx` usa el nombre tipográfico y
-> los iconos de la PWA se quedan como están. No bloquea nada más.
+**El logo en SVG ya llegó**, con las versiones mini de 16, 24 y 32 px que el
+manual exige. Vive en `docs/marca/Logo/SVG/` y esa es la fuente: los iconos de
+la aplicación —favicon, `.ico`, PWA, Apple, enmascarable— se generan de ahí con
+`node scripts/iconos.mjs`, que deja escrito de cuál de las veinte variantes sale
+cada archivo. Con arte nueva se corre otra vez; no se editan a mano.
+
+Lo que se sirve es PNG con paleta, no el SVG: el trazo de boceto son miles de
+paths y cada archivo pesa entre 300 y 700 KB. Los PNG de 4267 px que mandó el
+diseñador están en `.gitignore` —59 MB que el SVG regenera—.
+
+Y el crema del arte es `#F3E8DF`, dos puntos más cálido que `--background`
+`#F5EEE2`. Invisible salvo al rellenar el fondo del enmascarable, donde el
+token deja una costura; por eso el guion usa el del arte y el manifiesto sigue
+con el token.
+
+⚠ Se fue `marca.tsx`, que dibujaba a mano un gato sobre terracota `#8B4513`
+—ni la marca ni un color de la paleta— y ya no lo importaba nadie. La marca en
+pantalla es `docs/marca/isotipo-carrito.png`, en el encabezado y la bienvenida.
 
 ## Accesibilidad
 

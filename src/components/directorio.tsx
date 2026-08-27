@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import { AccionPrincipal } from '@/components/accion-principal'
-import { Info, Inbox, ShieldAlert, Stethoscope, CircleAlert, Briefcase, List, MapPin } from 'lucide-react'
+import { Info, Inbox, ShieldAlert, Stethoscope, CircleAlert, Briefcase, HandHelping, List, MapPin } from 'lucide-react'
 import { servidor } from '@/orpc/local'
 import { AVISO_SERVICIOS, NO_PAGUES_POR_ADELANTADO } from '@/lib/honestidad'
 import { GRUPOS, MODALIDADES, MODOS_PRECIO } from '@/lib/servicios'
@@ -240,15 +240,28 @@ export async function Directorio({
             </Link>
           }
           chipsExtra={
-            !miFicha ? (
+            <>
+              {/* El otro lado del directorio. Aquí se mira quién ofrece; a
+                  un toque está quién pide, que es lo que le sirve a un
+                  prestador que entró a ver la competencia y se queda sin
+                  saber que hay trabajo publicado. */}
               <Link
-                href="/servicios/soy-proveedor"
+                href="/solicitudes"
                 className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
               >
-                <Briefcase className="size-4" aria-hidden="true" />
-                Ofrecer mi trabajo
+                <HandHelping className="size-4" aria-hidden="true" />
+                Quién está pidiendo
               </Link>
-            ) : undefined
+              {!miFicha && (
+                <Link
+                  href="/servicios/soy-proveedor"
+                  className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
+                >
+                  <Briefcase className="size-4" aria-hidden="true" />
+                  Ofrecer mi trabajo
+                </Link>
+              )}
+            </>
           }
         >
           <SelectFiltro
