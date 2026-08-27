@@ -744,53 +744,6 @@ export const resenas = pgTable("resenas", {
 	check("resenas_trato_check", sql`(trato >= 1) AND (trato <= 3)`),
 ]);
 
-export const solicitudesServicio = pgTable("solicitudes_servicio", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	codigo: text().notNull(),
-	oficioId: text("oficio_id").notNull(),
-	municipio: text().notNull(),
-	zonaId: uuid("zona_id"),
-	zonaTexto: text("zona_texto"),
-	urgencia: text().notNull(),
-	capacidadPago: text("capacidad_pago").notNull(),
-	nota: text(),
-	estado: text().default('abierta').notNull(),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '15 days'::interval)`).notNull(),
-	esPrueba: boolean("es_prueba").default(false).notNull(),
-	perfilId: uuid("perfil_id").notNull(),
-}, (table) => [
-	index("idx_solicitudes_servicio_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
-	index("idx_solicitudes_servicio_vigentes").using("btree", table.municipio.asc().nullsLast().op("text_ops"), table.oficioId.asc().nullsLast().op("text_ops")).where(sql`(estado = 'abierta'::text)`),
-	foreignKey({
-			columns: [table.municipio],
-			foreignColumns: [municipios.codigoDane],
-			name: "solicitudes_servicio_municipio_fkey"
-		}),
-	foreignKey({
-			columns: [table.oficioId],
-			foreignColumns: [catalogoOficios.id],
-			name: "solicitudes_servicio_oficio_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.perfilId],
-			foreignColumns: [perfiles.id],
-			name: "solicitudes_servicio_perfil_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.zonaId],
-			foreignColumns: [zonas.id],
-			name: "solicitudes_servicio_zona_id_fkey"
-		}).onDelete("set null"),
-	unique("solicitudes_servicio_codigo_key").on(table.codigo),
-	check("solicitudes_servicio_capacidad_pago_check", sql`capacidad_pago = ANY (ARRAY['puedo_pagar'::text, 'pago_poco'::text, 'no_puedo_pagar'::text])`),
-	check("solicitudes_servicio_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'resuelta'::text])`),
-	check("solicitudes_servicio_nota_check", sql`char_length(nota) <= 140`),
-	check("solicitudes_servicio_tiene_zona", sql`num_nonnulls(zona_id, zona_texto) >= 1`),
-	check("solicitudes_servicio_urgencia_check", sql`urgencia = ANY (ARRAY['hoy'::text, 'esta_semana'::text, 'sin_prisa'::text])`),
-	check("solicitudes_servicio_zona_texto_check", sql`(char_length(zona_texto) >= 2) AND (char_length(zona_texto) <= 60)`),
-]);
-
 export const proveedores = pgTable("proveedores", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	perfilId: uuid("perfil_id").notNull(),
@@ -864,6 +817,59 @@ export const proveedores = pgTable("proveedores", {
 	check("proveedores_tiene_zona", sql`num_nonnulls(zona_id, zona_texto) >= 1`),
 	check("proveedores_tipo_check", sql`tipo = ANY (ARRAY['persona'::text, 'microempresa'::text])`),
 	check("proveedores_zona_texto_check", sql`(char_length(zona_texto) >= 2) AND (char_length(zona_texto) <= 60)`),
+]);
+
+export const solicitudesServicio = pgTable("solicitudes_servicio", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	codigo: text().notNull(),
+	oficioId: text("oficio_id"),
+	municipio: text().notNull(),
+	zonaId: uuid("zona_id"),
+	zonaTexto: text("zona_texto"),
+	urgencia: text().notNull(),
+	capacidadPago: text("capacidad_pago").notNull(),
+	nota: text(),
+	estado: text().default('abierta').notNull(),
+	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '15 days'::interval)`).notNull(),
+	esPrueba: boolean("es_prueba").default(false).notNull(),
+	perfilId: uuid("perfil_id").notNull(),
+	grupo: text().notNull(),
+	detalle: text().notNull(),
+	revisadaAt: timestamp("revisada_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("idx_solicitudes_servicio_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
+	index("idx_solicitudes_servicio_sin_revisar").using("btree", table.creadaAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(revisada_at IS NULL)`),
+	index("idx_solicitudes_servicio_vigentes").using("btree", table.municipio.asc().nullsLast().op("text_ops"), table.grupo.asc().nullsLast().op("text_ops")).where(sql`(estado = 'abierta'::text)`),
+	foreignKey({
+			columns: [table.municipio],
+			foreignColumns: [municipios.codigoDane],
+			name: "solicitudes_servicio_municipio_fkey"
+		}),
+	foreignKey({
+			columns: [table.oficioId],
+			foreignColumns: [catalogoOficios.id],
+			name: "solicitudes_servicio_oficio_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.perfilId],
+			foreignColumns: [perfiles.id],
+			name: "solicitudes_servicio_perfil_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.zonaId],
+			foreignColumns: [zonas.id],
+			name: "solicitudes_servicio_zona_id_fkey"
+		}).onDelete("set null"),
+	unique("solicitudes_servicio_codigo_key").on(table.codigo),
+	check("solicitudes_servicio_capacidad_pago_check", sql`capacidad_pago = ANY (ARRAY['puedo_pagar'::text, 'pago_poco'::text, 'no_puedo_pagar'::text])`),
+	check("solicitudes_servicio_detalle_check", sql`(char_length(btrim(detalle)) >= 3) AND (char_length(btrim(detalle)) <= 80)`),
+	check("solicitudes_servicio_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'resuelta'::text])`),
+	check("solicitudes_servicio_grupo_check", sql`grupo = ANY (ARRAY['comida'::text, 'belleza'::text, 'confeccion'::text, 'transporte'::text, 'aseo'::text, 'cuidado'::text, 'reparacion'::text, 'otros'::text])`),
+	check("solicitudes_servicio_nota_check", sql`char_length(nota) <= 140`),
+	check("solicitudes_servicio_tiene_zona", sql`num_nonnulls(zona_id, zona_texto) >= 1`),
+	check("solicitudes_servicio_urgencia_check", sql`urgencia = ANY (ARRAY['hoy'::text, 'esta_semana'::text, 'sin_prisa'::text])`),
+	check("solicitudes_servicio_zona_texto_check", sql`(char_length(zona_texto) >= 2) AND (char_length(zona_texto) <= 60)`),
 ]);
 
 export const chats = pgTable("chats", {
@@ -1160,6 +1166,23 @@ export const municipiosConEntidades = pgView("municipios_con_entidades", {	codig
 	departamento: text(),
 }).as(sql`SELECT DISTINCT m.codigo_dane, m.nombre, m.departamento FROM municipios m JOIN entidades e ON m.codigo_dane = ANY (e.municipios) WHERE e.activa AND e.cobertura = 'local'::text`);
 
+export const solicitudesServicioPublicas = pgView("solicitudes_servicio_publicas", {	id: uuid(),
+	codigo: text(),
+	grupo: text(),
+	detalle: text(),
+	municipio: text(),
+	zonaId: uuid("zona_id"),
+	zonaNombre: text("zona_nombre"),
+	zonaTexto: text("zona_texto"),
+	urgencia: text(),
+	capacidadPago: text("capacidad_pago"),
+	nota: text(),
+	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }),
+	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	numRespuestas: bigint("num_respuestas", { mode: "number" }),
+}).as(sql`SELECT s.id, s.codigo, s.grupo, s.detalle, s.municipio, s.zona_id, z.nombre AS zona_nombre, s.zona_texto, s.urgencia, s.capacidad_pago, s.nota, s.creada_at, s.expira_at, ( SELECT count(*) AS count FROM respuestas_servicio rs WHERE rs.solicitud_id = s.id) AS num_respuestas FROM solicitudes_servicio s LEFT JOIN zonas z ON z.id = s.zona_id WHERE s.estado = 'abierta'::text AND s.expira_at > now()`);
+
 export const municipiosConServidores = pgView("municipios_con_servidores", {	codigoDane: text("codigo_dane"),
 	nombre: text(),
 	departamento: text(),
@@ -1219,24 +1242,6 @@ export const resenasPublicas = pgView("resenas_publicas", {	id: uuid(),
 	replicaAt: timestamp("replica_at", { withTimezone: true, mode: 'string' }),
 	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }),
 }).as(sql`SELECT r.id, r.proveedor_id, r.cumplimiento, r.trato, r.puntualidad, r.comentario, r.replica, r.replica_at, r.creada_at FROM resenas r JOIN proveedores p ON p.id = r.proveedor_id WHERE NOT r.oculta AND NOT p.suspendido AND p.acepto_publicacion`);
-
-export const solicitudesServicioPublicas = pgView("solicitudes_servicio_publicas", {	id: uuid(),
-	codigo: text(),
-	oficioId: text("oficio_id"),
-	oficioNombre: text("oficio_nombre"),
-	grupo: text(),
-	municipio: text(),
-	zonaId: uuid("zona_id"),
-	zonaNombre: text("zona_nombre"),
-	zonaTexto: text("zona_texto"),
-	urgencia: text(),
-	capacidadPago: text("capacidad_pago"),
-	nota: text(),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }),
-	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	numRespuestas: bigint("num_respuestas", { mode: "number" }),
-}).as(sql`SELECT s.id, s.codigo, s.oficio_id, o.nombre AS oficio_nombre, o.grupo, s.municipio, s.zona_id, z.nombre AS zona_nombre, s.zona_texto, s.urgencia, s.capacidad_pago, s.nota, s.creada_at, s.expira_at, ( SELECT count(*) AS count FROM respuestas_servicio rs WHERE rs.solicitud_id = s.id) AS num_respuestas FROM solicitudes_servicio s JOIN catalogo_oficios o ON o.id = s.oficio_id LEFT JOIN zonas z ON z.id = s.zona_id WHERE s.estado = 'abierta'::text AND s.expira_at > now()`);
 
 export const proveedoresPublicos = pgView("proveedores_publicos", {	id: uuid(),
 	nombreVisible: text("nombre_visible"),

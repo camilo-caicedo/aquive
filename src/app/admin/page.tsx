@@ -121,6 +121,16 @@ export default async function AdminPage() {
                 ),
               },
               {
+                // Texto que escribió alguien y que nadie ha mirado (ADR
+                // 0011). Se publica ya, así que esta cola no bloquea a
+                // nadie: es para leer lo que salió.
+                href: '/admin/servicios?cola=solicitudes',
+                Icono: ClipboardList,
+                etiqueta: 'Solicitudes por revisar',
+                detalle: 'Lo que la gente escribió al pedir un servicio',
+                cuantas: v(n?.solicitudes_servicio_sin_revisar),
+              },
+              {
                 href: '/admin/servicios',
                 Icono: Wrench,
                 etiqueta: 'Servicios',

@@ -11,9 +11,11 @@ import {
   EyeOff,
   MapPin,
   Ban,
+  ClipboardList,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
+import { NOMBRE_GRUPO } from '@/contrato/servicios'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PanelZonas, type ZonaPropuesta } from '@/components/panel-zonas'
 
@@ -41,6 +43,16 @@ export interface PanelServiciosDatos {
     replica: string | null
     creada_at: string
   }[]
+  /** Lo que nadie ha mirado todavía (ADR 0011). Sin nada de quien pidió. */
+  solicitudes_por_revisar: {
+    id: string
+    codigo: string
+    grupo: string
+    detalle: string
+    nota: string | null
+    municipio: string
+    creada_at: string
+  }[]
   referencias_pendientes: number
   zonas_pendientes: number
   totales: {
@@ -51,7 +63,12 @@ export interface PanelServiciosDatos {
   }
 }
 
-export type ColaServicios = 'telefonos' | 'resenas' | 'zonas' | 'suspendidas'
+export type ColaServicios =
+  | 'telefonos'
+  | 'solicitudes'
+  | 'resenas'
+  | 'zonas'
+  | 'suspendidas'
 
 /**
  * La moderación del módulo de Servicios.
@@ -80,7 +97,12 @@ export function PanelServicios({
   const [borrando, setBorrando] = useState<string | null>(null)
 
   async function llamar(
-    fn: 'verificar_telefono_proveedor' | 'suspender_proveedor' | 'ocultar_resena' | 'borrar_resena',
+    fn:
+      | 'verificar_telefono_proveedor'
+      | 'suspender_proveedor'
+      | 'ocultar_resena'
+      | 'borrar_resena'
+      | 'revisar_solicitud_servicio',
     args: Record<string, unknown>
   ) {
     setOcupado(true)
@@ -108,6 +130,12 @@ export function PanelServicios({
       etiqueta: 'Teléfonos por verificar',
       cuantas: datos.por_verificar.length,
       Icono: PhoneCall,
+    },
+    {
+      clave: 'solicitudes',
+      etiqueta: 'Solicitudes por revisar',
+      cuantas: datos.solicitudes_por_revisar.length,
+      Icono: ClipboardList,
     },
     {
       clave: 'resenas',
@@ -216,6 +244,67 @@ export function PanelServicios({
           })}
         </ul>
       </nav>
+
+      {cola === 'solicitudes' && (
+        <section>
+          <h2 className="font-heading text-2xl">Solicitudes por revisar</h2>
+          <p className="mt-1 text-base text-muted-foreground">
+            Desde el ADR 0011 quien pide escribe con sus palabras qué
+            necesita. Se publica de inmediato —quien pide necesita respuesta
+            hoy— y se mira después. Aquí está lo que nadie ha mirado.
+          </p>
+          {/* Se modera un texto, no una persona: de quien pidió no sale ni
+              el nombre ni nada que lo identifique, y el código está para
+              reconocerla si alguien llama preguntando. */}
+
+          {datos.solicitudes_por_revisar.length === 0 ? (
+            <p className="mt-3 text-base text-muted-foreground">Nada pendiente.</p>
+          ) : (
+            <ul className="mt-3 space-y-3">
+              {datos.solicitudes_por_revisar.map((s) => (
+                <li key={s.id} className="rounded-2xl bg-card p-4 shadow-canto">
+                  <p className="font-heading text-lg leading-tight">{s.detalle}</p>
+                  <p className="mt-1 text-base text-muted-foreground">
+                    {NOMBRE_GRUPO[s.grupo] ?? s.grupo} · {s.municipio}
+                  </p>
+                  {s.nota && (
+                    <p className="mt-2 rounded-xl bg-secondary p-3 text-base">{s.nota}</p>
+                  )}
+                  <p className="mt-1 font-mono text-sm text-muted-foreground">{s.codigo}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      disabled={ocupado}
+                      onClick={() =>
+                        llamar('revisar_solicitud_servicio', { p_id: s.id, p_borrar: false })
+                      }
+                    >
+                      Está bien
+                    </Button>
+                    {/* Borrar es DELETE y no tiene vuelta (regla 3), así que
+                        pide una confirmación en dos toques como el resto de
+                        lo destructivo de este panel. */}
+                    {borrando === s.id ? (
+                      <Button
+                        variant="destructive"
+                        disabled={ocupado}
+                        onClick={() =>
+                          llamar('revisar_solicitud_servicio', { p_id: s.id, p_borrar: true })
+                        }
+                      >
+                        Sí, borrarla para siempre
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" onClick={() => setBorrando(s.id)}>
+                        Borrarla
+                      </Button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       {cola === 'telefonos' && (
         <section>

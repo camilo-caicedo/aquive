@@ -3,7 +3,6 @@ import type { SQL } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
 import {
-  catalogoOficios,
   chats,
   mensajes as mensajesTabla,
   productos,
@@ -57,7 +56,11 @@ async function partes(db: BaseDeDatos, origen: Origen): Promise<Partes | null> {
       .select({
         ofrece: proveedores.perfilId,
         pide: solicitudesServicio.perfilId,
-        asunto: catalogoOficios.nombre,
+        // Lo que pidió con sus palabras, no el nombre de un oficio del
+        // catálogo (ADR 0011). El asunto del hilo es de qué se está
+        // hablando, y «Que me arreglen la puerta del clóset» lo dice mejor
+        // que «Reparaciones del hogar».
+        asunto: solicitudesServicio.detalle,
         nombreOfrece: proveedores.nombreVisible,
       })
       .from(respuestasServicio)
@@ -66,7 +69,6 @@ async function partes(db: BaseDeDatos, origen: Origen): Promise<Partes | null> {
         eq(solicitudesServicio.id, respuestasServicio.solicitudId),
       )
       .innerJoin(proveedores, eq(proveedores.id, respuestasServicio.proveedorId))
-      .leftJoin(catalogoOficios, eq(catalogoOficios.id, solicitudesServicio.oficioId))
       .where(eq(respuestasServicio.id, origen.id))
       .limit(1)
     // Quien pide un servicio no publica su nombre, y no se le inventa uno.
@@ -386,7 +388,7 @@ const HILOS = sql`
     ) as pide_id,
     c.visto_ofrece_at,
     c.visto_pide_at,
-    coalesce(co.nombre, si.categoria, pr.nombre, pm.titulo) as asunto,
+    coalesce(ss.detalle, si.categoria, pr.nombre, pm.titulo) as asunto,
     coalesce(
       pv.nombre_visible,
       pp.nombre_visible,
@@ -398,7 +400,6 @@ const HILOS = sql`
   left join respuestas_servicio rs on rs.id = c.respuesta_servicio_id
   left join solicitudes_servicio ss on ss.id = rs.solicitud_id
   left join proveedores pv on pv.id = rs.proveedor_id
-  left join catalogo_oficios co on co.id = ss.oficio_id
   left join respuestas ri on ri.id = c.respuesta_insumo_id
   left join solicitudes si on si.id = ri.solicitud_id
   left join productos pr on pr.id = c.producto_id

@@ -301,6 +301,7 @@ export interface IndiceAdmin {
   matriculas: number
   telefonos: number
   reportes: number
+  solicitudes_servicio_sin_revisar: number
   sugerencias: number
   items_activos: number
   entidades: number

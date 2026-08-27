@@ -1,9 +1,9 @@
 import { and, desc, eq, sql } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
-import { catalogoOficios, solicitudesServicio, zonas } from '@/db/esquema'
+import { solicitudesServicio, zonas } from '@/db/esquema'
 import { contienePII, validarNota } from '@/lib/validacion'
-import type { MiSolicitudServicio } from '@/contrato/servicios'
+import type { GrupoOficio, MiSolicitudServicio } from '@/contrato/servicios'
 
 export class SolicitudRechazada extends Error {}
 
@@ -15,10 +15,14 @@ export class SolicitudRechazada extends Error {}
  * dominio por el ADR 0001 —la lógica de negocio sale del motor— y porque el
  * ADR 0006 dejó esa función apuntando a una columna que ya no existe.
  *
- * ⚠ Lo que se le pide a quien pide NO cambió con el ADR 0006: oficio,
- * municipio, zona, urgencia, capacidad de pago y la nota filtrada. Tener
- * cuenta no es dar datos — su nombre no se publica y la solicitud no lo
- * lleva. Lo único que cambió es quién es el dueño de la fila.
+ * ⚠ Tener cuenta no es dar datos (ADR 0006): su nombre no se publica y la
+ * solicitud no lo lleva. Lo que se le pide es categoría, lo que necesita
+ * escrito, municipio, zona, urgencia, capacidad de pago y la nota — y nada
+ * de eso lo identifica.
+ *
+ * ⚠ Desde el ADR 0011 el oficio del catálogo NO entra aquí. Entra una de
+ * las ocho categorías y una línea que escribe quien pide, porque el
+ * rebusque es justo el trabajo que no está en ninguna lista.
  */
 
 /** Cuatro letras y dos dígitos, para decirlo por teléfono sin deletrear. */
@@ -34,7 +38,8 @@ function nuevoCodigo() {
 export async function publicar(
   db: BaseDeDatos,
   entrada: {
-    oficio_id: string
+    grupo: GrupoOficio
+    detalle: string
     municipio: string
     zona_id?: string
     zona_texto?: string
@@ -48,9 +53,14 @@ export async function publicar(
     throw new SolicitudRechazada('Para pedir un servicio necesitas entrar con tu cuenta.')
   }
 
-  // Los dos campos libres, con su filtro (regla de producto 4). La zona
-  // escrita a mano es por donde más fácil se cuela un teléfono: «comuna 3,
-  // llámame al…».
+  // Los TRES campos libres, con su filtro (regla de producto 4). El
+  // detalle es el nuevo, y es el que más se va a escribir: si por ahí se
+  // cuela un teléfono, el chat deja de tener sentido antes de empezar.
+  const errorDetalle = validarNota(entrada.detalle)
+  if (errorDetalle) throw new SolicitudRechazada(errorDetalle)
+
+  // La zona escrita a mano es por donde más fácil se cuela un teléfono:
+  // «comuna 3, llámame al…».
   if (entrada.zona_texto && contienePII(entrada.zona_texto)) {
     throw new SolicitudRechazada(
       'No escribas teléfonos, correos ni cédulas. Se acuerda por el chat de aquí.',
@@ -60,15 +70,6 @@ export async function publicar(
     const error = validarNota(entrada.nota)
     if (error) throw new SolicitudRechazada(error)
   }
-
-  // El oficio sale del catálogo, no de lo que mande el cliente: si no
-  // existe o está apagado, no hay solicitud que valga.
-  const [oficio] = await db
-    .select({ id: catalogoOficios.id })
-    .from(catalogoOficios)
-    .where(and(eq(catalogoOficios.id, entrada.oficio_id), eq(catalogoOficios.activo, true)))
-    .limit(1)
-  if (!oficio) throw new SolicitudRechazada('Ese oficio ya no está en la lista.')
 
   // La zona tiene que ser de ese municipio. Sin esto, una comuna de Cali
   // podía quedar colgada de una solicitud de Buga.
@@ -98,7 +99,8 @@ export async function publicar(
       .values({
         codigo,
         perfilId: llave.usuarioId,
-        oficioId: entrada.oficio_id,
+        grupo: entrada.grupo,
+        detalle: entrada.detalle.trim(),
         municipio: entrada.municipio,
         zonaId: entrada.zona_id ?? null,
         zonaTexto: entrada.zona_texto ?? null,
@@ -125,20 +127,21 @@ export async function mias(
     .select({
       id: solicitudesServicio.id,
       codigo: solicitudesServicio.codigo,
-      oficio: catalogoOficios.nombre,
+      grupo: solicitudesServicio.grupo,
+      detalle: solicitudesServicio.detalle,
       estado: solicitudesServicio.estado,
       creada_at: solicitudesServicio.creadaAt,
       expira_at: solicitudesServicio.expiraAt,
     })
     .from(solicitudesServicio)
-    .leftJoin(catalogoOficios, eq(catalogoOficios.id, solicitudesServicio.oficioId))
     .where(eq(solicitudesServicio.perfilId, llave.usuarioId))
     .orderBy(desc(solicitudesServicio.creadaAt))
 
   return filas.map((f) => ({
     id: f.id,
     codigo: f.codigo,
-    oficio: f.oficio,
+    grupo: f.grupo as MiSolicitudServicio['grupo'],
+    detalle: f.detalle,
     estado: f.estado,
     creada_at: String(f.creada_at),
     expira_at: String(f.expira_at),
@@ -163,8 +166,11 @@ export async function gestionar(
   const filas = await db
     .update(solicitudesServicio)
     .set(
+      // ⚠ 'resuelta', no 'cerrada'. El CHECK de la tabla solo acepta
+      // 'abierta' y 'resuelta', así que cerrar una solicitud reventaba con
+      // una violación de restricción en vez de cerrarla.
       accion === 'cerrar'
-        ? { estado: 'cerrada' }
+        ? { estado: 'resuelta' }
         : { expiraAt: sql`now() + interval '15 days'`, estado: 'abierta' },
     )
     .where(

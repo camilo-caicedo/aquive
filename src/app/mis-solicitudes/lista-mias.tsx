@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 
 import { rpc } from '@/orpc/cliente'
 import { Button } from '@/components/ui/button'
-import type { MiSolicitudServicio } from '@/contrato/servicios'
+import { NOMBRE_GRUPO, type MiSolicitudServicio } from '@/contrato/servicios'
 
 /**
  * Las solicitudes de servicio propias.
@@ -60,7 +60,7 @@ export function ListaMias({ solicitudes }: { solicitudes: MiSolicitudServicio[] 
             <li key={s.id} className="shadow-canto rounded-2xl bg-card p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <h2 className="font-heading text-lg leading-tight">
-                  {s.oficio ?? 'Un servicio'}
+                  {s.detalle}
                 </h2>
                 {/* El estado no depende solo del color: lleva su palabra. */}
                 <span
@@ -73,6 +73,13 @@ export function ListaMias({ solicitudes }: { solicitudes: MiSolicitudServicio[] 
                   {abierta ? 'Abierta' : vencida ? 'Vencida' : 'Cerrada'}
                 </span>
               </div>
+
+              {/* La categoría debajo del texto, no encima: lo que se busca
+                  en la lista propia es cuál de las mías es, y eso lo dice
+                  lo que uno escribió. */}
+              <p className="mt-1 text-sm text-muted-foreground">
+                {NOMBRE_GRUPO[s.grupo] ?? s.grupo}
+              </p>
 
               {/* El código va en monoespaciada porque se dicta por teléfono,
                   y ahí importa distinguir un cero de una o. */}

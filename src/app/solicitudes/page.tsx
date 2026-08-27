@@ -5,7 +5,7 @@ import { listarMunicipios, mapaDeNombres } from '@/lib/municipios'
 import { GRUPOS } from '@/lib/servicios'
 import { ListaSolicitudesServicio, type SolicitudDeServicio } from './lista'
 import { SelectFiltro } from '@/components/select-filtro'
-import { HojaFiltros } from '@/components/hoja-filtros'
+import { HojaFiltros, GrupoChips } from '@/components/hoja-filtros'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { Button } from '@/components/ui/button'
 import type { MiProveedor } from '@/lib/types'
@@ -22,7 +22,7 @@ export const metadata = { title: 'Solicitudes de servicio' }
 export default async function SolicitudesDeServicioPage({
   searchParams,
 }: {
-  searchParams: Promise<{ municipio?: string; oficio?: string }>
+  searchParams: Promise<{ municipio?: string; grupo?: string }>
 }) {
   const params = await searchParams
   const supabase = await createClient()
@@ -30,12 +30,16 @@ export default async function SolicitudesDeServicioPage({
   const municipio =
     params.municipio && /^[0-9]{5}$/.test(params.municipio) ? params.municipio : null
 
-  const [{ data: lista }, { data: oficios }, todos, { data: mio }] = await Promise.all([
+  // La categoría en vez del oficio (ADR 0011). Se valida contra la lista
+  // cerrada antes de pasarla: la base la rechazaría igual, pero un filtro
+  // inventado tiene que devolver «todo», no un error.
+  const grupo = params.grupo && params.grupo in GRUPOS ? params.grupo : null
+
+  const [{ data: lista }, todos, { data: mio }] = await Promise.all([
     supabase.rpc('solicitudes_de_servicio', {
       p_municipio: municipio,
-      p_oficio_id: params.oficio ?? null,
+      p_grupo: grupo,
     }),
-    supabase.from('catalogo_oficios').select('*').eq('activo', true).order('orden'),
     listarMunicipios(supabase),
     supabase.rpc('mi_proveedor', {}),
   ])
@@ -43,7 +47,7 @@ export default async function SolicitudesDeServicioPage({
   const solicitudes = (lista as unknown as SolicitudDeServicio[]) ?? []
   const nombreMunicipio = mapaDeNombres(todos ?? [])
   const proveedor = (mio as MiProveedor | null) ?? null
-  const hayFiltro = !!(municipio || params.oficio)
+  const hayFiltro = !!(municipio || grupo)
 
   // Solo los municipios que aparecen en el tablero: la lista completa de
   // 1.122 no dice nada aquí.
@@ -52,11 +56,11 @@ export default async function SolicitudesDeServicioPage({
     .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
 
   const chipsAplicados = [
-    ...(params.oficio
+    ...(grupo
       ? [
           {
-            clave: 'oficio',
-            etiqueta: (oficios ?? []).find((o) => o.id === params.oficio)?.nombre ?? 'Un oficio',
+            clave: 'grupo',
+            etiqueta: GRUPOS[grupo as keyof typeof GRUPOS],
             href: municipio
               ? `/solicitudes?municipio=${municipio}`
               : '/solicitudes',
@@ -68,9 +72,7 @@ export default async function SolicitudesDeServicioPage({
           {
             clave: 'municipio',
             etiqueta: nombreMunicipio.get(municipio) ?? 'Un municipio',
-            href: params.oficio
-              ? `/solicitudes?oficio=${params.oficio}`
-              : '/solicitudes',
+            href: grupo ? `/solicitudes?grupo=${grupo}` : '/solicitudes',
           },
         ]
       : []),
@@ -95,16 +97,16 @@ export default async function SolicitudesDeServicioPage({
           titulo="Filtrar lo que piden"
           aplicados={chipsAplicados}
         >
-          <SelectFiltro
-            name="oficio"
-            label="Filtrar por oficio"
-            placeholder="Todos los oficios"
-            valorInicial={params.oficio ?? ''}
-            conBusqueda
-            opciones={(oficios ?? []).map((o) => ({
-              valor: o.id,
-              etiqueta: o.nombre,
-              detalle: GRUPOS[o.grupo],
+          {/* Ocho opciones: chips, no un desplegable con buscador. Una
+              lista corta se toca de una vez (regla de interfaz 4). */}
+          <GrupoChips
+            name="grupo"
+            label="Categoría"
+            todos="Todas"
+            valorInicial={grupo ?? ''}
+            opciones={Object.entries(GRUPOS).map(([valor, etiqueta]) => ({
+              valor,
+              etiqueta,
             }))}
           />
           <SelectFiltro

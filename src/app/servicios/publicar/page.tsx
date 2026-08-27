@@ -8,9 +8,11 @@ export const metadata = { title: 'Necesito un servicio' }
 export default async function PublicarServicioPage() {
   const supabase = await createClient()
 
-  const [municipios, { data: oficios }, { data: zonas }] = await Promise.all([
+  // Sin `catalogo_oficios`: desde el ADR 0011 quien pide elige categoría y
+  // escribe el detalle. El catálogo sigue siendo cosa de la ficha de quien
+  // ofrece.
+  const [municipios, { data: zonas }] = await Promise.all([
     listarMunicipios(supabase),
-    supabase.from('catalogo_oficios').select('*').eq('activo', true).order('orden'),
     supabase.from('zonas').select('*').eq('activa', true).order('orden'),
   ])
 
@@ -33,7 +35,6 @@ export default async function PublicarServicioPage() {
 
       <FormularioPublicarServicio
         municipios={municipios ?? []}
-        oficios={oficios ?? []}
         zonas={zonas ?? []}
         turnstileSiteKey={siteKey}
       />

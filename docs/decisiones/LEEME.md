@@ -32,6 +32,7 @@ El ADR se escribe **antes** del código. Si una tarea te obliga a contradecir
 | [0008](0008-el-aliado-es-un-centro-de-acopio.md) | El aliado es un centro de acopio | aceptada |
 | [0009](0009-un-solo-chat.md) | Un solo chat, para toda la aplicación | aceptada |
 | [0010](0010-la-portada-es-la-bienvenida.md) | La portada es siempre la bienvenida | aceptada |
+| [0011](0011-la-solicitud-dice-que-necesita.md) | Quien pide elige categoría y escribe qué necesita | aceptada |
 
 ## Plantilla
 

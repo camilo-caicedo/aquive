@@ -44,6 +44,7 @@ archivo, y detrás de él:
 | `docs/decisiones/0007-*.md` | Se retira el flujo acompañado |
 | `docs/decisiones/0008-*.md` | El aliado es un centro de acopio |
 | `docs/decisiones/0010-*.md` | La portada es siempre la bienvenida |
+| `docs/decisiones/0011-*.md` | Quien pide escribe qué necesita |
 | `docs/marca/AquiVe-Flujo.dc.html` | Prototipo de las 40 pantallas |
 | `docs/marca/Manual-de-Marca-AquiVe.pdf` | Manual de marca |
 | `docs/PENDIENTES-LEGALES.md` | Bloqueantes que no son código |
@@ -166,13 +167,15 @@ no es dato personal de quien lo escribió.
 
 ### 4 · Los campos libres tienen tope y filtro
 
-Los oficios salen de `catalogo_oficios` y los ítems de `catalogo_items`. Los
-campos libres llevan los tres: tope de caracteres, validación en servidor y
-filtro de patrones que **rechaza el envío** con mensaje explicativo.
+Los oficios de una **ficha** salen de `catalogo_oficios` y los ítems de
+`catalogo_items`. Los campos libres llevan los tres: tope de caracteres,
+validación en servidor y filtro de patrones que **rechaza el envío** con
+mensaje explicativo.
 
 | Campo | Tope |
 | --- | --- |
 | Presentación del prestador | 300 |
+| Detalle de solicitud de servicio | 80 |
 | Nota de solicitud | 140 |
 | Comentario de reseña | 140 |
 | Réplica del prestador | 140 |
@@ -180,9 +183,14 @@ filtro de patrones que **rechaza el envío** con mensaje explicativo.
 | Mensaje de chat | 500 |
 
 Quien **pide** —un servicio o un insumo— publica con cuenta, desde el ADR
-0006. Lo que se le pide sigue siendo lo mismo y nada más: oficio o categoría,
-municipio, zona, urgencia, capacidad de pago y la nota filtrada. **Tener
-cuenta no es dar datos**: su nombre no se publica y su solicitud no lo lleva.
+0006. **Tener cuenta no es dar datos**: su nombre no se publica y su solicitud
+no lo lleva.
+
+Y desde el ADR 0011, **quien pide un servicio no elige de un catálogo**: elige
+una de las ocho categorías y escribe con sus palabras qué necesita. El rebusque
+es justo el trabajo que no está en ninguna lista. Se publica de inmediato
+—quien pide necesita respuesta hoy— y entra en la cola «Solicitudes por
+revisar» de `/admin`, donde se marca revisada o se borra.
 
 ⚠ Esto reemplaza la asimetría anterior, en la que quien pedía publicaba sin
 cuenta y volvía con un token. El ADR 0006 dice qué se pierde con el cambio y

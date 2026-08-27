@@ -16,7 +16,10 @@ export default async function ServiciosAdminPage({
 }) {
   const { cola: crudo } = await searchParams
   const cola: ColaServicios =
-    crudo === 'resenas' || crudo === 'zonas' || crudo === 'suspendidas'
+    crudo === 'resenas' ||
+    crudo === 'zonas' ||
+    crudo === 'suspendidas' ||
+    crudo === 'solicitudes'
       ? crudo
       : 'telefonos'
 

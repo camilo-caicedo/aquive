@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { contienePII } from '@/lib/validacion'
 import { CAPACIDADES_PAGO, URGENCIAS, zonaLegible } from '@/lib/servicios'
 import type { CapacidadPago, UrgenciaServicio } from '@/lib/types'
+import { NOMBRE_GRUPO } from '@/contrato/servicios'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { HojaAccion } from '@/components/hoja-accion'
@@ -16,8 +17,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 export interface SolicitudDeServicio {
   id: string
   codigo: string
-  oficio_id: string
-  oficio_nombre: string
+  /** Su categoría, de los ocho gajos. */
+  grupo: string
+  /** Lo que pidió, con sus palabras (ADR 0011). */
+  detalle: string
   municipio: string
   zona_nombre: string | null
   zona_texto: string | null
@@ -81,14 +84,16 @@ export function ListaSolicitudesServicio({
         return (
           <li key={s.id} className="rounded-2xl bg-card p-4 shadow-canto">
             <div className="flex items-baseline justify-between gap-2">
-              <span className="min-w-0 text-lg font-bold">{s.oficio_nombre}</span>
+              <span className="min-w-0 text-lg font-bold">{s.detalle}</span>
               <span className="shrink-0 font-mono text-sm text-muted-foreground">
                 {s.codigo}
               </span>
             </div>
 
             <p className="mt-0.5 text-base text-muted-foreground">
-              {[zona, nombreMunicipio[s.municipio]].filter(Boolean).join(' · ')}
+              {[NOMBRE_GRUPO[s.grupo] ?? s.grupo, zona, nombreMunicipio[s.municipio]]
+                .filter(Boolean)
+                .join(' · ')}
             </p>
 
             {/* Urgencia y capacidad de pago, como chips: son dos datos que
@@ -170,7 +175,7 @@ export function ListaSolicitudesServicio({
                 )}
               >
                 <p className="text-base text-muted-foreground">
-                  {s.oficio_nombre}
+                  {s.detalle}
                 </p>
                 <Textarea
                   value={mensaje}

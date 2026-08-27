@@ -9,6 +9,7 @@ import { contienePII, validarNota } from '@/lib/validacion'
 import { nombreConDepartamento, type MunicipioBasico } from '@/lib/municipios'
 import { CAPACIDADES_PAGO, GRUPOS, URGENCIAS } from '@/lib/servicios'
 import type { CapacidadPago, Database, UrgenciaServicio } from '@/lib/types'
+import type { GrupoOficio } from '@/contrato/servicios'
 import { TurnstileWidget } from '@/components/turnstile-widget'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,26 +34,29 @@ import {
   ComboboxValue,
 } from '@/components/ui/combobox'
 
-type Oficio = Database['public']['Tables']['catalogo_oficios']['Row']
 type Zona = Database['public']['Tables']['zonas']['Row']
 
 /**
  * Tres pantallas, como manda la accesibilidad de CLAUDE.md: qué necesito,
  * dónde y cuándo, y enviar. Ni una más.
+ *
+ * ⚠ El primer paso ya NO es el catálogo de oficios (ADR 0011). Eran
+ * cuarenta y tantas píldoras, y quien necesitaba algo que no estuviera en
+ * la lista —que es la mitad del rebusque— las recorría todas y se iba.
+ * Ahora es una categoría de ocho y una línea escrita.
  */
 export function FormularioPublicarServicio({
   municipios,
-  oficios,
   zonas,
   turnstileSiteKey,
 }: {
   municipios: MunicipioBasico[]
-  oficios: Oficio[]
   zonas: Zona[]
   turnstileSiteKey: string
 }) {
   const [paso, setPaso] = useState<1 | 2 | 3>(1)
-  const [oficioId, setOficioId] = useState('')
+  const [grupo, setGrupo] = useState<GrupoOficio | ''>('')
+  const [detalle, setDetalle] = useState('')
   const [municipio, setMunicipio] = useState('')
   const [zonaId, setZonaId] = useState('')
   const [zonaTexto, setZonaTexto] = useState('')
@@ -67,6 +71,10 @@ export function FormularioPublicarServicio({
   const zonasDelMunicipio = zonas.filter((z) => z.municipio === municipio)
   const municipioElegido = municipios.find((m) => m.codigo_dane === municipio)
   const errorNota = nota.trim() ? validarNota(nota.trim()) : null
+  // Mismo filtro que la nota y el chat: si trae un teléfono o un correo, no
+  // se envía y se dice por qué. Solo se comprueba con algo escrito, para no
+  // gritarle a nadie por un campo vacío.
+  const errorDetalle = detalle.trim().length >= 3 ? validarNota(detalle.trim()) : null
   const errorZona =
     zonaTexto.trim() && contienePII(zonaTexto)
       ? 'La zona no puede llevar teléfonos ni correos.'
@@ -88,7 +96,8 @@ export function FormularioPublicarServicio({
     // ya no hay token que copiar ni que guardar en este teléfono.
     try {
       const { codigo } = await rpc.servicios.publicarSolicitud({
-        oficio_id: oficioId,
+        grupo: grupo as GrupoOficio,
+        detalle: detalle.trim(),
         municipio,
         zona_id: zonaId || undefined,
         zona_texto: zonaTexto.trim() || undefined,
@@ -167,36 +176,48 @@ export function FormularioPublicarServicio({
       {paso === 1 && (
         <div className="space-y-4">
           <fieldset>
-            <legend className="mb-2 text-base font-medium">¿Qué necesitas?</legend>
-            <div className="space-y-3">
-              {Object.entries(GRUPOS).map(([grupo, etiqueta]) => {
-                const delGrupo = oficios.filter((o) => o.grupo === grupo)
-                if (delGrupo.length === 0) return null
-                return (
-                  <div key={grupo}>
-                    <p className="text-sm font-medium text-muted-foreground">{etiqueta}</p>
-                    <div className="mt-1.5 flex flex-wrap gap-2">
-                      {delGrupo.map((o) => (
-                        <button
-                          key={o.id}
-                          type="button"
-                          aria-pressed={oficioId === o.id}
-                          onClick={() => setOficioId(o.id)}
-                          className={`inline-flex min-h-12 items-center rounded-full border px-4 text-base transition-colors ${
-                            oficioId === o.id
-                              ? 'border-enlace bg-secondary font-semibold text-secondary-foreground'
-                              : 'border-border bg-card hover:bg-muted'
-                          }`}
-                        >
-                          {o.nombre}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
+            <legend className="mb-2 text-base font-medium">
+              ¿De qué se trata?
+            </legend>
+            {/* Ocho píldoras, no cuarenta. Caben en una pantalla y se eligen
+                de un vistazo; el detalle lo escribe quien pide. */}
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(GRUPOS).map(([valor, etiqueta]) => (
+                <button
+                  key={valor}
+                  type="button"
+                  aria-pressed={grupo === valor}
+                  onClick={() => setGrupo(valor as GrupoOficio)}
+                  className={`inline-flex min-h-12 items-center rounded-full border px-4 text-base transition-colors ${
+                    grupo === valor
+                      ? 'border-enlace bg-secondary font-semibold text-secondary-foreground'
+                      : 'border-border bg-card hover:bg-muted'
+                  }`}
+                >
+                  {etiqueta}
+                </button>
+              ))}
             </div>
           </fieldset>
+
+          <div>
+            <Label htmlFor="detalle">¿Qué necesitas? Dilo con tus palabras</Label>
+            <Input
+              id="detalle"
+              value={detalle}
+              onChange={(e) => setDetalle(e.target.value)}
+              maxLength={80}
+              className="mt-1"
+              placeholder="Que me arreglen la puerta del clóset"
+            />
+            <p className="mt-1 text-sm text-muted-foreground">
+              {detalle.trim().length}/80. Sin teléfonos ni direcciones: quien
+              responda te escribe por el chat de aquí.
+            </p>
+            {errorDetalle && (
+              <p className="mt-1 text-sm text-destructive">{errorDetalle}</p>
+            )}
+          </div>
 
           <p className="text-sm text-muted-foreground">
             ¿Buscas un ingeniero, un médico o un abogado? Esos van en{' '}
@@ -206,7 +227,11 @@ export function FormularioPublicarServicio({
             .
           </p>
 
-          <Button className="w-full" disabled={!oficioId} onClick={() => setPaso(2)}>
+          <Button
+            className="w-full"
+            disabled={!grupo || detalle.trim().length < 3 || !!errorDetalle}
+            onClick={() => setPaso(2)}
+          >
             Continuar
           </Button>
         </div>

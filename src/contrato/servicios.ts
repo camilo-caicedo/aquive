@@ -167,6 +167,19 @@ export type MiFicha = z.infer<typeof MiFicha>
  * la aplicación de Expo va a pintar las mismas categorías y no tiene por qué
  * llevar una segunda copia de esta tabla que se desincronice.
  */
+export const GrupoOficio = z.enum([
+  'comida',
+  'belleza',
+  'confeccion',
+  'transporte',
+  'aseo',
+  'cuidado',
+  'reparacion',
+  'otros',
+])
+
+export type GrupoOficio = z.infer<typeof GrupoOficio>
+
 export const NOMBRE_GRUPO: Record<string, string> = {
   comida: 'Comida',
   belleza: 'Belleza',
@@ -221,7 +234,10 @@ export const MiSolicitudServicio = z.object({
   id: z.uuid(),
   /** Cuatro letras y dos dígitos: se dice por teléfono sin deletrear. */
   codigo: z.string(),
-  oficio: z.string().nullable(),
+  /** Su categoría, de los ocho gajos. */
+  grupo: GrupoOficio,
+  /** Lo que pidió, con sus palabras (ADR 0011). */
+  detalle: z.string(),
   estado: z.string(),
   creada_at: z.string(),
   expira_at: z.string(),
@@ -335,7 +351,11 @@ export const contratoServicios = {
     .errors(erroresUbicacion)
     .input(
       z.object({
-        oficio_id: z.string().min(1).max(60),
+        // ADR 0011: la categoría es cerrada, el detalle lo escribe quien
+        // pide. El catálogo de oficios sigue siendo cosa de la ficha de
+        // quien ofrece, no de lo que otra persona puede necesitar.
+        grupo: GrupoOficio,
+        detalle: z.string().trim().min(3).max(80),
         municipio: z.string().regex(/^[0-9]{5}$/),
         zona_id: z.uuid().optional(),
         zona_texto: z.string().trim().max(80).optional(),

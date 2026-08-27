@@ -74,8 +74,8 @@ export const perfilesRelations = relations(perfiles, ({one, many}) => ({
 	}),
 	respuestas: many(respuestas),
 	solicitudes: many(solicitudes),
-	solicitudesServicios: many(solicitudesServicio),
 	proveedores: many(proveedores),
+	solicitudesServicios: many(solicitudesServicio),
 	chats: many(chats),
 	publicacionesMuros: many(publicacionesMuro),
 	codigosAccesos: many(codigosAcceso),
@@ -203,16 +203,16 @@ export const zonasRelations = relations(zonas, ({one, many}) => ({
 		fields: [zonas.revisadaPor],
 		references: [usersInAuth.id]
 	}),
-	solicitudesServicios: many(solicitudesServicio),
 	proveedores: many(proveedores),
+	solicitudesServicios: many(solicitudesServicio),
 	publicacionesMuros: many(publicacionesMuro),
 }));
 
 export const municipiosRelations = relations(municipios, ({many}) => ({
 	zonas: many(zonas),
 	solicitudes: many(solicitudes),
-	solicitudesServicios: many(solicitudesServicio),
 	proveedores: many(proveedores),
+	solicitudesServicios: many(solicitudesServicio),
 	publicacionesMuros: many(publicacionesMuro),
 }));
 
