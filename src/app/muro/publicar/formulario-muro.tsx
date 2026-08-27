@@ -8,6 +8,13 @@ import { MarcoFlujo } from '@/components/marco-flujo'
 import { SubirImagen } from '@/components/subir-imagen'
 import { Button } from '@/components/ui/button'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Combobox,
   ComboboxContent,
   ComboboxEmpty,
@@ -57,6 +64,16 @@ export function FormularioMuro({
   const [listo, setListo] = useState(false)
 
   const ofrece = cara === 'ofrece'
+
+  /** «Casa Expandida · Calle 4b # 35-32». Nulo cuando no hay ninguno.
+   *  Es lo que se lee en el disparador, en una sola línea; en la lista van
+   *  apilados, que es donde la dirección cabe. */
+  const nombreDeAcopio = (id: string) => {
+    const a = acopios.find((x) => x.id === id)
+    if (!a) return null
+    return a.direccion ? `${a.nombre} · ${a.direccion}` : a.nombre
+  }
+
   const puede =
     titulo.trim().length >= 3 && municipio !== '' && (!ofrece || acepto) && !enviando
 
@@ -246,20 +263,30 @@ export function FormularioMuro({
           >
             Dónde lo entregas (opcional)
           </label>
-          <select
-            id="acopio"
-            value={acopioId}
-            onChange={(e) => setAcopioId(e.target.value)}
-            className="bg-card border border-input focus-visible:ring-ring mt-2 min-h-14 w-full rounded-2xl px-4 text-base focus-visible:ring-2 focus-visible:outline-none"
-          >
-            <option value="">Lo acuerdo con quien lo necesite</option>
-            {acopios.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.nombre}
-                {a.direccion ? ` · ${a.direccion}` : ''}
-              </option>
-            ))}
-          </select>
+          {/* El mismo desplegable que el municipio de arriba, no un
+              `<select>` nativo: el nativo abre la lista del sistema
+              operativo —otra tipografía, otro azul, otro tamaño de toque— y
+              en una hoja se ve como si fuera de otra aplicación. */}
+          <Select value={acopioId} onValueChange={(v) => setAcopioId(v ?? '')}>
+            <SelectTrigger id="acopio" className="mt-2">
+              <SelectValue placeholder="Lo acuerdo con quien lo necesite">
+                {(v: string) => nombreDeAcopio(v) ?? 'Lo acuerdo con quien lo necesite'}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">Lo acuerdo con quien lo necesite</SelectItem>
+              {acopios.map((a) => (
+                <SelectItem key={a.id} value={a.id}>
+                  <span className="flex min-w-0 flex-col">
+                    <span>{a.nombre}</span>
+                    {a.direccion && (
+                      <span className="text-sm text-muted-foreground">{a.direccion}</span>
+                    )}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <p className="mt-1 text-sm text-muted-foreground">
             Si eliges un punto, lo dejas ahí y quien lo necesite lo recoge ahí.
             Así no tienes que dar tu dirección ni encontrarte con nadie.

@@ -9,6 +9,13 @@ import { MarcoFlujo } from '@/components/marco-flujo'
 import { SubirImagen } from '@/components/subir-imagen'
 import { Button } from '@/components/ui/button'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   type MiProducto,
   NOMBRE_UNIDAD,
   UNIDADES_PRODUCTO,
@@ -202,19 +209,27 @@ export function FormularioProducto({ producto }: { producto?: MiProducto }) {
               {/* Lista cerrada, no texto: «la libra» y «x libra» son lo
                   mismo escrito de dos formas, y así la lista no se puede
                   ordenar ni comparar. */}
-              <select
-                id="unidad"
+              {/* Con el desplegable de la aplicación, no el del sistema:
+                  un `<select>` nativo dentro de la hoja abre la lista del
+                  teléfono y se ve como si fuera de otra aplicación. */}
+              <Select
                 value={unidad}
-                onChange={(e) => setUnidad(e.target.value as UnidadProducto | '')}
-                className="bg-card border border-input focus-visible:ring-ring min-h-14 w-full rounded-2xl px-4 text-base focus-visible:ring-2 focus-visible:outline-none"
+                onValueChange={(v) => setUnidad((v ?? '') as UnidadProducto | '')}
               >
-                <option value="">Por…</option>
-                {UNIDADES_PRODUCTO.map((u) => (
-                  <option key={u} value={u}>
-                    {NOMBRE_UNIDAD[u]}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger id="unidad">
+                  <SelectValue placeholder="Por…">
+                    {(v: string) => NOMBRE_UNIDAD[v as UnidadProducto] ?? 'Por…'}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Por…</SelectItem>
+                  {UNIDADES_PRODUCTO.map((u) => (
+                    <SelectItem key={u} value={u}>
+                      {NOMBRE_UNIDAD[u]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           {!parEsValido && (

@@ -140,7 +140,12 @@ function SelectItem({
       )}
       {...props}
     >
-      <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">
+      {/* Envuelve, no recorta. El popup mide lo que mide el disparador y
+          esconde el desbordamiento horizontal: con `whitespace-nowrap` una
+          opción larga —«Casa Expandida · Calle 4b # 35-32, San Fernando»—
+          se cortaba a media palabra y no había forma de leerla. En el
+          DISPARADOR sí se recorta a una línea, que es lo correcto ahí. */}
+      <SelectPrimitive.ItemText className="flex min-w-0 flex-1 gap-2">
         {children}
       </SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator
