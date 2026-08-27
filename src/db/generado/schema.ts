@@ -472,56 +472,6 @@ export const administradores = pgTable("administradores", {
 	pgPolicy("admin se ve a si mismo", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(( SELECT auth.uid() AS uid) = user_id)` }),
 ]);
 
-export const solicitudes = pgTable("solicitudes", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	codigo: text().notNull(),
-	tokenHash: text("token_hash").notNull(),
-	municipio: text().notNull(),
-	barrio: text().notNull(),
-	categoria: text().notNull(),
-	nota: text(),
-	estado: text().default('abierta').notNull(),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	confirmadaAt: timestamp("confirmada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '72:00:00'::interval)`).notNull(),
-	esPrueba: boolean("es_prueba").default(false).notNull(),
-	flujo: text().default('directo').notNull(),
-	organizacionId: uuid("organizacion_id"),
-	acompanamientoAt: timestamp("acompanamiento_at", { withTimezone: true, mode: 'string' }),
-	puedeRecoger: boolean("puede_recoger").default(false).notNull(),
-	notaAdmin: text("nota_admin"),
-	notaAdminAt: timestamp("nota_admin_at", { withTimezone: true, mode: 'string' }),
-	notaAdminPor: uuid("nota_admin_por"),
-}, (table) => [
-	index("idx_solicitudes_categoria").using("btree", table.categoria.asc().nullsLast().op("text_ops")),
-	index("idx_solicitudes_expira").using("btree", table.expiraAt.asc().nullsLast().op("timestamptz_ops")),
-	index("idx_solicitudes_municipio").using("btree", table.municipio.asc().nullsLast().op("text_ops")),
-	index("idx_solicitudes_token").using("btree", table.tokenHash.asc().nullsLast().op("text_ops")),
-	foreignKey({
-			columns: [table.municipio],
-			foreignColumns: [municipios.codigoDane],
-			name: "solicitudes_municipio_fkey"
-		}),
-	foreignKey({
-			columns: [table.notaAdminPor],
-			foreignColumns: [usersInAuth.id],
-			name: "solicitudes_nota_admin_por_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.organizacionId],
-			foreignColumns: [organizaciones.id],
-			name: "solicitudes_organizacion_id_fkey"
-		}).onDelete("set null"),
-	unique("solicitudes_codigo_key").on(table.codigo),
-	check("solicitudes_barrio_check", sql`(char_length(barrio) >= 2) AND (char_length(barrio) <= 60)`),
-	check("solicitudes_categoria_check", sql`categoria = ANY (ARRAY['alimentacion'::text, 'aseo'::text, 'salud'::text, 'abrigo'::text, 'cocina'::text, 'otros'::text, 'servicios'::text, 'mascotas'::text])`),
-	check("solicitudes_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'en_coordinacion'::text, 'entregada_parcial'::text, 'cumplida'::text])`),
-	check("solicitudes_flujo_check", sql`flujo = ANY (ARRAY['directo'::text, 'acompanado'::text])`),
-	check("solicitudes_flujo_coherente", sql`((flujo = 'directo'::text) AND (organizacion_id IS NULL)) OR ((flujo = 'acompanado'::text) AND (organizacion_id IS NOT NULL))`),
-	check("solicitudes_nota_admin_check", sql`char_length(nota_admin) <= 200`),
-	check("solicitudes_nota_check", sql`char_length(nota) <= 140`),
-]);
-
 export const pushSuscripciones = pgTable("push_suscripciones", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	solicitudId: uuid("solicitud_id").notNull(),
@@ -628,22 +578,6 @@ export const solicitudItems = pgTable("solicitud_items", {
 	check("solicitud_items_uno_u_otro", sql`num_nonnulls(item_id, sugerencia_id) = 1`),
 ]);
 
-export const metricas = pgTable("metricas", {
-	id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
-	municipio: text().notNull(),
-	categoria: text().notNull(),
-	cumplida: boolean().notNull(),
-	horasHastaRespuesta: numeric("horas_hasta_respuesta", { precision: 6, scale:  2 }),
-	horasHastaCierre: numeric("horas_hasta_cierre", { precision: 6, scale:  2 }),
-	numRespuestas: integer("num_respuestas").default(0).notNull(),
-	registradaAt: timestamp("registrada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	esPrueba: boolean("es_prueba").default(false).notNull(),
-	flujo: text().default('directo').notNull(),
-	conAliado: boolean("con_aliado").default(false).notNull(),
-}, (table) => [
-	pgPolicy("metricas lectura publica", { as: "permissive", for: "select", to: ["public"], using: sql`(es_prueba = false)` }),
-]);
-
 export const perfiles = pgTable("perfiles", {
 	id: uuid().primaryKey().notNull(),
 	nombreVisible: text("nombre_visible").notNull(),
@@ -673,13 +607,84 @@ export const perfiles = pgTable("perfiles", {
 	pgPolicy("perfil propio update", { as: "permissive", for: "update", to: ["authenticated"] }),
 	check("perfiles_contacto_publico_check", sql`CHECK (
 CASE
-    WHEN (tipo = 'aliado'::text) THEN ((contacto_publico IS NULL) OR ((char_length(contacto_publico) >= 7) AND (char_length(contacto_publico) <= 40)))
+    WHEN (tipo = ANY (ARRAY['vecino'::text, 'aliado'::text])) THEN ((contacto_publico IS NULL) OR ((char_length(contacto_publico) >= 7) AND (char_length(contacto_publico) <= 40)))
     ELSE ((char_length(contacto_publico) >= 7) AND (char_length(contacto_publico) <= 40))
 END)`),
 	check("perfiles_contacto_tipo_check", sql`contacto_tipo = ANY (ARRAY['whatsapp'::text, 'telefono'::text])`),
 	check("perfiles_descripcion_check", sql`char_length(descripcion) <= 300`),
 	check("perfiles_nombre_visible_check", sql`(char_length(nombre_visible) >= 3) AND (char_length(nombre_visible) <= 60)`),
-	check("perfiles_tipo_check", sql`tipo = ANY (ARRAY['ofertador'::text, 'servidor'::text, 'aliado'::text])`),
+	check("perfiles_tipo_check", sql`tipo = ANY (ARRAY['vecino'::text, 'ofertador'::text, 'servidor'::text, 'aliado'::text])`),
+]);
+
+export const metricas = pgTable("metricas", {
+	id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
+	municipio: text().notNull(),
+	categoria: text().notNull(),
+	cumplida: boolean().notNull(),
+	horasHastaRespuesta: numeric("horas_hasta_respuesta", { precision: 6, scale:  2 }),
+	horasHastaCierre: numeric("horas_hasta_cierre", { precision: 6, scale:  2 }),
+	numRespuestas: integer("num_respuestas").default(0).notNull(),
+	registradaAt: timestamp("registrada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	esPrueba: boolean("es_prueba").default(false).notNull(),
+	flujo: text().default('directo').notNull(),
+	conAliado: boolean("con_aliado").default(false).notNull(),
+}, (table) => [
+	pgPolicy("metricas lectura publica", { as: "permissive", for: "select", to: ["public"], using: sql`(es_prueba = false)` }),
+]);
+
+export const solicitudes = pgTable("solicitudes", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	codigo: text().notNull(),
+	municipio: text().notNull(),
+	barrio: text().notNull(),
+	categoria: text().notNull(),
+	nota: text(),
+	estado: text().default('abierta').notNull(),
+	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	confirmadaAt: timestamp("confirmada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '72:00:00'::interval)`).notNull(),
+	esPrueba: boolean("es_prueba").default(false).notNull(),
+	flujo: text().default('directo').notNull(),
+	organizacionId: uuid("organizacion_id"),
+	acompanamientoAt: timestamp("acompanamiento_at", { withTimezone: true, mode: 'string' }),
+	puedeRecoger: boolean("puede_recoger").default(false).notNull(),
+	notaAdmin: text("nota_admin"),
+	notaAdminAt: timestamp("nota_admin_at", { withTimezone: true, mode: 'string' }),
+	notaAdminPor: uuid("nota_admin_por"),
+	perfilId: uuid("perfil_id").notNull(),
+}, (table) => [
+	index("idx_solicitudes_categoria").using("btree", table.categoria.asc().nullsLast().op("text_ops")),
+	index("idx_solicitudes_expira").using("btree", table.expiraAt.asc().nullsLast().op("timestamptz_ops")),
+	index("idx_solicitudes_municipio").using("btree", table.municipio.asc().nullsLast().op("text_ops")),
+	index("idx_solicitudes_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.municipio],
+			foreignColumns: [municipios.codigoDane],
+			name: "solicitudes_municipio_fkey"
+		}),
+	foreignKey({
+			columns: [table.notaAdminPor],
+			foreignColumns: [usersInAuth.id],
+			name: "solicitudes_nota_admin_por_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.organizacionId],
+			foreignColumns: [organizaciones.id],
+			name: "solicitudes_organizacion_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.perfilId],
+			foreignColumns: [perfiles.id],
+			name: "solicitudes_perfil_id_fkey"
+		}).onDelete("cascade"),
+	unique("solicitudes_codigo_key").on(table.codigo),
+	check("solicitudes_barrio_check", sql`(char_length(barrio) >= 2) AND (char_length(barrio) <= 60)`),
+	check("solicitudes_categoria_check", sql`categoria = ANY (ARRAY['alimentacion'::text, 'aseo'::text, 'salud'::text, 'abrigo'::text, 'cocina'::text, 'otros'::text, 'servicios'::text, 'mascotas'::text])`),
+	check("solicitudes_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'en_coordinacion'::text, 'entregada_parcial'::text, 'cumplida'::text])`),
+	check("solicitudes_flujo_check", sql`flujo = ANY (ARRAY['directo'::text, 'acompanado'::text])`),
+	check("solicitudes_flujo_coherente", sql`((flujo = 'directo'::text) AND (organizacion_id IS NULL)) OR ((flujo = 'acompanado'::text) AND (organizacion_id IS NOT NULL))`),
+	check("solicitudes_nota_admin_check", sql`char_length(nota_admin) <= 200`),
+	check("solicitudes_nota_check", sql`char_length(nota) <= 140`),
 ]);
 
 export const respuestas = pgTable("respuestas", {
@@ -862,11 +867,57 @@ export const resenas = pgTable("resenas", {
 	check("resenas_trato_check", sql`(trato >= 1) AND (trato <= 3)`),
 ]);
 
+export const solicitudesServicio = pgTable("solicitudes_servicio", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	codigo: text().notNull(),
+	oficioId: text("oficio_id").notNull(),
+	municipio: text().notNull(),
+	zonaId: uuid("zona_id"),
+	zonaTexto: text("zona_texto"),
+	urgencia: text().notNull(),
+	capacidadPago: text("capacidad_pago").notNull(),
+	nota: text(),
+	estado: text().default('abierta').notNull(),
+	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '15 days'::interval)`).notNull(),
+	esPrueba: boolean("es_prueba").default(false).notNull(),
+	perfilId: uuid("perfil_id").notNull(),
+}, (table) => [
+	index("idx_solicitudes_servicio_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
+	index("idx_solicitudes_servicio_vigentes").using("btree", table.municipio.asc().nullsLast().op("text_ops"), table.oficioId.asc().nullsLast().op("text_ops")).where(sql`(estado = 'abierta'::text)`),
+	foreignKey({
+			columns: [table.municipio],
+			foreignColumns: [municipios.codigoDane],
+			name: "solicitudes_servicio_municipio_fkey"
+		}),
+	foreignKey({
+			columns: [table.oficioId],
+			foreignColumns: [catalogoOficios.id],
+			name: "solicitudes_servicio_oficio_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.perfilId],
+			foreignColumns: [perfiles.id],
+			name: "solicitudes_servicio_perfil_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.zonaId],
+			foreignColumns: [zonas.id],
+			name: "solicitudes_servicio_zona_id_fkey"
+		}).onDelete("set null"),
+	unique("solicitudes_servicio_codigo_key").on(table.codigo),
+	check("solicitudes_servicio_capacidad_pago_check", sql`capacidad_pago = ANY (ARRAY['puedo_pagar'::text, 'pago_poco'::text, 'no_puedo_pagar'::text])`),
+	check("solicitudes_servicio_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'resuelta'::text])`),
+	check("solicitudes_servicio_nota_check", sql`char_length(nota) <= 140`),
+	check("solicitudes_servicio_tiene_zona", sql`num_nonnulls(zona_id, zona_texto) >= 1`),
+	check("solicitudes_servicio_urgencia_check", sql`urgencia = ANY (ARRAY['hoy'::text, 'esta_semana'::text, 'sin_prisa'::text])`),
+	check("solicitudes_servicio_zona_texto_check", sql`(char_length(zona_texto) >= 2) AND (char_length(zona_texto) <= 60)`),
+]);
+
 export const proveedores = pgTable("proveedores", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
-	perfilId: uuid("perfil_id"),
+	perfilId: uuid("perfil_id").notNull(),
 	organizacionId: uuid("organizacion_id"),
-	tokenHash: text("token_hash"),
 	nombreVisible: text("nombre_visible").notNull(),
 	tipo: text().notNull(),
 	telefono: text().notNull(),
@@ -923,7 +974,6 @@ export const proveedores = pgTable("proveedores", {
 			name: "proveedores_zona_id_fkey"
 		}).onDelete("set null"),
 	unique("proveedores_perfil_id_key").on(table.perfilId),
-	unique("proveedores_token_hash_key").on(table.tokenHash),
 	pgPolicy("admin lee proveedores", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(EXISTS ( SELECT 1
    FROM administradores a
   WHERE (a.user_id = ( SELECT auth.uid() AS uid))))` }),
@@ -934,51 +984,9 @@ export const proveedores = pgTable("proveedores", {
 	check("proveedores_mapa_completo", sql`(NOT acepto_mapa) OR ((latitud IS NOT NULL) AND (longitud IS NOT NULL) AND (mapa_version IS NOT NULL))`),
 	check("proveedores_nombre_visible_check", sql`(char_length(nombre_visible) >= 3) AND (char_length(nombre_visible) <= 60)`),
 	check("proveedores_telefono_check", sql`telefono ~ '^[0-9+()\- ]{7,20}$'::text`),
-	check("proveedores_tiene_dueno", sql`num_nonnulls(perfil_id, token_hash) = 1`),
 	check("proveedores_tiene_zona", sql`num_nonnulls(zona_id, zona_texto) >= 1`),
 	check("proveedores_tipo_check", sql`tipo = ANY (ARRAY['persona'::text, 'microempresa'::text])`),
 	check("proveedores_zona_texto_check", sql`(char_length(zona_texto) >= 2) AND (char_length(zona_texto) <= 60)`),
-]);
-
-export const solicitudesServicio = pgTable("solicitudes_servicio", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	codigo: text().notNull(),
-	tokenHash: text("token_hash").notNull(),
-	oficioId: text("oficio_id").notNull(),
-	municipio: text().notNull(),
-	zonaId: uuid("zona_id"),
-	zonaTexto: text("zona_texto"),
-	urgencia: text().notNull(),
-	capacidadPago: text("capacidad_pago").notNull(),
-	nota: text(),
-	estado: text().default('abierta').notNull(),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '15 days'::interval)`).notNull(),
-	esPrueba: boolean("es_prueba").default(false).notNull(),
-}, (table) => [
-	index("idx_solicitudes_servicio_vigentes").using("btree", table.municipio.asc().nullsLast().op("text_ops"), table.oficioId.asc().nullsLast().op("text_ops")).where(sql`(estado = 'abierta'::text)`),
-	foreignKey({
-			columns: [table.municipio],
-			foreignColumns: [municipios.codigoDane],
-			name: "solicitudes_servicio_municipio_fkey"
-		}),
-	foreignKey({
-			columns: [table.oficioId],
-			foreignColumns: [catalogoOficios.id],
-			name: "solicitudes_servicio_oficio_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.zonaId],
-			foreignColumns: [zonas.id],
-			name: "solicitudes_servicio_zona_id_fkey"
-		}).onDelete("set null"),
-	unique("solicitudes_servicio_codigo_key").on(table.codigo),
-	check("solicitudes_servicio_capacidad_pago_check", sql`capacidad_pago = ANY (ARRAY['puedo_pagar'::text, 'pago_poco'::text, 'no_puedo_pagar'::text])`),
-	check("solicitudes_servicio_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'resuelta'::text])`),
-	check("solicitudes_servicio_nota_check", sql`char_length(nota) <= 140`),
-	check("solicitudes_servicio_tiene_zona", sql`num_nonnulls(zona_id, zona_texto) >= 1`),
-	check("solicitudes_servicio_urgencia_check", sql`urgencia = ANY (ARRAY['hoy'::text, 'esta_semana'::text, 'sin_prisa'::text])`),
-	check("solicitudes_servicio_zona_texto_check", sql`(char_length(zona_texto) >= 2) AND (char_length(zona_texto) <= 60)`),
 ]);
 
 export const chatsServicio = pgTable("chats_servicio", {
@@ -1037,48 +1045,6 @@ export const imagenes = pgTable("imagenes", {
 	unique("imagenes_ruta_key").on(table.ruta),
 	check("imagenes_estado_check", sql`estado = ANY (ARRAY['en_cola'::text, 'aprobada'::text, 'rechazada'::text])`),
 	check("imagenes_objeto_tipo_check", sql`objeto_tipo = ANY (ARRAY['muro'::text, 'producto'::text])`),
-]);
-
-export const publicacionesMuro = pgTable("publicaciones_muro", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	cara: text().notNull(),
-	perfilId: uuid("perfil_id"),
-	autorNombre: text("autor_nombre"),
-	autorizacionVersion: text("autorizacion_version"),
-	autorizacionAt: timestamp("autorizacion_at", { withTimezone: true, mode: 'string' }),
-	tokenHash: text("token_hash"),
-	categoria: text().notNull(),
-	titulo: text().notNull(),
-	detalle: text(),
-	municipio: text().notNull(),
-	zonaId: uuid("zona_id"),
-	estado: text().default('abierta').notNull(),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }),
-	esPrueba: boolean("es_prueba").default(false).notNull(),
-}, (table) => [
-	index("idx_muro_abierta").using("btree", table.cara.asc().nullsLast().op("timestamptz_ops"), table.municipio.asc().nullsLast().op("text_ops"), table.creadaAt.desc().nullsFirst().op("timestamptz_ops")).where(sql`(estado = 'abierta'::text)`),
-	foreignKey({
-			columns: [table.municipio],
-			foreignColumns: [municipios.codigoDane],
-			name: "publicaciones_muro_municipio_fkey"
-		}),
-	foreignKey({
-			columns: [table.perfilId],
-			foreignColumns: [perfiles.id],
-			name: "publicaciones_muro_perfil_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.zonaId],
-			foreignColumns: [zonas.id],
-			name: "publicaciones_muro_zona_id_fkey"
-		}).onDelete("set null"),
-	check("muro_necesita_sin_datos", sql`(cara <> 'necesita'::text) OR ((token_hash IS NOT NULL) AND (perfil_id IS NULL) AND (autor_nombre IS NULL))`),
-	check("muro_ofrece_con_nombre", sql`(cara <> 'ofrece'::text) OR ((perfil_id IS NOT NULL) AND (autor_nombre IS NOT NULL) AND (autorizacion_version IS NOT NULL))`),
-	check("publicaciones_muro_cara_check", sql`cara = ANY (ARRAY['ofrece'::text, 'necesita'::text])`),
-	check("publicaciones_muro_detalle_check", sql`char_length(detalle) <= 300`),
-	check("publicaciones_muro_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'resuelta'::text])`),
-	check("publicaciones_muro_titulo_check", sql`(char_length(titulo) >= 3) AND (char_length(titulo) <= 140)`),
 ]);
 
 export const productos = pgTable("productos", {
@@ -1144,6 +1110,47 @@ export const codigosAcceso = pgTable("codigos_acceso", {
 			name: "codigos_acceso_perfil_id_fkey"
 		}).onDelete("cascade"),
 	unique("codigos_acceso_codigo_hash_key").on(table.codigoHash),
+]);
+
+export const publicacionesMuro = pgTable("publicaciones_muro", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	cara: text().notNull(),
+	perfilId: uuid("perfil_id").notNull(),
+	autorNombre: text("autor_nombre"),
+	autorizacionVersion: text("autorizacion_version"),
+	autorizacionAt: timestamp("autorizacion_at", { withTimezone: true, mode: 'string' }),
+	categoria: text().notNull(),
+	titulo: text().notNull(),
+	detalle: text(),
+	municipio: text().notNull(),
+	zonaId: uuid("zona_id"),
+	estado: text().default('abierta').notNull(),
+	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }),
+	esPrueba: boolean("es_prueba").default(false).notNull(),
+}, (table) => [
+	index("idx_muro_abierta").using("btree", table.cara.asc().nullsLast().op("text_ops"), table.municipio.asc().nullsLast().op("text_ops"), table.creadaAt.desc().nullsFirst().op("timestamptz_ops")).where(sql`(estado = 'abierta'::text)`),
+	index("idx_muro_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.municipio],
+			foreignColumns: [municipios.codigoDane],
+			name: "publicaciones_muro_municipio_fkey"
+		}),
+	foreignKey({
+			columns: [table.perfilId],
+			foreignColumns: [perfiles.id],
+			name: "publicaciones_muro_perfil_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.zonaId],
+			foreignColumns: [zonas.id],
+			name: "publicaciones_muro_zona_id_fkey"
+		}).onDelete("set null"),
+	check("muro_ofrece_con_nombre", sql`(cara <> 'ofrece'::text) OR ((perfil_id IS NOT NULL) AND (autor_nombre IS NOT NULL) AND (autorizacion_version IS NOT NULL))`),
+	check("publicaciones_muro_cara_check", sql`cara = ANY (ARRAY['ofrece'::text, 'necesita'::text])`),
+	check("publicaciones_muro_detalle_check", sql`char_length(detalle) <= 300`),
+	check("publicaciones_muro_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'resuelta'::text])`),
+	check("publicaciones_muro_titulo_check", sql`(char_length(titulo) >= 3) AND (char_length(titulo) <= 140)`),
 ]);
 
 export const destapesContacto = pgTable("destapes_contacto", {

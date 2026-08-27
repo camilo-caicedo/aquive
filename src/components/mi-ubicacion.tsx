@@ -26,13 +26,11 @@ const Mapa = dynamic(() => import('@/components/mapa').then((m) => m.Mapa), {
  * esconde.
  */
 export function MiUbicacion({
-  token,
   latitudInicial,
   longitudInicial,
   aceptadoInicial,
   centroMunicipio,
 }: {
-  token?: string
   latitudInicial: number | null
   longitudInicial: number | null
   aceptadoInicial: boolean
@@ -54,7 +52,6 @@ export function MiUbicacion({
     setAviso(null)
     try {
       await rpc.servicios.guardarUbicacion({
-        token,
         acepto: !quitar && acepto,
         latitud: quitar ? null : (punto?.latitud ?? null),
         longitud: quitar ? null : (punto?.longitud ?? null),

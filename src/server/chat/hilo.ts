@@ -1,5 +1,3 @@
-import { createHash } from 'node:crypto'
-
 import { and, asc, desc, eq, sql } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
@@ -17,21 +15,22 @@ import type { Autor, Hilo, HiloEnBandeja, Mensaje } from '@/contrato/chat'
 // El chat de Servicios. Capa de dominio: sin `next/*`, sin cookies.
 //
 // Dos participantes con dos formas de identificarse, y esa asimetría no es
-// accidental. El prestador tiene cuenta. Quien pide NO la tiene —publicó su
-// solicitud sin dar un solo dato— y entra con el token que se le mostró una
-// vez. Se guarda `sha256(token)`, nunca el token, igual que en el resto de la
-// plataforma.
+// accidental. Los dos lados tienen cuenta desde el ADR 0006, así que el
+// papel de cada uno sale de comparar con quién es dueño de qué: de la
+// solicitud, quien pide; de la ficha, el prestador.
 
 /** Quién está hablando, decidido por lo que trae y no por lo que dice. */
 async function quienEs(
   db: BaseDeDatos,
   respuestaId: string,
-  llave: { token?: string; usuarioId: string | null },
+  llave: { usuarioId: string | null },
 ): Promise<Autor | null> {
+  if (!llave.usuarioId) return null
+
   const [fila] = await db
     .select({
-      tokenHash: solicitudesServicio.tokenHash,
-      perfilId: proveedores.perfilId,
+      dePide: solicitudesServicio.perfilId,
+      delPrestador: proveedores.perfilId,
     })
     .from(respuestasServicio)
     .innerJoin(
@@ -44,15 +43,11 @@ async function quienEs(
 
   if (!fila) return null
 
-  if (llave.token) {
-    const hash = createHash('sha256').update(llave.token).digest('hex')
-    // Comparación en tiempo constante no hace falta: el hash ya es el
-    // secreto y una diferencia de microsegundos sobre 64 caracteres hex no
-    // filtra nada aprovechable a través de la red.
-    if (hash === fila.tokenHash) return 'quien_pide'
-  }
-
-  if (llave.usuarioId && fila.perfilId === llave.usuarioId) return 'prestador'
+  // El orden importa poco pero la exclusión sí: una cuenta no puede ser los
+  // dos lados del mismo hilo, y si lo fuera —alguien se responde a sí
+  // mismo— vale que sea quien pide, que es el papel con menos permisos.
+  if (fila.dePide === llave.usuarioId) return 'quien_pide'
+  if (fila.delPrestador === llave.usuarioId) return 'prestador'
 
   return null
 }
@@ -123,6 +118,7 @@ export async function leer(
     id: chat.id,
     respuesta_id: respuestaId,
     cerrado: chat.cerradoAt !== null,
+    soy: autor,
     // Quien pide no tiene nombre publicado y no se le inventa uno: al
     // prestador se le dice de qué pedido viene el hilo, no quién es.
     con:

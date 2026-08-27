@@ -39,7 +39,7 @@ const leerServidor = () => null
  *
  * ⚠ Se dibuja solo cuando hay coincidencias de verdad. El teléfono no sale
  * de aquí ni asomado: esta cinta solo cuenta y enlaza. El contacto vive
- * detrás del token, en `/solicitud/[token]?ver=quien-tiene`, de a uno.
+ * detrás de la cuenta, en `/mis-solicitudes`, de a uno.
  *
  * El token no viaja en ninguna query string: va en el path, como manda la
  * regla 6.
@@ -99,7 +99,7 @@ export function CintaMiSolicitud() {
         variant="outline"
         className="shrink-0 bg-background"
         nativeButton={false}
-        render={<Link href={`/solicitud/${mia.token}?ver=quien-tiene`} />}
+        render={<Link href="/mis-solicitudes" />}
       >
         Ver cuáles
       </Button>

@@ -371,7 +371,9 @@ export function FormularioProveedor({
     if (secciones) {
       router.push(volver ?? '/perfil')
     } else if (token) {
-      router.push(`/servicios/mi-perfil/${token}`)
+      // Ya no hay ruta por token: la ficha cuelga de la cuenta (ADR 0006)
+      // y se llega a ella desde el perfil, como todo lo demás.
+      router.push('/servicios/soy-proveedor')
     } else {
       // Recién creada va a la confirmación (pantalla 04), que es donde se
       // dice por qué el carné todavía no lleva sello. Ya creada, vuelve a

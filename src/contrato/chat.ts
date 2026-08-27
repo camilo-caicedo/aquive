@@ -24,6 +24,14 @@ export const Hilo = z.object({
   cerrado: z.boolean(),
   /** Quién es el otro. El prestador tiene nombre público; quien pide, no. */
   con: z.string(),
+  /**
+   * De qué lado está quien pidió el hilo.
+   *
+   * Lo decide el servidor, que es quien sabe de quién es la solicitud y de
+   * quién la ficha. Antes el cliente lo deducía de si traía token o no;
+   * desde el ADR 0006 las dos partes son cuentas y esa pista no existe.
+   */
+  soy: z.enum(['quien_pide', 'prestador']),
   oficio: z.string().nullable(),
   mensajes: z.array(Mensaje),
 })
@@ -35,7 +43,7 @@ export type Hilo = z.infer<typeof Hilo>
  *
  * Dos puertas distintas porque hay dos clases de participante, y esa
  * asimetría es del producto, no del código: el prestador tiene cuenta y el
- * hilo le sale de su sesión; quien pide NO tiene cuenta y entra con el token
+ * hilo le sale de su sesión; quien pide también, desde el ADR 0006 — antes
  * de su solicitud, que es lo único que la plataforma le dio.
  */
 export const Llave = z.union([
@@ -86,7 +94,7 @@ export const contratoChat = {
   /** El hilo abierto por una respuesta, con sus mensajes. Pantalla 12. */
   leer: oc
     .errors(errores)
-    .input(z.object({ respuesta_id: z.uuid(), token: z.string().min(20).optional() }))
+    .input(z.object({ respuesta_id: z.uuid() }))
     .output(Hilo.nullable()),
 
   /**
@@ -106,7 +114,6 @@ export const contratoChat = {
     .input(
       z.object({
         respuesta_id: z.uuid(),
-        token: z.string().min(20).optional(),
         cuerpo: z.string().trim().min(1).max(500),
       }),
     )

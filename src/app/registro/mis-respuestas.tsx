@@ -92,7 +92,7 @@ export function MisRespuestas({ respuestas }: { respuestas: MiRespuesta[] }) {
                 variant={r.flujo === 'acompanado' ? 'default' : 'outline'}
                 className="mt-3 w-full"
                 nativeButton={false}
-                render={<Link href={`/responder/${r.codigo}`} />}
+                render={<Link href="/ayudas" />}
               >
                 {r.flujo === 'acompanado' ? 'Abrir la conversación' : 'Ver la solicitud'}
               </Button>

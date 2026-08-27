@@ -16,7 +16,7 @@ import { BotonVolver } from '@/components/volver'
  * mismo fondo y su `border-b`.
  *
  * `volver` es para las pantallas que son destino Y se entra a ellas desde
- * otra —`/solicitud/[token]` es la única hoy—: llevan flecha atrás y a la
+ * otra: llevan flecha atrás y a la
  * vez conservan la barra inferior, porque no son un formulario del que se
  * pueda salir a medio llenar.
  *

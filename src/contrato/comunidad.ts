@@ -152,7 +152,7 @@ export const contratoComunidad = {
    * La asimetría de la regla de producto 4 la sostiene la base con dos CHECK,
    * pero se declara también aquí para que el error llegue antes y en
    * castellano: quien OFRECE publica con nombre y consentimiento; quien
-   * NECESITA no da un solo dato y recibe un token.
+   * NECESITA no publica su nombre. Las dos son cuentas (ADR 0006).
    */
   publicarEnMuro: oc
     .errors(errores)
@@ -169,7 +169,7 @@ export const contratoComunidad = {
         acepto_publicar_nombre: z.boolean().default(false),
       }),
     )
-    .output(z.object({ id: z.uuid(), token: z.string().nullable() })),
+    .output(z.object({ id: z.uuid() })),
 
   /** Hecho en el barrio. Pantalla 31. */
   productos: oc

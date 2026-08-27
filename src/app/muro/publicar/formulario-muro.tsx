@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Copy } from 'lucide-react'
 
 import { rpc } from '@/orpc/cliente'
 import { MarcoFlujo } from '@/components/marco-flujo'
@@ -51,7 +50,7 @@ export function FormularioMuro({
   const [acepto, setAcepto] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [listo, setListo] = useState<{ token: string | null } | null>(null)
+  const [listo, setListo] = useState(false)
 
   const ofrece = cara === 'ofrece'
   const puede =
@@ -61,7 +60,7 @@ export function FormularioMuro({
     setEnviando(true)
     setError(null)
     try {
-      const r = await rpc.comunidad.publicarEnMuro({
+      await rpc.comunidad.publicarEnMuro({
         cara,
         categoria,
         titulo: titulo.trim(),
@@ -70,7 +69,7 @@ export function FormularioMuro({
         imagen_id: imagenId ?? undefined,
         acepto_publicar_nombre: acepto,
       })
-      setListo({ token: r.token })
+      setListo(true)
     } catch (e) {
       const motivo =
         e && typeof e === 'object' && 'data' in e
@@ -83,40 +82,20 @@ export function FormularioMuro({
   }
 
   if (listo) {
-    const url = listo.token
-      ? `${globalThis.location?.origin ?? ''}/muro/mia/${listo.token}`
-      : null
-
     return (
       <MarcoFlujo titulo="Listo" volver="/muro">
         <div className="shadow-canto rounded-2xl bg-card p-4">
           <h2 className="font-heading text-2xl">Tu publicación salió.</h2>
 
-          {url ? (
-            <>
-              <p className="mt-2 text-base">
-                Guarda este enlace. Es la única forma de volver a ella para
-                borrarla, y no lo podemos recuperar: no guardamos de quién es.
-              </p>
-              <p className="mt-2 break-all font-mono text-sm">{url}</p>
-              <div className="mt-3">
-                <Button
-                  variant="outline"
-                  onClick={() => navigator.clipboard.writeText(url)}
-                >
-                  <Copy className="size-4" aria-hidden="true" />
-                  Copiar enlace
-                </Button>
-              </div>
-              <p className="mt-3 text-sm text-muted-foreground">
-                Se borra sola a los 15 días.
-              </p>
-            </>
-          ) : (
-            <p className="mt-2 text-base">
-              Aparece en el muro con tu nombre. Puedes borrarla cuando quieras.
-            </p>
-          )}
+          {/* Ya no hay enlace que guardar: desde el ADR 0006 la publicación
+              cuelga de la cuenta, así que se vuelve a ella desde el perfil
+              como todo lo demás. Antes había que copiar un token en un papel
+              y perderlo era perder la publicación. */}
+          <p className="mt-2 text-base">
+            {ofrece
+              ? 'Aparece en el muro con tu nombre. Puedes borrarla cuando quieras.'
+              : 'La vas a encontrar en tu perfil. Se borra sola a los 15 días.'}
+          </p>
 
           {imagenId && (
             <p className="mt-3 text-base text-muted-foreground">

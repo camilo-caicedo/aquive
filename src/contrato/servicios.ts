@@ -210,6 +210,25 @@ export type ZonaConGente = z.infer<typeof ZonaConGente>
  * suyo o nuestro. Un rechazo que no explica es un rechazo que genera un
  * mensaje de soporte.
  */
+/**
+ * Una solicitud de servicio propia.
+ *
+ * Sustituye a lo que antes vivía en `localStorage`: la lista de tokens de
+ * este teléfono. Con cuenta (ADR 0006) lo suyo se le pregunta al servidor,
+ * lo que además arregla que cambiar de teléfono fuera perderlo todo.
+ */
+export const MiSolicitudServicio = z.object({
+  id: z.uuid(),
+  /** Cuatro letras y dos dígitos: se dice por teléfono sin deletrear. */
+  codigo: z.string(),
+  oficio: z.string().nullable(),
+  estado: z.string(),
+  creada_at: z.string(),
+  expira_at: z.string(),
+})
+
+export type MiSolicitudServicio = z.infer<typeof MiSolicitudServicio>
+
 const erroresUbicacion = {
   RECHAZADO: {
     status: 400,
@@ -306,6 +325,37 @@ export const contratoServicios = {
    * tiene que ser tan fácil como ponerse, o el consentimiento no es libre.
    */
   /**
+   * Pedir un servicio.
+   *
+   * ⚠ Exige cuenta desde el ADR 0006. Lo que se le PIDE a quien pide no
+   * cambió: oficio, municipio, zona, urgencia, capacidad de pago y la nota
+   * filtrada. Su nombre no se publica y la solicitud no lo lleva.
+   */
+  publicarSolicitud: oc
+    .errors(erroresUbicacion)
+    .input(
+      z.object({
+        oficio_id: z.string().min(1).max(60),
+        municipio: z.string().regex(/^[0-9]{5}$/),
+        zona_id: z.uuid().optional(),
+        zona_texto: z.string().trim().max(80).optional(),
+        urgencia: z.enum(['hoy', 'esta_semana', 'sin_prisa']),
+        capacidad_pago: z.enum(['puedo_pagar', 'pago_poco', 'no_puedo_pagar']),
+        nota: z.string().trim().max(140).optional(),
+      }),
+    )
+    .output(z.object({ id: z.uuid(), codigo: z.string() })),
+
+  /** Las mías, para el perfil. */
+  misSolicitudes: oc.output(z.array(MiSolicitudServicio)),
+
+  /** Renovarla por otros 15 días, o cerrarla. */
+  gestionarSolicitud: oc
+    .errors(erroresUbicacion)
+    .input(z.object({ id: z.uuid(), accion: z.enum(['renovar', 'cerrar']) }))
+    .output(z.object({ ok: z.literal(true) })),
+
+  /**
    * El punto propio, para poder editarlo.
    *
    * Se lee de la TABLA y no de `proveedores_publicos`: quien se quitó del
@@ -313,7 +363,7 @@ export const contratoServicios = {
    * razón— se lo esconde a todo el mundo, incluido su dueño.
    */
   miUbicacion: oc
-    .input(z.object({ token: z.string().min(20).optional() }).optional())
+    .input(z.void())
     .output(
       z
         .object({
@@ -330,7 +380,6 @@ export const contratoServicios = {
       z.object({
         // El token de quien fue dado de alta por la fundación y no tiene
         // cuenta. Buena parte del rebusque está en ese caso.
-        token: z.string().min(20).optional(),
         acepto: z.boolean(),
         latitud: z.number().min(-4.5).max(13.5).nullable(),
         longitud: z.number().min(-82).max(-66).nullable(),

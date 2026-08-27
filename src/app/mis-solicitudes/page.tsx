@@ -1,73 +1,43 @@
-import Link from 'next/link'
 import { Plus } from 'lucide-react'
+
+import { servidor } from '@/orpc/local'
 import { AccionPrincipal } from '@/components/accion-principal'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
-import { ChevronRight, Smartphone } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
-import { PestanasMias } from './pestanas-mias'
+import { ListaMias } from './lista-mias'
 
-export const metadata = { title: 'Lo mío' }
+export const metadata = { title: 'Mis solicitudes' }
 
-function Fila({ href, etiqueta, detalle }: { href: string; etiqueta: string; detalle: string }) {
-  return (
-    <Link
-      href={href}
-      className="shadow-canto flex min-h-16 items-center justify-between gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
-    >
-      <span>
-        <span className="block text-base font-medium">{etiqueta}</span>
-        <span className="block text-sm text-muted-foreground">{detalle}</span>
-      </span>
-      <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-    </Link>
-  )
-}
-
+/**
+ * Lo que he pedido. Pantalla 20.
+ *
+ * ⚠ Antes esto leía de `localStorage` la lista de tokens de este teléfono,
+ * con un aviso en tarjeta que decía que si cambiabas de aparato lo perdías
+ * todo. Desde el ADR 0006 lo suyo cuelga de la cuenta y se le pregunta al
+ * servidor: el aviso sobra y el fallo que el README tenía abierto —la lista
+ * que no siempre aparecía— desaparece con él.
+ *
+ * Sin sesión no rebota a `/login`: explica y ofrece entrar. Es la misma
+ * regla que sigue `/perfil`.
+ */
 export default async function MisSolicitudesPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const solicitudes = await servidor.servicios.misSolicitudes()
 
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
-      {/* El h1 repite la etiqueta de la barra (regla 8): quien tocó «Lo
-          mío» tiene que aterrizar en algo que se llame igual. */}
-      <CabeceraPantalla titulo="Lo mío" volver="/perfil">
-      </CabeceraPantalla>
+      {/* El h1 repite la etiqueta de la fila del perfil (regla 8). */}
+      <CabeceraPantalla titulo="Mis solicitudes" volver="/perfil" />
 
-      {/* En tarjeta y con icono, no como párrafo suelto: es lo único que
-          hay que entender de esta pantalla, y de ello depende que la persona
-          guarde el enlace antes de perderlo. */}
-      <div className="flex items-start gap-3 rounded-2xl bg-secondary p-4 text-secondary-foreground">
-        <Smartphone className="size-5 shrink-0 translate-y-0.5" aria-hidden="true" />
-        <p className="text-base">
-          Estas solicitudes viven solo en este teléfono. Si lo cambias o borras
-          los datos del navegador, se pierden: guarda el enlace de cada una.
-        </p>
-      </div>
-      {/* Dos módulos, dos listas: las de insumos viven 72 horas y las de
-          servicios 15 días renovables, así que no son la misma cosa aunque
-          las dos sean «lo que pedí». Eso no se aplana — lo que cambia es
-          cómo se eligen: eran dos plegables y ahora son dos pestañas con
-          contador, porque un plegable obliga a abrirlo para saber si hay
-          algo dentro, y a lo que se viene aquí es a saberlo. */}
-      <PestanasMias />
+      <p className="text-base text-muted-foreground">
+        Los servicios que has pedido. Duran 15 días y se renuevan desde aquí.
+      </p>
 
-      {/* La fila hacia /aliado se fue: desde que hay celda propia en la
-          barra, tenerla también aquí eran dos puertas al mismo cuarto —lo
-          mismo que le pasaba a «Mi perfil» en el encabezado—. */}
-      <nav aria-label="Lo mío" className="mt-8 flex flex-col gap-2">
-        {!user && (
-          <Fila
-            href="/login"
-            etiqueta="Entrar para ofrecer ayuda"
-            detalle="Solo hace falta cuenta para ofrecer, no para pedir"
-          />
-        )}
-      </nav>
-      <AccionPrincipal etiqueta="Necesito ayuda" Icono={Plus} href="/publicar" />
+      <ListaMias solicitudes={solicitudes} />
+
+      <AccionPrincipal
+        etiqueta="Pedir un servicio"
+        Icono={Plus}
+        href="/servicios/publicar"
+      />
     </main>
   )
 }

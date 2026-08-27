@@ -1,5 +1,3 @@
-import { createHash } from 'node:crypto'
-
 import { eq } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
@@ -19,22 +17,19 @@ export class UbicacionRechazada extends Error {}
 /**
  * Guardar o quitar el punto propio.
  *
- * Identifica al prestador por sesión o por token, igual que el chat: quien
- * fue dado de alta por la fundación no tiene cuenta, y su token es su puerta
- * de habeas data — sin él no podría ni ponerse ni quitarse del mapa.
+ * Identifica al prestador por su cuenta, que desde el ADR 0006 es la única
+ * manera de ser dueño de una ficha. Quien no tiene Google recibe la suya de
+ * un admin, así que nadie se queda sin poder ponerse ni quitarse del mapa.
  */
 export async function guardarUbicacion(
   db: BaseDeDatos,
   entrada: { acepto: boolean; latitud: number | null; longitud: number | null },
-  llave: { token?: string; usuarioId: string | null },
+  llave: { usuarioId: string | null },
 ): Promise<{ ok: true }> {
-  const condicion = llave.token
-    ? eq(proveedores.tokenHash, createHash('sha256').update(llave.token).digest('hex'))
-    : llave.usuarioId
-      ? eq(proveedores.perfilId, llave.usuarioId)
-      : null
-
-  if (!condicion) throw new UbicacionRechazada('No se pudo identificar tu ficha.')
+  if (!llave.usuarioId) {
+    throw new UbicacionRechazada('Para tocar tu ficha necesitas entrar con tu cuenta.')
+  }
+  const condicion = eq(proveedores.perfilId, llave.usuarioId)
 
   // Aceptar sin punto no significa nada, y el CHECK de la base lo rechazaría
   // con un error feo. Se atrapa aquí para poder decir qué falta.
@@ -77,15 +72,10 @@ export async function guardarUbicacion(
 /** El punto propio, leído de la tabla. Ver el comentario del contrato. */
 export async function miUbicacion(
   db: BaseDeDatos,
-  llave: { token?: string; usuarioId: string | null },
+  llave: { usuarioId: string | null },
 ): Promise<{ latitud: number | null; longitud: number | null; acepto: boolean } | null> {
-  const condicion = llave.token
-    ? eq(proveedores.tokenHash, createHash('sha256').update(llave.token).digest('hex'))
-    : llave.usuarioId
-      ? eq(proveedores.perfilId, llave.usuarioId)
-      : null
-
-  if (!condicion) return null
+  if (!llave.usuarioId) return null
+  const condicion = eq(proveedores.perfilId, llave.usuarioId)
 
   const [fila] = await db
     .select({

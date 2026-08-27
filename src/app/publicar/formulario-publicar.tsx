@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { rpc } from '@/orpc/cliente'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { HeartHandshake, Check, Minus, Plus, ShieldAlert } from 'lucide-react'
@@ -39,32 +40,6 @@ import {
 type ItemCatalogo = ItemCatalogoPublico
 
 const MAX_SUGERENCIAS = 3
-
-interface RespuestaExito {
-  codigo: string
-  token: string
-}
-
-interface RespuestaError {
-  error: string
-}
-
-function guardarEnLocalStorage(codigo: string, token: string) {
-  try {
-    const clave = 'mis_solicitudes'
-    const actuales = JSON.parse(localStorage.getItem(clave) ?? '[]') as Array<{
-      codigo: string
-      token: string
-      creada_at: string
-    }>
-    if (actuales.some((s) => s.token === token)) return
-    actuales.unshift({ codigo, token, creada_at: new Date().toISOString() })
-    localStorage.setItem(clave, JSON.stringify(actuales))
-  } catch {
-    // localStorage puede fallar (modo privado, cuota). No es crítico: el
-    // enlace de todos modos se muestra en la pantalla de confirmación.
-  }
-}
 
 /**
  * La cantidad mientras se está escribiendo, donde `0` significa «campo
@@ -229,62 +204,28 @@ export function FormularioPublicar({
     setEnviando(true)
     setError(null)
     try {
-      const res = await fetch('/api/solicitudes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          municipio,
-          barrio: barrio.trim(),
-          categoria,
-          nota: nota.trim() || null,
-          // Último filtro por si algún campo de cantidad llegó vacío hasta
-          // aquí: `0` es «no escribí nada todavía», nunca una cantidad.
-          items: seleccionados.map((s) => (s.cantidad === 0 ? { ...s, cantidad: 1 } : s)),
-          puedeRecoger,
-          turnstileToken,
-        }),
+      // Va por el contrato, no por una ruta de API con PL/pgSQL detrás
+      // (ADR 0001). La solicitud cuelga de la cuenta (ADR 0006), así que ya
+      // no hay token que guardar en este teléfono ni enlace que copiar.
+      await rpc.insumos.publicar({
+        municipio,
+        barrio: barrio.trim(),
+        categoria,
+        nota: nota.trim() || undefined,
+        // Último filtro por si algún campo de cantidad llegó vacío hasta
+        // aquí: `0` es «no escribí nada todavía», nunca una cantidad.
+        items: seleccionados.map((s) => (s.cantidad === 0 ? { ...s, cantidad: 1 } : s)),
+        puede_recoger: puedeRecoger,
       })
-      const data = (await res.json()) as RespuestaExito | RespuestaError
-      if (!res.ok || 'error' in data) {
-        setError('error' in data ? data.error : 'No se pudo publicar la solicitud')
-        setEnviando(false)
-        return
-      }
-      guardarEnLocalStorage(data.codigo, data.token)
 
-      // El contacto también va DESPUÉS de publicar y con el token en la
-      // mano, mismo motivo que el acompañamiento: si esto falla, la
-      // solicitud ya quedó publicada.
-      if (contactoTieneDatos) {
-        const supabase = createClient()
-        await supabase.rpc('agregar_contacto_solicitante', {
-          p_token: data.token,
-          p_nombre: contactoNombre.trim() || null,
-          p_telefono: contactoTelefono.trim() || null,
-          p_correo: contactoCorreo.trim() || null,
-          p_version: FECHA_LEGALES,
-        })
-      }
-
-      // El acompañamiento va DESPUÉS de publicar y con el token en la mano,
-      // en dos pasos y no en uno: si esto falla, la solicitud ya quedó
-      // publicada —anónima, que es el modo seguro de fallar— y desde su
-      // pantalla se puede volver a intentar. Al revés, un solo llamado que
-      // fallara dejaría a la persona sin solicitud y con los datos escritos.
-      if (conAliado && datosCompletos(datosAliado)) {
-        const supabase = createClient()
-        await supabase.rpc('activar_acompanamiento', {
-          p_token: data.token,
-          p_organizacion_id: datosAliado.organizacionId,
-          p_nombre: datosAliado.nombre.trim(),
-          p_autorizacion_version: FECHA_LEGALES,
-          p_telefono: datosAliado.telefono.trim() || null,
-        })
-      }
-
-      router.push(`/solicitud/${data.token}`)
-    } catch {
-      setError('No hay conexión. Intenta de nuevo.')
+      router.push('/mis-solicitudes')
+      router.refresh()
+    } catch (e) {
+      const motivo =
+        e && typeof e === 'object' && 'data' in e
+          ? ((e.data as { motivo?: string } | undefined)?.motivo ?? null)
+          : null
+      setError(motivo ?? 'No se pudo publicar la solicitud')
       setEnviando(false)
     }
   }

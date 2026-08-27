@@ -8,11 +8,13 @@ import type { Contexto } from './contexto'
 import * as chat from '@/server/chat/hilo'
 import * as comunidad from '@/server/comunidad/muro'
 import * as cuentas from '@/server/cuentas/alta'
+import * as insumos from '@/server/insumos/solicitudes'
 import * as productos from '@/server/comunidad/productos'
 import * as imagenes from '@/server/imagenes/recorrido'
 import * as moderacion from '@/server/moderacion/comandos'
 import * as pqr from '@/server/pqr/buzon'
 import * as servicios from '@/server/servicios/consultas'
+import * as pedidos from '@/server/servicios/solicitudes'
 import * as ubicacion from '@/server/servicios/ubicacion'
 
 // El enrutador: pega el contrato con la capa de dominio. Aquí y solo aquí se
@@ -33,8 +35,37 @@ export const enrutador = os.router({
     miFicha: os.servicios.miFicha.handler(({ context }) =>
       servicios.miFicha(db, context.usuarioId),
     ),
-    miUbicacion: os.servicios.miUbicacion.handler(({ input, context }) =>
-      ubicacion.miUbicacion(db, { token: input?.token, usuarioId: context.usuarioId }),
+    publicarSolicitud: os.servicios.publicarSolicitud.handler(
+      async ({ input, context, errors }) => {
+        try {
+          return await pedidos.publicar(db, input, { usuarioId: context.usuarioId })
+        } catch (e) {
+          if (e instanceof pedidos.SolicitudRechazada) {
+            throw errors.RECHAZADO({ data: { motivo: e.message } })
+          }
+          throw e
+        }
+      },
+    ),
+    misSolicitudes: os.servicios.misSolicitudes.handler(({ context }) =>
+      pedidos.mias(db, { usuarioId: context.usuarioId }),
+    ),
+    gestionarSolicitud: os.servicios.gestionarSolicitud.handler(
+      async ({ input, context, errors }) => {
+        try {
+          return await pedidos.gestionar(db, input.id, input.accion, {
+            usuarioId: context.usuarioId,
+          })
+        } catch (e) {
+          if (e instanceof pedidos.SolicitudRechazada) {
+            throw errors.RECHAZADO({ data: { motivo: e.message } })
+          }
+          throw e
+        }
+      },
+    ),
+    miUbicacion: os.servicios.miUbicacion.handler(({ context }) =>
+      ubicacion.miUbicacion(db, { usuarioId: context.usuarioId }),
     ),
     guardarUbicacion: os.servicios.guardarUbicacion.handler(
       async ({ input, context, errors }) => {
@@ -42,7 +73,7 @@ export const enrutador = os.router({
           return await ubicacion.guardarUbicacion(
             db,
             { acepto: input.acepto, latitud: input.latitud, longitud: input.longitud },
-            { token: input.token, usuarioId: context.usuarioId },
+            { usuarioId: context.usuarioId },
           )
         } catch (e) {
           if (e instanceof ubicacion.UbicacionRechazada) {
@@ -57,6 +88,33 @@ export const enrutador = os.router({
   },
   moderacion: {
     reportar: os.moderacion.reportar.handler(({ input }) => moderacion.reportar(db, input)),
+  },
+  insumos: {
+    publicar: os.insumos.publicar.handler(async ({ input, context, errors }) => {
+      try {
+        return await insumos.publicar(db, input, { usuarioId: context.usuarioId })
+      } catch (e) {
+        if (e instanceof insumos.InsumoRechazado) {
+          throw errors.RECHAZADO({ data: { motivo: e.message } })
+        }
+        throw e
+      }
+    }),
+    mias: os.insumos.mias.handler(({ context }) =>
+      insumos.mias(db, { usuarioId: context.usuarioId }),
+    ),
+    gestionar: os.insumos.gestionar.handler(async ({ input, context, errors }) => {
+      try {
+        return await insumos.gestionar(db, input.id, input.accion, {
+          usuarioId: context.usuarioId,
+        })
+      } catch (e) {
+        if (e instanceof insumos.InsumoRechazado) {
+          throw errors.RECHAZADO({ data: { motivo: e.message } })
+        }
+        throw e
+      }
+    }),
   },
   cuentas: {
     crear: os.cuentas.crear.handler(async ({ input, context, errors }) => {
@@ -209,7 +267,7 @@ export const enrutador = os.router({
   chat: {
     bandeja: os.chat.bandeja.handler(({ context }) => chat.bandeja(db, context.usuarioId)),
     leer: os.chat.leer.handler(({ input, context }) =>
-      chat.leer(db, input.respuesta_id, { token: input.token, usuarioId: context.usuarioId }),
+      chat.leer(db, input.respuesta_id, { usuarioId: context.usuarioId }),
     ),
     // El dominio lanza `ChatRechazado` y no sabe qué es un código HTTP; aquí
     // se traduce. Es la única capa que conoce las dos cosas.
@@ -218,7 +276,7 @@ export const enrutador = os.router({
         return await chat.escribir(
           db,
           { respuestaId: input.respuesta_id, cuerpo: input.cuerpo },
-          { token: input.token, usuarioId: context.usuarioId },
+          { usuarioId: context.usuarioId },
         )
       } catch (e) {
         if (e instanceof chat.ChatRechazado) {

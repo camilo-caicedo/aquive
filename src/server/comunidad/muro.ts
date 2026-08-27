@@ -1,5 +1,3 @@
-import { createHash, randomBytes } from 'node:crypto'
-
 import { and, desc, eq, ilike, or, sql } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
@@ -127,15 +125,19 @@ export async function publicar(
     return { id: fila.id, token: null }
   }
 
-  // Cara «necesita»: sin cuenta y sin un solo dato. Mismo mecanismo que una
-  // solicitud de insumos — 32 bytes, se guarda solo el hash, se muestra una
-  // vez. Ese token es lo único que le permite volver a borrar lo suyo.
-  const token = randomBytes(32).toString('base64url')
+  // Cara «necesita»: con cuenta desde el ADR 0006, pero SIN publicar nada.
+  // Ahí sigue la asimetría que importa — quien ofrece aparece con su nombre
+  // y quien pide no—, solo que ahora se sostiene en no copiar el nombre a
+  // la fila, no en no tener dueño.
+  if (!llave.usuarioId) {
+    throw new MuroRechazado('Para publicar necesitas entrar con tu cuenta.')
+  }
+
   const [fila] = await db
     .insert(publicacionesMuro)
     .values({
       cara: 'necesita',
-      tokenHash: createHash('sha256').update(token).digest('hex'),
+      perfilId: llave.usuarioId,
       categoria: entrada.categoria,
       titulo: entrada.titulo,
       detalle: entrada.detalle ?? null,
@@ -146,7 +148,7 @@ export async function publicar(
     .returning({ id: publicacionesMuro.id })
 
   if (entrada.imagen_id) await enlazar(db, entrada.imagen_id, fila.id)
-  return { id: fila.id, token }
+  return { id: fila.id, token: null }
 }
 
 export async function productos(

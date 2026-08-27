@@ -18,10 +18,7 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { InsigniasProveedor } from '@/components/insignias-proveedor'
-import { SeccionPlegable } from '@/components/seccion-plegable'
 import { CerrarSesion } from '@/app/registro/cerrar-sesion'
-import { ListaLocal } from '@/app/mis-solicitudes/lista-local'
-import { ListaServicios } from '@/app/mis-solicitudes/lista-servicios'
 import { createClient } from '@/lib/supabase/server'
 import { servidor } from '@/orpc/local'
 import { listarMunicipios, nombreConDepartamento } from '@/lib/municipios'
@@ -93,7 +90,13 @@ export default async function PerfilPage() {
   } = await supabase.auth.getUser()
 
   // ─────────────────────────────────────────────────────────────────
-  // Sin cuenta: lo que vive en este teléfono, y nada más.
+  // Sin cuenta: qué falta y cómo conseguirla.
+  //
+  // ⚠ NO rebota a `/login`: quien llega aquí quiere ver lo suyo, y mandarlo
+  // a una pantalla de acceso sin decirle por qué es un callejón. Antes esta
+  // rama enseñaba lo que este teléfono tenía guardado; desde el ADR 0006 lo
+  // suyo cuelga de la cuenta, así que sin cuenta no hay nada que enseñar —y
+  // lo que hay que explicar es cómo conseguir una.
   // ─────────────────────────────────────────────────────────────────
   if (!user) {
     return (
@@ -103,44 +106,26 @@ export default async function PerfilPage() {
         <div className="flex items-start gap-3 rounded-2xl bg-secondary p-4 text-secondary-foreground">
           <Smartphone className="size-5 shrink-0 translate-y-0.5" aria-hidden="true" />
           <p className="text-base">
-            Estas solicitudes viven solo en este teléfono. Si lo cambias o borras
-            los datos del navegador, se pierden: guarda el enlace de cada una.
+            Con cuenta, lo tuyo te sigue: cambias de teléfono y sigue ahí. Antes
+            vivía en este aparato y cambiarlo era perderlo.
           </p>
         </div>
 
-        <div className="mt-4 space-y-3">
-          <SeccionPlegable
-            titulo="Solicitudes de servicios"
-            resumen="Oficios que pediste en el directorio. Duran 15 días, renovables."
-            resumenSiempre
-            abierta
-          >
-            <ListaServicios />
-          </SeccionPlegable>
-
-          <SeccionPlegable
-            titulo="Solicitudes de ayuda"
-            resumen="Insumos que pediste. Se borran solas a las 72 horas."
-            resumenSiempre
-          >
-            <ListaLocal />
-          </SeccionPlegable>
-        </div>
-
-        <nav aria-label="Perfil" className="mt-8">
+        <nav aria-label="Perfil" className="mt-6">
           <ul className="flex flex-col gap-2">
             <Fila
               href="/login"
               Icono={KeyRound}
-              nombre="Entrar con una cuenta"
-              pista="Para ofrecer"
+              nombre="Entrar con Google"
               familia="azul"
             />
           </ul>
         </nav>
 
-        <p className="mt-3 text-base text-muted-foreground">
-          Solo hace falta cuenta para ofrecer tu trabajo. Para pedir, no.
+        <p className="mt-4 text-base text-muted-foreground">
+          ¿No tienes cuenta de Google o no quieres crear una? En el punto de
+          Nodo Social más cercano te crean la tuya y te dan un enlace para
+          entrar. Es lo mismo, sin correo.
         </p>
       </main>
     )
@@ -156,6 +141,7 @@ export default async function PerfilPage() {
     municipios,
     { data: perfilOfertador },
     misProductos,
+    misSolicitudes,
   ] = await Promise.all([
       supabase.rpc('mi_proveedor', {}),
       supabase.rpc('mis_servicios', {}),
@@ -169,6 +155,9 @@ export default async function PerfilPage() {
       // Lo que tiene puesto en «Hecho en el barrio». Va por el contrato,
       // que ya filtra por la ficha de quien llama.
       servidor.comunidad.misProductos(),
+      // Lo que ha pedido. Antes vivía en `localStorage` y por eso el perfil
+      // no lo sabía; desde el ADR 0006 cuelga de la cuenta.
+      servidor.servicios.misSolicitudes(),
     ])
 
   const proveedor = (mio as MiProveedor | null) ?? null
@@ -218,7 +207,15 @@ export default async function PerfilPage() {
         ]
       : []),
     { href: '/perfil/disponibilidad', Icono: Clock, nombre: 'Cuándo y dónde atiendo' },
-    { href: '/mis-solicitudes', Icono: ClipboardList, nombre: 'Mis solicitudes' },
+    {
+      href: '/mis-solicitudes',
+      Icono: ClipboardList,
+      nombre: 'Mis solicitudes',
+      pista:
+        misSolicitudes.length > 0
+          ? String(misSolicitudes.length)
+          : undefined,
+    },
     // Las dos vistas del módulo de emergencia. Solo salen si esa persona
     // tiene ese rol: son de quien OFRECE ayuda, que es otro papel que el de
     // prestar un servicio. Vivían tras unas pestañas que se retiraron al

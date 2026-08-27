@@ -9,10 +9,9 @@ import type { Hilo, Mensaje } from '@/contrato/chat'
 /**
  * El hilo de un pedido de servicio. Pantalla 12.
  *
- * Sirve a los dos lados con el mismo componente: el prestador entra con su
- * sesión y quien pide con el token de su solicitud. La diferencia la resuelve
- * el servidor —decide quién eres por lo que traes, no por lo que dices—, así
- * que aquí solo cambia de quién es cada burbuja.
+ * Sirve a los dos lados con el mismo componente. Quién es cada quien lo
+ * resuelve el servidor —de quién es la solicitud, de quién la ficha— y lo
+ * dice en `hilo.soy`, así que aquí solo cambia de qué lado va cada burbuja.
  *
  * Sin sondeo automático a propósito. Un `setInterval` contra el servidor cada
  * pocos segundos, en un teléfono viejo con datos contados, gasta batería y
@@ -22,11 +21,9 @@ import type { Hilo, Mensaje } from '@/contrato/chat'
  */
 export function ChatServicio({
   respuestaId,
-  token,
   hiloInicial,
 }: {
   respuestaId: string
-  token?: string
   hiloInicial: Hilo
 }) {
   const [mensajes, setMensajes] = useState<Mensaje[]>(hiloInicial.mensajes)
@@ -50,7 +47,6 @@ export function ChatServicio({
     try {
       const { mensaje } = await rpc.chat.escribir({
         respuesta_id: respuestaId,
-        token,
         cuerpo: texto,
       })
       setMensajes((previos) => [...previos, mensaje])
@@ -80,7 +76,7 @@ export function ChatServicio({
           </li>
         )}
         {mensajes.map((m) => {
-          const mio = token ? m.autor === 'quien_pide' : m.autor === 'prestador'
+          const mio = m.autor === hiloInicial.soy
           return (
             <li key={m.id} className={mio ? 'flex justify-end' : 'flex justify-start'}>
               {/* La burbuja propia en arena y no en lima: un hilo de veinte

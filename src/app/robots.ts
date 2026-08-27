@@ -35,11 +35,9 @@ export default function robots(): MetadataRoute.Robots {
           // El token portador de una solicitud va en el path. Quien lo
           // tiene puede ver respuestas, renovar y borrar: no puede quedar
           // en la caché de un buscador.
-          '/solicitud/',
           // El código de invitación de una organización, igual.
           '/unirse/',
           // Y la pantalla de habeas data, que también lleva el token.
-          '/mis-datos/',
           // Pantallas de sesión. No hay nada que indexar y sí un montón
           // de rutas que solo confunden a quien llega por un buscador.
           '/aliado',

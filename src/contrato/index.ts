@@ -1,6 +1,7 @@
 import { contratoChat } from './chat'
 import { contratoComunidad } from './comunidad'
 import { contratoCuentas } from './cuentas'
+import { contratoInsumos } from './insumos'
 import { contratoModeracion } from './moderacion'
 import { contratoPqr } from './pqr'
 import { contratoServicios } from './servicios'
@@ -13,6 +14,7 @@ export const contrato = {
   chat: contratoChat,
   comunidad: contratoComunidad,
   cuentas: contratoCuentas,
+  insumos: contratoInsumos,
   pqr: contratoPqr,
 }
 

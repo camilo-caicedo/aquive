@@ -2,7 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Copy } from 'lucide-react'
+
+import { rpc } from '@/orpc/cliente'
+
 import { contienePII, validarNota } from '@/lib/validacion'
 import { nombreConDepartamento, type MunicipioBasico } from '@/lib/municipios'
 import { CAPACIDADES_PAGO, GRUPOS, URGENCIAS } from '@/lib/servicios'
@@ -60,7 +62,7 @@ export function FormularioPublicarServicio({
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [listo, setListo] = useState<{ codigo: string; url: string } | null>(null)
+  const [listo, setListo] = useState<{ codigo: string } | null>(null)
 
   const zonasDelMunicipio = zonas.filter((z) => z.municipio === municipio)
   const municipioElegido = municipios.find((m) => m.codigo_dane === municipio)
@@ -81,50 +83,29 @@ export function FormularioPublicarServicio({
     setEnviando(true)
     setError(null)
 
-    const respuesta = await fetch('/api/servicios/solicitudes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    // Va por el contrato y no por una ruta de API con una función de
+    // PL/pgSQL detrás (ADR 0001). La solicitud cuelga de la cuenta, así que
+    // ya no hay token que copiar ni que guardar en este teléfono.
+    try {
+      const { codigo } = await rpc.servicios.publicarSolicitud({
         oficio_id: oficioId,
         municipio,
-        zona_id: zonaId || null,
-        zona_texto: zonaTexto.trim() || null,
+        zona_id: zonaId || undefined,
+        zona_texto: zonaTexto.trim() || undefined,
         urgencia,
         capacidad_pago: pago,
-        nota: nota.trim() || null,
-        turnstileToken,
-      }),
-    })
-
-    const datos = await respuesta.json()
-    if (!respuesta.ok) {
-      setError(datos.error ?? 'No se pudo publicar')
+        nota: nota.trim() || undefined,
+      })
+      setListo({ codigo })
+    } catch (e) {
+      const motivo =
+        e && typeof e === 'object' && 'data' in e
+          ? ((e.data as { motivo?: string } | undefined)?.motivo ?? null)
+          : null
+      setError(motivo ?? 'No se pudo publicar')
+    } finally {
       setEnviando(false)
-      return
     }
-
-    // El token se guarda en localStorage además de mostrarse, igual que
-    // hace `/publicar`: si la persona cierra sin copiarlo, al menos desde
-    // este teléfono puede volver.
-    try {
-      const previas = JSON.parse(localStorage.getItem('aquive_servicios') ?? '[]')
-      localStorage.setItem(
-        'aquive_servicios',
-        JSON.stringify([
-          { codigo: datos.codigo, token: datos.token, fecha: Date.now() },
-          ...previas,
-        ])
-      )
-    } catch {
-      // Si el navegador no deja escribir, no pasa nada: el enlace está en
-      // pantalla y es lo que de verdad importa.
-    }
-
-    setListo({
-      codigo: datos.codigo,
-      url: `${window.location.origin}/servicios/solicitud/${datos.token}`,
-    })
-    setEnviando(false)
   }
 
   if (listo) {
@@ -135,30 +116,25 @@ export function FormularioPublicarServicio({
             Listo. Tu solicitud es la {listo.codigo}.
           </AlertTitle>
           <AlertDescription>
+            {/* Ya no hay enlace que guardar: la solicitud cuelga de la
+                cuenta (ADR 0006) y se llega a ella desde el perfil. Antes
+                perder ese enlace era perder la solicitud y el chat. */}
             <p className="mt-2 text-base">
-              Guarda este enlace. Es la única forma de volver a ver quién te
-              respondió, y no lo podemos recuperar: no guardamos de quién es.
+              La vas a encontrar en tu perfil, con todo lo tuyo. El código sirve
+              para decirlo por teléfono si hace falta.
             </p>
-            <p className="mt-2 break-all font-mono text-sm">{listo.url}</p>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                onClick={() => navigator.clipboard.writeText(listo.url)}
-              >
-                <Copy className="size-4" aria-hidden="true" />
-                Copiar enlace
-              </Button>
-              <Button nativeButton={false} render={<Link href={listo.url} />}>
-                Ver mi solicitud
+              <Button nativeButton={false} render={<Link href="/mis-solicitudes" />}>
+                Ver mis solicitudes
               </Button>
             </div>
             <p className="mt-3 text-base">
-              Cuando alguien responda, se abre un chat en ese mismo enlace para
-              acordar hora, lugar y precio. No tienes que dar tu teléfono.
+              Cuando alguien responda, se abre un chat para acordar hora, lugar y
+              precio. No tienes que dar tu teléfono.
             </p>
             <p className="mt-3 text-sm text-muted-foreground">
               Se borra sola a los 15 días, con el chat dentro. Puedes renovarla,
-              cerrarla o borrarla antes desde ese enlace.
+              cerrarla o borrarla antes desde tu perfil.
             </p>
           </AlertDescription>
         </Alert>

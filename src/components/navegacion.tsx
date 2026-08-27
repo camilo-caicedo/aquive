@@ -140,14 +140,14 @@ const TAMBIEN: Record<string, string[]> = {
     '/barrio',
   ],
   // Las otras dos listas de la emergencia, y los dos extremos de una
-  // solicitud. /solicitud/[token] no está aquí: esa es la propia, y vive
+  // solicitud. La propia no está aquí: vive
   // en «Lo mío».
   // Buscar: categorías es la puerta, y debajo el mapa, las zonas y la ficha.
   '/categorias': ['/zonas', '/mapa'],
   // La ruta vieja de la bandeja acompañada redirige aquí, pero alguien puede
   // llegar por un enlace guardado.
   '/mensajes': ['/coordinacion'],
-  // /solicitud/[token] es la pantalla de una solicitud propia: se llega
+  // /mis-solicitudes es la pantalla de lo propio: se llega
   // desde «Lo mío» y se vuelve ahí. Sin esta línea, abrir la solicitud
   // apagaba las cuatro celdas y la barra parecía de otra aplicación.
   // `/servicios/soy-proveedor` es la pestaña «Mi ficha», aunque su ruta
