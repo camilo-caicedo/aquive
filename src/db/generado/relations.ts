@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { catalogoItems, ofrecimientos, perfiles, sugerenciasItem, conversaciones, entregas, organizaciones, entidades, solicitudes, solicitudesContacto, municipios, zonas, invitacionesOrganizacion, identidades, accesosIdentidad, mensajes, servidores, administradores, pushSuscripciones, pushOfertadores, solicitudItems, respuestas, catalogoOficios, referencias, proveedores, accesosReferencia, respuestasServicio, solicitudesServicio, serviciosPrestados, resenas, chatsServicio, mensajesServicio, imagenes, publicacionesMuro, productos, destapesContacto, proveedorOficios, miembrosOrganizacion } from "./schema";
+import { catalogoItems, ofrecimientos, perfiles, sugerenciasItem, conversaciones, entregas, organizaciones, entidades, solicitudes, solicitudesContacto, municipios, zonas, invitacionesOrganizacion, identidades, accesosIdentidad, mensajes, servidores, administradores, pushSuscripciones, pushOfertadores, solicitudItems, respuestas, catalogoOficios, referencias, proveedores, accesosReferencia, respuestasServicio, solicitudesServicio, serviciosPrestados, resenas, chatsServicio, mensajesServicio, imagenes, publicacionesMuro, productos, codigosAcceso, destapesContacto, proveedorOficios, miembrosOrganizacion } from "./schema";
 import { usersInAuth } from "../tipos";
 
 export const ofrecimientosRelations = relations(ofrecimientos, ({one}) => ({
@@ -48,6 +48,7 @@ export const perfilesRelations = relations(perfiles, ({one, many}) => ({
 	respuestas: many(respuestas),
 	proveedores: many(proveedores),
 	publicacionesMuros: many(publicacionesMuro),
+	codigosAccesos: many(codigosAcceso),
 	destapesContactos: many(destapesContacto),
 	miembrosOrganizacions_aprobadoPor: many(miembrosOrganizacion, {
 		relationName: "miembrosOrganizacion_aprobadoPor_perfiles_id"
@@ -163,6 +164,7 @@ export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
 	accesosReferencias: many(accesosReferencia),
 	proveedores: many(proveedores),
 	imagenes: many(imagenes),
+	codigosAccesos: many(codigosAcceso),
 }));
 
 export const solicitudesContactoRelations = relations(solicitudesContacto, ({one}) => ({
@@ -479,6 +481,17 @@ export const productosRelations = relations(productos, ({one}) => ({
 	proveedore: one(proveedores, {
 		fields: [productos.proveedorId],
 		references: [proveedores.id]
+	}),
+}));
+
+export const codigosAccesoRelations = relations(codigosAcceso, ({one}) => ({
+	usersInAuth: one(usersInAuth, {
+		fields: [codigosAcceso.creadoPor],
+		references: [usersInAuth.id]
+	}),
+	perfile: one(perfiles, {
+		fields: [codigosAcceso.perfilId],
+		references: [perfiles.id]
 	}),
 }));
 

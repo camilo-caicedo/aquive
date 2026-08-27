@@ -7,6 +7,7 @@ import {
   Building2,
   ClipboardList,
   Wrench,
+  UserPlus,
   Users,
   ScrollText,
 } from 'lucide-react'
@@ -143,8 +144,17 @@ export default async function AdminPage() {
             ],
           },
           {
-            titulo: 'Organizaciones',
+            titulo: 'Personas y organizaciones',
             colas: [
+              {
+                // La puerta de quien no tiene cuenta de Google (ADR 0006).
+                // Sin esta cola, exigir cuenta para todo deja fuera a buena
+                // parte del rebusque.
+                href: '/admin/cuentas',
+                Icono: UserPlus,
+                etiqueta: 'Cuentas',
+                detalle: 'Dar de alta a quien no tiene Google',
+              },
               {
                 href: '/admin/aliados',
                 Icono: Users,

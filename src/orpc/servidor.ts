@@ -7,6 +7,7 @@ import { db } from '@/db/cliente'
 import type { Contexto } from './contexto'
 import * as chat from '@/server/chat/hilo'
 import * as comunidad from '@/server/comunidad/muro'
+import * as cuentas from '@/server/cuentas/alta'
 import * as productos from '@/server/comunidad/productos'
 import * as imagenes from '@/server/imagenes/recorrido'
 import * as moderacion from '@/server/moderacion/comandos'
@@ -56,6 +57,30 @@ export const enrutador = os.router({
   },
   moderacion: {
     reportar: os.moderacion.reportar.handler(({ input }) => moderacion.reportar(db, input)),
+  },
+  cuentas: {
+    crear: os.cuentas.crear.handler(async ({ input, context, errors }) => {
+      try {
+        return await cuentas.crear(db, input, { usuarioId: context.usuarioId })
+      } catch (e) {
+        if (e instanceof cuentas.CuentaRechazada) {
+          throw errors.RECHAZADO({ data: { motivo: e.message } })
+        }
+        throw e
+      }
+    }),
+    regenerar: os.cuentas.regenerar.handler(async ({ input, context, errors }) => {
+      try {
+        return await cuentas.regenerar(db, input.perfil_id, {
+          usuarioId: context.usuarioId,
+        })
+      } catch (e) {
+        if (e instanceof cuentas.CuentaRechazada) {
+          throw errors.RECHAZADO({ data: { motivo: e.message } })
+        }
+        throw e
+      }
+    }),
   },
   comunidad: {
     muro: os.comunidad.muro.handler(({ input }) => comunidad.muro(db, input)),

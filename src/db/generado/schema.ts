@@ -1126,6 +1126,26 @@ export const pqr = pgTable("pqr", {
 	check("pqr_tipo_check", sql`tipo = ANY (ARRAY['peticion'::text, 'queja'::text, 'reclamo'::text, 'sugerencia'::text])`),
 ]);
 
+export const codigosAcceso = pgTable("codigos_acceso", {
+	perfilId: uuid("perfil_id").primaryKey().notNull(),
+	codigoHash: text("codigo_hash").notNull(),
+	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	creadoPor: uuid("creado_por"),
+	usadoAt: timestamp("usado_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	foreignKey({
+			columns: [table.creadoPor],
+			foreignColumns: [usersInAuth.id],
+			name: "codigos_acceso_creado_por_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.perfilId],
+			foreignColumns: [perfiles.id],
+			name: "codigos_acceso_perfil_id_fkey"
+		}).onDelete("cascade"),
+	unique("codigos_acceso_codigo_hash_key").on(table.codigoHash),
+]);
+
 export const destapesContacto = pgTable("destapes_contacto", {
 	solicitudId: uuid("solicitud_id").notNull(),
 	perfilId: uuid("perfil_id").notNull(),
