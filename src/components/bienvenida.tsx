@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import isotipo from '@/../docs/marca/isotipo-carrito.png'
+import { FranjaSombrilla } from '@/components/franja-sombrilla'
 
 /**
  * Pantalla 01. Lo primero que ve quien llega sin sesión.
@@ -35,15 +36,7 @@ import isotipo from '@/../docs/marca/isotipo-carrito.png'
 export function Bienvenida() {
   return (
     <div data-sin-cromo className="min-h-dvh">
-      {/* Los cuatro gajos de la sombrilla, arriba del todo. Es lo que hace
-          que la pantalla se reconozca antes de leer una palabra. Decorativa:
-          no informa nada que no esté escrito debajo. */}
-      <div className="flex h-2 w-full" aria-hidden="true">
-        <span className="bg-familia-azul flex-1" />
-        <span className="bg-familia-amarillo flex-1" />
-        <span className="bg-familia-verde flex-1" />
-        <span className="bg-familia-rojo flex-1" />
-      </div>
+      <FranjaSombrilla />
 
       <main className="mx-auto flex max-w-md flex-col px-5 py-8">
         {/* El isotipo en círculo. El PNG no tiene canal alfa —trae fondo

@@ -8,6 +8,7 @@ import { servidor } from '@/orpc/local'
 import { BarraInferior, Navegacion, type Coordinacion } from '@/components/navegacion'
 import { BotonAvisos } from '@/components/boton-avisos'
 import { BotonInstalar } from '@/components/boton-instalar'
+import { FranjaSombrilla } from '@/components/franja-sombrilla'
 import type { EstadoEncabezado, IndiceAdmin } from '@/lib/types'
 
 export async function Encabezado() {
@@ -143,6 +144,11 @@ export async function Encabezado() {
       </div>
 
       <Navegacion coordinacion={coordinacion} sinLeer={mensajesSinLeer} />
+
+      {/* Los cuatro gajos cierran el encabezado y separan la marca del
+          contenido. Estaba solo en la bienvenida, que era la única pantalla
+          donde se reconocía la sombrilla sin leer. */}
+      <FranjaSombrilla />
     </header>
 
     <BarraInferior coordinacion={coordinacion} sinLeer={mensajesSinLeer} />
