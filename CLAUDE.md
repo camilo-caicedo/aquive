@@ -19,8 +19,9 @@ comisión y sin mover dinero por la plataforma. Cinco cosas:
    producto cuelga de la ficha de quien lo vende: así aparece con el nombre
    y la autorización que esa persona ya firmó, se contacta por su mismo
    teléfono y se borra con ella.
-4. **Fundación.** Entregas coordinadas, hilos acompañados y lectura de datos
-   sensibles con bitácora.
+4. **Centros de acopio.** Lugares físicos con dirección y horario donde se
+   dejan donaciones y productos, y que registran lo que entra y lo que sale.
+   Los lleva el rol de aliado (ADR 0008).
 5. **Moderación.** Colas de trabajo, verificación de matrículas y revisión de
    imágenes.
 
@@ -38,6 +39,9 @@ archivo, y detrás de él:
 | `docs/decisiones/0001-*.md` | Backend en TypeScript, contrato tipado |
 | `docs/decisiones/0002-*.md` | Identidad visual, tokens, tipografía |
 | `docs/decisiones/0003-*.md` | Flujo, alcance, chat e imágenes |
+| `docs/decisiones/0006-*.md` | **Cuenta para todo** |
+| `docs/decisiones/0007-*.md` | Se retira el flujo acompañado |
+| `docs/decisiones/0008-*.md` | El aliado es un centro de acopio |
 | `docs/marca/AquiVe-Flujo.dc.html` | Prototipo de las 40 pantallas |
 | `docs/marca/Manual-de-Marca-AquiVe.pdf` | Manual de marca |
 | `docs/PENDIENTES-LEGALES.md` | Bloqueantes que no son código |
@@ -129,6 +133,7 @@ Nunca `estado = 'eliminada'`.
 | Publicación del muro | mientras su dueño la deje |
 | Producto de «Hecho en el barrio» | mientras su dueño lo deje |
 | Ficha de prestador | permanente, hasta que la borre o la suspenda un admin |
+| Cuenta creada por un admin | hasta que su dueño la borre |
 | Chat | con el pedido que lo abrió |
 | Código de servicio sin usar | 30 días |
 
@@ -160,10 +165,14 @@ filtro de patrones que **rechaza el envío** con mensaje explicativo.
 | Descripción del muro y de producto | 300 |
 | Mensaje de chat | 500 |
 
-Quien **pide** —un servicio o un insumo— sigue publicando sin cuenta y sin dar
-datos: oficio o categoría, municipio, zona, urgencia, capacidad de pago y la
-nota filtrada. Esa asimetría con quien ofrece **se sostiene en el modelo de
-datos**, no en que la interfaz se acuerde.
+Quien **pide** —un servicio o un insumo— publica con cuenta, desde el ADR
+0006. Lo que se le pide sigue siendo lo mismo y nada más: oficio o categoría,
+municipio, zona, urgencia, capacidad de pago y la nota filtrada. **Tener
+cuenta no es dar datos**: su nombre no se publica y su solicitud no lo lleva.
+
+⚠ Esto reemplaza la asimetría anterior, en la que quien pedía publicaba sin
+cuenta y volvía con un token. El ADR 0006 dice qué se pierde con el cambio y
+por qué se aceptó.
 
 ### 5 · La reputación se gana con un servicio, no con una opinión
 
@@ -309,7 +318,7 @@ diferencia entre «el código no debería» y «la base no lo acepta».
 | 2 · Eliminar el acceso a datos desde el navegador | en curso — quedan ~28 archivos, casi todos en admin y aliado |
 | 3 · Contrato oRPC con las primeras lecturas | **hecho** — Servicios, chat, comunidad, moderación |
 | 4 · Migrar lecturas, luego escrituras | en curso |
-| 5 · Cron y cifrado fuera del motor | parcial — el cron de imágenes huérfanas ya está fuera; el cifrado sigue en el motor |
+| 5 · Cron y cifrado fuera del motor | el cron de imágenes huérfanas está fuera; **el cifrado se retira con el flujo acompañado** (ADR 0007) |
 | 6 · better-auth; espacios de trabajo de npm | pendiente |
 | 7 · App Expo sobre el contrato | pendiente |
 
@@ -317,23 +326,26 @@ Actualiza esta tabla al avanzar.
 
 ## Autenticación
 
-**Quien pide → token portador, sin cuenta.** 32 bytes base64url; se guarda solo
-`sha256(token)`; se muestra una vez. Con él ve respuestas, renueva y borra lo
-suyo. Ya es un Bearer token, así que sirve igual desde móvil.
+**Todo exige cuenta** (ADR 0006). Publicar una solicitud, un producto o una
+donación, y recibir cualquier cosa. Una sola manera de ser dueño de algo:
+`perfil_id`.
 
-**Quien ofrece, aliados y admins → cuenta.** Se persiste únicamente el
-identificador opaco del proveedor de identidad. El correo se descarta.
+**Quien entra con Google.** Se persiste únicamente el identificador opaco del
+proveedor de identidad. El correo se descarta.
 
-**Prestador dado de alta por la fundación → su propio token.** Buena parte del
-rebusque no tiene cuenta, y es a quien el módulo quiere incluir. Ese token es su
-puerta de habeas data: sin él, la fundación sería dueña de los datos de otra
-persona. Un `check (num_nonnulls(perfil_id, token_hash) = 1)` impide que un
-prestador tenga dos dueños o ninguno.
+**Quien no tiene Google → cuenta creada por un admin.** Se le crea un usuario
+de verdad con un identificador sintético —no su correo, que se sigue sin
+guardar— y se le entrega un enlace de acceso en mano o por WhatsApp. Buena
+parte del rebusque no tiene cuenta de Google, y es a quien el módulo quiere
+incluir: sin esta puerta, exigir cuenta lo dejaría fuera.
 
-**Aliados.** Trabajan en una organización dada de alta por un admin; nunca se
+**La PQR es la única excepción, y no se toca.** Es el canal de habeas data
+(mínimo legal 3, Ley 1581 arts. 14 y 15) y condicionarlo a tener cuenta lo
+haría inejercible. `pqr.token_hash` se queda.
+
+**Aliados.** Llevan un centro de acopio dado de alta por un admin; nunca se
 auto-registran. El slug identifica, el código autoriza —y va en el path—. Sin
-ficha pública. `puede_ver_identidad` no se otorga solo: siempre es un acto
-explícito de un coordinador sobre una persona concreta, y queda registrado.
+ficha personal pública: la ficha es la del centro.
 
 ## Pantallas
 
@@ -350,7 +362,7 @@ portar**.
 | Perfil | 16–25 | `app/perfil/**`, `app/mis-solicitudes` (20), `app/servicios/mi-perfil/[token]` |
 | Insumos | 26 Publicar, 27 Tablero, 28 Responder, 29 Mi solicitud | `app/publicar`, `app/ayudas`, `app/responder/[codigo]`, `app/solicitud/[token]` |
 | Comunidad | 30 Muro, 31 Hecho en el barrio | `app/muro`, `app/barrio` (con `publicar` y `mios`) |
-| Fundación | 32 Entregas, 33 Hilo, 34 Dato sensible | `app/aliado`, `app/aliado/conversacion/[id]` (33), `hoja-dato-sensible.tsx` (34) |
+| Acopio | Lista pública, panel del centro | `app/acopios`, `app/aliado` |
 | Moderación | 35 Colas, 36 Matrículas, imágenes | `app/admin`, `app/admin/matriculas`, `app/admin/imagenes` |
 | Información | 37 Ayuda, 38 PQR, 39 Contactos, 40 Quiénes somos | `app/ayuda`, `app/pqr`, `app/contacto`, `app/quienes-somos` |
 

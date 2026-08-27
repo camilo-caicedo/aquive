@@ -27,6 +27,9 @@ El ADR se escribe **antes** del código. Si una tarea te obliga a contradecir
 | [0003](0003-nuevo-flujo-alcance-e-imagenes.md) | Flujo nuevo, alcance nuevo y subida de imágenes | aceptada |
 | [0004](0004-mapa-con-ubicacion-del-prestador.md) | El mapa muestra dónde está cada prestador | aceptada |
 | [0005](0005-sin-esqueleto-de-carga.md) | Fuera el esqueleto de carga, porque impedía hidratar | aceptada |
+| [0006](0006-cuenta-para-todo.md) | Cuenta para todo | aceptada |
+| [0007](0007-fuera-el-flujo-acompanado.md) | Se retira el flujo acompañado | aceptada |
+| [0008](0008-el-aliado-es-un-centro-de-acopio.md) | El aliado es un centro de acopio | aceptada |
 
 ## Plantilla
 

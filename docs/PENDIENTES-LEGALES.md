@@ -10,29 +10,33 @@ historia de git, y lo que seguía pendiente quedó aquí.
 
 Marca con `[x]` lo que se cierre, y anota la fecha.
 
-## Bloquean el flujo acompañado
+## Bloquean el uso de datos personales reales
 
-- [ ] **Contrato de transmisión de datos** entre la Fundación Nodo Social
-      (responsable) y AquíVe (encargada), artículo 25 del Decreto 1377 de 2013.
-      Debe decir explícitamente que la plataforma no retiene datos tras el
-      cierre y que la custodia de las planillas exportadas es de la fundación.
-      Borrador en `docs/legal/CONTRATO-TRANSMISION.md`.
-- [ ] **Registro en el RNBD** ante la SIC, a nombre de la fundación.
-- [ ] **Canal de habeas data** — consulta 10 días hábiles, reclamo y supresión
-      15 (artículos 14 y 15 de la Ley 1581). Solo aplica al flujo acompañado.
-      Tiene que existir y tiene que leerlo alguien: un canal que nadie abre es
-      peor que no tenerlo.
-- [ ] **Texto de autorización** del flujo acompañado, en
-      `docs/legal/PLANTILLAS.md`, revisado por abogado. No hay que rehacer el
-      documento entero: el aviso actual sigue siendo cierto para el flujo
-      directo. Hay que **agregar** la sección del flujo acompañado y el aviso
-      sobre falta de verificación.
-- [ ] **Verificación de la fundación**, fuera de la app: certificado de
+- [ ] **Registro en el RNBD** ante la SIC, a nombre de la fundación. Es el
+      único de esta lista que bloquea operar con datos reales, sin más
+      matices.
+- [x] **Canal de habeas data** — consulta 10 días hábiles, reclamo y
+      supresión 15 (artículos 14 y 15 de la Ley 1581). Existe en `/pqr`,
+      con los plazos legales, y **es la única puerta que no exige cuenta**
+      (ADR 0006): condicionar ese derecho a tener cuenta de Google lo haría
+      inejercible. Falta lo que no es código: que alguien lo lea.
+- [ ] **Texto de autorización de la cuenta creada por un admin**, en
+      `docs/legal/PLANTILLAS.md`, revisado por abogado. Desde el ADR 0006 un
+      admin crea cuentas para quien no tiene Google, y esa persona tiene que
+      autorizar en ese momento, con el guion leído en voz alta y la versión
+      del texto guardada con su fecha.
+- [ ] **Verificación del centro de acopio**, fuera de la app: certificado de
       existencia del RUES, NIT y persona de contacto. Es lo que el admin mira
-      **antes** de crear la organización; por eso no hay cola de verificación
-      dentro del producto.
+      **antes** de crearlo; por eso no hay cola de verificación dentro del
+      producto.
 
-Hasta que estos cinco estén, la pantalla que pide identidad no se despliega.
+> **Retirados el 26 de agosto de 2026, con el flujo acompañado (ADR 0007).**
+> El *contrato de transmisión de datos* entre la fundación (responsable) y
+> AquíVe (encargada) existía porque una fundación aliada trataba datos de
+> terceros dentro de la plataforma. Ya no hay fundaciones aliadas ni datos
+> de terceros: se borran `identidades` y `accesos_identidad`, y con ellas
+> el supuesto que lo exigía. Si algún día vuelve algo parecido, el borrador
+> sigue en `docs/legal/CONTRATO-TRANSMISION.md`.
 
 ## Bloquean el módulo de Servicios
 
@@ -118,10 +122,19 @@ a la vez.** Tienen efecto legal y hay que resolverlas antes de publicar nada.
       `privacidad` afirma en negrita, más abajo, «**No pedimos ni guardamos
       números de documento**». Una de las dos es falsa. `CLAUDE.md` y el
       esquema dicen que `identidades` sí lo guarda.
+
+      **Se resuelve al tocar los textos** (ADR 0007): la tabla
+      `identidades` se borra, así que la frase verdadera pasa a ser la de la
+      negrita — no se piden ni se guardan documentos. Lo que hay que hacer es
+      quitar el §4b, no elegir entre las dos.
 - [ ] **«No guardamos ningún dato tuyo».** El título del régimen de emergencia
       lo afirma, y dos párrafos después el mismo documento explica el contacto
       opcional y el flujo acompañado con nombre y teléfono cifrados. El título
       se contradice consigo mismo.
+
+      Con el flujo acompañado fuera (ADR 0007) queda solo el contacto
+      opcional, así que basta con que el título deje de prometer un absoluto:
+      hay que decir qué se guarda, que es poco.
 - [ ] **Quién opera y quién responde.** `terminos` dice «operado por
       {RESPONSABLE}» mientras `privacidad` ya nombra a la fundación como
       responsable del tratamiento. Puede ser correcto —operador y responsable
