@@ -1,3 +1,10 @@
+/* Los tres son dependencias de package.json y NINGUNO se importa desde
+   TypeScript: se importan desde aquí. Un barrido de 'quién importa qué'
+   sobre .ts y .tsx no los ve, y ya pasó una vez — se retiró `shadcn` de
+   package.json por 'sin importadores', el build local siguió pasando
+   porque node_modules lo tenía de antes, y reventó en Vercel al instalar
+   limpio: «Can't resolve shadcn/tailwind.css». Antes de quitar uno de
+   estos, buscar también en .css. */
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
