@@ -35,7 +35,15 @@ export default async function CategoriasPage({
         Cada color es un lado de la sombrilla.
       </p>
 
-      <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+      {/* Dos por línea también en el teléfono, y por eso la cinta apila el
+          nombre y el conteo en vez de ponerlos lado a lado: a 320 px de
+          ancho la tarjeta mide unos 140, y «Confección y arreglos · 1
+          persona» en una sola línea se parte por donde caiga.
+
+          Sin `line-clamp`: la tarjeta crece hasta que quepan sus oficios.
+          Las dos de una fila se igualan solas por el `h-full`, así que una
+          categoría con tres oficios no deja hueco al lado. */}
+      <ul className="mt-6 grid grid-cols-2 gap-3">
         {categorias.map((c) => {
           const familia = familiaDe(c.grupo)
           const href = municipio
@@ -47,17 +55,17 @@ export default async function CategoriasPage({
                 href={href}
                 className={`block h-full overflow-hidden rounded-2xl bg-card ${SOMBRA_CARTEL[familia]} transition-transform hover:-translate-y-0.5`}
               >
-                <div
-                  className={`flex items-baseline justify-between gap-2 px-4 py-2 ${CINTA[familia]} ${TINTA_CINTA[familia]}`}
-                >
-                  <span className="font-heading text-base font-extrabold">{c.nombre}</span>
+                <div className={`px-3 py-2 ${CINTA[familia]} ${TINTA_CINTA[familia]}`}>
+                  <p className="font-heading text-base leading-tight font-extrabold text-balance">
+                    {c.nombre}
+                  </p>
                   {/* El número va con la palabra al lado, nunca solo: «6» sin
                       «cerca» no dice si son personas, oficios o kilómetros. */}
-                  <span className="text-sm font-semibold">
+                  <p className="text-sm font-semibold">
                     {c.cuantos} {c.cuantos === 1 ? 'persona' : 'personas'}
-                  </span>
+                  </p>
                 </div>
-                <p className="line-clamp-2 px-4 py-3 text-base text-muted-foreground">
+                <p className="px-3 py-3 text-base text-muted-foreground">
                   {c.ejemplos.join(', ')}
                 </p>
               </Link>
