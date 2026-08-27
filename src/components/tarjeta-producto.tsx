@@ -81,7 +81,7 @@ export function TarjetaProducto({ producto }: { producto: Producto }) {
               className="bg-primary text-primary-foreground shadow-boton active:shadow-boton-hundido inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full px-4 text-base font-semibold transition-all active:translate-x-[2px] active:translate-y-[2px]"
             >
               <MessageCircle className="size-5" aria-hidden="true" />
-              Escribir
+              WhatsApp
             </a>
             <a
               href={`tel:${producto.telefono}`}

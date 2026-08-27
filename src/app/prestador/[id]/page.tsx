@@ -20,6 +20,7 @@ import {
 } from '@/lib/servicios'
 import { InsigniasProveedor } from '@/components/insignias-proveedor'
 import { BarraContacto } from '@/components/barra-contacto'
+import { BotonChat } from '@/components/boton-chat'
 import { MarcoFlujo } from '@/components/marco-flujo'
 import { CriteriosResena } from '@/components/criterios-resena'
 import { BotonReportar } from '@/components/boton-reportar'
@@ -122,7 +123,12 @@ export default async function FichaPage({
           falta repetir el aviso: ya está arriba y en la barra de contacto.
 
           Sin productos no se dibuja la sección: un «no vende nada» no le
-          sirve a nadie. */}
+          sirve a nadie.
+
+          Cada producto lleva su botón de chat. La ficha en sí no abre uno
+          —una ficha no caduca, y un hilo colgado de ella no moriría nunca,
+          ADR 0009— pero un producto sí, y es de lo que se quiere hablar.
+          WhatsApp y llamar están en la barra de abajo, para toda la ficha. */}
       {productos.length > 0 && (
         <>
           <h2 className="font-heading mt-6 text-2xl font-extrabold tracking-tight">
@@ -132,17 +138,23 @@ export default async function FichaPage({
             {productos.map((p) => (
               <li
                 key={p.id}
-                className="rounded-lg border border-border p-3"
+                className="flex items-start gap-3 rounded-lg border border-border p-3"
               >
-                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                  <span className="text-base font-medium">{p.nombre}</span>
-                  <span className="text-base text-muted-foreground">
-                    {precioDeProducto(p.modo, p.precio_desde, p.unidad)}
-                  </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                    <span className="text-base font-medium">{p.nombre}</span>
+                    <span className="text-base text-muted-foreground">
+                      {precioDeProducto(p.modo, p.precio_desde, p.unidad)}
+                    </span>
+                  </div>
+                  {p.detalle && (
+                    <p className="mt-1 text-sm text-muted-foreground">{p.detalle}</p>
+                  )}
                 </div>
-                {p.detalle && (
-                  <p className="mt-1 text-sm text-muted-foreground">{p.detalle}</p>
-                )}
+                <BotonChat
+                  origen={{ tipo: 'producto', id: p.id }}
+                  etiqueta={`Escribir por AquíVe sobre ${p.nombre}`}
+                />
               </li>
             ))}
           </ul>
