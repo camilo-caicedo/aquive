@@ -8,6 +8,27 @@ import { z } from 'zod'
 // cambió: municipio, barrio, categoría, los ítems y la nota filtrada. Ni
 // nombre, ni teléfono, ni dirección exacta.
 
+/**
+ * Las ocho categorías de insumos. Gemelas del CHECK de `solicitudes`.
+ *
+ * ⚠ Esto era `z.string().trim().min(1).max(40)`. La base sí lo restringe, así
+ * que una categoría inventada no entraba — pero llegaba como violación de
+ * restricción de Postgres, un error crudo que la pantalla no puede explicar.
+ * La regla de producto 4 pide validación en servidor con mensaje.
+ */
+export const CategoriaInsumo = z.enum([
+  'alimentacion',
+  'aseo',
+  'salud',
+  'abrigo',
+  'cocina',
+  'otros',
+  'servicios',
+  'mascotas',
+])
+
+export type CategoriaInsumo = z.infer<typeof CategoriaInsumo>
+
 const errores = {
   RECHAZADO: {
     status: 400,
@@ -55,7 +76,7 @@ export const contratoInsumos = {
       z.object({
         municipio: z.string().regex(/^[0-9]{5}$/),
         barrio: z.string().trim().min(2).max(80),
-        categoria: z.string().trim().min(1).max(40),
+        categoria: CategoriaInsumo,
         nota: z.string().trim().max(140).optional(),
         puede_recoger: z.boolean().optional(),
         items: z

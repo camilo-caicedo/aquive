@@ -129,7 +129,13 @@ export async function publicar(
           .insert(sugerenciasItem)
           // `origen` dice de dónde vino la propuesta: la revisa un admin
           // antes de que entre al catálogo.
-          .values({ nombrePropuesto: item.sugerencia, origen: 'solicitud' })
+          //
+          // ⚠ Decía 'solicitud', que **no está en el CHECK** —los valores son
+          // 'solicitante', 'ofertador', 'aliado' y 'proveedor'—, así que
+          // publicar un insumo escribiendo un ítem a mano reventaba con una
+          // violación de restricción. Con un ítem del catálogo funcionaba, y
+          // por eso no se veía.
+          .values({ nombrePropuesto: item.sugerencia, origen: 'solicitante' })
           .returning({ id: sugerenciasItem.id })
 
         await db.insert(solicitudItems).values({

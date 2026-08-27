@@ -169,7 +169,10 @@ export async function registrarMovimiento(
     }
     const [sug] = await db
       .insert(sugerenciasItem)
-      .values({ nombrePropuesto: texto, origen: 'entrega' })
+      // 'aliado': lo escribe alguien del equipo de un centro. Los cuatro
+      // valores del CHECK son 'solicitante', 'ofertador', 'aliado' y
+      // 'proveedor'.
+      .values({ nombrePropuesto: texto, origen: 'aliado' })
       .returning({ id: sugerenciasItem.id })
     sugerenciaId = sug.id
   }
