@@ -51,7 +51,9 @@ export type EstadoSolicitud =
   | 'cumplida'
 export type FlujoSolicitud = 'directo' | 'acompanado'
 export type OrigenItem = 'semilla' | 'admin' | 'aliado' | 'sugerencia'
-export type OrigenSugerencia = 'solicitante' | 'ofertador' | 'aliado'
+// Gemelo del CHECK de `sugerencias_item.origen`. El cuarto valor lleva ahí
+// desde siempre y faltaba aquí; con el ADR 0013 se empezó a usar.
+export type OrigenSugerencia = 'solicitante' | 'ofertador' | 'aliado' | 'proveedor'
 export type EstadoSugerencia = 'pendiente' | 'aprobada' | 'rechazada' | 'fusionada'
 export type AccionSugerencia = 'aprobar' | 'rechazar' | 'fusionar'
 export type TipoObjetoReporte =
@@ -525,12 +527,25 @@ export type OfrecimientoInput = { cantidad?: number | null; disponible?: boolean
 // propuesto: están ahí para que fusionar cueste lo mismo que aprobar.
 export interface SugerenciaPendiente {
   id: string
+  /**
+   * De qué catálogo es. `item` es de insumos, `oficio` es una
+   * subcategoría de servicios (ADR 0013). La columna y su CHECK existían
+   * desde antes y no los usaba nadie.
+   */
+  tipo: 'item' | 'oficio'
   nombre_propuesto: string
+  /** Solo con `tipo: 'item'`. Las ocho categorías de insumos. */
   categoria_sugerida: Categoria | null
+  /** Solo con `tipo: 'oficio'`. Las doce del ADR 0012. */
+  grupo_sugerido: string | null
   origen: OrigenSugerencia
   creada_at: string
   usos: number
-  parecidos: Array<{ id: string; nombre: string; categoria: Categoria }>
+  /**
+   * Lo parecido que ya existe, del catálogo que le toca. Es la decisión
+   * real —«¿esto ya está con otro nombre?»— y por eso va primero.
+   */
+  parecidos: Array<{ id: string; nombre: string; categoria: string }>
 }
 
 export interface Database {
@@ -1363,12 +1378,21 @@ export interface Database {
         Args: Record<string, never>
         Returns: Json
       }
+      // ⚠ `p_riesgo` no tiene valor por defecto en la base y aquí tampoco
+      // se le pone uno: es obligatorio al aprobar un oficio, porque la
+      // regla de producto 7 cuelga de esa columna (ADR 0013).
       resolver_sugerencia: {
         Args: {
           p_sugerencia_id: string
           p_accion: AccionSugerencia
           p_item_destino?: string | null
           p_nota?: string | null
+          /** El texto ya corregido por quien modera. */
+          p_nombre_final?: string | null
+          /** Solo para oficios: su categoría de las doce. */
+          p_grupo?: string | null
+          /** Solo para oficios, y solo al aprobar. */
+          p_riesgo?: 'bajo' | 'alto' | null
         }
         Returns: string | null
       }
