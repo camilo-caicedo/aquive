@@ -10,12 +10,16 @@ import { Chat } from '@/components/chat'
 export const metadata = { title: 'Chat' }
 
 /**
- * El hilo. Pantalla 12, y ahora para los cuatro módulos.
+ * El hilo. Pantalla 12, y ahora para los cinco orígenes.
  *
  * Una sola ruta y un solo componente para los dos lados: quién eres lo
  * decide el servidor por de qué eres dueño, no por la ruta por la que
  * entras. Antes vivía en `/servicios/chat/[respuesta]`, cuando servicios era
  * lo único que tenía chat.
+ *
+ * ⚠ El `MarcoFlujo` del hilo lo monta `Chat`, no esta pantalla: necesita
+ * meter el campo de escribir en la barra fija de abajo, y esa barra es el
+ * `accion` del marco. Aquí solo queda el de la puerta cerrada.
  *
  * La sesión se mira aquí y no en el dominio porque sin ella hay que decir
  * algo, no devolver un 404: quien toca «escribir» en un producto y aterriza
@@ -54,14 +58,5 @@ export default async function ChatPage({
   const hilo = await servidor.chat.leer({ origen: origen.data })
   if (!hilo) notFound()
 
-  return (
-    <MarcoFlujo titulo={hilo.con} volver="/mensajes">
-      {hilo.asunto && (
-        <p className="font-heading mb-4 text-xs font-bold tracking-[0.085em] text-muted-foreground uppercase">
-          {hilo.asunto}
-        </p>
-      )}
-      <Chat origen={origen.data} hiloInicial={hilo} />
-    </MarcoFlujo>
-  )
+  return <Chat origen={origen.data} hiloInicial={hilo} volver="/mensajes" />
 }
