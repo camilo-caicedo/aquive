@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { BadgeCheck, Check, ChevronRight, Eye, Hash, Pencil } from 'lucide-react'
+import { BadgeCheck, Camera, Check, ChevronRight, Eye, Hash, Pencil } from 'lucide-react'
 import { MarcoFlujo } from '@/components/marco-flujo'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { Carne } from '@/components/carne'
@@ -166,6 +166,29 @@ export default async function SoyProveedorPage() {
             <span className="block text-lg font-medium">Dar un código</span>
             <span className="block text-base text-muted-foreground">
               Para que te califiquen al terminar
+            </span>
+          </span>
+          <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        </Link>
+
+        {/* La foto va aparte y no dentro de «Editar», por la misma razón por
+            la que la ubicación va aparte: publicar una cara es otra
+            finalidad que publicar un nombre (artículo 9). Metida entre
+            nombre y presentación, la casilla se marcaría de paso mientras
+            se corrige otra cosa. */}
+        <Link
+          href="/perfil/foto"
+          className="shadow-canto flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
+        >
+          <span className="bg-familia-amarillo flex size-10 shrink-0 items-center justify-center rounded-full text-foreground">
+            <Camera className="size-5" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-lg font-medium">Mi foto</span>
+            <span className="block text-base text-muted-foreground">
+              {proveedor.acepto_foto && proveedor.foto
+                ? 'Publicada en tu ficha'
+                : 'Opcional. Ayuda a que te reconozcan'}
             </span>
           </span>
           <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />

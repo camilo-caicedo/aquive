@@ -88,7 +88,7 @@ export default async function SolicitudesDeServicioPage({
           cuelga. */}
       <CabeceraPantalla titulo="Solicitudes">
         <p className="mt-1 text-base text-muted-foreground">
-          Quién está pidiendo un oficio. Si tienes cómo hacerlo, escríbele.
+          Qué está pidiendo la gente. Si tienes cómo hacerlo, escríbele.
         </p>
 
         <HojaFiltros
