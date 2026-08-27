@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import type { SolicitudAdmin } from '@/lib/types'
+import { useAviso } from '@/components/avisos'
 
 /**
  * Una solicitud en la cola de administración: comentarla, y cerrarla
@@ -26,6 +27,7 @@ import type { SolicitudAdmin } from '@/lib/types'
  */
 function FilaSolicitud({ s }: { s: SolicitudAdmin }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [nota, setNota] = useState(s.nota_admin ?? '')
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -53,6 +55,7 @@ function FilaSolicitud({ s }: { s: SolicitudAdmin }) {
     }
 
     setEnviando(false)
+    avisar('Marcada como revisada')
     router.refresh()
   }
 

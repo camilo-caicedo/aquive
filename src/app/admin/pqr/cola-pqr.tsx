@@ -9,6 +9,7 @@ import { NOMBRE_TIPO_PQR, type PqrEnCola } from '@/contrato/pqr'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useAviso } from '@/components/avisos'
 
 /**
  * Una fila por PQR, con el plazo dicho en días y en palabras.
@@ -26,6 +27,7 @@ function plazoLegible(dias: number) {
 
 export function ColaPqr({ pqr }: { pqr: PqrEnCola[] }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [abierta, setAbierta] = useState<string | null>(null)
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -39,6 +41,7 @@ export function ColaPqr({ pqr }: { pqr: PqrEnCola[] }) {
       await rpc.pqr.responder({ id, respuesta: texto.trim() })
       setAbierta(null)
       setTexto('')
+      avisar('Respuesta enviada')
       router.refresh()
     } catch (e) {
       const motivo =

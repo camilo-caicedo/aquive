@@ -71,11 +71,17 @@ export function SubirImagen({
     <div>
       {previa ? (
         <div className="relative">
+          {/* ⚠ Era `h-48 object-cover`, que recortaba: de una foto vertical
+              se veía una franja del centro, y quien la sube no podía
+              comprobar qué estaba mandando. Con `object-contain` se ve
+              entera sea cual sea su forma, `bg-muted` rellena lo que sobra
+              a los lados con un token, y el tope de 70vh evita que una foto
+              de teléfono empuje el botón de guardar fuera de la pantalla. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={previa}
             alt="La imagen que elegiste"
-            className="shadow-canto h-48 w-full rounded-2xl object-cover"
+            className="shadow-canto max-h-[70vh] w-full rounded-2xl bg-muted object-contain"
           />
           <button
             type="button"

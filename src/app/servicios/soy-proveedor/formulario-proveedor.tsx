@@ -52,6 +52,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useAviso } from '@/components/avisos'
 import {
   Select,
   SelectContent,
@@ -286,6 +287,7 @@ export function FormularioProveedor({
   encabezado?: ReactNode
 }) {
   const router = useRouter()
+  const avisar = useAviso()
 
   const [nombre, setNombre] = useState(proveedor?.nombre_visible ?? '')
   const [tipo, setTipo] = useState<TipoProveedor>(proveedor?.tipo ?? 'persona')
@@ -553,6 +555,7 @@ export function FormularioProveedor({
       // la ficha publicada.
       router.push(proveedor ? '/servicios/soy-proveedor' : '/servicios/soy-proveedor/listo')
     }
+    avisar(proveedor ? 'Guardado' : 'Ficha publicada')
     router.refresh()
   }
 

@@ -558,6 +558,30 @@ en un rediseño:
     escrito en ese momento, y la pantalla dice después —no en letra pequeña—
     que la lectura quedó en bitácora.
 
+11. **La aplicación dice qué está pasando, siempre.** Tres momentos, tres
+    señales distintas:
+
+    - **Mientras va**: el botón cambia de texto —«Guardando…»— y se apaga. Un
+      botón apagado sin texto que cambie se lee como que el toque no registró,
+      y se vuelve a tocar.
+    - **Al terminar bien**: `useAviso()` de `components/avisos.tsx`, con lo que
+      pasó y no un «Listo» genérico. Va **solo donde la pantalla no lo dice
+      ya**: si la fila desaparece de la lista, eso es la confirmación y el
+      aviso encima es ruido.
+    - **Al terminar mal**: en línea, junto al campo, y **no se va solo**. Un
+      error que desaparece a los cuatro segundos obliga a repetir la acción
+      para volver a leerlo.
+
+    Al navegar, `BarraDeCarga` en el layout. ⚠ No es —ni puede ser— un
+    `loading.tsx`: el ADR 0005 lo retiró tras comprobar que dejaba la página
+    sin hidratar. Es una barra encima del árbol, sin `Suspense` y sin
+    `useSearchParams()`.
+
+12. **Lo que pone su fondo dentro de una cinta pone también su tinta.**
+    `TINTA_CINTA.azul` es `text-white` y se hereda, así que una píldora con
+    `bg-card` dentro salía blanca sobre blanca. La constante es
+    `PILDORA_EN_CINTA` en `lib/familias.ts`.
+
 ## Estilo de código
 
 - Español en UI, copy, nombres de tablas y columnas

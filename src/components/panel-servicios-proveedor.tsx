@@ -9,6 +9,7 @@ import type { Database } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useAviso } from '@/components/avisos'
 import {
   Select,
   SelectContent,
@@ -107,6 +108,7 @@ export function PanelServiciosProveedor({
   mostrar?: 'todo' | 'codigos' | 'resenas'
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [oficioId, setOficioId] = useState('')
   const [codigo, setCodigo] = useState<string | null>(null)
   const [respondiendo, setRespondiendo] = useState<string | null>(null)
@@ -156,6 +158,7 @@ export function PanelServiciosProveedor({
     }
     setRespondiendo(null)
     setReplica('')
+    avisar('Respuesta publicada')
     router.refresh()
   }
 

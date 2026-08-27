@@ -338,7 +338,7 @@ export function FormularioMuro({
 
       <div className="mt-6">
         <Button onClick={enviar} disabled={!puede} className="w-full">
-          Publicar
+          {enviando ? 'Publicando…' : 'Publicar'}
         </Button>
       </div>
     </MarcoFlujo>

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { HojaGestion, FilaPermiso } from '@/components/hoja-gestion'
 import type { AccionMiembro, InvitacionResumen, MiembroEquipo } from '@/lib/types'
+import { useAviso } from '@/components/avisos'
 
 function fecha(iso: string) {
   return new Date(iso).toLocaleString('es-CO', {
@@ -331,6 +332,7 @@ export function PanelEquipo({
   invitaciones: InvitacionResumen[]
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -353,6 +355,7 @@ export function PanelEquipo({
       return
     }
     setEnviando(false)
+    avisar('Invitación creada')
     router.refresh()
   }
 

@@ -263,6 +263,29 @@
   animation: subir-hoja 0.24s ease-out both;
 }
 
+/* La barra de carga al cambiar de pantalla. Solo `transform`, como todo lo
+   demás.
+
+   No llega nunca al 100 %: se frena cerca del final y se queda ahí hasta que
+   la pantalla nueva la desmonta. Una barra que llega al tope y sigue esperando
+   miente; una que se frena dice «voy, pero no sé cuánto falta», que es la
+   verdad — el servidor tarda lo que tarda (ADR 0005). */
+@keyframes avance {
+  0% {
+    transform: scaleX(0.02);
+  }
+  40% {
+    transform: scaleX(0.55);
+  }
+  100% {
+    transform: scaleX(0.92);
+  }
+}
+
+.barra-avance {
+  animation: avance 8s cubic-bezier(0.1, 0.6, 0.2, 1) forwards;
+}
+
 /* La barra de acción de un flujo, dentro de una hoja modal.
 
    `position: fixed` se mide contra la VENTANA, así que en una hoja que no

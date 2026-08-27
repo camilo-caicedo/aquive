@@ -8,6 +8,7 @@ import type { EstadoReferencia } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { HojaDatoSensible } from '@/components/hoja-dato-sensible'
+import { useAviso } from '@/components/avisos'
 
 export interface ReferenciaPorRevisar {
   id: string
@@ -45,6 +46,7 @@ export function PanelReferencias({
   referencias: ReferenciaPorRevisar[]
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [confirmandoRef, setConfirmandoRef] = useState<string | null>(null)
   const [datos, setDatos] = useState<Record<string, { nombre: string; telefono: string }>>({})
   const [ocupado, setOcupado] = useState(false)
@@ -83,6 +85,7 @@ export function PanelReferencias({
       setError(rpcError.message)
       return
     }
+    avisar('Referencia resuelta')
     router.refresh()
   }
 

@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { rpc } from '@/orpc/cliente'
 import { Button } from '@/components/ui/button'
 import { NOMBRE_GRUPO, type MiSolicitudServicio } from '@/contrato/servicios'
+import { useAviso } from '@/components/avisos'
 
 /**
  * Las solicitudes de servicio propias.
@@ -19,6 +20,7 @@ import { NOMBRE_GRUPO, type MiSolicitudServicio } from '@/contrato/servicios'
  */
 export function ListaMias({ solicitudes }: { solicitudes: MiSolicitudServicio[] }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [pendiente, iniciar] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -26,7 +28,10 @@ export function ListaMias({ solicitudes }: { solicitudes: MiSolicitudServicio[] 
     setError(null)
     rpc.servicios
       .gestionarSolicitud({ id, accion })
-      .then(() => iniciar(() => router.refresh()))
+      .then(() => {
+        avisar(accion === 'renovar' ? 'Renovada 15 días' : 'Cerrada')
+        iniciar(() => router.refresh())
+      })
       .catch((e) => {
         const motivo =
           e && typeof e === 'object' && 'data' in e

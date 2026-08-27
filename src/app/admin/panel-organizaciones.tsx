@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/combobox'
 import type { InvitacionResumen, OrganizacionAdmin, TipoOrganizacion } from '@/lib/types'
 import { LIMITE_MUNICIPIOS, mapaDeNombres, nombreConDepartamento, type MunicipioBasico as Municipio } from '@/lib/municipios'
+import { useAviso } from '@/components/avisos'
 
 const TIPOS: { valor: TipoOrganizacion; etiqueta: string }[] = [
   { valor: 'fundacion', etiqueta: 'Fundación' },
@@ -41,6 +42,7 @@ function FormularioOrganizacion({
   onGuardado: () => void
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [nombre, setNombre] = useState(organizacion?.nombre ?? '')
   const [tipo, setTipo] = useState<TipoOrganizacion>(organizacion?.tipo ?? 'fundacion')
   const [nit, setNit] = useState(organizacion?.nit ?? '')
@@ -92,6 +94,7 @@ function FormularioOrganizacion({
     }
 
     onGuardado()
+    avisar('Centro guardado')
     router.refresh()
   }
 
@@ -350,6 +353,7 @@ function FichaOrganizacion({
   onEditar: () => void
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -363,6 +367,7 @@ function FichaOrganizacion({
       return
     }
     setEnviando(false)
+    avisar('Guardado')
     router.refresh()
   }
 

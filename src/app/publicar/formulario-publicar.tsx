@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useAviso } from '@/components/avisos'
 import {
   Combobox,
   ComboboxContent,
@@ -57,6 +58,7 @@ export function FormularioPublicar({
   turnstileSiteKey: string
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [paso, setPaso] = useState<1 | 2 | 3>(1)
   const [municipio, setMunicipio] = useState('')
   const [barrio, setBarrio] = useState('')
@@ -182,6 +184,7 @@ export function FormularioPublicar({
         puede_recoger: puedeRecoger,
       })
 
+      avisar('Solicitud publicada')
       router.push('/mis-solicitudes')
       router.refresh()
     } catch (e) {

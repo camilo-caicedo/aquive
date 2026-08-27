@@ -6,6 +6,8 @@ import { Encabezado } from "@/components/encabezado";
 import { AvisoPruebas } from "@/components/aviso-pruebas";
 import { PieDePagina } from "@/components/pie-de-pagina";
 import { RastroDeNavegacion } from "@/components/volver";
+import { ProveedorDeAvisos } from "@/components/avisos";
+import { BarraDeCarga } from "@/components/barra-de-carga";
 
 // Cuerpo (ADR 0002). Reemplaza a Figtree.
 //
@@ -92,12 +94,16 @@ export const metadata: Metadata = {
     ? { robots: { index: false, follow: false } }
     : {}),
   appleWebApp: { capable: true, title: "AquíVe", statusBarStyle: "default" },
+  // Todos salen del arte del diseñador con `node scripts/iconos.mjs`. Los de
+  // 16 y 32 px no son el cuadrado reducido: son dibujos aparte, porque a ese
+  // tamaño el completo es una mancha.
   icons: {
     icon: [
+      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
       { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
       { url: "/icono-192.png", sizes: "192x192", type: "image/png" },
     ],
-    apple: "/icono-192.png",
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
   },
 };
 
@@ -150,17 +156,23 @@ export default function RootLayout({ children, modal }: LayoutProps<"/">) {
         >
           Saltar al contenido
         </a>
-        <RastroDeNavegacion />
-        <AvisoPruebas />
-        <Encabezado />
-        <div id="contenido" className="flex-1">
-          {children}
-        </div>
-        {/* Las pantallas interceptadas: la ficha y los formularios de flujo
-            se abren encima de lo que ya estaba, sin desmontarlo. Fuera de
-            una intercepción esto es `null`. Ver `hoja-modal.tsx`. */}
-        {modal}
-        <PieDePagina />
+        {/* El proveedor envuelve TODO lo que puede guardar algo, incluido
+            `{modal}`: los formularios de flujo se abren interceptados y
+            desde ahí también se guarda. */}
+        <ProveedorDeAvisos>
+          <BarraDeCarga />
+          <RastroDeNavegacion />
+          <AvisoPruebas />
+          <Encabezado />
+          <div id="contenido" className="flex-1">
+            {children}
+          </div>
+          {/* Las pantallas interceptadas: la ficha y los formularios de flujo
+              se abren encima de lo que ya estaba, sin desmontarlo. Fuera de
+              una intercepción esto es `null`. Ver `hoja-modal.tsx`. */}
+          {modal}
+          <PieDePagina />
+        </ProveedorDeAvisos>
       </body>
     </html>
   );

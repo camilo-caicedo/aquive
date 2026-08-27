@@ -120,9 +120,12 @@ export function Chat({
                 type="submit"
                 disabled={enviando || cuerpo.trim().length === 0}
                 className="bg-primary text-primary-foreground shadow-boton active:shadow-boton-hundido flex size-14 shrink-0 items-center justify-center rounded-full transition-all active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-40"
-                aria-label="Enviar mensaje"
+                aria-label={enviando ? 'Enviando el mensaje' : 'Enviar mensaje'}
               >
-                <Send className="size-6" aria-hidden="true" />
+                <Send
+                  className={`size-6 ${enviando ? 'punto-urgente' : ''}`}
+                  aria-hidden="true"
+                />
               </button>
             </div>
             {/* La línea corta va aquí, pegada al campo, porque es donde se

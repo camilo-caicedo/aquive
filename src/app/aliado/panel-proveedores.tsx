@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useAviso } from '@/components/avisos'
 import {
   Select,
   SelectContent,
@@ -106,6 +107,7 @@ export function PanelProveedores({
   origen: string
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [abierto, setAbierto] = useState(false)
   const [llamado, setLlamado] = useState(false)
   const [nombre, setNombre] = useState('')
@@ -201,6 +203,7 @@ export function PanelProveedores({
     })
     setGuardando(false)
     limpiar()
+    avisar('Ficha registrada')
     router.refresh()
   }
 
@@ -214,6 +217,7 @@ export function PanelProveedores({
       setError(rpcError.message)
       return
     }
+    avisar(valor ? 'Teléfono verificado' : 'Verificación retirada')
     router.refresh()
   }
 

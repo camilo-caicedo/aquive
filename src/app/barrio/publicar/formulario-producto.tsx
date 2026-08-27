@@ -8,6 +8,7 @@ import { rpc } from '@/orpc/cliente'
 import { MarcoFlujo } from '@/components/marco-flujo'
 import { SubirImagen } from '@/components/subir-imagen'
 import { Button } from '@/components/ui/button'
+import { useAviso } from '@/components/avisos'
 import {
   Select,
   SelectContent,
@@ -54,6 +55,7 @@ const MODOS: { valor: Modo; etiqueta: string; ayuda: string }[] = [
  */
 export function FormularioProducto({ producto }: { producto?: MiProducto }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [nombre, setNombre] = useState(producto?.nombre ?? '')
   const [detalle, setDetalle] = useState(producto?.detalle ?? '')
   const [modo, setModo] = useState<Modo>(producto?.modo ?? 'normal')
@@ -92,6 +94,7 @@ export function FormularioProducto({ producto }: { producto?: MiProducto }) {
       } else {
         await rpc.comunidad.publicarProducto(campos)
       }
+      avisar(producto ? 'Producto guardado' : 'Producto publicado')
       router.push('/barrio/mios')
       router.refresh()
     } catch (e) {

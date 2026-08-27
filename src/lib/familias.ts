@@ -53,6 +53,22 @@ export const SOMBRA_CARTEL: Record<Familia, string> = {
   rojo: 'shadow-cartel-rojo',
 }
 
+/**
+ * Una píldora encima de una cinta.
+ *
+ * ⚠ Lleva su tinta dentro, y por eso existe. `TINTA_CINTA.azul` es
+ * `text-white`, y una píldora con su propio `bg-card` **hereda esa tinta**:
+ * blanco sobre blanco, invisible. Pasó con el sello «HOY» de la tira del
+ * inicio y solo se veía en las tarjetas azules, que son una de cada cuatro.
+ *
+ * La regla, para lo que venga después: cualquier cosa que ponga su propio
+ * fondo dentro de una cinta tiene que poner también su propia tinta. Negro
+ * sobre blanco da 18,9:1, así que la píldora se lee en las cuatro familias
+ * sin tener que pensarlo cada vez.
+ */
+export const PILDORA_EN_CINTA =
+  'shadow-canto rounded-full bg-card text-foreground'
+
 /** El relleno de la cinta superior. Siempre con texto negro encima. */
 export const CINTA: Record<Familia, string> = {
   azul: 'bg-familia-azul',

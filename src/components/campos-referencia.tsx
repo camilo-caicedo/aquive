@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useAviso } from '@/components/avisos'
 import {
   Select,
   SelectContent,
@@ -72,6 +73,7 @@ export function CamposReferencia({
   token?: string
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [abierto, setAbierto] = useState(false)
   const [nombre, setNombre] = useState('')
   const [telefono, setTelefono] = useState('')
@@ -118,6 +120,7 @@ export function CamposReferencia({
     setDeclaro(false)
     setAbierto(false)
     setGuardando(false)
+    avisar('Referencia agregada. La llamamos para confirmarla.')
     router.refresh()
   }
 

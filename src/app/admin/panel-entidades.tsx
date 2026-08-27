@@ -24,6 +24,7 @@ import {
   ComboboxList,
 } from '@/components/ui/combobox'
 import type { CoberturaEntidad, Database, EnlaceEntidad, Json } from '@/lib/types'
+import { useAviso } from '@/components/avisos'
 import {
   LIMITE_MUNICIPIOS,
   nombreConDepartamento,
@@ -66,6 +67,7 @@ function FormularioEntidad({
   hojaId: string
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const contenedor = useContenedorHoja()
   const [nombre, setNombre] = useState(entidad?.nombre ?? '')
   const [subtitulo, setSubtitulo] = useState(entidad?.subtitulo ?? '')
@@ -144,6 +146,7 @@ function FormularioEntidad({
 
     setEnviando(false)
     cerrar()
+    avisar('Entidad guardada')
     router.refresh()
   }
 
@@ -409,6 +412,7 @@ function FormularioEntidad({
 /** Publicar o retirar, y borrar con su confirmación. */
 function AccionesEntidad({ entidad }: { entidad: EntidadAdmin }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [confirmando, setConfirmando] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -429,6 +433,7 @@ function AccionesEntidad({ entidad }: { entidad: EntidadAdmin }) {
       return
     }
 
+    avisar('Guardado')
     router.refresh()
   }
 

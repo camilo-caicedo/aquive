@@ -6,6 +6,7 @@ import { BadgeCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useAviso } from '@/components/avisos'
 
 /**
  * Las dos decisiones de una matrícula: marcarla verificada o suspender el
@@ -31,6 +32,7 @@ export function AccionesServidor({
   suspendido?: boolean
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [confirmando, setConfirmando] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -51,6 +53,7 @@ export function AccionesServidor({
       return
     }
 
+    avisar('Verificado')
     router.refresh()
   }
 
@@ -70,6 +73,7 @@ export function AccionesServidor({
       return
     }
 
+    avisar(valor ? 'Suspendido' : 'Suspensión levantada')
     router.refresh()
   }
 

@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { TipoObjetoReporte } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useAviso } from '@/components/avisos'
 
 /**
  * Qué se lleva por delante «Borrar contenido», por tipo de objeto.
@@ -38,6 +39,7 @@ export function AccionesReporte({
   existe: boolean
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [confirmando, setConfirmando] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -60,6 +62,7 @@ export function AccionesReporte({
       return
     }
 
+    avisar('Reporte resuelto')
     router.refresh()
   }
 

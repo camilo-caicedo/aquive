@@ -135,11 +135,11 @@ export function MiUbicacion({
 
       <div className="mt-4 flex flex-wrap gap-3">
         <Button onClick={() => guardar(false)} disabled={guardando || !acepto || !punto}>
-          Guardar mi punto
+          {guardando ? 'Guardando…' : 'Guardar mi punto'}
         </Button>
         {enElMapa && (
           <Button variant="outline" onClick={() => guardar(true)} disabled={guardando}>
-            Quitarme del mapa
+            {guardando ? 'Un momento…' : 'Quitarme del mapa'}
           </Button>
         )}
       </div>

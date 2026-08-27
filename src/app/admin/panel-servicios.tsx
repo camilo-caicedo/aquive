@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { NOMBRE_GRUPO } from '@/contrato/servicios'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { PanelZonas, type ZonaPropuesta } from '@/components/panel-zonas'
+import { useAviso } from '@/components/avisos'
 
 export interface PanelServiciosDatos {
   por_verificar: {
@@ -92,6 +93,7 @@ export function PanelServicios({
   cola: ColaServicios
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [borrando, setBorrando] = useState<string | null>(null)
@@ -116,6 +118,7 @@ export function PanelServicios({
       setError(rpcError.message)
       return
     }
+    avisar('Guardado')
     router.refresh()
   }
 

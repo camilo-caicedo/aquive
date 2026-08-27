@@ -31,6 +31,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useAviso } from '@/components/avisos'
 import {
   Select,
   SelectContent,
@@ -103,6 +104,7 @@ export function FormularioRegistro({
   ofrecimientos: OfrecimientoResumen[]
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   // Un aliado llega aquí con `tipo = 'aliado'`, que no es una de las dos
   // opciones de esta pantalla: nadie se declara aliado, eso pasa al unirse
   // a una organización. Se arranca en 'ofertador' para que el formulario
@@ -330,6 +332,7 @@ export function FormularioRegistro({
     // en una pestaña que nadie abría: de cinco perfiles en producción, uno
     // solo los tenía activos, y por eso las solicitudes se represaban.
     router.push('/registro/listo')
+    avisar('Guardado')
     router.refresh()
   }
 

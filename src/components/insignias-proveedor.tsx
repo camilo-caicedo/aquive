@@ -52,8 +52,12 @@ export function InsigniasProveedor({
         </li>
       )}
 
+      {/* `text-foreground` explícito, como sus tres hermanas: era la única
+          de las cuatro que no ponía su tinta, y dentro de una cinta azul
+          heredaría el blanco. Hoy esta no se pinta ahí, pero es el mismo
+          fallo esperando a que alguien la mueva. */}
       {mostrar !== 'telefono' && esMicroempresa && (
-        <li className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-sm">
+        <li className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-sm text-foreground">
           <Store className="size-4 shrink-0" aria-hidden="true" />
           Negocio registrado
         </li>

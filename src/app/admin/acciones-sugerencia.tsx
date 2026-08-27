@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import type { SugerenciaPendiente } from '@/lib/types'
+import { useAviso } from '@/components/avisos'
 
 /**
  * Las tres salidas de una sugerencia: fusionar, aprobar o rechazar.
@@ -36,6 +37,7 @@ import type { SugerenciaPendiente } from '@/lib/types'
  */
 export function AccionesSugerencia({ sugerencia }: { sugerencia: SugerenciaPendiente }) {
   const router = useRouter()
+  const avisar = useAviso()
   const esOficio = sugerencia.tipo === 'oficio'
 
   // El texto se puede corregir antes de aprobar: casi siempre es una tilde
@@ -73,6 +75,13 @@ export function AccionesSugerencia({ sugerencia }: { sugerencia: SugerenciaPendi
       return
     }
 
+    avisar(
+      accion === 'aprobar'
+        ? 'Aprobado y creado en el catálogo'
+        : accion === 'fusionar'
+          ? 'Fusionado con lo que ya existía'
+          : 'Rechazado',
+    )
     router.refresh()
   }
 

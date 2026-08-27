@@ -3,7 +3,13 @@ import { ChevronRight, HandHelping, Heart, ShoppingBag, Wrench } from 'lucide-re
 
 import { servidor } from '@/orpc/local'
 import { GRUPOS, precioLegible, zonaLegible } from '@/lib/servicios'
-import { CINTA, SOMBRA_CARTEL, TINTA_CINTA, familiaDe } from '@/lib/familias'
+import {
+  CINTA,
+  PILDORA_EN_CINTA,
+  SOMBRA_CARTEL,
+  TINTA_CINTA,
+  familiaDe,
+} from '@/lib/familias'
 import {
   TiraEntidades,
   TiraProductos,
@@ -115,7 +121,7 @@ export async function Inicio({ municipio }: { municipio?: string }) {
                       </span>
                       {/* «Hoy» es literal: esta tira solo trae a quien declaró
                           este día y esta franja. */}
-                      <span className="shadow-canto shrink-0 rounded-full bg-card px-2 py-0.5 text-xs font-bold">
+                      <span className={`${PILDORA_EN_CINTA} shrink-0 px-2 py-0.5 text-xs font-bold`}>
                         HOY
                       </span>
                     </div>

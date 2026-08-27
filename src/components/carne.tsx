@@ -1,5 +1,11 @@
 import { InsigniasProveedor } from '@/components/insignias-proveedor'
-import { CINTA, SOMBRA_CARTEL, TINTA_CINTA, familiaDe } from '@/lib/familias'
+import {
+  CINTA,
+  PILDORA_EN_CINTA,
+  SOMBRA_CARTEL,
+  TINTA_CINTA,
+  familiaDe,
+} from '@/lib/familias'
 import { GRUPOS } from '@/lib/servicios'
 import type { GrupoOficio } from '@/lib/types'
 
@@ -88,7 +94,7 @@ export function Carne({
             </span>
           )}
           {etiquetaGrupo && (
-            <span className="shadow-canto inline-flex min-h-8 items-center rounded-full bg-card px-3 text-sm">
+            <span className={`${PILDORA_EN_CINTA} inline-flex min-h-8 items-center px-3 text-sm`}>
               {etiquetaGrupo}
             </span>
           )}

@@ -131,7 +131,9 @@ export function FormularioPqr() {
       volver="/ayuda"
       accion={
         <Button onClick={enviar} disabled={!puede} className="w-full">
-          Enviar la {NOMBRE_TIPO_PQR[tipo].toLowerCase()}
+          {enviando
+            ? 'Enviando…'
+            : `Enviar la ${NOMBRE_TIPO_PQR[tipo].toLowerCase()}`}
         </Button>
       }
     >

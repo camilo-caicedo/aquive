@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useHidratado } from '@/components/hidratado'
+import { useAviso } from '@/components/avisos'
 import {
   Select,
   SelectContent,
@@ -47,6 +48,7 @@ export function PanelEntregas({
   movimientos: Movimiento[]
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const hidratado = useHidratado()
 
   const [direccion, setDireccion] = useState<'entra' | 'sale'>('entra')
@@ -84,6 +86,7 @@ export function PanelEntregas({
       setSugerencia('')
       setCantidad('')
       setCodigo('')
+      avisar('Anotado')
       router.refresh()
     } catch (e) {
       const motivo =

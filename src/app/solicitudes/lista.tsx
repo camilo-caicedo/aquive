@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { HojaAccion } from '@/components/hoja-accion'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useAviso } from '@/components/avisos'
 
 export interface SolicitudDeServicio {
   id: string
@@ -54,6 +55,7 @@ export function ListaSolicitudesServicio({
   puedeResponder: boolean
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [abierta, setAbierta] = useState<string | null>(null)
   const [mensaje, setMensaje] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -79,6 +81,7 @@ export function ListaSolicitudesServicio({
     }
     setAbierta(null)
     setMensaje('')
+    avisar('Respuesta enviada')
     router.refresh()
   }
 

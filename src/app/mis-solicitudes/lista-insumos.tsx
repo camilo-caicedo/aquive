@@ -10,6 +10,7 @@ import { categoria } from '@/lib/catalogo'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useHidratado } from '@/components/hidratado'
+import { useAviso } from '@/components/avisos'
 
 /**
  * Las solicitudes de insumos propias.
@@ -32,6 +33,7 @@ export function ListaInsumos({
   solicitudes: MiSolicitudInsumos[]
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [pendiente, iniciar] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -43,7 +45,10 @@ export function ListaInsumos({
     setError(null)
     rpc.insumos
       .gestionar({ id, accion })
-      .then(() => iniciar(() => router.refresh()))
+      .then(() => {
+        avisar(accion === 'renovar' ? 'Renovada 72 horas' : 'Marcada como recibida')
+        iniciar(() => router.refresh())
+      })
       .catch((e) => {
         const motivo =
           e && typeof e === 'object' && 'data' in e
@@ -129,7 +134,11 @@ export function ListaInsumos({
                   disabled={pendiente}
                   onClick={() => actuar(s.id, 'renovar')}
                 >
-                  {abierta ? 'Renovar 72 horas' : 'Volver a abrirla'}
+                  {pendiente
+                    ? 'Un momento…'
+                    : abierta
+                      ? 'Renovar 72 horas'
+                      : 'Volver a abrirla'}
                 </Button>
                 {abierta && (
                   <Button
@@ -137,7 +146,7 @@ export function ListaInsumos({
                     disabled={pendiente}
                     onClick={() => actuar(s.id, 'cerrar')}
                   >
-                    Ya me llegó
+                    {pendiente ? 'Un momento…' : 'Ya me llegó'}
                   </Button>
                 )}
               </div>
