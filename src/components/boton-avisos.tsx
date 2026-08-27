@@ -8,9 +8,6 @@ import {
   BellOff,
   BellRing,
   MessageSquare,
-  UserPlus,
-  Clock,
-  HeartHandshake,
   ShieldAlert,
   type LucideIcon,
 } from 'lucide-react'
@@ -49,11 +46,20 @@ function haceCuanto(iso: string) {
  * estado es por navegador, así que apagarlo aquí no lo apaga en el otro
  * teléfono.
  */
+/**
+ * ⚠ Las claves son las que `mis_avisos()` emite de verdad, no las que un
+ * día emitió. Tenía cinco —`mensaje`, `invitacion`, `sin_atender`,
+ * `acompanamiento`, `reporte`— y la función solo devuelve `respuesta`:
+ * `ICONO_AVISO[aviso.tipo]` era `undefined` y `<Icono />` con `undefined`
+ * es «Element type is invalid», o sea la campana caída en cuanto alguien
+ * tuviera un aviso.
+ *
+ * El `?? ` de abajo es el cinturón: si mañana la base emite un tipo nuevo
+ * antes de que esto lo conozca, se pinta un icono genérico en vez de tirar
+ * la pantalla.
+ */
 const ICONO_AVISO: Record<Aviso['tipo'], LucideIcon> = {
-  mensaje: MessageSquare,
-  invitacion: UserPlus,
-  sin_atender: Clock,
-  acompanamiento: HeartHandshake,
+  respuesta: MessageSquare,
   reporte: ShieldAlert,
 }
 
@@ -299,7 +305,7 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
         ) : (
           <ul>
             {avisos.map((aviso, i) => {
-              const Icono = ICONO_AVISO[aviso.tipo]
+              const Icono = ICONO_AVISO[aviso.tipo] ?? Bell
               const dia = diaDe(aviso.fecha)
               const nuevoDia = i === 0 || diaDe(avisos[i - 1].fecha) !== dia
               return (

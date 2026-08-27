@@ -651,11 +651,17 @@ export interface SolicitudPorAtender {
   pendientes: Array<{ nombre: string; cantidad: number; unidad: string }>
 }
 
-// Una fila de `mis_avisos()`. No hay tabla de notificaciones: los cinco
-// tipos se derivan de datos que ya existen, y lo «nuevo» es todo lo
-// posterior a `perfiles.avisos_vistos_at`.
+// Una fila de `mis_avisos()`. No hay tabla de notificaciones: los tipos se
+// derivan de datos que ya existen, y lo «nuevo» es todo lo posterior a
+// `perfiles.avisos_vistos_at`.
+//
+// ⚠ Eran cinco tipos y la función solo emite dos. Los otros tres —`mensaje`,
+// `invitacion`, `sin_atender`— eran del flujo acompañado, y `v5-b1` reescribió
+// `mis_avisos()` sin ellos. El desajuste no era cosmético: el mapa de iconos
+// de la campana se indexaba por este tipo, así que el único aviso que la base
+// sí emite daba `undefined` y `<Icono />` reventaba la campana entera.
 export interface Aviso {
-  tipo: 'mensaje' | 'invitacion' | 'sin_atender' | 'acompanamiento' | 'reporte'
+  tipo: 'respuesta' | 'reporte'
   texto: string
   fecha: string
   /** A dónde lleva. Cada aviso es un enlace, no un resumen que toca buscar. */

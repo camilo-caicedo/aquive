@@ -1,9 +1,17 @@
-import { and, desc, eq, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, sql } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
-import { catalogoItems, solicitudItems, solicitudes, sugerenciasItem } from '@/db/esquema'
+import {
+  catalogoItems,
+  municipios,
+  perfiles,
+  respuestas,
+  solicitudItems,
+  solicitudes,
+  sugerenciasItem,
+} from '@/db/esquema'
 import { contienePII, validarNota } from '@/lib/validacion'
-import type { MiSolicitudInsumos } from '@/contrato/insumos'
+import type { MiSolicitudInsumos, SolicitudParaResponder } from '@/contrato/insumos'
 
 export class InsumoRechazado extends Error {}
 
@@ -185,8 +193,13 @@ export async function gestionar(
   const filas = await db
     .update(solicitudes)
     .set(
+      // ⚠ 'cumplida', no 'cerrada'. El CHECK de la tabla nunca aceptó
+      // 'cerrada': cerrar una solicitud reventaba con una violación de
+      // restricción. Es el mismo fallo que ya se arregló en el gemelo de
+      // servicios; esta copia se quedó rota, y no se notaba porque ninguna
+      // pantalla llamaba a esta función.
       accion === 'cerrar'
-        ? { estado: 'cerrada' }
+        ? { estado: 'cumplida' }
         : {
             expiraAt: sql`now() + interval '72 hours'`,
             confirmadaAt: sql`now()`,
@@ -198,4 +211,162 @@ export async function gestionar(
 
   if (filas.length === 0) throw new InsumoRechazado('Esto no es tuyo.')
   return { ok: true }
+}
+
+/**
+ * Una solicitud por su código, para quien va a responderla.
+ *
+ * ⚠ De aquí NO sale ni un dato de quien pidió. Ni nombre, ni teléfono, ni
+ * dirección: solo el municipio y el barrio, que es la granularidad máxima
+ * que la regla de producto 10 permite para quien pide. Lo que devuelve es
+ * lo mismo que ya está impreso en el tablero público.
+ */
+export async function porCodigo(
+  db: BaseDeDatos,
+  codigo: string,
+  llave: { usuarioId: string | null },
+): Promise<SolicitudParaResponder | null> {
+  const [s] = await db
+    .select({
+      id: solicitudes.id,
+      codigo: solicitudes.codigo,
+      municipio: solicitudes.municipio,
+      municipioNombre: municipios.nombre,
+      barrio: solicitudes.barrio,
+      categoria: solicitudes.categoria,
+      nota: solicitudes.nota,
+      puedeRecoger: solicitudes.puedeRecoger,
+      creadaAt: solicitudes.creadaAt,
+      expiraAt: solicitudes.expiraAt,
+      estado: solicitudes.estado,
+    })
+    .from(solicitudes)
+    .leftJoin(municipios, eq(municipios.codigoDane, solicitudes.municipio))
+    .where(eq(solicitudes.codigo, codigo.trim().toUpperCase()))
+    .limit(1)
+
+  // Vencida o ya cumplida se trata como inexistente: enseñar una solicitud
+  // que no se puede responder es ofrecer un botón que no va a funcionar.
+  if (!s || s.estado !== 'abierta' || new Date(s.expiraAt) <= new Date()) return null
+
+  const filas = await db
+    .select({
+      nombre: sql<string>`coalesce(${catalogoItems.nombre}, ${sugerenciasItem.nombrePropuesto})`,
+      cantidad: solicitudItems.cantidad,
+      unidad: sql<string>`coalesce(${catalogoItems.unidad}, ${sugerenciasItem.unidadSugerida}, 'unidad')`,
+      orden: sql<number>`coalesce(${catalogoItems.orden}, 9999)`,
+    })
+    .from(solicitudItems)
+    .leftJoin(catalogoItems, eq(catalogoItems.id, solicitudItems.itemId))
+    .leftJoin(sugerenciasItem, eq(sugerenciasItem.id, solicitudItems.sugerenciaId))
+    .where(eq(solicitudItems.solicitudId, s.id))
+    .orderBy(asc(sql`coalesce(${catalogoItems.orden}, 9999)`))
+
+  const yaRespondi = llave.usuarioId
+    ? (
+        await db
+          .select({ id: respuestas.id })
+          .from(respuestas)
+          .where(
+            and(eq(respuestas.solicitudId, s.id), eq(respuestas.autorId, llave.usuarioId)),
+          )
+          .limit(1)
+      ).length > 0
+    : false
+
+  return {
+    id: s.id,
+    codigo: s.codigo,
+    municipio: s.municipio,
+    municipio_nombre: s.municipioNombre,
+    barrio: s.barrio,
+    categoria: s.categoria,
+    nota: s.nota,
+    puede_recoger: s.puedeRecoger,
+    creada_at: String(s.creadaAt),
+    expira_at: String(s.expiraAt),
+    items: filas.map((f) => ({
+      nombre: f.nombre,
+      cantidad: Number(f.cantidad),
+      unidad: f.unidad,
+    })),
+    ya_respondi: yaRespondi,
+  }
+}
+
+/**
+ * «Yo puedo ayudar».
+ *
+ * ⚠ Esto era la RPC `responder_solicitud`. Sube al dominio por el ADR 0001
+ * y porque el Route Handler que la envolvía —`/api/respuestas`— existía solo
+ * para avisar por push después de insertar, y ese aviso llevaba a una ruta
+ * por token que el ADR 0006 borró.
+ *
+ * Las comprobaciones son las mismas que hacía la función de Postgres, en el
+ * mismo orden, y una de ellas importa más de lo que parece: **sin contacto
+ * público no se puede responder**. Todo el flujo directo se sostiene sobre
+ * que quien pidió pueda escribirle a quien ofreció; una respuesta sin
+ * teléfono es una promesa que el otro lado no puede recoger.
+ */
+export async function responder(
+  db: BaseDeDatos,
+  entrada: { codigo: string; mensaje: string; puede_llevar?: boolean },
+  llave: { usuarioId: string | null },
+): Promise<{ solicitud_id: string }> {
+  if (!llave.usuarioId) {
+    throw new InsumoRechazado('Para responder necesitas entrar con tu cuenta.')
+  }
+
+  const mensaje = entrada.mensaje.trim()
+  // El mismo filtro que la nota y el chat (regla de producto 4). Aquí es
+  // donde más tienta escribir el teléfono, porque es literalmente lo que se
+  // quiere dar — y por eso el perfil ya lo publica y el mensaje no lo lleva.
+  const error = validarNota(mensaje)
+  if (error) throw new InsumoRechazado(error)
+
+  const [perfil] = await db
+    .select({
+      id: perfiles.id,
+      suspendido: perfiles.suspendido,
+      contacto: perfiles.contactoPublico,
+    })
+    .from(perfiles)
+    .where(eq(perfiles.id, llave.usuarioId))
+    .limit(1)
+
+  if (!perfil) throw new InsumoRechazado('Necesitas completar tu perfil antes de responder.')
+  if (perfil.suspendido) throw new InsumoRechazado('Tu cuenta está suspendida.')
+  if (!perfil.contacto) {
+    throw new InsumoRechazado(
+      'Para responder necesitas un teléfono público en tu perfil: si no, quien pidió no tiene a dónde escribirte.',
+    )
+  }
+
+  const [s] = await db
+    .select({ id: solicitudes.id, estado: solicitudes.estado, expiraAt: solicitudes.expiraAt })
+    .from(solicitudes)
+    .where(eq(solicitudes.codigo, entrada.codigo.trim().toUpperCase()))
+    .limit(1)
+
+  if (!s || s.estado !== 'abierta' || new Date(s.expiraAt) <= new Date()) {
+    throw new InsumoRechazado('Esa solicitud ya no está disponible.')
+  }
+
+  // Una por persona y solicitud. Lo garantiza además un `unique` en la
+  // tabla; esto solo está para poder decirlo con palabras.
+  const [ya] = await db
+    .select({ id: respuestas.id })
+    .from(respuestas)
+    .where(and(eq(respuestas.solicitudId, s.id), eq(respuestas.autorId, llave.usuarioId)))
+    .limit(1)
+  if (ya) throw new InsumoRechazado('Ya respondiste esta solicitud.')
+
+  await db.insert(respuestas).values({
+    solicitudId: s.id,
+    autorId: llave.usuarioId,
+    mensaje,
+    puedeLlevar: entrada.puede_llevar === true,
+  })
+
+  return { solicitud_id: s.id }
 }

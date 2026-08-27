@@ -126,6 +126,19 @@ export const enrutador = os.router({
     mias: os.insumos.mias.handler(({ context }) =>
       insumos.mias(db, { usuarioId: context.usuarioId }),
     ),
+    porCodigo: os.insumos.porCodigo.handler(({ input, context }) =>
+      insumos.porCodigo(db, input.codigo, { usuarioId: context.usuarioId }),
+    ),
+    responder: os.insumos.responder.handler(async ({ input, context, errors }) => {
+      try {
+        return await insumos.responder(db, input, { usuarioId: context.usuarioId })
+      } catch (e) {
+        if (e instanceof insumos.InsumoRechazado) {
+          throw errors.RECHAZADO({ data: { motivo: e.message } })
+        }
+        throw e
+      }
+    }),
     gestionar: os.insumos.gestionar.handler(async ({ input, context, errors }) => {
       try {
         return await insumos.gestionar(db, input.id, input.accion, {
