@@ -40,7 +40,7 @@ export async function Inicio({ municipio }: { municipio?: string }) {
   ])
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-5">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-5">
       {/* Los tres módulos, de entrada y sin preámbulo. Antes había un título
           «Hoy en tu barrio» encima: una línea que no dice nada que no diga ya
           la fila de abajo, y que empujaba el contenido fuera del primer

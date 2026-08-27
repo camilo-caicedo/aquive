@@ -582,6 +582,28 @@ en un rediseño:
     `bg-card` dentro salía blanca sobre blanca. La constante es
     `PILDORA_EN_CINTA` en `lib/familias.ts`.
 
+13. **Cuanto más se ve algo, menos se mueve.** Es lo que decide dónde va el
+    movimiento, y no el gusto:
+
+    | Cuántas veces al día | Qué lleva |
+    | --- | --- |
+    | Decenas — la barra inferior, los enlaces de lista | Casi imperceptible. La barra solo crece el icono activo |
+    | De vez en cuando — hojas, modales, pestañas, listas | La entrada normal del proyecto |
+    | Raro — vacíos, confirmaciones, primera vez | Aquí vive el presupuesto de gracia |
+
+    Una barra de navegación que hace una gracia en cada toque cansa a la
+    tercera hora. Un estado vacío que se ve una vez al mes puede permitirse
+    una entrada escalonada.
+
+    El vocabulario está en `globals.css`: `--curva-entrada`, `--curva-suave`
+    y cuatro duraciones, ninguna por encima de 300 ms. **Van en `:root` y no
+    en `@theme`**, que poda lo que no se usa como clase de utilidad y los
+    dejaba vacíos.
+
+    Y lo de siempre, que aquí es lo que más fácil se rompe: **solo `opacity`
+    y `transform`**. La comprobación es de un minuto — recorrer los
+    `@keyframes` de la hoja en el navegador y mirar qué propiedades declaran.
+
 ## Estilo de código
 
 - Español en UI, copy, nombres de tablas y columnas

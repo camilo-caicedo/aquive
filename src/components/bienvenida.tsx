@@ -42,7 +42,7 @@ export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
     <div data-sin-cromo={conSesion ? undefined : true} className="min-h-dvh">
       <FranjaSombrilla />
 
-      <main className="mx-auto flex max-w-md flex-col px-5 py-8">
+      <main className="animar-pantalla mx-auto flex max-w-md flex-col px-5 py-8">
         {/* El isotipo en círculo. El PNG no tiene canal alfa —trae fondo
             blanco sólido— así que el círculo blanco no es un adorno: es lo
             que evita que se vea un cuadrado recortado sobre el crema.
