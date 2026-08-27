@@ -264,7 +264,6 @@ async function Equipo({
             <>
               <p className="mt-3 text-base text-muted-foreground">
                 Estás como {yo.rol === 'coordinador' ? 'coordinador' : 'parte del equipo'}
-                {yo.puede_ver_identidad && ' · puedes ver identidades'}
                 {yo.puede_moderar && ' · puedes moderar'}
               </p>
 

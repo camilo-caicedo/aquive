@@ -75,7 +75,7 @@ export default async function BitacoraPage() {
           <Estado
             Icono={ScrollText}
             titulo="Nadie ha leído nada todavía"
-            detalle="Aparece aquí cada vez que alguien abre una identidad o una referencia."
+            detalle="Aparece aquí cada vez que alguien abre una referencia."
           />
         </div>
       ) : (
@@ -97,7 +97,7 @@ export default async function BitacoraPage() {
                     </p>
                     {a.huerfano && (
                       <p className="mt-1 text-base text-muted-foreground">
-                        {a.tipo === 'identidad' ? 'La identidad' : 'La referencia'} ya se
+                        La referencia ya se
                         borró; el rastro se queda.
                       </p>
                     )}

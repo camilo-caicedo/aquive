@@ -124,27 +124,6 @@ export const entidades = pgTable("entidades", {
 	check("entidades_subtitulo_check", sql`(char_length(subtitulo) >= 1) AND (char_length(subtitulo) <= 120)`),
 ]);
 
-export const solicitudesContacto = pgTable("solicitudes_contacto", {
-	solicitudId: uuid("solicitud_id").primaryKey().notNull(),
-	nombre: text(),
-	telefono: text(),
-	correo: text(),
-	consentimientoVersion: text("consentimiento_version"),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	index("idx_solicitudes_contacto_solicitud").using("btree", table.solicitudId.asc().nullsLast().op("uuid_ops")),
-	foreignKey({
-			columns: [table.solicitudId],
-			foreignColumns: [solicitudes.id],
-			name: "solicitudes_contacto_solicitud_id_fkey"
-		}).onDelete("cascade"),
-	check("solicitudes_contacto_con_consentimiento", sql`consentimiento_version IS NOT NULL`),
-	check("solicitudes_contacto_correo_check", sql`(correo IS NULL) OR (correo ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'::text)`),
-	check("solicitudes_contacto_nombre_check", sql`(nombre IS NULL) OR ((char_length(nombre) >= 1) AND (char_length(nombre) <= 80))`),
-	check("solicitudes_contacto_telefono_check", sql`(telefono IS NULL) OR (telefono ~ '^[0-9+()\- ]{6,20}$'::text)`),
-	check("solicitudes_contacto_tiene_algo", sql`(nombre IS NOT NULL) OR (telefono IS NOT NULL) OR (correo IS NOT NULL)`),
-]);
-
 export const reportes = pgTable("reportes", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	tipoObjeto: text("tipo_objeto").notNull(),
@@ -1052,24 +1031,6 @@ export const codigosAcceso = pgTable("codigos_acceso", {
 			name: "codigos_acceso_perfil_id_fkey"
 		}).onDelete("cascade"),
 	unique("codigos_acceso_codigo_hash_key").on(table.codigoHash),
-]);
-
-export const destapesContacto = pgTable("destapes_contacto", {
-	solicitudId: uuid("solicitud_id").notNull(),
-	perfilId: uuid("perfil_id").notNull(),
-	destapadoAt: timestamp("destapado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.perfilId],
-			foreignColumns: [perfiles.id],
-			name: "destapes_contacto_perfil_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.solicitudId],
-			foreignColumns: [solicitudes.id],
-			name: "destapes_contacto_solicitud_id_fkey"
-		}).onDelete("cascade"),
-	primaryKey({ columns: [table.solicitudId, table.perfilId], name: "destapes_contacto_pkey"}),
 ]);
 
 export const proveedorOficios = pgTable("proveedor_oficios", {

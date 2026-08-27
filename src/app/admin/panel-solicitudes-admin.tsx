@@ -83,21 +83,11 @@ function FilaSolicitud({ s }: { s: SolicitudAdmin }) {
 
       {s.nota && <p className="mt-2 text-base text-muted-foreground">«{s.nota}»</p>}
 
-      {/* Excepción explícita a la regla 1 de CLAUDE.md — ver
-          supabase/migraciones/v2-k4-contacto-solicitante.sql. Solo lo ve
-          el administrador, nunca sale en el tablero, y eso se dice aquí y
-          no en un aviso general. */}
-      {(s.contacto?.nombre || s.contacto?.telefono || s.contacto?.correo) && (
-        <div className="mt-3 rounded-xl bg-accent p-3 text-base text-accent-foreground">
-          <p className="font-medium">Contacto que dejó quien pidió</p>
-          <p className="mt-0.5">
-            {[s.contacto.nombre, s.contacto.telefono, s.contacto.correo]
-              .filter(Boolean)
-              .join(' · ')}
-          </p>
-          <p className="mt-1">Solo lo ves tú. Nunca sale en el tablero.</p>
-        </div>
-      )}
+      {/* ⚠ Aquí se enseñaba «el contacto que dejó quien pidió», de
+          `solicitudes_contacto`. Esa tabla lleva vacía desde el ADR 0006:
+          nadie deja un contacto suelto porque quien pide tiene cuenta, y su
+          teléfono no se publica en ninguna parte. El bloque no se veía nunca
+          y describía una excepción a la regla 1 que ya no existe. */}
 
       {cerrada ? (
         <>

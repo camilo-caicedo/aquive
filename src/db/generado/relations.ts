@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { chats, mensajes, catalogoItems, ofrecimientos, perfiles, sugerenciasItem, entregas, organizaciones, entidades, solicitudes, solicitudesContacto, municipios, zonas, invitacionesOrganizacion, servidores, administradores, pushOfertadores, solicitudItems, respuestas, catalogoOficios, referencias, proveedores, accesosReferencia, respuestasServicio, solicitudesServicio, serviciosPrestados, resenas, productos, publicacionesMuro, imagenes, codigosAcceso, destapesContacto, proveedorOficios, miembrosOrganizacion } from "./schema";
+import { chats, mensajes, catalogoItems, ofrecimientos, perfiles, sugerenciasItem, entregas, organizaciones, entidades, municipios, zonas, invitacionesOrganizacion, servidores, administradores, solicitudes, pushOfertadores, solicitudItems, respuestas, catalogoOficios, referencias, proveedores, accesosReferencia, respuestasServicio, solicitudesServicio, serviciosPrestados, resenas, productos, publicacionesMuro, imagenes, codigosAcceso, proveedorOficios, miembrosOrganizacion } from "./schema";
 import { usersInAuth } from "../tipos";
 
 export const mensajesRelations = relations(mensajes, ({one}) => ({
@@ -79,7 +79,6 @@ export const perfilesRelations = relations(perfiles, ({one, many}) => ({
 	chats: many(chats),
 	publicacionesMuros: many(publicacionesMuro),
 	codigosAccesos: many(codigosAcceso),
-	destapesContactos: many(destapesContacto),
 	miembrosOrganizacions_aprobadoPor: many(miembrosOrganizacion, {
 		relationName: "miembrosOrganizacion_aprobadoPor_perfiles_id"
 	}),
@@ -167,32 +166,6 @@ export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
 	codigosAccesos: many(codigosAcceso),
 }));
 
-export const solicitudesContactoRelations = relations(solicitudesContacto, ({one}) => ({
-	solicitude: one(solicitudes, {
-		fields: [solicitudesContacto.solicitudId],
-		references: [solicitudes.id]
-	}),
-}));
-
-export const solicitudesRelations = relations(solicitudes, ({one, many}) => ({
-	solicitudesContactos: many(solicitudesContacto),
-	municipio: one(municipios, {
-		fields: [solicitudes.municipio],
-		references: [municipios.codigoDane]
-	}),
-	usersInAuth: one(usersInAuth, {
-		fields: [solicitudes.notaAdminPor],
-		references: [usersInAuth.id]
-	}),
-	perfile: one(perfiles, {
-		fields: [solicitudes.perfilId],
-		references: [perfiles.id]
-	}),
-	solicitudItems: many(solicitudItems),
-	respuestas: many(respuestas),
-	destapesContactos: many(destapesContacto),
-}));
-
 export const zonasRelations = relations(zonas, ({one, many}) => ({
 	municipio: one(municipios, {
 		fields: [zonas.municipio],
@@ -243,6 +216,23 @@ export const administradoresRelations = relations(administradores, ({one}) => ({
 		fields: [administradores.userId],
 		references: [usersInAuth.id]
 	}),
+}));
+
+export const solicitudesRelations = relations(solicitudes, ({one, many}) => ({
+	municipio: one(municipios, {
+		fields: [solicitudes.municipio],
+		references: [municipios.codigoDane]
+	}),
+	usersInAuth: one(usersInAuth, {
+		fields: [solicitudes.notaAdminPor],
+		references: [usersInAuth.id]
+	}),
+	perfile: one(perfiles, {
+		fields: [solicitudes.perfilId],
+		references: [perfiles.id]
+	}),
+	solicitudItems: many(solicitudItems),
+	respuestas: many(respuestas),
 }));
 
 export const pushOfertadoresRelations = relations(pushOfertadores, ({one}) => ({
@@ -441,17 +431,6 @@ export const codigosAccesoRelations = relations(codigosAcceso, ({one}) => ({
 	perfile: one(perfiles, {
 		fields: [codigosAcceso.perfilId],
 		references: [perfiles.id]
-	}),
-}));
-
-export const destapesContactoRelations = relations(destapesContacto, ({one}) => ({
-	perfile: one(perfiles, {
-		fields: [destapesContacto.perfilId],
-		references: [perfiles.id]
-	}),
-	solicitude: one(solicitudes, {
-		fields: [destapesContacto.solicitudId],
-		references: [solicitudes.id]
 	}),
 }));
 

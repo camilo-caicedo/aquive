@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { MessageSquare, Check, HeartHandshake, Info } from 'lucide-react'
-import type { Categoria, FlujoSolicitud, ItemResumen } from '@/lib/types'
+import { MessageSquare, Check, Info } from 'lucide-react'
+import type { Categoria, ItemResumen } from '@/lib/types'
 import { categoria, describirItem } from '@/lib/catalogo'
 import { BadgeFrescura } from '@/components/badge-frescura'
 import { Button } from '@/components/ui/button'
@@ -24,7 +24,6 @@ interface Solicitud {
   num_respuestas: number
   items: ItemResumen[]
   // Opcional: el cruce inverso devuelve las mismas columnas menos esta.
-  flujo?: FlujoSolicitud
   /** Nota del proyecto, no de quien pidio. Opcional por lo mismo. */
   nota_admin?: string | null
 }
@@ -127,15 +126,9 @@ export function TarjetaSolicitud({
         </ul>
       )}
 
-      {/* Sello discreto, no un distintivo de categoría: dice que hay una
-          fundación coordinando, y nada más. Ni cuál, ni de quién es la
-          solicitud. Va con icono y texto, nunca solo color. */}
-      {solicitud.flujo === 'acompanado' && (
-        <p className="mt-3 flex items-center gap-1.5 text-sm text-foreground">
-          <HeartHandshake className="size-4 shrink-0" aria-hidden="true" />
-          Una fundación acompaña esta entrega
-        </p>
-      )}
+      {/* ⚠ Aquí iba «una fundación acompaña esta entrega». El ADR 0007
+          retiró el flujo acompañado entero: `solicitudes.flujo` ya no
+          existe en la tabla, así que el sello no se pintaba nunca. */}
 
       {/* Esto lo escribe AquíVe, no quien pidió, así que se distingue del
           resto de la tarjeta — mismo criterio que el sello de «una fundación

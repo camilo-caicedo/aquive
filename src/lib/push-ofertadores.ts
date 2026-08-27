@@ -1,21 +1,5 @@
-import webpush from 'web-push'
 import { createServiceClient } from '@/lib/supabase/service'
-
-let configurado = false
-
-function configurar() {
-  if (configurado) return
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT ?? 'mailto:contacto@aquive.co',
-    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-    process.env.VAPID_PRIVATE_KEY!
-  )
-  configurado = true
-}
-
-interface ErrorWebPush {
-  statusCode?: number
-}
+import { configurarWebPush, enviarPush } from '@/lib/push-vapid'
 
 /**
  * Avisa a quienes ofrecen ayuda en ese municipio que hay una solicitud
@@ -63,7 +47,7 @@ export async function notificarOfertadores(
 
   if (!destinatarios || destinatarios.length === 0) return
 
-  configurar()
+  configurarWebPush()
 
   // Dos mensajes, ninguno con nada que permita acercarse a quién pidió: el
   // municipio y la categoría ya están en el tablero público. El de
@@ -83,15 +67,8 @@ export async function notificarOfertadores(
 
   await Promise.all(
     destinatarios.map(async (d) => {
-      try {
-        await webpush.sendNotification(
-          { endpoint: d.endpoint, keys: { p256dh: d.p256dh, auth: d.auth_key } },
-          d.calza ? conCoincidencia : generico
-        )
-      } catch (error) {
-        const codigo = (error as ErrorWebPush).statusCode
-        if (codigo === 404 || codigo === 410) muertas.push(d.suscripcion_id)
-      }
+      const r = await enviarPush(d, d.calza ? conCoincidencia : generico)
+      if (r === 'muerta') muertas.push(d.suscripcion_id)
     })
   )
 

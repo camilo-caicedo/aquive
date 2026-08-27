@@ -131,46 +131,6 @@ export type OficioProveedorInput = {
 }
 
 /** Lo que devuelve `ficha_proveedor`. Sale de la vista, no de la tabla. */
-export interface FichaProveedor {
-  id: string
-  nombre_visible: string
-  tipo: TipoProveedor
-  telefono: string
-  telefono_verificado: boolean
-  municipio: string
-  zona_nombre: string | null
-  zona_texto: string | null
-  modalidad: ModalidadServicio[]
-  dias: DiaSemana[]
-  franjas: FranjaHoraria[]
-  medios_pago: MedioPago[]
-  descripcion: string | null
-  creado_at: string
-  referencias_confirmadas: number
-  servicios_confirmados: number
-  total_resenas: number
-  cumplimiento: number | null
-  trato: number | null
-  puntualidad: number | null
-  oficios: {
-    oficio_id: string
-    nombre: string
-    grupo: GrupoOficio
-    modo: ModoPrecio
-    precio_desde: number | null
-    unidad: UnidadPrecio | null
-  }[]
-  resenas: {
-    id: string
-    cumplimiento: number
-    trato: number
-    puntualidad: number
-    comentario: string | null
-    replica: string | null
-    creada_at: string
-  }[]
-}
-
 /**
  * Lo que devuelve `mi_proveedor`. Ve lo que la vista pública esconde: si
  * está suspendida y qué oficios todavía no se publican por la regla S.
@@ -271,35 +231,6 @@ export interface ItemOfrecidoCruce {
   nombre: string
   por_confirmar: boolean
   calza: boolean
-}
-
-// Una fila de `ofertadores_que_calzan`: quién tiene algo de lo que pide
-// una solicitud. Es la ficha pública más el cruce.
-//
-// ⚠ Sin contacto a propósito. El teléfono lo devuelve `destapar_contacto`,
-// de a una persona y con tope — ver la migración v3-t1.
-export interface OfertadorQueCalza {
-  id: string
-  nombre_visible: string
-  municipios: string[]
-  descripcion: string | null
-  puede_trasladarse: boolean
-  items: ItemOfrecidoCruce[]
-  total_items: number
-  /** En cuántas de las cosas pedidas calza esta persona. */
-  coincidencias: number
-  /** Si esta solicitud ya destapó su contacto alguna vez. */
-  destapado: boolean
-  /** Cuántas personas calzan en total, antes de paginar. */
-  total: number
-}
-
-// Lo que devuelve `destapar_contacto`. Solo existe en memoria del cliente
-// que lo pidió: no se guarda en ninguna parte de este lado.
-export interface ContactoDestapado {
-  nombre: string
-  contacto: string
-  contacto_tipo: ContactoTipo
 }
 
 // Los contadores del índice de administración, tal como los devuelve
@@ -456,30 +387,6 @@ export interface AliadoResumen {
   invitaciones: InvitacionResumen[]
 }
 
-// Lo que devuelve `leer_identidad`. Cada vez que este objeto existe, hay
-// una fila nueva en `accesos_identidad` diciendo quién lo pidió y por qué
-// (regla N). No lo pases a un Client Component ni lo metas en un log.
-export interface IdentidadDescifrada {
-  id: string
-  titular_tipo: TitularIdentidad
-  nombre: string
-  documento_tipo: TipoDocumento
-  documento: string
-  telefono: string | null
-  autorizacion_version: string
-  autorizacion_at: string
-}
-
-// Lo que devuelve `buscar_identidad_presencial`. NO descifra nada: son los
-// cuatro últimos dígitos —que quien busca acaba de teclear— y el código de
-// la solicitud, que es lo que hace falta para seguir.
-export interface CoincidenciaIdentidad {
-  id: string
-  titular_tipo: TitularIdentidad
-  documento_ultimos4: string
-  solicitud_codigo: string | null
-}
-
 // Los seis estados de un hilo. `asignada` existe por la regla L: sin él,
 // un hilo con organización pero sin persona a cargo quedaría «abierto» y
 // sería bilateral de hecho, que es justo lo prohibido.
@@ -492,129 +399,11 @@ export type EstadoConversacion =
   | 'cerrada'
 export type RolEnConversacion = 'solicitante' | 'ofertador' | 'aliado' | 'admin'
 
-// Un mensaje del hilo. `cuerpo` llega en null cuando está oculto: moderar
-// oculta, no borra, y el hueco se ve.
-export interface MensajeChat {
-  id: string
-  rol: RolEnConversacion
-  nombre: string | null
-  cuerpo: string | null
-  oculto: boolean
-  creado_at: string
-}
-
-export interface AcopioResumen {
-  nombre: string
-  direccion: string | null
-  horario: string | null
-}
-
-// Un ítem que todavía no ha llegado. Lleva su identificador porque la
-// pantalla de la entrega es una lista de botones grandes y cada uno manda
-// ese id: se usa a media luz, en un acopio, y con las manos ocupadas.
-export interface ItemPendiente {
-  id: string
-  item_id: string | null
-  sugerencia_id: string | null
-  nombre: string
-  cantidad: number
-  unidad: string
-}
-
-// Lo que devuelve `leer_conversacion` (por sesión).
-export interface ConversacionDetalle {
-  id: string
-  estado: EstadoConversacion
-  mi_rol: RolEnConversacion
-  /** La fundación entrega de su bodega: no hay ofertador en este hilo. */
-  directa: boolean
-  codigo: string
-  acopio: AcopioResumen | null
-  pendientes: ItemPendiente[]
-  mensajes: MensajeChat[]
-}
-
-// Una fila de `coincidencias_para_aliado()`: una solicitud acompañada de
-// sus municipios cruzada con alguien que tiene justo eso.
-export interface Coincidencia {
-  solicitud_id: string
-  codigo: string
-  municipio: string
-  ofertador_id: string
-  ofertador: string
-  items_coincidentes: number
-  detalle: Array<{ nombre: string; cantidad: number; unidad: string }>
-  ya_hay_hilo: boolean
-  /**
-   * Solo cuando la fila viene de `respuestas_por_coordinar`: lo que esa
-   * persona escribió al ofrecerse. Con el cruce por inventario no hay
-   * mensaje, hay ítems.
-   */
-  mensaje?: string
-}
-
-// Lo que devuelve `exportar_planilla`. LLEVA DATOS PERSONALES y cada vez
-// que existe hay una fila nueva en `accesos_identidad`. Es para entregarla
-// a la fundación en el momento: no la guardes, no la registres en un log y
-// no la pases a un Client Component más de lo imprescindible.
-export interface Planilla {
-  codigo: string
-  nombre: string
-  documento_tipo: TipoDocumento
-  documento: string
-  telefono: string | null
-  autorizacion_version: string
-  autorizacion_at: string
-  entregas: Array<{
-    item: string
-    cantidad: number
-    unidad: string
-    recibido_at: string
-    confirmada: boolean
-  }>
-}
-
-// Lo que devuelve `mis_conversaciones_token` (por token del solicitante).
-export interface ConversacionDelSolicitante {
-  id: string
-  estado: EstadoConversacion
-  /** La fundación entrega de su bodega: no hay ofertador en este hilo. */
-  directa: boolean
-  ofertador: string | null
-  aliado: string | null
-  acopio: AcopioResumen | null
-  mensajes: MensajeChat[]
-}
-
-// Una fila de `mis_hilos()`: lo que ve una cuenta, sea porque ofrece en
-// ese hilo o porque es miembro de la organización que lo coordina.
-export interface HiloResumen {
-  id: string
-  estado: EstadoConversacion
-  creada_at: string
-  codigo: string
-  municipio: string
-  barrio: string
-  /** La fundación entrega de su bodega: no hay ofertador en este hilo. */
-  directa: boolean
-  soy_ofertador: boolean
-  ofertador: string | null
-  aliado: string | null
-  sin_asignar: boolean
-  mensajes_total: number
-}
-
 /**
  * El contacto opcional que deja quien pide ayuda. Excepción explícita a la
  * regla 1 de CLAUDE.md — ver supabase/migraciones/v2-k4-contacto-solicitante.sql.
  * Todos los campos son opcionales, así que puede venir null en cualquiera.
  */
-export interface ContactoSolicitante {
-  nombre: string | null
-  telefono: string | null
-  correo: string | null
-}
-
 // Una fila de `solicitudes_admin()`. Solo la ve un administrador, y lleva
 // el `estado` real —incluido `cumplida`, que no sale en el tablero— para
 // que cerrar una no signifique perderla de vista.
@@ -631,24 +420,6 @@ export interface SolicitudAdmin {
   expira_at: string
   respuestas: number
   items: Array<{ nombre: string; cantidad: number; unidad: string }>
-  contacto: ContactoSolicitante | null
-}
-
-// Una fila de `solicitudes_de_mi_organizacion()`: lo que la fundación
-// acompaña y todavía no ha atendido. No hay cruce de inventario porque no
-// hay inventario de organizaciones: mira los ítems y decide.
-export interface SolicitudPorAtender {
-  solicitud_id: string
-  codigo: string
-  municipio: string
-  barrio: string
-  categoria: Categoria
-  nota: string | null
-  creada_at: string
-  puede_recoger: boolean
-  /** Hilos vivos que ya tiene. Si alguien más lo está trayendo, cambia la decisión. */
-  hilos: number
-  pendientes: Array<{ nombre: string; cantidad: number; unidad: string }>
 }
 
 // Una fila de `mis_avisos()`. No hay tabla de notificaciones: los tipos se
@@ -672,34 +443,6 @@ export interface EstadoEncabezado {
   /** `'organizacion'`, `'coordinacion'` o null. Ver `Navegacion`. */
   coordinacion: 'organizacion' | 'coordinacion' | null
   avisos_sin_ver: number
-}
-
-// Lo que devuelve `mis_datos`: los artículos 14 y 15 de la Ley 1581
-// hechos pantalla. NO trae el documento descifrado, solo el tipo y los
-// cuatro últimos: ver su propia cédula completa no le dice a nadie nada
-// que no sepa, y multiplica los sitios por donde ese dato puede salir.
-export interface MisDatos {
-  codigo: string
-  flujo: FlujoSolicitud
-  municipio: string
-  barrio: string
-  nota: string | null
-  creada_at: string
-  expira_at: string
-  organizacion: string | null
-  identidad: {
-    tiene_telefono: boolean
-    autorizacion_version: string
-    autorizacion_at: string
-  } | null
-  /** Quién vio esos datos, cuándo y con qué motivo. El derecho a saber. */
-  accesos: Array<{ rol: 'admin' | 'aliado'; motivo: string; cuando: string }>
-  entregas: Array<{
-    item: string
-    cantidad: number
-    unidad: string
-    confirmada: boolean
-  }>
 }
 
 
@@ -780,41 +523,6 @@ export interface SugerenciaPendiente {
   creada_at: string
   usos: number
   parecidos: Array<{ id: string; nombre: string; categoria: Categoria }>
-}
-
-// Forma del jsonb que devuelve leer_solicitud
-export interface SolicitudConRespuestas {
-  id: string
-  codigo: string
-  municipio: string
-  barrio: string
-  categoria: Categoria
-  nota: string | null
-  estado: EstadoSolicitud
-  expira_at: string
-  flujo: FlujoSolicitud
-  /** Nombre de la fundacion que acompaña, o null en Flujo 1. Nunca su id. */
-  organizacion: string | null
-  /** Si ESTA solicitud tiene avisos. No es lo mismo que si este navegador los tiene. */
-  tiene_avisos: boolean
-  items: Array<ItemResumen & { cubierto: boolean }>
-  respuestas: Array<{
-    id: string
-    mensaje: string
-    creada_at: string
-    nombre: string
-    // NULL cuando quien respondió no tiene contacto público: desde la
-    // Fase D un perfil de aliado no lo tiene.  ya no
-    // deja responder así, pero las respuestas viejas siguen existiendo y
-    // esta pantalla tiene que poder mostrarlas.
-    contacto: string | null
-    contacto_tipo: ContactoTipo
-    tipo: TipoPerfil
-    profesion: string | null
-    verificado: boolean
-    /** Se ofreció a llevarlo. Lo dijo al responder, no hay que preguntarlo. */
-    puede_llevar: boolean
-  }>
 }
 
 export interface Database {
@@ -1582,34 +1290,6 @@ export interface Database {
       }
     }
     Functions: {
-      crear_solicitud: {
-        Args: {
-          p_municipio: string
-          p_barrio: string
-          p_categoria: Categoria
-          p_nota: string | null
-          p_items: Json
-          p_token: string
-          p_puede_recoger?: boolean
-        }
-        Returns: { solicitud_id: string; codigo: string }[]
-      }
-      leer_solicitud: {
-        Args: { p_token: string }
-        Returns: Json
-      }
-      renovar_solicitud: {
-        Args: { p_token: string }
-        Returns: string
-      }
-      cerrar_solicitud: {
-        Args: { p_token: string; p_cumplida: boolean }
-        Returns: undefined
-      }
-      guardar_push: {
-        Args: { p_token: string; p_endpoint: string; p_p256dh: string; p_auth: string }
-        Returns: undefined
-      }
       guardar_push_ofertador: {
         Args: { p_endpoint: string; p_p256dh: string; p_auth: string }
         Returns: undefined
@@ -1634,20 +1314,6 @@ export interface Database {
           p_desde?: number
         }
         Returns: SolicitudQueCalza[]
-      }
-      // El cruce al revés, y la única puerta al teléfono de quien ofrece:
-      // lo autoriza el token portador de una solicitud viva, no la sesión.
-      ofertadores_que_calzan: {
-        Args: {
-          p_token: string
-          p_limite?: number
-          p_desde?: number
-        }
-        Returns: OfertadorQueCalza[]
-      }
-      destapar_contacto: {
-        Args: { p_token: string; p_perfil_id: string }
-        Returns: Json
       }
       // Los contadores del índice de /admin, en una sola llamada.
       panel_admin_indice: {
@@ -1681,24 +1347,6 @@ export interface Database {
           p256dh: string
           auth_key: string
           calza: boolean
-        }>
-      }
-      // Los otros dos de un hilo. `de_solicitante` dice en qué tabla vive
-      // la suscripción: la de quien pide cuelga de la solicitud, las de
-      // quien ofrece y quien coordina cuelgan del perfil.
-      destinatarios_conversacion: {
-        Args: {
-          p_conversacion_id: string
-          p_excluir_perfil?: string
-          p_excluir_solicitante?: boolean
-        }
-        Returns: Array<{
-          suscripcion_id: string
-          de_solicitante: boolean
-          endpoint: string
-          p256dh: string
-          auth_key: string
-          codigo: string
         }>
       }
       destinatarios_respondieron: {
@@ -1833,12 +1481,6 @@ export interface Database {
         Args: Record<string, never>
         Returns: Json
       }
-      // Devuelve Coincidencia[], con `mensaje` en vez de ítems: quien ya
-      // ofreció ayuda en una solicitud acompañada y sigue sin hilo.
-      respuestas_por_coordinar: {
-        Args: Record<string, never>
-        Returns: Json
-      }
       // Devuelve EstadoEncabezado. Todo lo que el encabezado necesita
       // saber en una sola consulta: si se dibuja la pestaña de /aliado y
       // con qué nombre, y cuántos avisos hay sin ver. Como `soy_aliado`,
@@ -1861,125 +1503,6 @@ export interface Database {
         Args: Record<string, never>
         Returns: boolean
       }
-      // Habeas data y ciclo de vida (Fase I).
-      //
-      // `devolver_a_directo` y `expirar_solicitudes` NO están aquí, y es
-      // deliberado: no tienen grant para nadie. La primera la llaman otras
-      // RPC; la segunda, `pg_cron`.
-      //
-      // Devuelve MisDatos.
-      mis_datos: {
-        Args: { p_token: string }
-        Returns: Json
-      }
-      // Borra la identidad, devuelve la solicitud a `directo` y cierra los
-      // hilos. El hilo NO se borra: contiene palabras de otras dos
-      // personas; lo que se reemplaza es el cuerpo de lo que escribió el
-      // titular, dejando rol y fecha.
-      suprimir_mis_datos: {
-        Args: { p_token: string }
-        Returns: Json
-      }
-      // Coincidencias y entregas (Fase H).
-      //
-      // `v_cruces` NO está tipada como vista, y es deliberado: no tiene
-      // grant para nadie y la única puerta legítima es esta RPC.
-      // Devuelve Coincidencia[].
-      coincidencias_para_aliado: {
-        Args: Record<string, never>
-        Returns: Json
-      }
-      // El aliado abre el hilo desde una coincidencia. Nace `abierta` y con
-      // él ya a cargo, y el primer mensaje lo firma él: quien ofrece recibe
-      // una invitación, no un mensaje suyo que no escribió.
-      invitar_a_conversacion: {
-        Args: { p_solicitud_id: string; p_ofertador_id: string; p_mensaje: string }
-        Returns: string
-      }
-      // Solo la fundación. Registra qué llegó, tacha esos ítems y deja la
-      // solicitud en `cumplida` o `entregada_parcial`.
-      registrar_entrega: {
-        Args: { p_conversacion_id: string; p_items: Json }
-        Returns: Json
-      }
-      // La segunda confirmación, la de quien pidió. Sin ella «entregado»
-      // sería la palabra de una sola parte.
-      confirmar_recepcion: {
-        Args: { p_token: string; p_conversacion_id: string }
-        Returns: number
-      }
-      marcar_item_cubierto: {
-        Args: { p_item_id: string; p_cubierto: boolean; p_token?: string | null }
-        Returns: undefined
-      }
-      // Devuelve Planilla. LLEVA PII y escribe bitácora: mismo permiso que
-      // leer_identidad, porque una planilla es una identidad con una lista
-      // de cosas al lado.
-      exportar_planilla: {
-        Args: { p_conversacion_id: string; p_motivo: string }
-        Returns: Json
-      }
-      // Chat tripartito (Fase G). Ninguna de estas devuelve un
-      // identificador de cuenta: los mensajes salen con el rol de quien
-      // escribe y su nombre visible, que es lo que hace falta para seguir
-      // la conversación.
-      iniciar_conversacion: {
-        Args: { p_codigo: string; p_mensaje: string }
-        Returns: string
-      }
-      asignar_aliado: {
-        Args: { p_conversacion_id: string }
-        Returns: undefined
-      }
-      enviar_mensaje: {
-        Args: { p_conversacion_id: string; p_cuerpo: string }
-        Returns: string
-      }
-      // Para quien pidió ayuda, que no tiene cuenta. El token no autoriza
-      // «cualquier conversación»: solo las de su propia solicitud.
-      enviar_mensaje_token: {
-        Args: { p_token: string; p_conversacion_id: string; p_cuerpo: string }
-        Returns: string
-      }
-      // Devuelve ConversacionDetalle.
-      leer_conversacion: {
-        Args: { p_conversacion_id: string }
-        Returns: Json
-      }
-      // Devuelve ConversacionDelSolicitante[].
-      mis_conversaciones_token: {
-        Args: { p_token: string }
-        Returns: Json
-      }
-      // Devuelve HiloResumen[].
-      mis_hilos: {
-        Args: Record<string, never>
-        Returns: Json
-      }
-      moderar_mensaje: {
-        Args: { p_mensaje_id: string; p_oculto: boolean }
-        Returns: undefined
-      }
-      // Elección de flujo (Fase F). Devuelve AliadoDelMunicipio[]: todas
-      // las organizaciones activas del municipio, con su acopio, para poder
-      // escoger la que quede más fácil.
-      aliados_del_municipio: {
-        Args: { p_municipio: string }
-        Returns: Json
-      }
-      // Crea la identidad cifrada y marca la solicitud, en una sola
-      // transacción. Si falla, la solicitud se queda en 'directo', que es
-      // el modo seguro de fallar. No hay camino de vuelta (§7).
-      activar_acompanamiento: {
-        Args: {
-          p_token: string
-          p_organizacion_id: string
-          p_nombre: string
-          p_autorizacion_version: string
-          p_telefono?: string | null
-        }
-        Returns: Json
-      }
       // Identidad cifrada (Fase E). `identidades` y `accesos_identidad` NO
       // están tipadas como tablas, y es deliberado: están revocadas enteras
       // y no hay ninguna lectura legítima que no pase por estas RPC, ni
@@ -2001,18 +1524,6 @@ export interface Database {
           p_perfil_id?: string | null
         }
         Returns: string
-      }
-      // Devuelve IdentidadDescifrada y escribe bitácora ANTES de devolver.
-      // Falla si el motivo viene vacío.
-      leer_identidad: {
-        Args: { p_id: string; p_motivo: string }
-        Returns: Json
-      }
-      // Devuelve CoincidenciaIdentidad[]. Deja rastro incluso cuando no
-      // encuentra nada: una búsqueda a ciegas también es un acceso.
-      buscar_identidad_presencial: {
-        Args: { p_documento: string; p_motivo: string }
-        Returns: Json
       }
       crear_item_catalogo: {
         Args: { p_nombre: string; p_categoria: Categoria; p_unidad?: string }
@@ -2052,10 +1563,6 @@ export interface Database {
         }
         Returns: string
       }
-      borrar_proveedor: {
-        Args: { p_token?: string | null }
-        Returns: undefined
-      }
       mi_organizacion_activa: {
         Args: Record<string, never>
         Returns: string | null
@@ -2063,22 +1570,6 @@ export interface Database {
       proveedores_de_mi_organizacion: {
         Args: Record<string, never>
         Returns: Json
-      }
-      crear_proveedor_asistido: {
-        Args: {
-          p_organizacion_id: string
-          p_token_hash: string
-          p_nombre_visible: string
-          p_tipo: TipoProveedor
-          p_telefono: string
-          p_municipio: string
-          p_zona_id: string | null
-          p_zona_texto: string | null
-          p_modalidad: ModalidadServicio[]
-          p_oficios: Json
-          p_autorizacion_version: string
-        }
-        Returns: string
       }
       verificar_telefono_proveedor: {
         Args: { p_proveedor_id: string; p_verificado: boolean }
@@ -2121,29 +1612,6 @@ export interface Database {
       }
       accesos_a_referencias: {
         Args: Record<string, never>
-        Returns: Json
-      }
-      // Sin grant a `anon`: solo la llama /api/servicios/solicitudes con la
-      // llave de servicio, para que nadie se salte el Turnstile.
-      crear_solicitud_servicio: {
-        Args: {
-          p_oficio_id: string
-          p_municipio: string
-          p_zona_id: string | null
-          p_zona_texto: string | null
-          p_urgencia: UrgenciaServicio
-          p_capacidad_pago: CapacidadPago
-          p_nota: string | null
-          p_token: string
-        }
-        Returns: { solicitud_id: string; codigo: string }[]
-      }
-      leer_solicitud_servicio: {
-        Args: { p_token: string }
-        Returns: Json
-      }
-      gestionar_solicitud_servicio: {
-        Args: { p_token: string; p_accion: 'renovar' | 'resolver' | 'borrar' }
         Returns: Json
       }
       responder_servicio: {
@@ -2260,38 +1728,6 @@ export interface Database {
       mi_movilidad: {
         Args: Record<string, never>
         Returns: boolean
-      }
-      // Excepción explícita a la regla 1 de CLAUDE.md — ver
-      // supabase/migraciones/v2-k4-contacto-solicitante.sql. Se escribe
-      // con el token, igual que `activar_acompanamiento`.
-      agregar_contacto_solicitante: {
-        Args: {
-          p_token: string
-          p_nombre?: string | null
-          p_telefono?: string | null
-          p_correo?: string | null
-          p_version?: string | null
-        }
-        Returns: undefined
-      }
-      // Devuelve ContactoSolicitante | null. Mismo patrón de guardia que
-      // `movilidad_solicitud`: RPC aparte, nunca en la vista pública, y
-      // solo con sesión de perfil activo.
-      contacto_solicitante: {
-        Args: { p_codigo: string }
-        Returns: Json
-      }
-      // La fundación abre un hilo con quien pidió, sin ofertador de por
-      // medio, para entregar de su propia bodega. Devuelve el id del hilo.
-      abrir_entrega_directa: {
-        Args: { p_solicitud_id: string; p_mensaje: string }
-        Returns: string
-      }
-      // Devuelve SolicitudPorAtender[]: lo que su organización acompaña y
-      // todavía no ha atendido. Sin cruce de inventario — no lo hay.
-      solicitudes_de_mi_organizacion: {
-        Args: Record<string, never>
-        Returns: Json
       }
       // Devuelve SolicitudAdmin[]. Vacío para quien no es administrador.
       solicitudes_admin: {

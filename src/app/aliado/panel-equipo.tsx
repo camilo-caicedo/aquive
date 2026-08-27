@@ -154,7 +154,7 @@ function Miembro({
     onCambio()
   }
 
-  async function permiso(p_permiso: 'puede_ver_identidad' | 'puede_moderar', p_valor: boolean) {
+  async function permiso(p_permiso: 'puede_moderar', p_valor: boolean) {
     setEnviando(true)
     setError(null)
     const supabase = createClient()
@@ -203,7 +203,6 @@ function Miembro({
           {miembro.estado === 'activo' && miembro.rol === 'coordinador'
             ? ' · coordinador'
             : ''}
-          {miembro.puede_ver_identidad ? ' · ve identidades' : ''}
         </p>
       </div>
 
@@ -222,17 +221,15 @@ function Miembro({
                       permiso» y otro que dice «Quitar» son la misma cosa
                       dicha de dos formas, y quien mira rápido no sabe cuál
                       es el estado actual. */}
-                  <FilaPermiso
-                    etiqueta="Ver identidades"
-                    explicacion="Puede abrir los datos de quien pide ayuda para coordinar una entrega."
-                    advertencia="Abre nombres, documentos y teléfonos de personas reales. Cada lectura queda en la bitácora con su nombre, la hora y el motivo."
-                    activo={miembro.puede_ver_identidad}
-                    disabled={enviando}
-                    onChange={(v) => permiso('puede_ver_identidad', v)}
-                  />
+                  {/* ⚠ Aquí había un «Ver identidades». El permiso seguía
+                      en la tabla y **no otorgaba ya nada**: `identidades`,
+                      `accesos_identidad` y las tres funciones que las leían
+                      se fueron con el ADR 0007. Un interruptor que promete
+                      acceso a datos de personas reales y no hace nada es
+                      peor que no tener interruptor. */}
                   <FilaPermiso
                     etiqueta="Moderar"
-                    explicacion="Puede retirar mensajes de las conversaciones de la organización."
+                    explicacion="Puede retirar mensajes de los chats de la organización."
                     activo={miembro.puede_moderar}
                     disabled={enviando}
                     onChange={(v) => permiso('puede_moderar', v)}

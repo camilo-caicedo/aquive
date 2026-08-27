@@ -17,7 +17,6 @@ import { SelectFiltro } from '@/components/select-filtro'
 import { HojaFiltros } from '@/components/hoja-filtros'
 import { BotonReportar } from '@/components/boton-reportar'
 import { AccionPrincipal } from '@/components/accion-principal'
-import { CintaMiSolicitud } from './cinta-mi-solicitud'
 
 export const metadata = { title: 'Quién está ofreciendo' }
 
@@ -83,8 +82,6 @@ export default async function OfertadoresPage({
         Si ya publicaste lo que necesitas, te marcamos quién tiene algo tuyo y
         desde ahí puedes escribirle.
       </p>
-
-      <CintaMiSolicitud />
 
 
       {mostrarFiltros && (

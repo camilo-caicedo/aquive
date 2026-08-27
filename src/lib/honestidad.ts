@@ -46,26 +46,6 @@ export const AVISO_TABLERO =
 export const AVISO_TABLERO_CORTO =
   'AquíVe no verifica a quien publica ni a quien responde.'
 
-/** El aviso completo, para la confirmación de publicación. */
-export const AVISO_PUBLICAR =
-  'Cuando alguien responda vas a ver su nombre y su forma de contacto. ' +
-  'AquíVe no verifica quién publica ni quién responde: confirma lo que ' +
-  'puedas antes de acordar una entrega, y prefiere lugares públicos.'
-
-/**
- * Para quien va a responder una solicitud. Es la otra mitad del recorrido
- * y también es un paso irreversible: entrega su nombre real y su teléfono
- * a alguien anónimo, y después se mueve físicamente a un encuentro.
- *
- * Una solicitud falsa es el fraude obvio de este flujo —publicar "necesito
- * cobijas" para cosechar teléfonos de gente caritativa— y hasta que se
- * escribió esto no había una sola línea que lo dijera.
- */
-export const AVISO_RESPONDER =
-  'AquíVe no verifica quién publica esta solicitud. Tu nombre y tu forma ' +
-  'de contacto quedan visibles para esa persona. Si acuerdan una entrega, ' +
-  'prefiere un lugar público y de día.'
-
 /** Justo antes de abrir WhatsApp, que es donde de verdad se decide. */
 export const AVISO_CONTACTO =
   'AquíVe no verificó la identidad de esta persona. Prefiere un lugar ' +
