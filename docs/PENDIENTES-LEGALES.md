@@ -1,5 +1,19 @@
 # Pendientes que no son código
 
+> **Al día del 27 de agosto de 2026.** Una auditoría del código encontró que
+> tres de las contradicciones que este documento anotaba ya no eran
+> contradicciones: eran **falsedades**. Los términos decían «guardamos tu
+> nombre, tu documento y un teléfono, cifrados» y el aviso de privacidad
+> describía el flujo acompañado entero, los dos retirados por el ADR 0007.
+> Esos bloques se quitaron del código. Lo que queda escrito abajo es lo que
+> sigue faltando, y la mayoría no se resuelve programando.
+>
+> Se cerraron además dos huecos que sí eran de código y estaban en el mínimo
+> legal: `perfiles` publicaba nombre y teléfono **sin guardar la versión de
+> la autorización** (artículo 9), y la PQR no tenía cómo leerse ni
+> responderse —`estado = 'respondida'` era inalcanzable—, así que los plazos
+> de los artículos 14 y 15 no se podían cumplir por ninguna vía del producto.
+
 Bloqueantes reales: ninguno se resuelve programando, y varios bloquean el
 despliegue de una funcionalidad que ya está escrita.
 

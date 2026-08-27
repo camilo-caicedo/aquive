@@ -406,11 +406,16 @@ export async function categorias(
 /**
  * Las zonas con gente, agregadas.
  *
- * Devuelve CUÁNTOS por zona y nada más. No hay coordenadas en la base y no
- * las va a haber: la granularidad máxima es barrio o comuna (regla de
- * producto 10). Publicar la ubicación puntual de alguien que trabaja solo en
- * la calle, con su nombre y su teléfono al lado, es un dato que sirve para
- * encontrarlo.
+ * Devuelve CUÁNTOS por zona y nada más: esta consulta no toca coordenadas.
+ *
+ * ⚠ Aquí decía «no hay coordenadas en la base y no las va a haber». Las hay
+ * desde el ADR 0004, que derogó esa mitad de la regla 10: quien OFRECE puede
+ * aparecer en el mapa con un punto que **pone él mismo**, arrastrando el pin,
+ * con su propia casilla `acepto_mapa` y su versión aparte — publicar dónde
+ * está alguien es otra finalidad que publicar su teléfono.
+ *
+ * Lo que no cambió, y no está en discusión: **quien PIDE no deja rastro**. Una
+ * solicitud no lleva coordenadas ni nada más fino que barrio o comuna.
  */
 export async function zonasConGente(
   db: BaseDeDatos,

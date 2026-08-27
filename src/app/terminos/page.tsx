@@ -75,27 +75,16 @@ export default function TerminosPage() {
         incumplimientos, pérdidas, daños o delitos.
       </p>
 
-      <h2 className="font-heading mt-8 text-2xl">4b. Si eliges que una fundación te acompañe.</h2>
-      <p className="mt-3 text-base">
-        Publicar es siempre lo primero y no exige esto. El acompañamiento es una opción que aparece solo donde
-        hay una organización aliada, y solo existe si la aceptas.
-      </p>
-      <p className="mt-3 text-base">
-        Cuando la aceptas cambian tres cosas. La entrega ocurre en el punto de acopio de la fundación, no en la
-        casa de nadie. La coordinación ocurre dentro de la plataforma, en una conversación donde están los tres
-        —tú, quien ofrece y la fundación— y donde no se pueden intercambiar teléfonos ni correos. Y guardamos tu
-        nombre, tu documento y un teléfono, cifrados, para que la fundación verifique la entrega.
-      </p>
-      <p className="mt-3 text-base">
-        En ese caso la fundación es responsable del tratamiento de esos datos y AquíVe actúa como encargado. La
-        fundación responde por cómo los usa y por lo que ocurra en su punto de acopio. Nosotros seguimos sin
-        verificar a nadie: que una organización esté aquí significa que revisamos su certificado de existencia y
-        su NIT, no que respondamos por su operación.
-      </p>
-      <p className="mt-3 text-base">
-        Puedes ver en cualquier momento qué guardamos y quién lo ha consultado, y pedir que lo borremos. Al
-        borrarlo tu solicitud sigue publicada, anónima, como cualquier otra.
-      </p>
+      {/* ⚠ Aquí iba «4b. Si eliges que una fundación te acompañe», que
+          describía el flujo acompañado: entrega en el punto de acopio,
+          conversación de tres, y «guardamos tu nombre, tu documento y un
+          teléfono, cifrados».
+
+          El ADR 0007 retiró ese flujo entero y borró las tablas. Desde
+          entonces esas frases no eran una contradicción con el aviso de
+          privacidad: eran falsas. No guardamos ningún documento de nadie —no
+          hay ninguna columna de documento en la base— y no hay conversación
+          de tres. Ver `docs/PENDIENTES-LEGALES.md`. */}
 
       <h2 className="font-heading mt-8 text-2xl">5. Recomendaciones de seguridad.</h2>
       <p className="mt-3 text-base">

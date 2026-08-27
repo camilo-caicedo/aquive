@@ -61,9 +61,8 @@ export default function PrivacidadPage() {
         plataforma no cobra nada a nadie ni recibe dinero de nadie.
       </p>
       <p className="mt-3 text-base">
-        Hay además fundaciones que trabajan <strong>con</strong> la plataforma en la ayuda de
-        emergencia —aparecen por su nombre y solo si tú las escoges— pero ninguna la opera. Ver «Si
-        pides que una fundación te acompañe», más abajo.
+        Hay además centros de acopio que trabajan <strong>con</strong> la plataforma —aparecen por
+        su nombre, con su dirección y su horario— pero ninguno la opera.
       </p>
 
       <h2 className="font-heading mt-10 border-t border-border pt-6 text-3xl">Ayuda de emergencia</h2>
@@ -115,37 +114,21 @@ export default function PrivacidadPage() {
         Puedes borrar tu perfil completo desde tu cuenta, en cualquier momento.
       </p>
 
-      <h2 className="font-heading mt-8 text-2xl">
-        Si pides que una fundación te acompañe: ahí sí guardamos datos tuyos, cifrados.
-      </h2>
-      <p className="mt-3 text-base">
-        Publicar una solicitud no exige esto y nunca lo va a exigir. Es una opción aparte, que se ofrece solo si
-        hay una organización aliada trabajando en tu municipio, y que solo existe si tú la aceptas.
-      </p>
-      <p className="mt-3 text-base">
-        Si la aceptas, guardamos <strong>tu nombre y, si nos lo das, un teléfono. Nada más.</strong> Van
-        cifrados, en una tabla aparte, y no aparecen en ninguna página pública ni se le entregan a quien ofrece
-        ayuda. La finalidad es una sola: que la fundación sepa a quién le está entregando.
-      </p>
-      <p className="mt-3 text-base">
-        <strong>No pedimos ni guardamos números de documento.</strong> Si la fundación necesita comprobar tu
-        identidad para entregarte algo, lo hace mirando tu cédula en persona, en su punto: no la teclea aquí y
-        no queda ninguna copia en la plataforma.
-      </p>
-      <p className="mt-3 text-base">
-        Cada vez que alguien de la fundación consulta esos datos queda registrado quién fue, cuándo y con qué
-        motivo. Puedes ver ese registro completo desde el enlace de tu solicitud, en «ver qué datos tuyos
-        guardamos», y desde ahí pedir que los borremos.
-      </p>
-      <p className="mt-3 text-base">
-        En este caso la fundación es responsable del tratamiento y nosotros actuamos como encargados: ellos
-        deciden para qué usan esos datos y los custodian en sus propios sistemas; nosotros solo los guardamos
-        mientras dure la coordinación. Se borran con tu solicitud, y la solicitud se borra sola.
-      </p>
-      <p className="mt-3 text-base">
-        La conversación con la fundación y con quien ofrece ocurre dentro de la plataforma, y también se borra
-        con la solicitud. No es un archivo: no la uses para guardar nada que necesites después.
-      </p>
+      {/* ⚠ Aquí iba «Si pides que una fundación te acompañe: ahí sí
+          guardamos datos tuyos, cifrados» — nombre, teléfono, la bitácora de
+          quién los consultaba y el reparto responsable/encargado con la
+          fundación.
+
+          El ADR 0007 retiró el flujo acompañado entero y borró `identidades`
+          y `accesos_identidad`. Desde entonces esta sección describía algo
+          que no ocurre: no se guarda ningún dato de quien pide más allá de su
+          cuenta, y no hay ninguna fundación consultándolos.
+
+          Lo que sí sobrevive y sí se cifra son las REFERENCIAS de un
+          prestador —el contacto de un cliente anterior, que es un tercero que
+          no está en la plataforma—, y eso se explica en su propia sección.
+          Ver `docs/PENDIENTES-LEGALES.md`. */}
+
 
       <h2 className="font-heading mt-10 border-t border-border pt-6 text-3xl">Servicios</h2>
       <p className="mt-3 text-base">
@@ -215,9 +198,10 @@ export default function PrivacidadPage() {
       <h2 className="font-heading mt-8 text-2xl">Lo que nunca hacemos, en las dos partes</h2>
       <p className="mt-3 text-base">
         No vendemos ni compartimos información con terceros. No hacemos publicidad. No procesamos
-        dinero, no cobramos comisión y no hay pasarela de pago en ninguna parte de este sitio. Salvo
-        el chat del acompañamiento, no alojamos conversaciones entre personas: cuando contactas a
-        alguien, lo haces por fuera de esta plataforma y nosotros no vemos nada de eso.
+        dinero, no cobramos comisión y no hay pasarela de pago en ninguna parte de este sitio. Sí alojamos el chat
+        de la plataforma, que es donde se acuerda un servicio o una entrega sin tener que dar el
+        teléfono: ese chat se borra con lo que lo abrió y no se archiva. Si en cambio decides
+        escribir por WhatsApp o llamar, eso ocurre por fuera y nosotros no vemos nada.
       </p>
 
       <h2 className="font-heading mt-8 text-2xl">Tus derechos</h2>
@@ -250,9 +234,8 @@ export default function PrivacidadPage() {
         </li>
       </ul>
       <p className="mt-3 text-base">
-        Si diste tu nombre para que una fundación acompañe una entrega, puedes pedir que lo borren desde el
-        enlace de tu solicitud, en «ver qué datos tuyos guardamos», sin esperar a las 72 horas. Y si nada de
-        esto te sirve, escríbenos a {CORREO_CONTACTO}.
+        Si nada de esto te sirve, escríbenos a {CORREO_CONTACTO} o pon una PQR en /pqr, que no
+        necesita cuenta.
       </p>
       <p className="mt-3 text-base">
         Lo único que no se borra es el registro de <em>quién miró</em> tus datos: quién fue, cuándo y con qué

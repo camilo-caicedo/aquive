@@ -65,10 +65,17 @@ responsable lo decide.
 
 **1 · Datos de menores.** Ley 1581 de 2012, artículo 7: el tratamiento de datos
 de niños, niñas y adolescentes está proscrito salvo datos de naturaleza
-pública. No se piden, no se guardan, no se publican. Los tipos de documento
-aceptados son CC, CE, PEP y PPT, por `CHECK` en la base; TI y RC no existen ni
-en la base ni en un desplegable. En moderación de imágenes, una foto donde se
-identifique a un menor se rechaza.
+pública. No se piden, no se guardan, no se publican.
+
+⚠ Esto decía «los tipos de documento aceptados son CC, CE, PEP y PPT, por
+`CHECK` en la base». Ese `CHECK` **ya no existe**, y la garantía de hoy es más
+fuerte: **no hay ninguna columna de documento en la base**. Se fue con
+`identidades` (ADR 0007), y con ella `validarDocumento` y `TIPOS_DOCUMENTO`.
+No es que se acepten cuatro tipos: es que no se pide ninguno. Si algún día
+vuelve a hacer falta un documento, vuelve también el `CHECK`.
+
+En moderación de imágenes, una foto donde se identifique a un menor se
+rechaza.
 
 **2 · Autorización previa e informada.** Artículo 9. Publicar el nombre, el
 teléfono o la foto de una persona necesita casilla explícita, finalidad
@@ -117,7 +124,7 @@ hilo cuelga de una de cinco cosas —una respuesta a un pedido de servicio, una
 respuesta a una solicitud de insumos, un producto, una publicación del muro o
 una ficha de prestador— y se borra cuando se borra ella.
 
-- Son cuatro columnas con `on delete cascade`, no un par «tipo + id»: una
+- Son cinco columnas con `on delete cascade`, no un par «tipo + id»: una
   llave polimórfica no puede cascadear, y entonces el borrado dependería de
   que algo se acuerde de cumplirlo.
 - Los dos papeles se llaman igual en los cinco orígenes: **`ofrece`** tiene la
@@ -304,7 +311,7 @@ de los dos lados.
 | Lógica de negocio | `src/server/<dominio>/`, TypeScript puro |
 | Autenticación | better-auth, con plugin de Expo |
 | Base de datos | Postgres (hoy Supabase) |
-| Archivos | almacenamiento S3 (hoy Supabase), subida directa del cliente |
+| Archivos | API REST de Storage de Supabase, subida directa del cliente. Aislada en `almacen.ts` para poder pasar a S3 |
 | Procesado de imagen | `sharp` |
 | Tareas programadas | Vercel Cron |
 | Cifrado | `node:crypto`, AES-256-GCM |
@@ -322,8 +329,10 @@ de los dos lados.
    Action exclusiva.
 3. **Ningún acceso a datos desde el navegador.**
 4. **Las subidas van directo del cliente al almacenamiento**, con URL firmada.
-5. **El almacenamiento se habla por S3**, no por el cliente de Supabase: el
-   mismo código sirve contra R2, MinIO o AWS cambiando variables de entorno.
+5. **El almacenamiento vive en UN archivo**, `src/server/imagenes/almacen.ts`,
+   y nadie más habla con él. Hoy usa la API REST de Storage de Supabase, no
+   S3: `@aws-sdk/client-s3` no está instalado. Pasar a R2, MinIO o AWS es
+   reescribir ese archivo y nada más, que era el punto.
 
 ### Qué se queda en Postgres
 
@@ -337,10 +346,10 @@ diferencia entre «el código no debería» y «la base no lo acepta».
 | Paso | Estado |
 | --- | --- |
 | 1 · Tipos de Drizzle desde el esquema | **hecho** — `npm run db:pull`, 60 objetos verificados contra el catálogo |
-| 2 · Eliminar el acceso a datos desde el navegador | en curso — quedan ~28 archivos, casi todos en admin y aliado |
+| 2 · Eliminar el acceso a datos desde el navegador | en curso — quedan ~20 archivos: 10 en admin y aliado, el resto repartidos |
 | 3 · Contrato oRPC con las primeras lecturas | **hecho** — Servicios, chat, comunidad, moderación |
 | 4 · Migrar lecturas, luego escrituras | en curso — las escrituras de solicitudes (servicios e insumos) ya están en el contrato |
-| 5 · Cron y cifrado fuera del motor | **hecho** — el cron de imágenes huérfanas está fuera y el cifrado se retiró con el flujo acompañado (ADR 0007) |
+| 5 · Cron y cifrado fuera del motor | **no** — el cron de imágenes huérfanas sí está fuera, pero `pg_cron` sigue programando los dos vencimientos y el cifrado de referencias sigue en Postgres con `pgp_sym_encrypt` y el Vault |
 | 6 · better-auth; espacios de trabajo de npm | pendiente |
 | 7 · App Expo sobre el contrato | pendiente |
 
@@ -381,15 +390,17 @@ portar**.
 | Buscar | 05 Inicio, 06 Categorías, 07 Listado, 08 Zonas + Mapa, 09 Ficha | `app/inicio`, `app/categorias`, `app/zonas`, `app/directorio` (lista y mapa), `app/prestador/[id]` |
 | Contratar | 10 Pedir, 11 Enviada, 12 Chat, 13 Calificar | `app/servicios/publicar`, `app/mensajes`, `app/chat/[tipo]/[id]`, `app/servicios/confirmar` |
 | Ofrecer | 14 Formulario, 15 Mi ficha | `app/servicios/soy-proveedor` |
-| Perfil | 16–25 | `app/perfil/**`, `app/mis-solicitudes` (20), `app/servicios/mi-perfil/[token]` |
+| Perfil | 16–25 | `app/perfil/**`, `app/mis-solicitudes` (20) |
 | Insumos | 26 Publicar, 27 Tablero, 29 Mis solicitudes | `app/publicar`, `app/ayudas`, `app/mis-solicitudes` |
 | Comunidad | 30 Muro, 31 Hecho en el barrio | `app/muro`, `app/barrio` (con `publicar` y `mios`) |
-| Acopio | Lista pública y mapa, panel del centro | `app/acopios`, `app/aliado` |
-| Moderación | 35 Colas, 36 Matrículas, imágenes | `app/admin`, `app/admin/matriculas`, `app/admin/imagenes` |
-| Información | 37 Ayuda, 38 PQR, 39 Contactos, 40 Quiénes somos | `app/ayuda`, `app/pqr`, `app/contacto`, `app/quienes-somos` |
+| Acopio | Lista pública y mapa, panel del centro con sus entregas | `app/acopios`, `app/aliado` |
+| Moderación | 35 Colas, 36 Matrículas, imágenes, PQR | `app/admin`, `app/admin/matriculas`, `app/admin/imagenes`, `app/admin/pqr`, `app/admin/cuentas` |
+| Información | 37 Ayuda, 38 PQR, 39 Contactos, 40 Quiénes somos | `app/ayuda`, `app/pqr` (y `app/pqr/[codigo]`), `app/contacto`, `app/quienes-somos` |
+| Fuera del prototipo | Directorios y puertas que el flujo de 40 pantallas no dibujó | `app/profesionales`, `app/entidades`, `app/ofertadores`, `app/solicitudes`, `app/registro`, `app/mapa`, `app/entrar/[codigo]`, `app/unirse/[...ruta]`, `app/responder/[codigo]`, `app/muro/mios` |
 
 **Barra inferior: `Inicio · Buscar · Mensajes · Perfil`.** Cuatro celdas, las del
-prototipo.
+prototipo, más una quinta condicional —«Acopio»— para quien pertenece al
+equipo de un centro.
 
 **La portada es la bienvenida**, con sesión y sin ella (ADR 0010). El logo
 del encabezado lleva ahí, que es lo que se espera al tocar una marca. Con
