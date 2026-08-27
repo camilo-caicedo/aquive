@@ -280,7 +280,22 @@
  *
  * Con la barra de carga arriba y esto abajo, cambiar de pantalla tiene
  * principio y final sin tocar ninguna API experimental — que en esta
- * aplicación ya costó caro una vez (ADR 0005). */
+ * aplicación ya costó caro una vez (ADR 0005).
+ *
+ * ⚠⚠ SOLO OPACIDAD. NO se le puede poner `transform`, y no es una
+ * preferencia: **un ancestro con `transform` se convierte en el bloque
+ * contenedor de sus descendientes `position: fixed`**, y dentro del
+ * `<main>` viven dos cosas fijas —la píldora de `AccionPrincipal` y la
+ * barra de acción de `MarcoFlujo`—.
+ *
+ * Con un `translateY` de 8 px aquí, «Necesito un servicio» dejaba de
+ * flotar y se iba con el desplazamiento: `offsetParent` pasaba a ser
+ * `MAIN` y la píldora terminaba dos mil píxeles por debajo de la ventana.
+ * Es la MISMA trampa que `accion-principal.tsx` ya tenía documentada para
+ * el `backdrop-filter` del encabezado.
+ *
+ * La subida de 8 px no se pierde: la ponen las tarjetas de dentro con
+ * `.animar-entrada` y `.lista-escalonada`, que no contienen nada fijo. */
 .animar-pantalla {
   animation: entrar-pantalla var(--dur-media) var(--curva-entrada) both;
 }
@@ -288,11 +303,9 @@
 @keyframes entrar-pantalla {
   from {
     opacity: 0;
-    transform: translateY(8px);
   }
   to {
     opacity: 1;
-    transform: none;
   }
 }
 
