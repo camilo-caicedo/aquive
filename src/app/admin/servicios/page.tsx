@@ -35,7 +35,7 @@ export default async function ServiciosAdminPage({
   const zonas = (zonasData as unknown as ZonaPropuesta[] | null) ?? []
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Servicios" volver="/admin" />
       {datos && <PanelServicios datos={datos} zonas={zonas} cola={cola} />}
     </main>

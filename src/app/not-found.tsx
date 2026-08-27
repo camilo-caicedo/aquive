@@ -8,7 +8,7 @@ import { Estado } from '@/components/estado'
 // dirección eso convierte la pantalla en un oráculo.
 export default function NoEncontrado() {
   return (
-    <main className="mx-auto max-w-lg px-4 py-12">
+    <main className="animar-pantalla mx-auto max-w-lg px-4 py-12">
       <Estado
         Icono={Compass}
         titulo="Esta página no existe"

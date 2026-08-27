@@ -55,7 +55,7 @@ const PUNTOS: { n: string; titulo: string; texto: string; clase: string }[] = [
 
 export default function QuienesSomosPage() {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Un directorio hecho entre vecinos" />
 
       <p className="max-w-prose text-base">

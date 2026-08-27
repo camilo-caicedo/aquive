@@ -13,7 +13,7 @@ export const metadata = { title: 'Cómo cuidarte' }
 
 export default function SeguridadPage() {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <h1 className="font-heading flex items-center gap-2 text-3xl">
         <ShieldAlert className="size-6 shrink-0" aria-hidden="true" />
         Cómo cuidarte

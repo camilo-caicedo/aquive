@@ -48,7 +48,7 @@ export default async function ZonasPage({
   const COLORES: Familia[] = ['azul', 'amarillo', 'verde', 'rojo']
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Dónde hay gente" volver="/categorias" />
       <p className="text-base text-muted-foreground">
         {total} {total === 1 ? 'persona' : 'personas'} en {zonas.length}{' '}

@@ -26,7 +26,7 @@ export default async function CategoriasPage({
   const categorias = await servidor.servicios.categorias({ municipio })
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Categorías" volver="/inicio" />
 
       {/* ⚠ Aquí había un `notFound()` cuando no hay ninguna categoría con

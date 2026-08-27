@@ -150,7 +150,7 @@ export default async function SolicitudesPage({
   ]
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-3xl px-4 py-6">
       <CabeceraPantalla titulo="Ayudas">
         <p className="mt-1 text-base text-muted-foreground">
           Insumos para la emergencia: quién los necesita y quién los tiene.

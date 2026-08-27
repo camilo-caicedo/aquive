@@ -359,7 +359,11 @@ export function BarraInferior({
                     : 'border-transparent text-muted-foreground'
                 }`}
               >
-                <span className="relative flex shrink-0">
+                <span
+                  className={`relative flex shrink-0 transition-transform duration-[var(--dur-toque)] ease-[var(--curva-suave)] ${
+                    activa ? 'scale-110' : 'scale-100'
+                  }`}
+                >
                   <Icono className="size-[1.375rem] shrink-0" aria-hidden="true" />
                   {pendientes > 0 && <Punto />}
                 </span>

@@ -47,7 +47,7 @@ export default async function AdminPage() {
     v(n?.matriculas) + v(n?.telefonos) + v(n?.reportes) + v(n?.imagenes) + v(n?.pqr)
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Administración" volver="/inicio">
         <p className="mt-1 text-base text-muted-foreground">
           {esperando === 0

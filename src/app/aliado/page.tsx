@@ -72,7 +72,7 @@ export default async function AliadoPage({
   const organizaciones = (aliadoData as unknown as AliadoResumen[]) ?? []
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       {/* El nombre de la organización, no «Mi organización»: quien
           coordina trabaja en una que se llama de alguna forma, y verla
           nombrada es lo que dice que está en el sitio correcto. */}

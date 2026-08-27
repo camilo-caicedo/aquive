@@ -53,7 +53,7 @@ export default async function ReportesPage() {
   const reportes = (data as unknown as ReporteConContenido[] | null) ?? []
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Reportes" volver="/admin">
         <p className="mt-1 text-base text-muted-foreground">
           {reportes.length === 0

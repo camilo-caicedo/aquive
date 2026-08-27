@@ -55,7 +55,7 @@ const PREGUNTAS: { t: string; r: string }[] = [
 
 export default function AyudaPage() {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Ayuda con la plataforma" />
 
       <p className="max-w-prose text-base text-muted-foreground">

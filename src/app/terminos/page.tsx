@@ -13,7 +13,7 @@ import {
 
 export default function TerminosPage() {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <p className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase">
         Términos de uso
       </p>

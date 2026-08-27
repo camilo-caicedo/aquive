@@ -19,7 +19,7 @@ import {
 // al flujo directo (sin titular identificable no hay titular).
 export default function PrivacidadPage() {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       {/* La etiqueta de arriba dice qué documento es esto; el `h1` dice qué
           promete. Sin ella, «Cómo tratamos la información» podía ser una
           página de ayuda cualquiera y no el aviso que tiene efecto legal. */}

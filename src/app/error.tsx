@@ -8,7 +8,7 @@ import { Estado } from '@/components/estado'
 // contenido de la solicitud (CLAUDE.md regla 6, sin PII en logs).
 export default function ErrorGlobal({ reset }: { error: Error; reset: () => void }) {
   return (
-    <main className="mx-auto max-w-lg px-4 py-12">
+    <main className="animar-pantalla mx-auto max-w-lg px-4 py-12">
       <Estado
         Icono={TriangleAlert}
         titulo="Algo falló de nuestro lado"

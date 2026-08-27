@@ -79,7 +79,7 @@ export default async function SolicitudesDeServicioPage({
   ]
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       {/* ⚠ Ya no lleva el segmentado de Servicios ni el chip que volvía al
           directorio. Esto era una vista colgada de /servicios y ahora es un
           destino propio de la barra: los dos lados del directorio, quién

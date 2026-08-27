@@ -31,7 +31,7 @@ export default async function MensajesPage() {
   const hilos = await servidor.chat.bandeja()
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Mensajes" />
 
       {hilos.length === 0 ? (

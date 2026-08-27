@@ -22,7 +22,7 @@ export default async function PqrAdminPage() {
   const abiertas = pqr.filter((p) => p.estado === 'abierta')
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="PQR" volver="/admin">
         <p className="mt-1 text-base text-muted-foreground">
           {abiertas.length === 0

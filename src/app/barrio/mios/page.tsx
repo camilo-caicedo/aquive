@@ -22,7 +22,7 @@ export default async function MisProductosPage() {
   const mios = await servidor.comunidad.misProductos()
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Mis productos" volver="/barrio" />
 
       <p className="text-base text-muted-foreground">

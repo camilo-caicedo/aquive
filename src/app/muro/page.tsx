@@ -43,7 +43,7 @@ export default async function MuroPage({
   const otra = cara === 'ofrece' ? 'necesita' : 'ofrece'
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Muro" />
       <p className="text-base text-muted-foreground">
         Dos caras del mismo muro: quien tiene algo que dar y quien necesita

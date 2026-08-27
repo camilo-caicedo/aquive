@@ -102,7 +102,7 @@ export default async function PerfilPage() {
   // ─────────────────────────────────────────────────────────────────
   if (!user) {
     return (
-      <main className="mx-auto max-w-lg px-4 py-6">
+      <main className="animar-pantalla mx-auto max-w-lg px-4 py-6">
         <CabeceraPantalla titulo="Perfil" />
 
         <div className="flex items-start gap-3 rounded-2xl bg-secondary p-4 text-secondary-foreground">
@@ -290,7 +290,7 @@ export default async function PerfilPage() {
 
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-lg px-4 py-6">
       <CabeceraPantalla titulo="Perfil" />
 
       {proveedor ? (

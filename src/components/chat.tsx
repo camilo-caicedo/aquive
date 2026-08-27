@@ -52,6 +52,14 @@ export function Chat({
     finRef.current?.scrollIntoView({ block: 'end' })
   }, [mensajes.length])
 
+  // Cuántos había al abrir. Lo que pase de ahí lo escribió esta persona en
+  // esta sesión, y es lo único que entra moviéndose.
+  //
+  // Estado inicial y no un ref: el valor se captura una vez al montar y no
+  // cambia nunca, y leer un ref durante el render es justo lo que el
+  // compilador de React no admite.
+  const [alAbrir] = useState(mensajes.length)
+
   async function enviar(evento: React.FormEvent) {
     evento.preventDefault()
     const texto = cuerpo.trim()
@@ -78,7 +86,7 @@ export function Chat({
   }
 
   const cerrado = hiloInicial.cerrado
-  const filas = agrupar(mensajes, hiloInicial.soy)
+  const filas = agrupar(mensajes, hiloInicial.soy, alAbrir)
 
   return (
     <MarcoFlujo
@@ -164,7 +172,7 @@ export function Chat({
                 key={fila.clave}
                 className={`flex ${fila.mio ? 'justify-end' : 'justify-start'} ${
                   fila.empiezaTanda ? 'pt-2' : ''
-                }`}
+                } ${fila.recienEnviado ? 'animar-entrada' : ''}`}
               >
                 {/* Lo mío en blanco y lo suyo en amarillo, por decisión del
                     responsable. Antes lo propio iba en arena, que sobre el
@@ -230,6 +238,16 @@ type Fila =
       empiezaTanda: boolean
       /** Último de la tanda: lleva la hora y la esquina de la cola. */
       cierraTanda: boolean
+      /**
+       * Se envió en esta sesión, después de abrir el hilo. Es lo único
+       * que entra moviéndose.
+       *
+       * ⚠ No se anima la lista entera: al abrir un hilo de treinta
+       * mensajes, treinta burbujas entrando a la vez es una cortina, no
+       * una conversación. Y aquí no hay sondeo —es deliberado, está
+       * escrito arriba—, así que el único que «llega» es el propio.
+       */
+      recienEnviado: boolean
     }
 
 /**
@@ -243,7 +261,7 @@ type Fila =
  * navegador ven igual. El texto del separador sí sale en hora local, pero
  * solo después de hidratar.
  */
-function agrupar(mensajes: Mensaje[], soy: Autor): Fila[] {
+function agrupar(mensajes: Mensaje[], soy: Autor, habiaAlAbrir: number): Fila[] {
   const filas: Fila[] = []
   let diaAnterior: string | null = null
 
@@ -269,6 +287,7 @@ function agrupar(mensajes: Mensaje[], soy: Autor): Fila[] {
         !siguiente ||
         siguiente.autor !== m.autor ||
         siguiente.creado_at.slice(0, 10) !== dia,
+      recienEnviado: i >= habiaAlAbrir,
     })
   }
 

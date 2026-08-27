@@ -25,7 +25,7 @@ export default async function PublicarServicioPage() {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ''
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-lg px-4 py-6">
       <h1 className="font-heading text-3xl">Necesito un servicio</h1>
       <p className="mt-2 text-base text-muted-foreground">
         Publica qué te hace falta y quien pueda hacerlo te responde con su

@@ -100,7 +100,7 @@ export default async function VerificacionesPage() {
     : null
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-lg px-4 py-6">
       <CabeceraPantalla titulo="Verificaciones" volver="/perfil" />
 
       <p className="text-base text-muted-foreground">

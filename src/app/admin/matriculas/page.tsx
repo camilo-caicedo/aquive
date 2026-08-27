@@ -45,7 +45,7 @@ export default async function MatriculasPage() {
   const cola = servidores ?? []
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Matrículas" volver="/admin">
         <p className="mt-1 text-base text-muted-foreground">
           {cola.length === 0

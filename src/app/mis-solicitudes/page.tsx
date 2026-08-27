@@ -37,7 +37,7 @@ export default async function MisSolicitudesPage() {
   ])
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-lg px-4 py-6">
       {/* El h1 repite la etiqueta de la fila del perfil (regla 8). */}
       <CabeceraPantalla titulo="Mis solicitudes" volver="/perfil" />
 

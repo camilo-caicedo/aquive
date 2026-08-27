@@ -18,7 +18,7 @@ export default async function ImagenesPage() {
   const cola = await servidor.comunidad.colaDeImagenes()
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Imágenes" volver="/admin" />
       <p className="text-base text-muted-foreground">
         {cola.length === 0

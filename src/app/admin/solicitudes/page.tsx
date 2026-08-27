@@ -49,7 +49,7 @@ export default async function SolicitudesAdminPage({
   ]
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Solicitudes vivas" volver="/admin">
         <nav aria-label="Filtrar solicitudes" className="riel -mx-4 mt-3 flex gap-2 overflow-x-auto px-4">
           {CHIPS.map((c) => {

@@ -55,7 +55,7 @@ export default async function OfertadoresPage({
   const mostrarFiltros = (municipios?.length ?? 0) > 0 || hayFiltro
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       {/* El titulo era «Ayudas» y lo que decia cual de las tres listas era
           el segmentado. Sin segmentado (regla 3), el h1 tiene que nombrar lo
           que hay en la pantalla: «Quien ofrece». */}

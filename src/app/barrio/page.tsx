@@ -75,7 +75,7 @@ export default async function BarrioPage({
   const hayFiltro = Boolean(params.q || grupo || modo)
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       {/* Se entra desde el inicio, así que la vuelta de reserva es a él.
           Habiendo historia detrás, la flecha va a donde estabas de verdad. */}
       <CabeceraPantalla titulo="Productos" volver="/inicio">

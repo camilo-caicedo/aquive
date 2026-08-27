@@ -23,7 +23,7 @@ export default async function ResenasPage() {
   const confirmados = proveedor?.servicios_confirmados ?? 0
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-lg px-4 py-6">
       <CabeceraPantalla titulo="Reseñas" volver="/perfil" />
 
       <section className="shadow-cartel-amarillo rounded-2xl bg-card p-4">

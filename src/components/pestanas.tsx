@@ -1,4 +1,9 @@
+'use client'
+
 import Link from 'next/link'
+import { useLayoutEffect, useRef } from 'react'
+
+import { useHidratado } from '@/components/hidratado'
 
 export interface Pestana {
   href: string
@@ -30,6 +35,11 @@ export interface Pestana {
  *
  * El alto sigue en 48 px, que es lo que manda CLAUDE.md aunque el
  * original de shadcn sea más bajo: esto se toca de pie y con prisa.
+ *
+ * ⚠ Pasó a `'use client'` para que el papel de la activa se DESLICE entre
+ * pestañas en vez de saltar. Lo que se mueve es una píldora absoluta detrás
+ * de los enlaces; los enlaces siguen siendo `<Link>` a rutas del servidor y
+ * nada del contenido se volvió cliente.
  */
 export function Pestanas({
   etiqueta,
@@ -39,11 +49,76 @@ export function Pestanas({
   etiqueta: string
   pestanas: Pestana[]
 }) {
+  const lista = useRef<HTMLUListElement>(null)
+
+  // Antes de hidratar, el papel va en el propio enlace, como siempre: la
+  // primera pintada del cliente es idéntica a la del servidor (ADR 0005) y
+  // sin JavaScript la pestaña activa se sigue viendo.
+  const hidratado = useHidratado()
+  const activa = pestanas.findIndex((p) => p.activa)
+
+  // Se coloca desde el DOM y no desde el estado: así no hay un render de
+  // más por cada medida, y la primera colocación puede ser instantánea
+  // mientras las siguientes se deslizan.
+  useLayoutEffect(() => {
+    const ul = lista.current
+    if (!ul || activa < 0) return
+
+    function colocar() {
+      if (!ul) return
+      // ⚠ La píldora se busca por atributo y no por `ref`. Con un `ref`,
+      // el compilador de React marca la lectura como acceso durante el
+      // render en cuanto la función se le pasa a un `ResizeObserver`, que
+      // es lo que hace falta aquí.
+      const p = ul.querySelector('[data-pildora]')
+      // ⚠ Los `<li>`, no `ul.children`: la píldora también es hija del
+      // `<ul>` y va primera, así que por índice se cogería la pestaña
+      // equivocada.
+      const el = ul.querySelectorAll('li')[activa]
+      if (!(p instanceof HTMLElement) || !(el instanceof HTMLElement)) return
+
+      p.style.width = `${el.offsetWidth}px`
+      p.style.transform = `translateX(${el.offsetLeft}px)`
+
+      // ⚠ La transición se pone DESPUÉS de escribir la posición, y a
+      // propósito. En la primera colocación el navegador ya tiene el valor
+      // nuevo cuando aparece la regla, así que no hay nada que animar y la
+      // píldora cae en su sitio en vez de entrar deslizándose desde el
+      // borde izquierdo cada vez que carga la pantalla. En las siguientes
+      // la regla ya está puesta y sí se desliza.
+      p.style.transition = 'transform var(--dur-media) var(--curva-entrada)'
+    }
+
+    colocar()
+
+    // El riel se arrastra y la ventana cambia de tamaño; en las dos cosas
+    // la píldora tiene que volver a cuadrar con su pestaña.
+    const observador = new ResizeObserver(colocar)
+    observador.observe(ul)
+    return () => observador.disconnect()
+  }, [activa, pestanas.length])
+
   return (
     <nav aria-label={etiqueta} className="riel -mx-4 overflow-x-auto px-4">
-      <ul className="inline-flex w-full min-w-fit items-center gap-1 rounded-full bg-secondary p-1.5">
+      <ul
+        ref={lista}
+        className="relative inline-flex w-full min-w-fit items-center gap-1 rounded-full bg-secondary p-1.5"
+      >
+        {/* El papel que se desliza.
+            ⚠ Solo se anima `transform`. El ancho se pone de golpe, sin
+            transición: animar `width` es exactamente lo que la regla de
+            accesibilidad prohíbe, y como las pestañas son `flex-1` casi
+            siempre miden lo mismo y el cambio no se ve. */}
+        {hidratado && (
+          <span
+            data-pildora=""
+            aria-hidden="true"
+            className="shadow-canto pointer-events-none absolute top-1.5 bottom-1.5 left-0 rounded-full bg-card"
+          />
+        )}
+
         {pestanas.map((p) => (
-          <li key={p.href} className="min-w-fit flex-1">
+          <li key={p.href} className="relative min-w-fit flex-1">
             <Link
               href={p.href}
               aria-current={p.activa ? 'page' : undefined}
@@ -59,9 +134,12 @@ export function Pestanas({
               // borde —que el papel pelado no tenía—, más la sombra y el
               // peso de la letra: tres señales en vez de una, y ninguna
               // depende solo del tono.
-              className={`inline-flex min-h-12 w-full items-center justify-center gap-1.5 rounded-full px-5 text-base whitespace-nowrap transition-colors ${
+              className={`relative inline-flex min-h-12 w-full items-center justify-center gap-1.5 rounded-full px-5 text-base whitespace-nowrap transition-colors duration-[var(--dur-corta)] ${
                 p.activa
-                  ? 'bg-card font-semibold text-foreground shadow-canto'
+                  ? // El papel lo pone la píldora en cuanto hidrata. Aquí
+                    // solo mientras tanto, para que no haya un parpadeo sin
+                    // fondo entre el HTML del servidor y la medición.
+                    `font-semibold text-foreground ${hidratado ? '' : 'bg-card shadow-canto'}`
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -71,7 +149,7 @@ export function Pestanas({
                   // En la activa va arena y no un blanco translúcido: el
                   // de antes se apoyaba en el relleno terracota, y sobre
                   // papel desaparece.
-                  className={`rounded-full px-2 text-sm ${
+                  className={`rounded-full px-2 text-sm transition-colors duration-[var(--dur-corta)] ${
                     p.activa
                       ? 'bg-secondary text-secondary-foreground'
                       : 'bg-background text-muted-foreground'

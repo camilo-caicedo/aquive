@@ -98,7 +98,7 @@ export default async function RegistroPage({
   }
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-lg px-4 py-6">
       <VueltaAlDestino />
       <CabeceraPantalla titulo="Lo mío" volver="/perfil">
       </CabeceraPantalla>

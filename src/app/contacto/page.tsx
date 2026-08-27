@@ -61,7 +61,7 @@ export default function ContactoPage() {
   const filas = FILAS.filter((f) => f.valor)
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Hablemos" />
 
       <ul className="space-y-3">

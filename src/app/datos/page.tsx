@@ -83,7 +83,7 @@ export default async function DatosPage() {
   const maxCategoria = Math.max(1, ...porCategoria.map((c) => c.total))
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-3xl px-4 py-6">
       <p className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase">
         Datos abiertos
       </p>

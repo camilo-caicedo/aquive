@@ -100,7 +100,7 @@ export default async function SoyProveedorPage() {
   )
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-lg px-4 py-6">
       <CabeceraPantalla titulo="Mi ficha" volver="/perfil" />
 
       {/* La cinta dice lo único que quien acaba de publicar quiere saber:

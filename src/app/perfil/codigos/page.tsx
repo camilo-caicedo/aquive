@@ -20,7 +20,7 @@ export default async function CodigosPage() {
   if (!proveedor) redirect('/servicios/soy-proveedor')
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-lg px-4 py-6">
       <CabeceraPantalla titulo="Códigos" volver="/perfil" />
 
       <p className="text-base text-muted-foreground">

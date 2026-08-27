@@ -40,7 +40,7 @@ export default async function AcopiosPage({
   const fueraDelMapa = acopios.length - enElMapa.length
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Dónde entregar" volver="/muro" />
 
       <p className="text-base text-muted-foreground">
