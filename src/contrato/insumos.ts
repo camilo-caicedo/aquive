@@ -46,6 +46,7 @@ export const MiSolicitudInsumos = z.object({
   estado: z.string(),
   creada_at: z.string(),
   expira_at: z.string(),
+  num_respuestas: z.number(),
 })
 
 export type MiSolicitudInsumos = z.infer<typeof MiSolicitudInsumos>

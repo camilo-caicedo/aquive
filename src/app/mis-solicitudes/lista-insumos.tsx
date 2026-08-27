@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 
 import { rpc } from '@/orpc/cliente'
 import type { MiSolicitudInsumos } from '@/contrato/insumos'
+import type { Categoria } from '@/lib/types'
+import { categoria } from '@/lib/catalogo'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useHidratado } from '@/components/hidratado'
@@ -75,7 +77,12 @@ export function ListaInsumos({
           return (
             <li key={s.id} className="shadow-canto rounded-2xl bg-card p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <h3 className="font-heading text-lg leading-tight">{s.categoria}</h3>
+                {/* La etiqueta, no el valor de la columna: la pantalla decía
+                    «abrigo» en minúscula, que es cómo lo guarda la base y no
+                    cómo se llama la categoría. */}
+                <h3 className="font-heading text-lg leading-tight">
+                  {categoria(s.categoria as Categoria).etiqueta}
+                </h3>
                 {/* El estado no depende solo del color: lleva su palabra. */}
                 <span
                   className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-sm font-medium ${
@@ -93,6 +100,20 @@ export function ListaInsumos({
               {/* El código va en monoespaciada porque se dicta por teléfono,
                   y ahí importa distinguir un cero de una o. */}
               <p className="mt-1 font-mono text-sm text-muted-foreground">{s.codigo}</p>
+
+              {/* Lo único que quien pidió vuelve a mirar. Sin esto la
+                  pantalla enseña un código y nada más. */}
+              <p
+                className={`mt-2 text-base ${
+                  s.num_respuestas > 0 ? 'font-medium text-foreground' : 'text-muted-foreground'
+                }`}
+              >
+                {s.num_respuestas === 0
+                  ? 'Nadie ha respondido todavía.'
+                  : s.num_respuestas === 1
+                    ? 'Una persona respondió.'
+                    : `${s.num_respuestas} personas respondieron.`}
+              </p>
 
               <p className="mt-1 text-sm text-muted-foreground">
                 {hidratado

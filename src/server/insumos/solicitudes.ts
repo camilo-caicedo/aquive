@@ -193,6 +193,12 @@ export async function mias(
       estado: solicitudes.estado,
       creada_at: solicitudes.creadaAt,
       expira_at: solicitudes.expiraAt,
+      // Quien pide publica, ve un código y no vuelve a saber nada. Sin este
+      // número la pantalla no puede decirle lo único que vino a mirar: si
+      // alguien respondió. El gemelo de servicios ya lo trae.
+      num_respuestas: sql<number>`(
+        select count(*) from ${respuestas} r where r.solicitud_id = ${solicitudes.id}
+      )`.mapWith(Number),
     })
     .from(solicitudes)
     .where(eq(solicitudes.perfilId, llave.usuarioId))
@@ -206,6 +212,7 @@ export async function mias(
     estado: f.estado,
     creada_at: String(f.creada_at),
     expira_at: String(f.expira_at),
+    num_respuestas: f.num_respuestas,
   }))
 }
 
