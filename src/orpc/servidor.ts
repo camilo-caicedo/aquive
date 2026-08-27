@@ -165,6 +165,23 @@ export const enrutador = os.router({
   },
   acopios: {
     lista: os.acopios.lista.handler(({ input }) => acopios.lista(db, input)),
+    movimientos: os.acopios.movimientos.handler(({ input, context }) =>
+      acopios.movimientos(db, input.organizacion_id, { usuarioId: context.usuarioId }),
+    ),
+    registrarMovimiento: os.acopios.registrarMovimiento.handler(
+      async ({ input, context, errors }) => {
+        try {
+          return await acopios.registrarMovimiento(db, input, {
+            usuarioId: context.usuarioId,
+          })
+        } catch (e) {
+          if (e instanceof acopios.AcopioRechazado) {
+            throw errors.RECHAZADO({ data: { motivo: e.message } })
+          }
+          throw e
+        }
+      },
+    ),
   },
   cuentas: {
     crear: os.cuentas.crear.handler(async ({ input, context, errors }) => {

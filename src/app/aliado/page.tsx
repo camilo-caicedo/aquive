@@ -12,13 +12,18 @@ import { PanelEquipo } from './panel-equipo'
 import { PanelProveedores, type ProveedorDeOrganizacion } from './panel-proveedores'
 import { PanelReferencias, type ReferenciaPorRevisar } from './panel-referencias'
 import { PanelZonas, type ZonaPropuesta } from '@/components/panel-zonas'
+import { PanelEntregas } from './panel-entregas'
+import { servidor } from '@/orpc/local'
 
 export const metadata: Metadata = {
   title: 'Mi centro de acopio',
   robots: { index: false, follow: false },
 }
 
-type Vista = 'equipo' | 'proveedores'
+// ⚠ El ADR 0008 pide tres pestañas: Entregas, Equipo y la ficha pública.
+// Había dos, y faltaba justo la que ese ADR pone primera — «un centro de
+// acopio registra lo que entra y lo que sale».
+type Vista = 'entregas' | 'equipo' | 'proveedores'
 
 /**
  * El panel de un centro de acopio (ADR 0008).
@@ -60,7 +65,8 @@ export default async function AliadoPage({
   const esAdmin = Boolean(admin)
   if (!esAliado && !esAdmin) redirect('/')
 
-  const vista: Vista = ver === 'proveedores' ? 'proveedores' : 'equipo'
+  const vista: Vista =
+    ver === 'proveedores' ? 'proveedores' : ver === 'equipo' ? 'equipo' : 'entregas'
 
   const { data: aliadoData } = await supabase.rpc('mi_aliado')
   const organizaciones = (aliadoData as unknown as AliadoResumen[]) ?? []
@@ -80,7 +86,12 @@ export default async function AliadoPage({
           <Pestanas
             etiqueta="Secciones del centro"
             pestanas={[
-              { href: '/aliado', etiqueta: 'Mi equipo', activa: vista === 'equipo' },
+              { href: '/aliado', etiqueta: 'Entregas', activa: vista === 'entregas' },
+              {
+                href: '/aliado?ver=equipo',
+                etiqueta: 'Mi equipo',
+                activa: vista === 'equipo',
+              },
               {
                 href: '/aliado?ver=proveedores',
                 etiqueta: 'Servicios',
@@ -97,6 +108,8 @@ export default async function AliadoPage({
           de acopio, así que hay secciones que van a salir vacías.
         </p>
       )}
+
+      {vista === 'entregas' && <Entregas organizaciones={organizaciones} />}
 
       {vista === 'proveedores' && <Proveedores />}
 
@@ -270,5 +283,49 @@ async function Equipo({
         </section>
       ))}
     </>
+  )
+}
+
+/**
+ * Lo que entra y lo que sale del centro. ADR 0008, decisión 2.
+ *
+ * Sección aparte y consultas propias, como `Equipo` y `Proveedores`: son
+ * tres consultas que no tienen por qué hacerse cuando alguien entra a mirar
+ * su equipo.
+ */
+async function Entregas({ organizaciones }: { organizaciones: AliadoResumen[] }) {
+  const supabase = await createClient()
+  const { data: organizacionId } = await supabase.rpc('mi_organizacion_activa')
+
+  if (!organizacionId) {
+    return (
+      <p className="mt-6 text-base text-muted-foreground">
+        Tu ingreso al equipo todavía está por aprobar.
+      </p>
+    )
+  }
+
+  const [municipios, { data: items }, movimientos] = await Promise.all([
+    listarMunicipios(supabase),
+    supabase.from('catalogo_items').select('*').eq('activo', true).order('orden'),
+    servidor.acopios.movimientos({ organizacion_id: organizacionId as string }),
+  ])
+
+  // Solo los municipios donde ese centro opera: la lista completa de 1.122
+  // no dice nada aquí, y anotar una entrega en un municipio donde el centro
+  // no está es un dato que después nadie sabe leer.
+  const suyos = organizaciones[0]?.organizacion.municipios ?? []
+  const delCentro =
+    suyos.length > 0
+      ? municipios.filter((m) => suyos.includes(m.codigo_dane))
+      : municipios
+
+  return (
+    <PanelEntregas
+      organizacionId={organizacionId as string}
+      municipios={delCentro}
+      items={items ?? []}
+      movimientos={movimientos}
+    />
   )
 }

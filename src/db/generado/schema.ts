@@ -63,9 +63,10 @@ export const entregas = pgTable("entregas", {
 	cantidad: numeric({ precision: 8, scale:  2 }).notNull(),
 	recibidoAt: timestamp("recibido_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	confirmadaPorSolicitanteAt: timestamp("confirmada_por_solicitante_at", { withTimezone: true, mode: 'string' }),
-	solicitudCodigo: text("solicitud_codigo").notNull(),
+	solicitudCodigo: text("solicitud_codigo"),
 	esPrueba: boolean("es_prueba").default(false).notNull(),
 	origenTipo: text("origen_tipo"),
+	direccion: text().default('entra').notNull(),
 }, (table) => [
 	index("idx_entregas_organizacion").using("btree", table.organizacionId.asc().nullsLast().op("timestamptz_ops"), table.recibidoAt.desc().nullsFirst().op("timestamptz_ops")),
 	foreignKey({
@@ -84,7 +85,8 @@ export const entregas = pgTable("entregas", {
 			name: "entregas_sugerencia_id_fkey"
 		}).onDelete("set null"),
 	check("entregas_cantidad_check", sql`(cantidad > (0)::numeric) AND (cantidad <= (9999)::numeric)`),
-	check("entregas_origen_tipo_check", sql`origen_tipo = ANY (ARRAY['muro'::text, 'producto'::text, 'directo'::text])`),
+	check("entregas_direccion_check", sql`direccion = ANY (ARRAY['entra'::text, 'sale'::text])`),
+	check("entregas_origen_tipo_check", sql`(origen_tipo IS NULL) OR (origen_tipo = ANY (ARRAY['muro'::text, 'producto'::text, 'directo'::text, 'mostrador'::text]))`),
 	check("entregas_uno_u_otro", sql`num_nonnulls(item_id, sugerencia_id) = 1`),
 ]);
 
