@@ -380,6 +380,19 @@ export const contratoServicios = {
   misSolicitudes: oc.output(z.array(MiSolicitudServicio)),
 
   /**
+   * Borrar mi ficha, con su foto y las de mis productos.
+   *
+   * ⚠ Va por el contrato y no por la RPC `borrar_proveedor`, que era un
+   * `delete` a secas: una función de Postgres no puede borrar un objeto del
+   * almacén, y la regla de producto 3 dice que borrar una fila borra también
+   * sus imágenes. Con la RPC, la foto de la cara de esa persona se quedaba
+   * publicada después de que ella pidiera borrarla.
+   */
+  borrarFicha: oc
+    .errors(erroresUbicacion)
+    .output(z.object({ ok: z.literal(true) })),
+
+  /**
    * Alta asistida: alguien del equipo de un aliado registra a un prestador
    * que no tiene cuenta de Google.
    *

@@ -431,12 +431,16 @@ export function FormularioProveedor({
       return
     }
     setGuardando(true)
-    const supabase = createClient()
-    const { error: rpcError } = await supabase.rpc('borrar_proveedor', {
-      p_token: token ?? null,
-    })
-    if (rpcError) {
-      setError(rpcError.message)
+    // Por el contrato: borrar la ficha borra además su foto del almacén, y
+    // eso no lo puede hacer una función de Postgres (regla de producto 3).
+    try {
+      await rpc.servicios.borrarFicha()
+    } catch (e) {
+      const motivo =
+        e && typeof e === 'object' && 'data' in e
+          ? ((e.data as { motivo?: string } | undefined)?.motivo ?? null)
+          : null
+      setError(motivo ?? 'No se pudo borrar. Inténtalo otra vez.')
       setGuardando(false)
       return
     }

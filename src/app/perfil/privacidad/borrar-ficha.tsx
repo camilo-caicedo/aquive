@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Trash2 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { rpc } from '@/orpc/cliente'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
@@ -26,11 +26,16 @@ export function BorrarFicha() {
   async function borrar() {
     setBorrando(true)
     setError(null)
-    const { error: rpcError } = await createClient().rpc('borrar_proveedor', {
-      p_token: null,
-    })
-    if (rpcError) {
-      setError(rpcError.message)
+    // Por el contrato, no por la RPC: borrar la ficha tiene que borrar
+    // además su foto del almacén, y eso es código (regla de producto 3).
+    try {
+      await rpc.servicios.borrarFicha()
+    } catch (e) {
+      const motivo =
+        e && typeof e === 'object' && 'data' in e
+          ? ((e.data as { motivo?: string } | undefined)?.motivo ?? null)
+          : null
+      setError(motivo ?? 'No se pudo borrar. Inténtalo otra vez.')
       setBorrando(false)
       return
     }

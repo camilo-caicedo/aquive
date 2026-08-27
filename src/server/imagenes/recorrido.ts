@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
 
-import { and, asc, eq, isNull, lt } from 'drizzle-orm'
+import { and, asc, eq, isNull, lt, or, sql } from 'drizzle-orm'
 import sharp from 'sharp'
 
 import type { BaseDeDatos } from '@/db/cliente'
@@ -204,7 +204,32 @@ export async function barrerHuerfanas(db: BaseDeDatos) {
     await db.delete(imagenes).where(eq(imagenes.id, v.id))
   }
 
-  return { borradas: viejas.length }
+  // Segunda pasada: las que sí tienen `objeto_id`, pero apuntando a algo que
+  // ya no existe.
+  //
+  // `imagenes` no tiene llave foránea hacia su objeto —no puede, porque el
+  // objeto vive en tres tablas distintas—, así que borrar un producto, una
+  // publicación o una ficha por una vía que no limpie el almacén deja esto
+  // detrás. Hoy todas esas vías limpian; esta pasada es la red por si mañana
+  // aparece una que no.
+  const colgando = await db
+    .select({ id: imagenes.id, ruta: imagenes.ruta })
+    .from(imagenes)
+    .where(
+      sql`${imagenes.objetoId} is not null and not exists (
+        select 1 from productos p where p.id = ${imagenes.objetoId}
+        union all select 1 from publicaciones_muro m where m.id = ${imagenes.objetoId}
+        union all select 1 from proveedores v where v.id = ${imagenes.objetoId}
+      )`,
+    )
+
+  for (const c of colgando) {
+    await almacen.borrar('cuarentena', c.ruta)
+    await almacen.borrar('publico', `${c.ruta}.webp`)
+    await db.delete(imagenes).where(eq(imagenes.id, c.id))
+  }
+
+  return { borradas: viejas.length + colgando.length }
 }
 
 /**
@@ -222,4 +247,46 @@ export async function esAdmin(db: BaseDeDatos, usuarioId: string | null) {
     .where(eq(administradores.userId, usuarioId))
     .limit(1)
   return Boolean(fila)
+}
+
+/**
+ * Borrar las imágenes de unos objetos, del almacén y de la tabla.
+ *
+ * ⚠ Esto existe porque `ON DELETE CASCADE` no borra un archivo de un bucket
+ * (regla de producto 3), y porque `imagenes` **no tiene llave foránea hacia
+ * su objeto**: ni siquiera la fila se iba sola. Borrar una ficha dejaba la
+ * foto de la cara de esa persona en una URL pública, con su fila apuntando a
+ * algo que ya no existe — y el barredor de huérfanas no la alcanzaba, porque
+ * solo mira las que tienen `objeto_id` en nulo.
+ *
+ * Se llama ANTES de borrar la fila dueña. Al revés no habría forma de saber
+ * qué imágenes eran suyas.
+ */
+export async function borrarImagenesDe(
+  db: BaseDeDatos,
+  objetos: { tipo: 'muro' | 'producto' | 'proveedor'; id: string }[],
+) {
+  if (objetos.length === 0) return { borradas: 0 }
+
+  const filas = await db
+    .select({ id: imagenes.id, ruta: imagenes.ruta })
+    .from(imagenes)
+    .where(
+      or(
+        ...objetos.map((o) =>
+          and(eq(imagenes.objetoTipo, o.tipo), eq(imagenes.objetoId, o.id)),
+        ),
+      ),
+    )
+
+  for (const f of filas) {
+    // Los dos buckets: en cuarentena vive lo que espera revisión, en público
+    // lo aprobado. Una imagen está en uno o en otro, y borrar del que no
+    // toca no cuesta nada.
+    await almacen.borrar('cuarentena', f.ruta)
+    await almacen.borrar('publico', `${f.ruta}.webp`)
+    await db.delete(imagenes).where(eq(imagenes.id, f.id))
+  }
+
+  return { borradas: filas.length }
 }

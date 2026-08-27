@@ -1,0 +1,31 @@
+-- =====================================================================
+-- v6 · Fase C · 3 — se retira `borrar_proveedor`
+--
+-- Era un `delete from public.proveedores` y nada más. Una función de
+-- Postgres **no puede borrar un objeto del almacén**, y la regla de
+-- producto 3 dice que borrar una fila borra también sus imágenes:
+--
+--   «`ON DELETE CASCADE` no borra objetos de un bucket: eso es código, y
+--    se escribe junto con la subida.»
+--
+-- Con esta función, quien pedía borrar su ficha se quedaba con su foto
+-- publicada en una URL pública, y la fila de `imagenes` apuntando a un
+-- proveedor que ya no existe — fuera del alcance del barredor de
+-- huérfanas, que solo mira las que tienen `objeto_id` en nulo.
+--
+-- Su reemplazo es `servicios.borrarFicha` del contrato, en
+-- `src/server/servicios/ficha.ts`, que borra los objetos de los dos
+-- buckets antes de tocar la fila.
+--
+-- Idempotente. Se puede volver a correr.
+-- =====================================================================
+
+drop function if exists public.borrar_proveedor(text);
+
+-- Comprobar que no queda ninguna función borrando filas que puedan tener
+-- imagen sin limpiar el almacén:
+--
+--   select p.proname from pg_proc p
+--     join pg_namespace n on n.oid = p.pronamespace
+--    where n.nspname = 'public'
+--      and p.prosrc ~ 'delete\s+from\s+public\.(proveedores|productos|publicaciones_muro)';

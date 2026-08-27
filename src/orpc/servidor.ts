@@ -19,6 +19,7 @@ import * as pedidos from '@/server/servicios/solicitudes'
 import * as ubicacion from '@/server/servicios/ubicacion'
 import * as foto from '@/server/servicios/foto'
 import * as altaAsistida from '@/server/servicios/alta-asistida'
+import * as fichaPropia from '@/server/servicios/ficha'
 
 // El enrutador: pega el contrato con la capa de dominio. Aquí y solo aquí se
 // tocan las dos cosas — el contrato no sabe de Postgres y el dominio no sabe
@@ -58,6 +59,16 @@ export const enrutador = os.router({
         return await altaAsistida.registrar(db, input, { usuarioId: context.usuarioId })
       } catch (e) {
         if (e instanceof altaAsistida.AltaRechazada) {
+          throw errors.RECHAZADO({ data: { motivo: e.message } })
+        }
+        throw e
+      }
+    }),
+    borrarFicha: os.servicios.borrarFicha.handler(async ({ context, errors }) => {
+      try {
+        return await fichaPropia.borrar(db, { usuarioId: context.usuarioId })
+      } catch (e) {
+        if (e instanceof fichaPropia.FichaRechazada) {
           throw errors.RECHAZADO({ data: { motivo: e.message } })
         }
         throw e
