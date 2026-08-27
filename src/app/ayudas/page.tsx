@@ -304,7 +304,7 @@ export default async function SolicitudesPage({
                         key={c.clave}
                         href={c.href}
                         scroll={false}
-                        className="shadow-canto inline-flex min-h-12 items-center gap-2 rounded-full bg-card px-4 text-base transition-colors hover:bg-muted"
+                        className="pulsable shadow-canto inline-flex min-h-12 items-center gap-2 rounded-full bg-card px-4 text-base transition-colors hover:bg-muted"
                       >
                         Quitar {c.etiqueta}
                         <X className="size-4 shrink-0" aria-hidden="true" />

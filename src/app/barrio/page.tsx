@@ -88,7 +88,7 @@ export default async function BarrioPage({
             mios.length > 0 ? (
               <Link
                 href="/barrio/mios"
-                className="shadow-canto inline-flex min-h-12 shrink-0 items-center rounded-full bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
+                className="pulsable shadow-canto inline-flex min-h-12 shrink-0 items-center rounded-full bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
               >
                 Mis productos · {mios.length}
               </Link>

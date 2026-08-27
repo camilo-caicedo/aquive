@@ -167,7 +167,7 @@ export function ListaSolicitudesServicio({
                   <Link
                     href={`/chat/servicio/${s.mi_respuesta_id}`}
                     aria-label={`Abrir el chat de la solicitud ${s.codigo}`}
-                    className="border-enlace text-enlace hover:bg-accent flex size-12 shrink-0 items-center justify-center rounded-full border transition-colors"
+                    className="pulsable border-enlace text-enlace hover:bg-accent flex size-12 shrink-0 items-center justify-center rounded-full border transition-colors"
                   >
                     <MessagesSquare className="size-5" aria-hidden="true" />
                   </Link>

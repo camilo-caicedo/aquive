@@ -84,7 +84,7 @@ export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
             nadie lo toque creyendo que sigue mirando. */}
         <Link
           href="/inicio"
-          className="shadow-cartel-azul mt-7 block rounded-2xl bg-card p-5 transition-transform hover:-translate-y-0.5"
+          className="pulsable-tarjeta shadow-cartel-azul mt-7 block rounded-2xl bg-card p-5 transition-transform hover:-translate-y-0.5"
         >
           <span className="font-heading block text-xl">Necesito un servicio</span>
           <span className="mt-1.5 block text-base text-muted-foreground">
@@ -94,7 +94,7 @@ export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
 
         <Link
           href={conSesion ? '/servicios/soy-proveedor' : '/login'}
-          className="shadow-cartel-amarillo mt-4 block rounded-2xl bg-card p-5 transition-transform hover:-translate-y-0.5"
+          className="pulsable-tarjeta shadow-cartel-amarillo mt-4 block rounded-2xl bg-card p-5 transition-transform hover:-translate-y-0.5"
         >
           <span className="font-heading block text-xl">Ofrezco mi trabajo</span>
           <span className="mt-1.5 block text-base text-muted-foreground">

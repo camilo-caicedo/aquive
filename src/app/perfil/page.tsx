@@ -60,7 +60,7 @@ function Fila({
     <li>
       <Link
         href={href}
-        className="shadow-canto flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
+        className="pulsable-tarjeta shadow-canto flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
       >
         <span
           className={`flex size-10 shrink-0 items-center justify-center rounded-full ${CINTA[familia]} ${TINTA_CINTA[familia]}`}
@@ -360,7 +360,7 @@ export default async function PerfilPage() {
           </p>
           <Link
             href="/servicios/soy-proveedor"
-            className="mt-3 inline-flex min-h-12 items-center rounded-full bg-primary px-5 text-base font-semibold text-primary-foreground"
+            className="pulsable mt-3 inline-flex min-h-12 items-center rounded-full bg-primary px-5 text-base font-semibold text-primary-foreground"
           >
             Armar mi carné
           </Link>

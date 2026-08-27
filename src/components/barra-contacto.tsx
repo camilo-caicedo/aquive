@@ -69,7 +69,7 @@ export function BarraContacto({
         <a
           href={`tel:${telefono}`}
           aria-label={`Llamar al ${telefono}`}
-          className="flex size-14 shrink-0 items-center justify-center rounded-full border border-enlace text-enlace transition-colors hover:bg-accent"
+          className="pulsable flex size-14 shrink-0 items-center justify-center rounded-full border border-enlace text-enlace transition-colors hover:bg-accent"
         >
           <Phone className="size-6" aria-hidden="true" />
         </a>

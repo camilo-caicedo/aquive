@@ -106,7 +106,7 @@ export default async function ZonasPage({
           <li key={z.id}>
             <Link
               href={`/?zona=${z.id}&municipio=${z.municipio}`}
-              className="shadow-canto flex min-h-14 items-center justify-between gap-3 rounded-xl bg-card px-4"
+              className="pulsable shadow-canto flex min-h-14 items-center justify-between gap-3 rounded-xl bg-card px-4"
             >
               <span className="text-base font-medium">{z.nombre}</span>
               <span className="text-base text-muted-foreground">

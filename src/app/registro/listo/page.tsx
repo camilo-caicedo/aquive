@@ -86,7 +86,7 @@ export default async function ListoPage() {
           <li key={f.href}>
             <Link
               href={f.href}
-              className="flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 shadow-canto transition-colors hover:bg-muted"
+              className="pulsable-tarjeta flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 shadow-canto transition-colors hover:bg-muted"
             >
               <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
                 <f.Icono className="size-5" aria-hidden="true" />

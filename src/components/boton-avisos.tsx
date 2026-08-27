@@ -255,7 +255,7 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
               popoverTarget="panel-avisos"
               popoverTargetAction="hide"
               aria-label="Cerrar"
-              className="-mr-2 flex size-12 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="pulsable -mr-2 flex size-12 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <span aria-hidden="true" className="text-2xl leading-none">
                 ×
@@ -282,7 +282,7 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
               type="button"
               onClick={alternarPush}
               disabled={push === 'cargando' || push === 'trabajando'}
-              className="mt-2 inline-flex min-h-12 items-center gap-2 rounded-full bg-primary px-4 text-base font-medium text-primary-foreground disabled:opacity-50"
+              className="pulsable mt-2 inline-flex min-h-12 items-center gap-2 rounded-full bg-primary px-4 text-base font-medium text-primary-foreground disabled:opacity-50"
             >
               <IconoPush className="size-5 shrink-0" aria-hidden="true" />
               Activar avisos

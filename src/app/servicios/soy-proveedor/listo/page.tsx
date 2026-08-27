@@ -76,13 +76,13 @@ export default async function ListoPage() {
             salir, y salir no es la acción principal de una confirmación. */}
         <Link
           href="/servicios/soy-proveedor"
-          className="flex min-h-12 items-center justify-center rounded-full bg-primary px-5 text-base font-semibold text-primary-foreground"
+          className="pulsable flex min-h-12 items-center justify-center rounded-full bg-primary px-5 text-base font-semibold text-primary-foreground"
         >
           Completar mi ficha
         </Link>
         <Link
           href="/inicio"
-          className="shadow-canto flex min-h-12 items-center justify-center rounded-full bg-card px-5 text-base font-semibold"
+          className="pulsable shadow-canto flex min-h-12 items-center justify-center rounded-full bg-card px-5 text-base font-semibold"
         >
           Ir al inicio
         </Link>

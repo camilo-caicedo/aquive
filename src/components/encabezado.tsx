@@ -113,7 +113,7 @@ export async function Encabezado() {
                   : `Administración · ${pendientes} por atender`
               }
               title="Administración"
-              className="relative flex size-12 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="pulsable relative flex size-12 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <ShieldCheck className="size-5" aria-hidden="true" />
               {pendientes > 0 && (
@@ -139,7 +139,7 @@ export async function Encabezado() {
           {!user && (
             <Link
               href="/login"
-              className="shadow-canto inline-flex min-h-12 shrink-0 items-center rounded-full bg-card px-5 text-base font-semibold"
+              className="pulsable shadow-canto inline-flex min-h-12 shrink-0 items-center rounded-full bg-card px-5 text-base font-semibold"
             >
               Entrar
             </Link>

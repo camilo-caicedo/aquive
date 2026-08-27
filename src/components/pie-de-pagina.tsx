@@ -21,7 +21,7 @@ export function PieDePagina() {
             <li key={e.numero}>
               <a
                 href={`tel:${e.numero}`}
-                className="shadow-canto flex min-h-12 items-center gap-2 rounded-full bg-card px-3 text-base font-medium"
+                className="pulsable shadow-canto flex min-h-12 items-center gap-2 rounded-full bg-card px-3 text-base font-medium"
               >
                 <Phone className="size-4" aria-hidden="true" />
                 {e.nombre} {e.numero}

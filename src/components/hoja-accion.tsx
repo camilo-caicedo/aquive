@@ -82,7 +82,7 @@ export function HojaAccion({
                 popoverTarget={id}
                 popoverTargetAction="hide"
                 aria-label="Cerrar"
-                className="-mr-2 flex size-12 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="pulsable -mr-2 flex size-12 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <span aria-hidden="true" className="text-2xl leading-none">
                   ×

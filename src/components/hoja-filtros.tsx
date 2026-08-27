@@ -170,7 +170,7 @@ export function HojaFiltros({
           <button
             type="button"
             popoverTarget={id}
-            className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-enlace bg-accent px-4 text-base font-medium text-accent-foreground"
+            className="pulsable inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-enlace bg-accent px-4 text-base font-medium text-accent-foreground"
           >
             <SlidersHorizontal className="size-4" aria-hidden="true" />
             Filtros
@@ -189,7 +189,7 @@ export function HojaFiltros({
             href={a.href}
             scroll={false}
             aria-label={`Quitar el filtro ${a.etiqueta}`}
-            className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-secondary px-4 text-base text-secondary-foreground transition-colors hover:bg-muted"
+            className="pulsable inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-secondary px-4 text-base text-secondary-foreground transition-colors hover:bg-muted"
           >
             {a.etiqueta}
             <X className="size-4 shrink-0" aria-hidden="true" />
@@ -255,7 +255,7 @@ export function HojaFiltros({
                 popoverTarget={id}
                 popoverTargetAction="hide"
                 aria-label="Cerrar"
-                className="-mr-2 flex size-12 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="pulsable -mr-2 flex size-12 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <X className="size-5" aria-hidden="true" />
               </button>
@@ -273,7 +273,7 @@ export function HojaFiltros({
                   href={action}
                   scroll={false}
                   onClick={cerrar}
-                  className="inline-flex min-h-12 shrink-0 items-center rounded-full px-3 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="pulsable inline-flex min-h-12 shrink-0 items-center rounded-full px-3 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   Quitar todo
                 </Link>

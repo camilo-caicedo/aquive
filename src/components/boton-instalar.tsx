@@ -73,7 +73,7 @@ export function BotonInstalar() {
       onClick={instalar}
       aria-label="Instalar AquíVe en este teléfono"
       title="Instalar AquíVe"
-      className="flex size-12 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+      className="pulsable flex size-12 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
     >
       <Download className="size-5" aria-hidden="true" />
     </button>

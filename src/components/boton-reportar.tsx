@@ -100,7 +100,7 @@ export function BotonReportar({
           <button
             type="button"
             onClick={cerrar}
-            className="inline-flex min-h-12 shrink-0 items-center rounded-full px-3 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="pulsable inline-flex min-h-12 shrink-0 items-center rounded-full px-3 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             Cancelar
           </button>

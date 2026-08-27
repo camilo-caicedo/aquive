@@ -491,14 +491,23 @@ body:has(dialog[open]) {
   transform: scale(0.97);
 }
 
-/* Una tarjeta entera encoge menos que un botón: es más grande, y el mismo
-   porcentaje sobre 300 px de ancho se lee como un salto. */
+/* Una tarjeta no encoge: se HUNDE dentro de su sombra, que es el mismo
+   gesto del botón de cartel y el lenguaje de la identidad (ADR 0002).
+
+   ⚠ Antes era un `scale(0.99)` a secas y el responsable lo reportó como
+   que las tarjetas «no se ven presionadas»: sobre 300 px de ancho, un uno
+   por ciento no lo ve nadie. Moverse dos píxeles hacia su propia sombra sí
+   se ve, y encima dice lo mismo que dicen los botones.
+
+   ⚠ Se usa `transform` y no la propiedad `translate`, que está ocupada:
+   la anima el revelado al desplazar, y esa animación se queda con su
+   propiedad para siempre. Siendo dos distintas, conviven. */
 .pulsable-tarjeta {
   transition: transform var(--dur-toque) var(--curva-entrada);
 }
 
 .pulsable-tarjeta:active {
-  transform: scale(0.99);
+  transform: translate(2px, 2px) scale(0.995);
 }
 
 /* --------------------------------------------------------------------

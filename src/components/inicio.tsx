@@ -50,7 +50,7 @@ export async function Inicio({ municipio }: { municipio?: string }) {
           <li>
             <Link
               href="/categorias"
-              className="bg-familia-azul shadow-cartel-azul flex h-28 flex-col justify-between rounded-2xl p-3 text-white transition-transform hover:-translate-y-0.5"
+              className="pulsable-tarjeta bg-familia-azul shadow-cartel-azul flex h-28 flex-col justify-between rounded-2xl p-3 text-white transition-transform hover:-translate-y-0.5"
             >
               <Wrench className="size-6" aria-hidden="true" />
               <span className="font-heading text-base">Servicios</span>
@@ -59,7 +59,7 @@ export async function Inicio({ municipio }: { municipio?: string }) {
           <li>
             <Link
               href="/barrio"
-              className="bg-familia-amarillo shadow-cartel-amarillo text-foreground flex h-28 flex-col justify-between rounded-2xl p-3 transition-transform hover:-translate-y-0.5"
+              className="pulsable-tarjeta bg-familia-amarillo shadow-cartel-amarillo text-foreground flex h-28 flex-col justify-between rounded-2xl p-3 transition-transform hover:-translate-y-0.5"
             >
               <ShoppingBag className="size-6" aria-hidden="true" />
               <span className="font-heading text-base">Productos</span>
@@ -68,7 +68,7 @@ export async function Inicio({ municipio }: { municipio?: string }) {
           <li>
             <Link
               href="/muro"
-              className="bg-familia-rojo shadow-cartel-rojo text-foreground flex h-28 flex-col justify-between rounded-2xl p-3 transition-transform hover:-translate-y-0.5"
+              className="pulsable-tarjeta bg-familia-rojo shadow-cartel-rojo text-foreground flex h-28 flex-col justify-between rounded-2xl p-3 transition-transform hover:-translate-y-0.5"
             >
               <Heart className="size-6" aria-hidden="true" />
               <span className="font-heading text-base">Donaciones</span>
@@ -170,7 +170,7 @@ export async function Inicio({ municipio }: { municipio?: string }) {
             tipo servicio. */}
         <Link
           href="/solicitudes"
-          className="shadow-canto mt-4 flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
+          className="pulsable-tarjeta shadow-canto mt-4 flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
         >
           <span className="bg-familia-verde flex size-10 shrink-0 items-center justify-center rounded-full text-foreground">
             <HandHelping className="size-5" aria-hidden="true" />

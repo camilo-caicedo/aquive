@@ -86,7 +86,7 @@ export function SubirImagen({
           <button
             type="button"
             onClick={quitar}
-            className="shadow-canto absolute top-2 right-2 flex size-12 items-center justify-center rounded-full bg-card"
+            className="pulsable shadow-canto absolute top-2 right-2 flex size-12 items-center justify-center rounded-full bg-card"
             aria-label="Quitar la imagen"
           >
             <X className="size-5" aria-hidden="true" />

@@ -57,7 +57,7 @@ export function TiraProfesionales({
                 destino es la fila dentro de su lista. */}
             <Link
               href={`/profesionales#p-${p.id}`}
-              className="shadow-cartel-azul block h-full rounded-2xl bg-card p-4"
+              className="pulsable-tarjeta shadow-cartel-azul block h-full rounded-2xl bg-card p-4"
             >
               <p className="font-heading truncate text-base">{p.nombre_visible}</p>
               {p.profesion && (
@@ -114,7 +114,7 @@ export function TiraEntidades({ entidades }: { entidades: EntidadBreve[] }) {
           <li key={e.id} className="w-56 shrink-0">
             <Link
               href={`/entidades#e-${e.id}`}
-              className="shadow-cartel-verde block h-full rounded-2xl bg-card p-4"
+              className="pulsable-tarjeta shadow-cartel-verde block h-full rounded-2xl bg-card p-4"
             >
               <p className="font-heading truncate text-base">{e.nombre}</p>
               {e.subtitulo && (
@@ -169,7 +169,7 @@ export function TiraProductos({ productos }: { productos: Producto[] }) {
           <li key={p.id} className="w-56 shrink-0">
             <Link
               href={`/barrio#prod-${p.id}`}
-              className="shadow-cartel-amarillo block h-full overflow-hidden rounded-2xl bg-card"
+              className="pulsable-tarjeta shadow-cartel-amarillo block h-full overflow-hidden rounded-2xl bg-card"
             >
               {p.imagen ? (
                 <Image

@@ -179,7 +179,7 @@ export default async function MuroPage({
                         <a
                           href={`tel:${p.telefono}`}
                           aria-label={`Llamar a ${p.autor_nombre ?? 'quien ofrece'}`}
-                          className="border-enlace text-enlace hover:bg-accent flex size-12 shrink-0 items-center justify-center rounded-full border transition-colors"
+                          className="pulsable border-enlace text-enlace hover:bg-accent flex size-12 shrink-0 items-center justify-center rounded-full border transition-colors"
                         >
                           <Phone className="size-5" aria-hidden="true" />
                         </a>

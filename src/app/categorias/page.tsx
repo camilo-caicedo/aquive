@@ -112,7 +112,7 @@ export default async function CategoriasPage({
           categorías, no entre ellas: son dos preguntas distintas. */}
       <Link
         href="/solicitudes"
-        className="shadow-canto mt-6 flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
+        className="pulsable-tarjeta shadow-canto mt-6 flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
       >
         <span className="bg-familia-verde flex size-10 shrink-0 items-center justify-center rounded-full text-foreground">
           <HandHelping className="size-5" aria-hidden="true" />

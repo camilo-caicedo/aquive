@@ -98,7 +98,7 @@ export default async function LoginPage({
             quien solo venía a mirar dudaba cuál era el suyo. */}
         <Link
           href="/inicio"
-          className="shadow-canto mt-4 inline-flex min-h-12 items-center rounded-full bg-card px-5 text-base font-semibold"
+          className="pulsable shadow-canto mt-4 inline-flex min-h-12 items-center rounded-full bg-card px-5 text-base font-semibold"
         >
           Seguir sin cuenta
         </Link>
@@ -117,7 +117,7 @@ export default async function LoginPage({
           de la pantalla un subrayado se pierde. */}
       <Link
         href="/ayuda"
-        className="shadow-canto mt-4 flex min-h-14 items-center justify-between gap-3 rounded-2xl bg-card px-5"
+        className="pulsable-tarjeta shadow-canto mt-4 flex min-h-14 items-center justify-between gap-3 rounded-2xl bg-card px-5"
       >
         <span className="flex items-center gap-3 text-base font-medium">
           <LifeBuoy className="size-5 shrink-0" aria-hidden="true" />

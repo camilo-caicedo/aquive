@@ -24,7 +24,7 @@ export function CerrarSesion() {
     <form action={salir}>
       <button
         type="submit"
-        className="flex min-h-16 w-full items-center gap-3 rounded-2xl bg-card p-4 text-left shadow-canto transition-colors hover:bg-muted"
+        className="pulsable-tarjeta flex min-h-16 w-full items-center gap-3 rounded-2xl bg-card p-4 text-left shadow-canto transition-colors hover:bg-muted"
       >
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
           <LogOut className="size-5" aria-hidden="true" />

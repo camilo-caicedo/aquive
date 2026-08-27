@@ -149,14 +149,14 @@ export default async function SoyProveedorPage() {
       <div className="mt-3 grid grid-cols-2 gap-2">
         <Link
           href={`/prestador/${proveedor.id}`}
-          className="shadow-canto flex min-h-12 items-center justify-center gap-2 rounded-full bg-card px-4 text-base font-semibold"
+          className="pulsable shadow-canto flex min-h-12 items-center justify-center gap-2 rounded-full bg-card px-4 text-base font-semibold"
         >
           <Eye className="size-5" aria-hidden="true" />
           Ver como cliente
         </Link>
         <Link
           href="/perfil/datos"
-          className="shadow-canto flex min-h-12 items-center justify-center gap-2 rounded-full bg-card px-4 text-base font-semibold"
+          className="pulsable shadow-canto flex min-h-12 items-center justify-center gap-2 rounded-full bg-card px-4 text-base font-semibold"
         >
           <Pencil className="size-5" aria-hidden="true" />
           Editar
@@ -166,7 +166,7 @@ export default async function SoyProveedorPage() {
       <nav aria-label="Mi ficha" className="mt-6 flex flex-col gap-2">
         <Link
           href="/perfil/codigos"
-          className="shadow-canto flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
+          className="pulsable-tarjeta shadow-canto flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
         >
           <span className="bg-familia-rojo flex size-10 shrink-0 items-center justify-center rounded-full text-foreground">
             <Hash className="size-5" aria-hidden="true" />
@@ -187,7 +187,7 @@ export default async function SoyProveedorPage() {
             se corrige otra cosa. */}
         <Link
           href="/perfil/foto"
-          className="shadow-canto flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
+          className="pulsable-tarjeta shadow-canto flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
         >
           <span className="bg-familia-amarillo flex size-10 shrink-0 items-center justify-center rounded-full text-foreground">
             <Camera className="size-5" aria-hidden="true" />
@@ -206,7 +206,7 @@ export default async function SoyProveedorPage() {
         {/* La otra mitad del módulo, desde el lado de quien ofrece. */}
         <Link
           href="/solicitudes"
-          className="shadow-canto flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
+          className="pulsable-tarjeta shadow-canto flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
         >
           <span className="bg-familia-azul flex size-10 shrink-0 items-center justify-center rounded-full text-white">
             <HandHelping className="size-5" aria-hidden="true" />
@@ -222,7 +222,7 @@ export default async function SoyProveedorPage() {
 
         <Link
           href="/perfil/verificaciones"
-          className="shadow-canto flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
+          className="pulsable-tarjeta shadow-canto flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
         >
           <span className="bg-familia-verde flex size-10 shrink-0 items-center justify-center rounded-full text-foreground">
             <BadgeCheck className="size-5" aria-hidden="true" />

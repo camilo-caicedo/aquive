@@ -109,7 +109,7 @@ export default function AyudaPage() {
         </p>
         <a
           href="tel:123"
-          className="shadow-canto mt-3 inline-flex min-h-12 items-center gap-2 rounded-full bg-card px-5 text-base font-semibold text-foreground"
+          className="pulsable shadow-canto mt-3 inline-flex min-h-12 items-center gap-2 rounded-full bg-card px-5 text-base font-semibold text-foreground"
         >
           <Phone className="size-5" aria-hidden="true" />
           Llamar al 123

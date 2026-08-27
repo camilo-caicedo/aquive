@@ -54,7 +54,7 @@ function Tarjeta({
       {accion && (
         <Link
           href={accion.href}
-          className="shadow-canto mt-3 inline-flex min-h-12 items-center rounded-full bg-card px-4 text-base font-semibold text-enlace"
+          className="pulsable shadow-canto mt-3 inline-flex min-h-12 items-center rounded-full bg-card px-4 text-base font-semibold text-enlace"
         >
           {accion.texto}
         </Link>

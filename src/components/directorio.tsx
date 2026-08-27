@@ -247,7 +247,7 @@ export async function Directorio({
                   saber que hay trabajo publicado. */}
               <Link
                 href="/solicitudes"
-                className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
+                className="pulsable inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
               >
                 <HandHelping className="size-4" aria-hidden="true" />
                 Quién está pidiendo
@@ -255,7 +255,7 @@ export async function Directorio({
               {!miFicha && (
                 <Link
                   href="/servicios/soy-proveedor"
-                  className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
+                  className="pulsable inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
                 >
                   <Briefcase className="size-4" aria-hidden="true" />
                   Ofrecer mi trabajo

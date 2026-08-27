@@ -115,7 +115,7 @@ export default async function AcopiosPage({
                     <a
                       href={`tel:${a.telefono}`}
                       aria-label={`Llamar a ${a.nombre}`}
-                      className="border-enlace text-enlace hover:bg-accent flex size-12 shrink-0 items-center justify-center rounded-full border transition-colors"
+                      className="pulsable border-enlace text-enlace hover:bg-accent flex size-12 shrink-0 items-center justify-center rounded-full border transition-colors"
                     >
                       <Phone className="size-5" aria-hidden="true" />
                     </a>
