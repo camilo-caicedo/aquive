@@ -1,4 +1,3 @@
-import { NOMBRE_GRUPO } from '@/contrato/servicios'
 // Etiquetas y formato del módulo de Servicios.
 //
 // Las listas cerradas viven aquí y en el CHECK de la base, y son gemelas:
@@ -21,6 +20,8 @@ import type {
   UrgenciaServicio,
   CapacidadPago,
 } from '@/lib/types'
+import { NOMBRE_GRUPO } from '@/contrato/servicios'
+import { NOMBRE_UNIDAD, type UnidadProducto } from '@/contrato/comunidad'
 
 export const MODALIDADES: { valor: ModalidadServicio; etiqueta: string }[] = [
   { valor: 'domicilio', etiqueta: 'Voy a domicilio' },
@@ -119,10 +120,10 @@ export const etiquetaMedioPago = (v: MedioPago) => etiquetaDe(MEDIOS_PAGO, v)
  * tarifa cerrada, y dar a entender lo contrario provoca justo la discusión
  * que la plataforma no puede mediar.
  */
-export function precioLegible(
+function conMonto(
   modo: ModoPrecio,
   precioDesde: number | null,
-  unidad: UnidadPrecio | null
+  cola: string,
 ): string {
   if (modo === 'gratis') return 'Gratis'
   if (modo === 'aporte') return 'Aporte voluntario'
@@ -133,8 +134,33 @@ export function precioLegible(
     currency: 'COP',
     maximumFractionDigits: 0,
   }).format(precioDesde)
-  const cola = unidad ? ` ${etiquetaDe(UNIDADES, unidad)}` : ''
   return `${prefijo ? prefijo + ': ' : ''}Desde ${monto}${cola}`
+}
+
+export function precioLegible(
+  modo: ModoPrecio,
+  precioDesde: number | null,
+  unidad: UnidadPrecio | null
+): string {
+  return conMonto(modo, precioDesde, unidad ? ` ${etiquetaDe(UNIDADES, unidad)}` : '')
+}
+
+/**
+ * Lo mismo, para un producto.
+ *
+ * ⚠ Existe porque las unidades NO son las mismas. Un oficio se cobra por
+ * hora, por día, por prenda o por viaje; un producto se vende por libra,
+ * por kilo o por docena. Pasar una por la otra imprimía «Desde $3.500
+ * libra» —sin artículo, porque `UNIDADES` no conoce esa palabra—, y era un
+ * fallo silencioso: el tipo se colaba con un `as` y solo se notaba mirando
+ * la pantalla.
+ */
+export function precioDeProducto(
+  modo: ModoPrecio,
+  precioDesde: number | null,
+  unidad: UnidadProducto | null
+): string {
+  return conMonto(modo, precioDesde, unidad ? ` ${NOMBRE_UNIDAD[unidad]}` : '')
 }
 
 /** «Lunes a viernes» cuando se puede, la lista suelta cuando no. */

@@ -51,6 +51,9 @@ export async function muro(
       autor_nombre: f.autorNombre,
       creada_at: String(f.creadaAt),
       imagen: f.imagen,
+      proveedor_id: f.proveedorId,
+      telefono: f.telefono,
+      telefono_verificado: f.telefonoVerificado ?? false,
     }),
   )
 }
@@ -153,11 +156,15 @@ export async function productos(
     busqueda?: string
     grupo?: string
     modo?: string
+    proveedor?: string
     limite?: number
   },
 ): Promise<Producto[]> {
   const condiciones = []
   if (filtros.municipio) condiciones.push(eq(productosPublicos.municipio, filtros.municipio))
+  if (filtros.proveedor) {
+    condiciones.push(eq(productosPublicos.proveedorId, filtros.proveedor))
+  }
   if (filtros.modo) condiciones.push(eq(productosPublicos.modo, filtros.modo))
   // La familia de oficio de quien vende, que es un arreglo: quien cocina
   // puede tener también «aseo» declarado y sale en las dos.

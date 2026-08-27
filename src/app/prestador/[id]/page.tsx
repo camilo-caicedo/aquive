@@ -14,6 +14,7 @@ import {
   etiquetaFranja,
   etiquetaMedioPago,
   etiquetaModalidad,
+  precioDeProducto,
   precioLegible,
   zonaLegible,
 } from '@/lib/servicios'
@@ -41,6 +42,12 @@ export default async function FichaPage({
   // aplicación de Expo habría tenido que acordarse de repetirla.
   const ficha = await servidor.servicios.ficha({ id })
   if (!ficha) notFound()
+
+  // Lo que esta persona vende en «Hecho en el barrio». Va aparte de la
+  // ficha y no dentro: un producto es de comunidad y un oficio de
+  // servicios, y meterlos en la misma consulta uniría dos dominios que no
+  // se necesitan. Después del  para no pedirlo si no hay ficha.
+  const productos = await servidor.comunidad.productos({ proveedor: id })
 
   const municipio =
     ficha.municipio_nombre === null
@@ -109,6 +116,45 @@ export default async function FichaPage({
           </li>
         ))}
       </ul>
+
+      {/* Lo que vende, debajo de lo que hace. Es la misma persona y el
+          mismo trato —se acuerda por fuera, sin comisión—, así que no hace
+          falta repetir el aviso: ya está arriba y en la barra de contacto.
+
+          Sin productos no se dibuja la sección: un «no vende nada» no le
+          sirve a nadie. */}
+      {productos.length > 0 && (
+        <>
+          <h2 className="font-heading mt-6 text-2xl font-extrabold tracking-tight">
+            Qué vende
+          </h2>
+          <ul className="mt-3 space-y-2">
+            {productos.map((p) => (
+              <li
+                key={p.id}
+                className="rounded-lg border border-border p-3"
+              >
+                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                  <span className="text-base font-medium">{p.nombre}</span>
+                  <span className="text-base text-muted-foreground">
+                    {precioDeProducto(p.modo, p.precio_desde, p.unidad)}
+                  </span>
+                </div>
+                {p.detalle && (
+                  <p className="mt-1 text-sm text-muted-foreground">{p.detalle}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Aparece también en{' '}
+            <Link href="/barrio" className="text-enlace underline underline-offset-4">
+              Productos
+            </Link>
+            .
+          </p>
+        </>
+      )}
 
       <dl className="mt-6 space-y-3">
         <div className="flex items-start gap-2">

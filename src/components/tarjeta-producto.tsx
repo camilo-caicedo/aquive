@@ -3,10 +3,9 @@ import Image from 'next/image'
 import { MessageCircle, Phone } from 'lucide-react'
 
 import { enlaceWhatsapp } from '@/lib/contacto'
-import { precioLegible } from '@/lib/servicios'
+import { precioDeProducto } from '@/lib/servicios'
 import { SOMBRA_CARTEL, familiaDe } from '@/lib/familias'
 import type { Producto } from '@/contrato/comunidad'
-import type { UnidadPrecio } from '@/lib/types'
 
 /**
  * Un producto de «Hecho en el barrio».
@@ -46,11 +45,7 @@ export function TarjetaProducto({ producto }: { producto: Producto }) {
         <h3 className="font-heading text-base leading-tight">{producto.nombre}</h3>
 
         <p className="mt-2 text-base font-semibold">
-          {precioLegible(
-            producto.modo,
-            producto.precio_desde,
-            producto.unidad as UnidadPrecio | null,
-          )}
+          {precioDeProducto(producto.modo, producto.precio_desde, producto.unidad)}
         </p>
 
         {producto.detalle && (

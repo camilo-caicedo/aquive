@@ -44,6 +44,16 @@ export const EnMuro = z.object({
   autor_nombre: z.string().nullable(),
   creada_at: z.string(),
   imagen: z.string().nullable(),
+  /**
+   * Por dónde se le responde a quien ofrece.
+   *
+   * Nulos los tres en la cara que PIDE —esa persona no dio un solo dato— y
+   * también en la que ofrece si no tiene ficha de prestador: su
+   * autorización del muro cubre el nombre, no el contacto.
+   */
+  proveedor_id: z.uuid().nullable(),
+  telefono: z.string().nullable(),
+  telefono_verificado: z.boolean(),
 })
 
 export type EnMuro = z.infer<typeof EnMuro>
@@ -171,6 +181,8 @@ export const contratoComunidad = {
         grupo: z.string().trim().max(40).optional().catch(undefined),
         /** Cómo lo cobra. «Gratis» y «solidario» es lo que busca quien no tiene. */
         modo: z.enum(['gratis', 'aporte', 'solidario', 'normal']).optional().catch(undefined),
+        /** Lo que vende una persona, para su ficha. */
+        proveedor: z.uuid().optional().catch(undefined),
         /** Para la tira del inicio, que no quiere sesenta. */
         limite: z.number().int().min(1).max(60).optional().catch(undefined),
       }),

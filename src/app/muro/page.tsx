@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import { Plus } from 'lucide-react'
+import { MessageCircle, Phone, Plus } from 'lucide-react'
 
 import { servidor } from '@/orpc/local'
+import { enlaceWhatsapp } from '@/lib/contacto'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { AccionPrincipal } from '@/components/accion-principal'
 import { NOMBRE_CATEGORIA_MURO, type Cara } from '@/contrato/comunidad'
@@ -44,7 +45,7 @@ export default async function MuroPage({
       <CabeceraPantalla titulo="Muro" />
       <p className="text-base text-muted-foreground">
         Dos caras del mismo muro: quien tiene algo que dar y quien necesita
-        algo. Se acuerda por chat y no pasa dinero por aquí.
+        algo. Se acuerda directamente con quien publicó y no pasa dinero por aquí.
       </p>
 
       {/* Segmentado: la segunda capa de navegación, y la única (regla 3). */}
@@ -125,8 +126,52 @@ export default async function MuroPage({
                       siquiera existe el campo, así que no hay nada que
                       esconder aquí. */}
                   {p.autor_nombre && (
-                    <p className="mt-2 text-base font-medium">{p.autor_nombre}</p>
+                    <p className="mt-2 text-base font-medium">
+                      {/* Con ficha, el nombre lleva a ella: quien va a
+                          recibir algo de alguien puede mirar antes con
+                          quién habla. */}
+                      {p.proveedor_id ? (
+                        <Link
+                          href={`/prestador/${p.proveedor_id}`}
+                          className="text-enlace underline-offset-4 hover:underline"
+                        >
+                          {p.autor_nombre}
+                        </Link>
+                      ) : (
+                        p.autor_nombre
+                      )}
+                    </p>
                   )}
+
+                  {/* El contacto solo existe si esa persona tiene ficha: su
+                      autorización del muro cubre el nombre, no el teléfono.
+                      Sin ficha se dice, en vez de dejar un botón muerto. */}
+                  {p.cara === 'ofrece' &&
+                    (p.telefono ? (
+                      <div className="mt-3 flex items-center gap-2">
+                        <a
+                          href={enlaceWhatsapp(p.telefono)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-primary text-primary-foreground shadow-boton active:shadow-boton-hundido inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-full px-4 text-base font-semibold transition-all active:translate-x-[2px] active:translate-y-[2px]"
+                        >
+                          <MessageCircle className="size-5" aria-hidden="true" />
+                          Escribir
+                        </a>
+                        <a
+                          href={`tel:${p.telefono}`}
+                          aria-label={`Llamar a ${p.autor_nombre ?? 'quien ofrece'}`}
+                          className="border-enlace text-enlace hover:bg-accent flex size-12 shrink-0 items-center justify-center rounded-full border transition-colors"
+                        >
+                          <Phone className="size-5" aria-hidden="true" />
+                        </a>
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-muted-foreground">
+                        Esta persona todavía no tiene ficha publicada, así que
+                        aquí no aparece su contacto.
+                      </p>
+                    ))}
                 </div>
               </li>
             )

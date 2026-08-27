@@ -1,9 +1,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 
-import { precioLegible } from '@/lib/servicios'
+import { precioDeProducto } from '@/lib/servicios'
 import type { Producto } from '@/contrato/comunidad'
-import type { UnidadPrecio } from '@/lib/types'
 
 import type { EntidadBreve, ProfesionalBreve } from '@/contrato/servicios'
 
@@ -184,7 +183,7 @@ export function TiraProductos({ productos }: { productos: Producto[] }) {
               <div className="p-3">
                 <p className="font-heading truncate text-base">{p.nombre}</p>
                 <p className="mt-1 text-base font-semibold">
-                  {precioLegible(p.modo, p.precio_desde, p.unidad as UnidadPrecio | null)}
+                  {precioDeProducto(p.modo, p.precio_desde, p.unidad)}
                 </p>
                 <p className="mt-1 truncate text-sm text-muted-foreground">
                   {p.proveedor_nombre}

@@ -6,10 +6,9 @@ import Link from 'next/link'
 import { Pencil, Trash2 } from 'lucide-react'
 
 import { rpc } from '@/orpc/cliente'
-import { precioLegible } from '@/lib/servicios'
+import { precioDeProducto } from '@/lib/servicios'
 import { Button } from '@/components/ui/button'
 import type { MiProducto } from '@/contrato/comunidad'
-import type { UnidadPrecio } from '@/lib/types'
 
 /**
  * Mis productos, con sus tres acciones.
@@ -78,7 +77,7 @@ export function ListaMios({ productos }: { productos: MiProducto[] }) {
             </div>
 
             <p className="mt-1 text-base font-semibold">
-              {precioLegible(p.modo, p.precio_desde, p.unidad as UnidadPrecio | null)}
+              {precioDeProducto(p.modo, p.precio_desde, p.unidad)}
             </p>
             {p.detalle && (
               <p className="mt-1 text-base text-muted-foreground">{p.detalle}</p>

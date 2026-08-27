@@ -1405,7 +1405,10 @@ export const muroPublico = pgView("muro_publico", {	id: uuid(),
 	autorNombre: text("autor_nombre"),
 	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }),
 	imagen: text(),
-}).as(sql`SELECT m.id, m.cara, m.categoria, m.titulo, m.detalle, m.municipio, mu.nombre AS municipio_nombre, m.zona_id, z.nombre AS zona_nombre, m.autor_nombre, m.creada_at, ( SELECT i.ruta FROM imagenes i WHERE i.objeto_tipo = 'muro'::text AND i.objeto_id = m.id AND i.estado = 'aprobada'::text ORDER BY i.subida_at LIMIT 1) AS imagen FROM publicaciones_muro m JOIN municipios mu ON mu.codigo_dane = m.municipio LEFT JOIN zonas z ON z.id = m.zona_id WHERE m.estado = 'abierta'::text AND (m.expira_at IS NULL OR m.expira_at > now())`);
+	proveedorId: uuid("proveedor_id"),
+	telefono: text(),
+	telefonoVerificado: boolean("telefono_verificado"),
+}).as(sql`SELECT m.id, m.cara, m.categoria, m.titulo, m.detalle, m.municipio, mu.nombre AS municipio_nombre, m.zona_id, z.nombre AS zona_nombre, m.autor_nombre, m.creada_at, ( SELECT i.ruta FROM imagenes i WHERE i.objeto_tipo = 'muro'::text AND i.objeto_id = m.id AND i.estado = 'aprobada'::text ORDER BY i.subida_at LIMIT 1) AS imagen, pp.id AS proveedor_id, pp.telefono, COALESCE(pp.telefono_verificado, false) AS telefono_verificado FROM publicaciones_muro m JOIN municipios mu ON mu.codigo_dane = m.municipio LEFT JOIN zonas z ON z.id = m.zona_id LEFT JOIN proveedores pr ON pr.perfil_id = m.perfil_id LEFT JOIN proveedores_publicos pp ON pp.id = pr.id WHERE m.estado = 'abierta'::text AND (m.expira_at IS NULL OR m.expira_at > now())`);
 
 export const productosPublicos = pgView("productos_publicos", {	id: uuid(),
 	proveedorId: uuid("proveedor_id"),
