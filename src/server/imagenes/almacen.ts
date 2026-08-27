@@ -64,6 +64,43 @@ export async function descargarDeCuarentena(ruta: string): Promise<Buffer> {
   return Buffer.from(await r.arrayBuffer())
 }
 
+/**
+ * Guardar en cuarentena, encima de lo que ya hubiera.
+ *
+ * Es donde vive la imagen ya limpia —sin metadatos, redimensionada, en
+ * WebP— MIENTRAS espera a que alguien la mire. El bucket de cuarentena no
+ * es público, que es justo lo que la regla de producto 8 pide de los pasos
+ * 1 a 4.
+ */
+export async function subirACuarentena(ruta: string, cuerpo: Buffer, tipo: string) {
+  const { url } = base()
+  const r = await fetch(`${url}/object/${BUCKET_CUARENTENA}/${ruta}`, {
+    method: 'POST',
+    headers: { ...cabeceras(), 'Content-Type': tipo, 'x-upsert': 'true' },
+    body: new Uint8Array(cuerpo),
+  })
+  if (!r.ok) throw new Error(`No se pudo guardar en cuarentena: ${r.status}`)
+}
+
+/**
+ * Una URL de lectura, temporal, para algo que sigue en cuarentena.
+ *
+ * La necesita quien modera: tiene que VER la imagen para decidir, y el
+ * bucket no es público. Dura una hora, que es de sobra para una sesión de
+ * moderación y poco para que el enlace sirva de nada si se filtra.
+ */
+export async function urlFirmadaDeCuarentena(ruta: string) {
+  const { url } = base()
+  const r = await fetch(`${url}/object/sign/${BUCKET_CUARENTENA}/${ruta}`, {
+    method: 'POST',
+    headers: { ...cabeceras(), 'Content-Type': 'application/json' },
+    body: JSON.stringify({ expiresIn: 3600 }),
+  })
+  if (!r.ok) throw new Error(`No se pudo firmar la lectura: ${r.status}`)
+  const { signedURL } = (await r.json()) as { signedURL: string }
+  return `${url}${signedURL}`
+}
+
 export async function subirAPublico(ruta: string, cuerpo: Buffer, tipo: string) {
   const { url } = base()
   const r = await fetch(`${url}/object/${BUCKET_PUBLICO}/${ruta}`, {

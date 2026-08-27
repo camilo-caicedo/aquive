@@ -238,7 +238,15 @@ export const enrutador = os.router({
         }
       },
     ),
-    firmarImagen: os.comunidad.firmarImagen.handler(async ({ input, errors }) => {
+    // ⚠ Con cuenta, las dos. Desde el ADR 0006 todo la exige, y estas dos
+    // eran las únicas que escribían sin mirarla: cualquiera sin sesión podía
+    // pedir URLs firmadas y subir 2 MB por vez, sin límite de veces. El
+    // archivo iba a un bucket público (ver `recorrido.ts`), así que era
+    // alojamiento gratis en el dominio del proyecto.
+    firmarImagen: os.comunidad.firmarImagen.handler(async ({ input, context, errors }) => {
+      if (!context.usuarioId) {
+        throw errors.RECHAZADO({ data: { motivo: 'Para subir una imagen necesitas entrar con tu cuenta.' } })
+      }
       try {
         return await imagenes.firmarSubida(db, input)
       } catch (e) {
@@ -267,7 +275,10 @@ export const enrutador = os.router({
         throw e
       }
     }),
-    procesarImagen: os.comunidad.procesarImagen.handler(async ({ input, errors }) => {
+    procesarImagen: os.comunidad.procesarImagen.handler(async ({ input, context, errors }) => {
+      if (!context.usuarioId) {
+        throw errors.RECHAZADO({ data: { motivo: 'Para subir una imagen necesitas entrar con tu cuenta.' } })
+      }
       try {
         return await imagenes.procesar(db, input.imagen_id)
       } catch (e) {

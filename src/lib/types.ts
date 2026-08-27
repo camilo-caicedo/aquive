@@ -307,6 +307,10 @@ export interface ContactoDestapado {
 // filas con su número, y encadenar diez consultas para eso sería peor que
 // las pestañas que reemplaza.
 export interface IndiceAdmin {
+  /** Imágenes esperando a que alguien las mire. Regla de producto 8. */
+  imagenes: number
+  /** PQR abiertas. Detrás de cada una hay un plazo legal corriendo. */
+  pqr: number
   matriculas: number
   telefonos: number
   reportes: number

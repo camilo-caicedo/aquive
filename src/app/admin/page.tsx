@@ -9,6 +9,8 @@ import {
   UserPlus,
   Users,
   ScrollText,
+  Image as ImageIcon,
+  Scale,
 } from 'lucide-react'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { createClient } from '@/lib/supabase/server'
@@ -41,7 +43,8 @@ export default async function AdminPage() {
   const v = (x: number | undefined) => x ?? 0
   // El número del encabezado es la suma del primer grupo y nada más: es
   // cuánta gente está esperando, no cuánto trabajo hay.
-  const esperando = v(n?.matriculas) + v(n?.telefonos) + v(n?.reportes)
+  const esperando =
+    v(n?.matriculas) + v(n?.telefonos) + v(n?.reportes) + v(n?.imagenes) + v(n?.pqr)
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
@@ -83,6 +86,30 @@ export default async function AdminPage() {
                 detalle: 'Contenido que alguien marcó como problemático',
                 cuantas: v(n?.reportes),
                 gajo: 'verde',
+                espera: true,
+              },
+              {
+                // Regla de producto 8: ninguna imagen se publica sin pasar
+                // por aquí. Faltaba la fila, así que la cola existía y no
+                // la atendía nadie — toda foto subida se quedaba esperando.
+                href: '/admin/imagenes',
+                Icono: ImageIcon,
+                etiqueta: 'Imágenes por revisar',
+                detalle: 'No se publican hasta que alguien las mire',
+                cuantas: v(n?.imagenes),
+                gajo: 'azul',
+                espera: true,
+              },
+              {
+                // Habeas data: consulta en 10 días hábiles, reclamo y
+                // supresión en 15 (mínimo legal 3). El plazo corre desde
+                // que se escribe, la mire alguien o no.
+                href: '/admin/pqr',
+                Icono: Scale,
+                etiqueta: 'PQR sin responder',
+                detalle: 'Habeas data. Consulta en 10 días, supresión en 15',
+                cuantas: v(n?.pqr),
+                gajo: 'amarillo',
                 espera: true,
               },
             ],

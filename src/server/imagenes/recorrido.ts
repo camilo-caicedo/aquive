@@ -83,10 +83,17 @@ export async function procesar(db: BaseDeDatos, imagenId: string) {
     })
     .where(eq(imagenes.id, imagenId))
 
-  // La limpia se guarda encima de la de cuarentena. La original con su EXIF
-  // deja de existir en cuanto esto termina, aunque nadie la apruebe nunca.
-  await almacen.subirAPublico(`${fila.ruta}.webp`, limpia.data, 'image/webp')
-  await almacen.borrar('cuarentena', fila.ruta)
+  // La limpia se guarda ENCIMA de la original, en cuarentena. Dos cosas a
+  // la vez: la original con su EXIF deja de existir en cuanto esto termina
+  // —aunque nadie la apruebe nunca— y la limpia NO se publica todavía.
+  //
+  // ⚠ Antes esto subía a `publico/` aquí mismo, en el paso 3. El bucket
+  // público lo es de verdad, así que el archivo era alcanzable por URL
+  // desde antes de que nadie lo mirara: la regla de producto 8 dice que
+  // eso pasa en el paso 5, «aprobada», y por eso el paso 1 firma contra un
+  // bucket que no es público. Las vistas filtraban `estado='aprobada'` y
+  // dentro de la aplicación no se veía — pero el archivo estaba publicado.
+  await almacen.subirACuarentena(fila.ruta, limpia.data, 'image/webp')
 
   return { ok: true as const }
 }
@@ -117,15 +124,20 @@ export async function cola(db: BaseDeDatos, limite = 30) {
     .orderBy(asc(imagenes.subidaAt))
     .limit(limite)
 
-  return filas.map((f) => ({
-    id: f.id,
-    objeto_tipo: f.objeto_tipo as 'muro' | 'producto' | 'proveedor',
-    objeto_id: f.objeto_id,
-    url: almacen.urlPublica(`${f.ruta}.webp`),
-    ancho: f.ancho,
-    alto: f.alto,
-    subida_at: String(f.subida_at),
-  }))
+  // Una URL firmada de CUARENTENA, no la pública: lo que se está moderando
+  // todavía no está publicado, y esta lista era el único sitio que
+  // imprimía la URL pública de algo sin aprobar.
+  return await Promise.all(
+    filas.map(async (f) => ({
+      id: f.id,
+      objeto_tipo: f.objeto_tipo as 'muro' | 'producto' | 'proveedor',
+      objeto_id: f.objeto_id,
+      url: await almacen.urlFirmadaDeCuarentena(f.ruta),
+      ancho: f.ancho,
+      alto: f.alto,
+      subida_at: String(f.subida_at),
+    })),
+  )
 }
 
 export async function moderar(
@@ -141,6 +153,18 @@ export async function moderar(
 
   if (!fila) throw new ImagenRechazada('Esa imagen no existe.')
 
+  // ⚠ Aquí y en ninguna otra parte se publica una imagen. Es el paso 5 de
+  // la regla de producto 8: aprobada, se copia a `publico/`; rechazada, se
+  // borra. Antes esta función solo cambiaba `estado` y el archivo llevaba
+  // publicado desde el paso 3.
+  if (entrada.aprobar) {
+    const limpia = await almacen.descargarDeCuarentena(fila.ruta)
+    await almacen.subirAPublico(`${fila.ruta}.webp`, limpia, 'image/webp')
+  }
+
+  // El estado se escribe DESPUÉS de mover el archivo. Al revés, un fallo al
+  // copiar dejaría una imagen marcada como aprobada que no está en ningún
+  // sitio, y las vistas la buscarían para siempre.
   await db
     .update(imagenes)
     .set({
@@ -151,10 +175,11 @@ export async function moderar(
     })
     .where(eq(imagenes.id, entrada.imagen_id))
 
-  // Rechazada se borra del almacén, no solo se marca. Guardar un archivo que
-  // se rechazó por tener a un menor identificable sería exactamente lo que la
-  // decisión de rechazarlo dice que no se hace.
-  if (!entrada.aprobar) await almacen.borrar('publico', `${fila.ruta}.webp`)
+  // Cuarentena se vacía en los dos casos: aprobada, su copia ya está en
+  // público; rechazada, no queda nada. Guardar un archivo que se rechazó por
+  // tener a un menor identificable sería exactamente lo que la decisión de
+  // rechazarlo dice que no se hace.
+  await almacen.borrar('cuarentena', fila.ruta)
 
   return { ok: true as const }
 }
