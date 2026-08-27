@@ -4,6 +4,7 @@ import * as React from "react"
 import { Combobox as ComboboxPrimitive } from "@base-ui/react"
 
 import { cn } from "@/lib/utils"
+import { useContenedorHoja } from "@/components/contenedor-hoja"
 import { Button } from "@/components/ui/button"
 import {
   InputGroup,
@@ -119,8 +120,20 @@ function ComboboxContent({
   // Dónde se monta la lista. Ver `contenedor-hoja.ts`: dentro de una hoja
   // inferior tiene que ser la hoja, o queda debajo de la capa superior.
   Pick<ComboboxPrimitive.Portal.Props, "container">) {
+  // Dentro de una hoja inferior la lista se monta EN LA HOJA. La hoja es un
+  // `popover` nativo y vive en la capa superior del navegador, que se pinta
+  // encima de todo el documento sin importar el z-index: portalizada al
+  // `body`, la lista se abre de verdad —`aria-expanded="true"`— y no se ve
+  // nada. Ver `contenedor-hoja.ts`.
+  //
+  // ⚠ Va aquí dentro y no en cada llamada. Antes era un prop que había que
+  // acordarse de pasar, y de trece desplegables solo dos lo pasaban: los
+  // otros once estaban rotos dentro de una hoja. El prop sigue existiendo y
+  // sigue mandando, para el caso raro de querer otro contenedor.
+  const deLaHoja = useContenedorHoja()
+
   return (
-    <ComboboxPrimitive.Portal container={container}>
+    <ComboboxPrimitive.Portal container={container ?? deLaHoja ?? undefined}>
       <ComboboxPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}
