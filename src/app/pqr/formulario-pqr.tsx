@@ -34,6 +34,12 @@ export function FormularioPqr() {
   const [error, setError] = useState<string | null>(null)
   const [listo, setListo] = useState<{ codigo: string; plazo: number } | null>(null)
 
+  // El origen se lee del navegador y no de una variable de entorno: esto es
+  // un componente de cliente y ya está donde hay que estar. Antes de hidratar
+  // no se pinta nada de esto —solo aparece con `listo` puesto, que es
+  // consecuencia de un clic—, así que no hay desajuste posible.
+  const origen = typeof window === 'undefined' ? '' : window.location.origin
+
   const puede =
     asunto.trim().length >= 3 && detalle.trim().length >= 10 && !enviando
 
@@ -71,27 +77,46 @@ export function FormularioPqr() {
         <div className="shadow-canto rounded-2xl bg-card p-4">
           <h2 className="font-heading text-2xl">Recibimos tu {NOMBRE_TIPO_PQR[tipo].toLowerCase()}.</h2>
           <p className="mt-2 text-base">
-            Guarda este código. Es lo que identifica tu caso cuando nos
-            escribas, y no lo podemos recuperar: no guardamos quién eres.
+            Guarda este enlace. Es lo que identifica tu caso y por donde vas a
+            ver la respuesta, y no lo podemos recuperar: no guardamos quién
+            eres.
           </p>
-          <p className="mt-3 font-mono text-sm break-all">{listo.codigo}</p>
-          <div className="mt-3">
+          {/* El enlace, no el código suelto. Antes se entregaba un código
+              «para cuando escribas después» y no había ningún después: no
+              existía pantalla para consultarla. Un canal de habeas data que
+              solo sabe recibir no es un canal. */}
+          <p className="mt-3 font-mono text-sm break-all">
+            {origen}/pqr/{listo.codigo}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
             <Button
               variant="outline"
-              onClick={() => navigator.clipboard.writeText(listo.codigo)}
+              onClick={() =>
+                navigator.clipboard.writeText(`${origen}/pqr/${listo.codigo}`)
+              }
             >
               <Copy className="size-4" aria-hidden="true" />
-              Copiar el código
+              Copiar el enlace
+            </Button>
+            <Button
+              nativeButton={false}
+              render={<Link href={`/pqr/${encodeURIComponent(listo.codigo)}`} />}
+            >
+              Ver mi {NOMBRE_TIPO_PQR[tipo].toLowerCase()}
             </Button>
           </div>
           <p className="mt-4 text-base text-muted-foreground">
             Respondemos dentro de los {listo.plazo} días hábiles que fija la
-            Ley 1581 de 2012. Escríbenos a {CORREO_CONTACTO} citando el
-            código y te contamos en qué va.
+            Ley 1581 de 2012. La respuesta aparece en ese enlace. Si lo
+            pierdes, escríbenos a {CORREO_CONTACTO}.
           </p>
 
           <div className="mt-4">
-            <Button nativeButton={false} render={<Link href="/ayuda" />}>
+            <Button
+              variant="ghost"
+              nativeButton={false}
+              render={<Link href="/ayuda" />}
+            >
               Volver a Ayuda
             </Button>
           </div>

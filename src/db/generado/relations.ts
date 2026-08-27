@@ -67,13 +67,13 @@ export const perfilesRelations = relations(perfiles, ({one, many}) => ({
 	ofrecimientos: many(ofrecimientos),
 	invitacionesOrganizacions: many(invitacionesOrganizacion),
 	servidores: many(servidores),
+	solicitudes: many(solicitudes),
 	pushOfertadores: many(pushOfertadores),
 	usersInAuth: one(usersInAuth, {
 		fields: [perfiles.id],
 		references: [usersInAuth.id]
 	}),
 	respuestas: many(respuestas),
-	solicitudes: many(solicitudes),
 	proveedores: many(proveedores),
 	solicitudesServicios: many(solicitudesServicio),
 	chats: many(chats),
@@ -157,9 +157,9 @@ export const usersInAuthRelations = relations(usersInAuth, ({many}) => ({
 	organizaciones: many(organizaciones),
 	servidores: many(servidores),
 	administradores: many(administradores),
+	solicitudes: many(solicitudes),
 	catalogoItems: many(catalogoItems),
 	perfiles: many(perfiles),
-	solicitudes: many(solicitudes),
 	referencias: many(referencias),
 	accesosReferencias: many(accesosReferencia),
 	proveedores: many(proveedores),
@@ -176,9 +176,6 @@ export const solicitudesContactoRelations = relations(solicitudesContacto, ({one
 
 export const solicitudesRelations = relations(solicitudes, ({one, many}) => ({
 	solicitudesContactos: many(solicitudesContacto),
-	pushSuscripciones: many(pushSuscripciones),
-	solicitudItems: many(solicitudItems),
-	respuestas: many(respuestas),
 	municipio: one(municipios, {
 		fields: [solicitudes.municipio],
 		references: [municipios.codigoDane]
@@ -191,6 +188,9 @@ export const solicitudesRelations = relations(solicitudes, ({one, many}) => ({
 		fields: [solicitudes.perfilId],
 		references: [perfiles.id]
 	}),
+	pushSuscripciones: many(pushSuscripciones),
+	solicitudItems: many(solicitudItems),
+	respuestas: many(respuestas),
 	destapesContactos: many(destapesContacto),
 }));
 

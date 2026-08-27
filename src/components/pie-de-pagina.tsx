@@ -73,6 +73,15 @@ export function PieDePagina() {
                 Quiénes somos
               </Link>
             </li>
+            {/* La PQR va aquí y no solo dentro de Ayuda: es el canal de
+                habeas data (Ley 1581, arts. 14 y 15) y el sitio donde se
+                busca un derecho es el pie, al lado del aviso de privacidad
+                que lo menciona. */}
+            <li>
+              <Link href="/pqr" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
+                PQR y habeas data
+              </Link>
+            </li>
             <li>
               <Link href="/privacidad" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
                 Aviso de privacidad

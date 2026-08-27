@@ -314,6 +314,20 @@ export const enrutador = os.router({
     }),
   },
   pqr: {
+    porCodigo: os.pqr.porCodigo.handler(({ input }) => pqr.porCodigo(db, input.codigo)),
+    // La cola y la respuesta comprueban el permiso EN el procedimiento, no
+    // en la pantalla: esconder el botón deja el endpoint abierto.
+    cola: os.pqr.cola.handler(({ context }) => pqr.cola(db, context.usuarioId)),
+    responder: os.pqr.responder.handler(async ({ input, context, errors }) => {
+      try {
+        return await pqr.responder(db, input, context.usuarioId)
+      } catch (e) {
+        if (e instanceof pqr.PqrRechazada) {
+          throw errors.RECHAZADO({ data: { motivo: e.message } })
+        }
+        throw e
+      }
+    }),
     crear: os.pqr.crear.handler(async ({ input, errors }) => {
       try {
         return await pqr.crear(db, input)

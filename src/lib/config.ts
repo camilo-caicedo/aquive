@@ -77,6 +77,12 @@ export const CONSENTIMIENTO_REFERENCIA_VERSION = 'servicios-referencia-2026-08-1
 // cara de alguien es otra finalidad que publicar su teléfono, igual que
 // el punto en el mapa (ADR 0004). Quien firmó la de agosto no firmó esta.
 export const AUTORIZACION_FOTO_VERSION = 'servicios-foto-2026-08-27'
+// El perfil también publica nombre y teléfono —en /profesionales y en
+// /ofertadores— y también necesita su versión guardada (mínimo legal 2). La
+// fecha es la del texto que hoy se lee en el formulario de registro, no la
+// de cuando se añadió la columna: decir que alguien aceptó un texto que no
+// existía sería peor que no guardar nada.
+export const AUTORIZACION_PERFIL_VERSION = 'perfil-2026-08-19'
 
 export const ENTIDADES_MATRICULA = [
   { valor: 'COPNIA', etiqueta: 'COPNIA — Ingeniería' },

@@ -4,7 +4,11 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { RESPONSABLE, ENTIDADES_MATRICULA } from '@/lib/config'
+import {
+  RESPONSABLE,
+  ENTIDADES_MATRICULA,
+  AUTORIZACION_PERFIL_VERSION,
+} from '@/lib/config'
 import type {
   Database,
   TipoPerfil,
@@ -293,6 +297,9 @@ export function FormularioRegistro({
       p_numero_matricula: tipo === 'servidor' ? matricula.trim() : null,
       p_servicios: tipo === 'servidor' ? serviciosIds : [],
       p_puede_trasladarse: puedeTrasladarse,
+      // La prueba de QUÉ texto aceptó esta persona. Sin ella la RPC
+      // rechaza el alta de cualquiera que publique (mínimo legal 2).
+      p_autorizacion_version: AUTORIZACION_PERFIL_VERSION,
     })
 
     if (rpcError) {

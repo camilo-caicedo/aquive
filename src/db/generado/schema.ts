@@ -359,6 +359,51 @@ export const administradores = pgTable("administradores", {
 	pgPolicy("admin se ve a si mismo", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(( SELECT auth.uid() AS uid) = user_id)` }),
 ]);
 
+export const solicitudes = pgTable("solicitudes", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	codigo: text().notNull(),
+	municipio: text().notNull(),
+	barrio: text().notNull(),
+	categoria: text().notNull(),
+	nota: text(),
+	estado: text().default('abierta').notNull(),
+	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	confirmadaAt: timestamp("confirmada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '72:00:00'::interval)`).notNull(),
+	esPrueba: boolean("es_prueba").default(false).notNull(),
+	puedeRecoger: boolean("puede_recoger").default(false).notNull(),
+	notaAdmin: text("nota_admin"),
+	notaAdminAt: timestamp("nota_admin_at", { withTimezone: true, mode: 'string' }),
+	notaAdminPor: uuid("nota_admin_por"),
+	perfilId: uuid("perfil_id").notNull(),
+}, (table) => [
+	index("idx_solicitudes_categoria").using("btree", table.categoria.asc().nullsLast().op("text_ops")),
+	index("idx_solicitudes_expira").using("btree", table.expiraAt.asc().nullsLast().op("timestamptz_ops")),
+	index("idx_solicitudes_municipio").using("btree", table.municipio.asc().nullsLast().op("text_ops")),
+	index("idx_solicitudes_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.municipio],
+			foreignColumns: [municipios.codigoDane],
+			name: "solicitudes_municipio_fkey"
+		}),
+	foreignKey({
+			columns: [table.notaAdminPor],
+			foreignColumns: [usersInAuth.id],
+			name: "solicitudes_nota_admin_por_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.perfilId],
+			foreignColumns: [perfiles.id],
+			name: "solicitudes_perfil_id_fkey"
+		}).onDelete("cascade"),
+	unique("solicitudes_codigo_key").on(table.codigo),
+	check("solicitudes_barrio_check", sql`(char_length(barrio) >= 2) AND (char_length(barrio) <= 60)`),
+	check("solicitudes_categoria_check", sql`categoria = ANY (ARRAY['alimentacion'::text, 'aseo'::text, 'salud'::text, 'abrigo'::text, 'cocina'::text, 'otros'::text, 'servicios'::text, 'mascotas'::text])`),
+	check("solicitudes_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'cumplida'::text])`),
+	check("solicitudes_nota_admin_check", sql`char_length(nota_admin) <= 200`),
+	check("solicitudes_nota_check", sql`char_length(nota) <= 140`),
+]);
+
 export const pushSuscripciones = pgTable("push_suscripciones", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	solicitudId: uuid("solicitud_id").notNull(),
@@ -465,44 +510,6 @@ export const solicitudItems = pgTable("solicitud_items", {
 	check("solicitud_items_uno_u_otro", sql`num_nonnulls(item_id, sugerencia_id) = 1`),
 ]);
 
-export const perfiles = pgTable("perfiles", {
-	id: uuid().primaryKey().notNull(),
-	nombreVisible: text("nombre_visible").notNull(),
-	tipo: text().notNull(),
-	municipios: text().array().default([""]).notNull(),
-	contactoPublico: text("contacto_publico"),
-	contactoTipo: text("contacto_tipo").default('whatsapp').notNull(),
-	descripcion: text(),
-	aceptoPublicacion: boolean("acepto_publicacion").default(false).notNull(),
-	aceptoPoliticaAt: timestamp("acepto_politica_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	suspendido: boolean().default(false).notNull(),
-	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	avisosVistosAt: timestamp("avisos_vistos_at", { withTimezone: true, mode: 'string' }),
-	puedeTrasladarse: boolean("puede_trasladarse").default(false).notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.id],
-			foreignColumns: [usersInAuth.id],
-			name: "perfiles_id_fkey"
-		}).onDelete("cascade"),
-	pgPolicy("admin lee perfiles", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(EXISTS ( SELECT 1
-   FROM administradores a
-  WHERE (a.user_id = ( SELECT auth.uid() AS uid))))` }),
-	pgPolicy("perfil propio delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
-	pgPolicy("perfil propio insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
-	pgPolicy("perfil propio lectura", { as: "permissive", for: "select", to: ["authenticated"] }),
-	pgPolicy("perfil propio update", { as: "permissive", for: "update", to: ["authenticated"] }),
-	check("perfiles_contacto_publico_check", sql`CHECK (
-CASE
-    WHEN (tipo = ANY (ARRAY['vecino'::text, 'aliado'::text])) THEN ((contacto_publico IS NULL) OR ((char_length(contacto_publico) >= 7) AND (char_length(contacto_publico) <= 40)))
-    ELSE ((char_length(contacto_publico) >= 7) AND (char_length(contacto_publico) <= 40))
-END)`),
-	check("perfiles_contacto_tipo_check", sql`contacto_tipo = ANY (ARRAY['whatsapp'::text, 'telefono'::text])`),
-	check("perfiles_descripcion_check", sql`char_length(descripcion) <= 300`),
-	check("perfiles_nombre_visible_check", sql`(char_length(nombre_visible) >= 3) AND (char_length(nombre_visible) <= 60)`),
-	check("perfiles_tipo_check", sql`tipo = ANY (ARRAY['vecino'::text, 'ofertador'::text, 'servidor'::text, 'aliado'::text])`),
-]);
-
 export const metricas = pgTable("metricas", {
 	id: bigserial({ mode: "bigint" }).primaryKey().notNull(),
 	municipio: text().notNull(),
@@ -517,6 +524,46 @@ export const metricas = pgTable("metricas", {
 	conAliado: boolean("con_aliado").default(false).notNull(),
 }, (table) => [
 	pgPolicy("metricas lectura publica", { as: "permissive", for: "select", to: ["public"], using: sql`(es_prueba = false)` }),
+]);
+
+export const perfiles = pgTable("perfiles", {
+	id: uuid().primaryKey().notNull(),
+	nombreVisible: text("nombre_visible").notNull(),
+	tipo: text().notNull(),
+	municipios: text().array().default([""]).notNull(),
+	contactoPublico: text("contacto_publico"),
+	contactoTipo: text("contacto_tipo").default('whatsapp').notNull(),
+	descripcion: text(),
+	aceptoPublicacion: boolean("acepto_publicacion").default(false).notNull(),
+	aceptoPoliticaAt: timestamp("acepto_politica_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	suspendido: boolean().default(false).notNull(),
+	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	avisosVistosAt: timestamp("avisos_vistos_at", { withTimezone: true, mode: 'string' }),
+	puedeTrasladarse: boolean("puede_trasladarse").default(false).notNull(),
+	autorizacionVersion: text("autorizacion_version"),
+}, (table) => [
+	foreignKey({
+			columns: [table.id],
+			foreignColumns: [usersInAuth.id],
+			name: "perfiles_id_fkey"
+		}).onDelete("cascade"),
+	pgPolicy("admin lee perfiles", { as: "permissive", for: "select", to: ["authenticated"], using: sql`(EXISTS ( SELECT 1
+   FROM administradores a
+  WHERE (a.user_id = ( SELECT auth.uid() AS uid))))` }),
+	pgPolicy("perfil propio delete", { as: "permissive", for: "delete", to: ["authenticated"] }),
+	pgPolicy("perfil propio insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
+	pgPolicy("perfil propio lectura", { as: "permissive", for: "select", to: ["authenticated"] }),
+	pgPolicy("perfil propio update", { as: "permissive", for: "update", to: ["authenticated"] }),
+	check("perfiles_autorizacion_completa", sql`(NOT acepto_publicacion) OR (autorizacion_version IS NOT NULL)`),
+	check("perfiles_contacto_publico_check", sql`CHECK (
+CASE
+    WHEN (tipo = ANY (ARRAY['vecino'::text, 'aliado'::text])) THEN ((contacto_publico IS NULL) OR ((char_length(contacto_publico) >= 7) AND (char_length(contacto_publico) <= 40)))
+    ELSE ((char_length(contacto_publico) >= 7) AND (char_length(contacto_publico) <= 40))
+END)`),
+	check("perfiles_contacto_tipo_check", sql`contacto_tipo = ANY (ARRAY['whatsapp'::text, 'telefono'::text])`),
+	check("perfiles_descripcion_check", sql`char_length(descripcion) <= 300`),
+	check("perfiles_nombre_visible_check", sql`(char_length(nombre_visible) >= 3) AND (char_length(nombre_visible) <= 60)`),
+	check("perfiles_tipo_check", sql`tipo = ANY (ARRAY['vecino'::text, 'ofertador'::text, 'servidor'::text, 'aliado'::text])`),
 ]);
 
 export const respuestas = pgTable("respuestas", {
@@ -542,51 +589,6 @@ export const respuestas = pgTable("respuestas", {
 	pgPolicy("respuestas insert", { as: "permissive", for: "insert", to: ["authenticated"] }),
 	pgPolicy("respuestas propias", { as: "permissive", for: "select", to: ["authenticated"] }),
 	check("respuestas_mensaje_check", sql`(char_length(mensaje) >= 5) AND (char_length(mensaje) <= 200)`),
-]);
-
-export const solicitudes = pgTable("solicitudes", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	codigo: text().notNull(),
-	municipio: text().notNull(),
-	barrio: text().notNull(),
-	categoria: text().notNull(),
-	nota: text(),
-	estado: text().default('abierta').notNull(),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	confirmadaAt: timestamp("confirmada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '72:00:00'::interval)`).notNull(),
-	esPrueba: boolean("es_prueba").default(false).notNull(),
-	puedeRecoger: boolean("puede_recoger").default(false).notNull(),
-	notaAdmin: text("nota_admin"),
-	notaAdminAt: timestamp("nota_admin_at", { withTimezone: true, mode: 'string' }),
-	notaAdminPor: uuid("nota_admin_por"),
-	perfilId: uuid("perfil_id").notNull(),
-}, (table) => [
-	index("idx_solicitudes_categoria").using("btree", table.categoria.asc().nullsLast().op("text_ops")),
-	index("idx_solicitudes_expira").using("btree", table.expiraAt.asc().nullsLast().op("timestamptz_ops")),
-	index("idx_solicitudes_municipio").using("btree", table.municipio.asc().nullsLast().op("text_ops")),
-	index("idx_solicitudes_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
-	foreignKey({
-			columns: [table.municipio],
-			foreignColumns: [municipios.codigoDane],
-			name: "solicitudes_municipio_fkey"
-		}),
-	foreignKey({
-			columns: [table.notaAdminPor],
-			foreignColumns: [usersInAuth.id],
-			name: "solicitudes_nota_admin_por_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.perfilId],
-			foreignColumns: [perfiles.id],
-			name: "solicitudes_perfil_id_fkey"
-		}).onDelete("cascade"),
-	unique("solicitudes_codigo_key").on(table.codigo),
-	check("solicitudes_barrio_check", sql`(char_length(barrio) >= 2) AND (char_length(barrio) <= 60)`),
-	check("solicitudes_categoria_check", sql`categoria = ANY (ARRAY['alimentacion'::text, 'aseo'::text, 'salud'::text, 'abrigo'::text, 'cocina'::text, 'otros'::text, 'servicios'::text, 'mascotas'::text])`),
-	check("solicitudes_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'en_coordinacion'::text, 'entregada_parcial'::text, 'cumplida'::text])`),
-	check("solicitudes_nota_admin_check", sql`char_length(nota_admin) <= 200`),
-	check("solicitudes_nota_check", sql`char_length(nota) <= 140`),
 ]);
 
 export const metricasServicio = pgTable("metricas_servicio", {
