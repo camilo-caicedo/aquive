@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { servidor } from '@/orpc/local'
 import { listarMunicipios } from '@/lib/municipios'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { FormularioPublicarServicio } from './formulario-publicar-servicio'
@@ -8,12 +9,17 @@ export const metadata = { title: 'Necesito un servicio' }
 export default async function PublicarServicioPage() {
   const supabase = await createClient()
 
-  // Sin `catalogo_oficios`: desde el ADR 0011 quien pide elige categoría y
-  // escribe el detalle. El catálogo sigue siendo cosa de la ficha de quien
-  // ofrece.
-  const [municipios, { data: zonas }] = await Promise.all([
+  // ⚠ El catálogo vuelve a esta pantalla con el ADR 0013. El ADR 0011 lo
+  // había sacado por largo —cuarenta y tantas píldoras juntas— y lo que
+  // faltaba no era quitarlo: era enseñar solo las de la categoría elegida,
+  // con la salida escrita siempre delante.
+  //
+  // Son 81 filas de cuatro campos, unos 6 KB. Van enteras al cliente para
+  // que cambiar de categoría no sea otra ida y vuelta al servidor.
+  const [municipios, { data: zonas }, subcategorias] = await Promise.all([
     listarMunicipios(supabase),
     supabase.from('zonas').select('*').eq('activa', true).order('orden'),
+    servidor.servicios.subcategorias(),
   ])
 
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ''
@@ -36,6 +42,7 @@ export default async function PublicarServicioPage() {
       <FormularioPublicarServicio
         municipios={municipios ?? []}
         zonas={zonas ?? []}
+        subcategorias={subcategorias}
         turnstileSiteKey={siteKey}
       />
     </main>

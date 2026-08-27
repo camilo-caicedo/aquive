@@ -17,10 +17,15 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 export interface SolicitudDeServicio {
   id: string
   codigo: string
-  /** Su categoría, de los ocho gajos. */
+  /** Su categoría, de los doce gajos (ADR 0012). */
   grupo: string
-  /** Lo que pidió, con sus palabras (ADR 0011). */
-  detalle: string
+  /** La subcategoría del catálogo, si eligió una (ADR 0013). */
+  oficio_id: string | null
+  oficio_nombre: string | null
+  /** O lo que escribió, mientras nadie lo ha mirado. Uno de los dos. */
+  subcategoria_propuesta: string | null
+  /** El contexto que escribió, si lo escribió. Opcional desde el ADR 0013. */
+  detalle: string | null
   municipio: string
   zona_nombre: string | null
   zona_texto: string | null
@@ -83,18 +88,41 @@ export function ListaSolicitudesServicio({
         const zona = zonaLegible(s.zona_nombre, s.zona_texto)
         return (
           <li key={s.id} className="rounded-2xl bg-card p-4 shadow-canto">
+            {/* El título es la subcategoría desde el ADR 0013 — «Pintura de
+                casas y locales» dice más que «Arreglos de la casa», y ahora
+                se puede sin depender de que la persona escriba bien. Las
+                solicitudes anteriores al ADR no la tienen y siguen
+                titulándose con su detalle. */}
             <div className="flex items-baseline justify-between gap-2">
-              <span className="min-w-0 text-lg font-bold">{s.detalle}</span>
+              <span className="min-w-0 text-lg font-bold">
+                {s.oficio_nombre ?? s.subcategoria_propuesta ?? s.detalle}
+              </span>
               <span className="shrink-0 font-mono text-sm text-muted-foreground">
                 {s.codigo}
               </span>
             </div>
+
+            {/* Que la escribió su dueño y todavía no la ha mirado nadie: se
+                dice con la palabra, no con un color (regla de interfaz 9). */}
+            {s.subcategoria_propuesta && (
+              <p className="font-heading mt-1 inline-flex rounded-full bg-accent px-2.5 py-0.5 text-xs tracking-[0.085em] text-accent-foreground uppercase">
+                Lo escribió quien pide
+              </p>
+            )}
 
             <p className="mt-0.5 text-base text-muted-foreground">
               {[NOMBRE_GRUPO[s.grupo] ?? s.grupo, zona, nombreMunicipio[s.municipio]]
                 .filter(Boolean)
                 .join(' · ')}
             </p>
+
+            {/* El detalle baja a línea secundaria: ya no identifica,
+                aclara. Solo si NO es ya el título — en las anteriores al
+                ADR 0013 no hay subcategoría y el título cae en el detalle,
+                que entonces saldría dos veces. */}
+            {s.detalle && (s.oficio_nombre ?? s.subcategoria_propuesta) && (
+              <p className="mt-1 text-base">{s.detalle}</p>
+            )}
 
             {/* Urgencia y capacidad de pago, como chips: son dos datos que
                 se comparan entre solicitudes, y en una línea de texto con
@@ -175,7 +203,9 @@ export function ListaSolicitudesServicio({
                 )}
               >
                 <p className="text-base text-muted-foreground">
-                  {s.detalle}
+                  {[s.oficio_nombre ?? s.subcategoria_propuesta, s.detalle]
+                    .filter(Boolean)
+                    .join(' · ')}
                 </p>
                 <Textarea
                   value={mensaje}

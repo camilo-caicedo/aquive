@@ -60,8 +60,11 @@ export function ListaMias({ solicitudes }: { solicitudes: MiSolicitudServicio[] 
           return (
             <li key={s.id} className="shadow-canto rounded-2xl bg-card p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
+                {/* La subcategoría titula desde el ADR 0013; el detalle
+                    baja. Las anteriores al ADR no la tienen y se siguen
+                    titulando con lo que su dueño escribió. */}
                 <h2 className="font-heading text-lg leading-tight">
-                  {s.detalle}
+                  {s.subcategoria ?? s.detalle}
                 </h2>
                 {/* El estado no depende solo del color: lleva su palabra. */}
                 <span
@@ -75,12 +78,23 @@ export function ListaMias({ solicitudes }: { solicitudes: MiSolicitudServicio[] 
                 </span>
               </div>
 
-              {/* La categoría debajo del texto, no encima: lo que se busca
-                  en la lista propia es cuál de las mías es, y eso lo dice
-                  lo que uno escribió. */}
+              {/* Que nadie la ha mirado todavía. Va con la palabra, no
+                  con un color (regla de interfaz 9). */}
+              {s.subcategoria_en_revision && (
+                <p className="font-heading mt-1 inline-flex rounded-full bg-accent px-2.5 py-0.5 text-xs tracking-[0.085em] text-accent-foreground uppercase">
+                  Lo estamos revisando
+                </p>
+              )}
+
+              {/* La categoría debajo del título, no encima: lo que se busca
+                  en la lista propia es cuál de las mías es. */}
               <p className="mt-1 text-sm text-muted-foreground">
                 {NOMBRE_GRUPO[s.grupo] ?? s.grupo}
               </p>
+
+              {s.subcategoria && s.detalle && (
+                <p className="mt-1 text-base">{s.detalle}</p>
+              )}
 
               {/* El código va en monoespaciada porque se dicta por teléfono,
                   y ahí importa distinguir un cero de una o. */}

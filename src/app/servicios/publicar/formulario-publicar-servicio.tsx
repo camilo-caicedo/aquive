@@ -9,7 +9,8 @@ import { contienePII, validarNota } from '@/lib/validacion'
 import { nombreConDepartamento, type MunicipioBasico } from '@/lib/municipios'
 import { CAPACIDADES_PAGO, GRUPOS, URGENCIAS } from '@/lib/servicios'
 import type { CapacidadPago, Database, UrgenciaServicio } from '@/lib/types'
-import type { GrupoOficio } from '@/contrato/servicios'
+import type { GrupoOficio, Subcategoria } from '@/contrato/servicios'
+import { validarSugerencia } from '@/lib/validacion'
 import { TurnstileWidget } from '@/components/turnstile-widget'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -40,22 +41,35 @@ type Zona = Database['public']['Tables']['zonas']['Row']
  * Tres pantallas, como manda la accesibilidad de CLAUDE.md: qué necesito,
  * dónde y cuándo, y enviar. Ni una más.
  *
- * ⚠ El primer paso ya NO es el catálogo de oficios (ADR 0011). Eran
- * cuarenta y tantas píldoras, y quien necesitaba algo que no estuviera en
- * la lista —que es la mitad del rebusque— las recorría todas y se iba.
- * Ahora es una categoría de ocho y una línea escrita.
+ * ⚠ El primer paso tiene DOS momentos desde el ADR 0013, y sigue siendo un
+ * paso: primero la categoría, y solo entonces las subcategorías de esa
+ * categoría. Doce píldoras y luego siete u ocho, nunca ochenta y una.
+ *
+ * El ADR 0011 había quitado el catálogo entero de aquí porque eran cuarenta
+ * y tantas píldoras juntas y quien no encontraba la suya se iba. Lo que
+ * faltaba no era quitarlo: era que la salida —«esto que necesito no está»—
+ * estuviera a la vista en vez de al final de la lista. Ahora lo está, y por
+ * eso la lista puede volver.
  */
 export function FormularioPublicarServicio({
   municipios,
   zonas,
+  subcategorias,
   turnstileSiteKey,
 }: {
   municipios: MunicipioBasico[]
   zonas: Zona[]
+  subcategorias: Subcategoria[]
   turnstileSiteKey: string
 }) {
   const [paso, setPaso] = useState<1 | 2 | 3>(1)
   const [grupo, setGrupo] = useState<GrupoOficio | ''>('')
+  // Del catálogo, o escrita a mano. Nunca las dos: elegir una limpia la
+  // otra, que es el gemelo en la pantalla del CHECK
+  // `solicitudes_servicio_una_subcategoria`.
+  const [oficioId, setOficioId] = useState('')
+  const [propuesta, setPropuesta] = useState('')
+  const [escribiendo, setEscribiendo] = useState('')
   const [detalle, setDetalle] = useState('')
   const [municipio, setMunicipio] = useState('')
   const [zonaId, setZonaId] = useState('')
@@ -75,6 +89,20 @@ export function FormularioPublicarServicio({
   // se envía y se dice por qué. Solo se comprueba con algo escrito, para no
   // gritarle a nadie por un campo vacío.
   const errorDetalle = detalle.trim().length >= 3 ? validarNota(detalle.trim()) : null
+  const delGrupo = subcategorias.filter((sc) => sc.grupo === grupo)
+  // Solo con algo escrito: validar lo que la persona no ha escrito es cómo
+  // aparecen mensajes de error sobre campos vacíos.
+  const errorPropuesta = escribiendo.trim() ? validarSugerencia(escribiendo.trim()) : null
+  const hayaSubcategoria = oficioId !== '' || propuesta !== ''
+
+  function elegirCategoria(valor: GrupoOficio) {
+    setGrupo(valor)
+    // Cambiar de categoría suelta lo de la anterior: un oficio de Belleza
+    // colgando de «Arreglos de la casa» no lo acepta ni el servidor.
+    setOficioId('')
+    setPropuesta('')
+    setEscribiendo('')
+  }
   const errorZona =
     zonaTexto.trim() && contienePII(zonaTexto)
       ? 'La zona no puede llevar teléfonos ni correos.'
@@ -97,7 +125,9 @@ export function FormularioPublicarServicio({
     try {
       const { codigo } = await rpc.servicios.publicarSolicitud({
         grupo: grupo as GrupoOficio,
-        detalle: detalle.trim(),
+        oficio_id: oficioId || undefined,
+        subcategoria_nueva: propuesta || undefined,
+        detalle: detalle.trim() || undefined,
         municipio,
         zona_id: zonaId || undefined,
         zona_texto: zonaTexto.trim() || undefined,
@@ -175,49 +205,148 @@ export function FormularioPublicarServicio({
 
       {paso === 1 && (
         <div className="space-y-4">
-          <fieldset>
-            <legend className="mb-2 text-base font-medium">
-              ¿De qué se trata?
-            </legend>
-            {/* Ocho píldoras, no cuarenta. Caben en una pantalla y se eligen
-                de un vistazo; el detalle lo escribe quien pide. */}
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(GRUPOS).map(([valor, etiqueta]) => (
+          {/* Momento 1: la categoría. Elegida, las doce píldoras colapsan a
+              una sola con «Cambiar» — si se quedaran, el paso pasaría de
+              doce a veinte y empeoraría justo lo que el ADR 0011 arregló. */}
+          {!grupo ? (
+            <fieldset>
+              <legend className="mb-2 text-base font-medium">
+                ¿De qué se trata?
+              </legend>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(GRUPOS).map(([valor, etiqueta]) => (
+                  <button
+                    key={valor}
+                    type="button"
+                    onClick={() => elegirCategoria(valor as GrupoOficio)}
+                    className="inline-flex min-h-12 items-center rounded-full border border-border bg-card px-4 text-base transition-colors hover:bg-muted"
+                  >
+                    {etiqueta}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="inline-flex min-h-12 items-center rounded-full border border-enlace bg-secondary px-4 text-base font-semibold text-secondary-foreground">
+                  {GRUPOS[grupo]}
+                </span>
                 <button
-                  key={valor}
                   type="button"
-                  aria-pressed={grupo === valor}
-                  onClick={() => setGrupo(valor as GrupoOficio)}
-                  className={`inline-flex min-h-12 items-center rounded-full border px-4 text-base transition-colors ${
-                    grupo === valor
-                      ? 'border-enlace bg-secondary font-semibold text-secondary-foreground'
-                      : 'border-border bg-card hover:bg-muted'
-                  }`}
+                  onClick={() => elegirCategoria('' as GrupoOficio)}
+                  className="text-enlace min-h-12 text-base underline underline-offset-4"
                 >
-                  {etiqueta}
+                  Cambiar
                 </button>
-              ))}
-            </div>
-          </fieldset>
+              </div>
 
-          <div>
-            <Label htmlFor="detalle">¿Qué necesitas? Dilo con tus palabras</Label>
-            <Input
-              id="detalle"
-              value={detalle}
-              onChange={(e) => setDetalle(e.target.value)}
-              maxLength={80}
-              className="mt-1"
-              placeholder="Que me arreglen la puerta del clóset"
-            />
-            <p className="mt-1 text-sm text-muted-foreground">
-              {detalle.trim().length}/80. Sin teléfonos ni direcciones: quien
-              responda te escribe por el chat de aquí.
-            </p>
-            {errorDetalle && (
-              <p className="mt-1 text-sm text-destructive">{errorDetalle}</p>
-            )}
-          </div>
+              {/* Momento 2: qué, dentro de esa categoría. */}
+              <fieldset>
+                <legend className="mb-2 text-base font-medium">
+                  ¿Qué necesitas exactamente?
+                </legend>
+                <div className="flex flex-wrap gap-2">
+                  {delGrupo.map((sc) => (
+                    <button
+                      key={sc.id}
+                      type="button"
+                      aria-pressed={oficioId === sc.id}
+                      onClick={() => {
+                        setOficioId(sc.id)
+                        setPropuesta('')
+                        setEscribiendo('')
+                      }}
+                      className={`inline-flex min-h-12 items-center rounded-full border px-4 text-base transition-colors ${
+                        oficioId === sc.id
+                          ? 'border-enlace bg-secondary font-semibold text-secondary-foreground'
+                          : 'border-border bg-card hover:bg-muted'
+                      }`}
+                    >
+                      {sc.nombre}
+                    </button>
+                  ))}
+                  {/* Lo escrito se pinta como una más, elegida, con su sello:
+                      así se ve que cuenta como respuesta y no como un campo a
+                      medio llenar. */}
+                  {propuesta && (
+                    <button
+                      type="button"
+                      aria-pressed
+                      onClick={() => {
+                        setEscribiendo(propuesta)
+                        setPropuesta('')
+                      }}
+                      className="border-enlace bg-secondary text-secondary-foreground inline-flex min-h-12 items-center gap-2 rounded-full border px-4 text-base font-semibold"
+                    >
+                      {propuesta}
+                      <span className="font-heading rounded-full bg-accent px-2 py-0.5 text-xs tracking-[0.085em] text-accent-foreground uppercase">
+                        Lo revisamos
+                      </span>
+                    </button>
+                  )}
+                </div>
+              </fieldset>
+
+              {/* ⚠ Siempre a la vista, nunca detrás de un desplegable. Es la
+                  salida que le faltaba al ADR 0011, y una salida escondida
+                  no es una salida. */}
+              {!propuesta && (
+                <div className="rounded-2xl bg-card p-3 shadow-canto">
+                  <Label htmlFor="propuesta" className="text-base">
+                    ¿No encuentras lo tuyo?
+                  </Label>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
+                    Escríbelo y lo revisamos. Tu solicitud se publica ya.
+                  </p>
+                  <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                    <Input
+                      id="propuesta"
+                      value={escribiendo}
+                      onChange={(e) => setEscribiendo(e.target.value)}
+                      maxLength={60}
+                      className="min-w-0 flex-1"
+                      placeholder="Cambiar una teja rota"
+                    />
+                    <Button
+                      variant="outline"
+                      className="shrink-0"
+                      disabled={escribiendo.trim().length < 2 || !!errorPropuesta}
+                      onClick={() => {
+                        setPropuesta(escribiendo.trim())
+                        setOficioId('')
+                        setEscribiendo('')
+                      }}
+                    >
+                      Agregar
+                    </Button>
+                  </div>
+                  {errorPropuesta && (
+                    <p className="mt-1 text-sm text-destructive">{errorPropuesta}</p>
+                  )}
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="detalle">Cuéntanos más (opcional)</Label>
+                <Input
+                  id="detalle"
+                  value={detalle}
+                  onChange={(e) => setDetalle(e.target.value)}
+                  maxLength={80}
+                  className="mt-1"
+                  placeholder="La pieza de atrás, unos 12 metros"
+                />
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {detalle.trim().length}/80. Sirve para dar contexto: cuánto,
+                  dónde, cuándo. Sin teléfonos ni direcciones.
+                </p>
+                {errorDetalle && (
+                  <p className="mt-1 text-sm text-destructive">{errorDetalle}</p>
+                )}
+              </div>
+            </>
+          )}
 
           <p className="text-sm text-muted-foreground">
             ¿Buscas un ingeniero, un médico o un abogado? Esos van en{' '}
@@ -227,9 +356,11 @@ export function FormularioPublicarServicio({
             .
           </p>
 
+          {/* El detalle ya no bloquea: desde el ADR 0013 lo que identifica
+              la solicitud es la subcategoría. */}
           <Button
             className="w-full"
-            disabled={!grupo || detalle.trim().length < 3 || !!errorDetalle}
+            disabled={!grupo || !hayaSubcategoria || !!errorDetalle}
             onClick={() => setPaso(2)}
           >
             Continuar
