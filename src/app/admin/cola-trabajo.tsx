@@ -38,14 +38,17 @@ export interface Cola {
   /**
    * Si detrás de ese número hay una persona esperando.
    *
-   * ⚠ Es lo único que saca el número del cuerpo de la fila y lo pone en el
-   * cuadro de color de la izquierda, y por eso no es un `destacada` ni un
-   * `urgente`: el color no marca importancia, marca espera. Si algún día
-   * una cola deja de tener a alguien detrás, pierde el cuadro aunque siga
-   * teniendo trabajo dentro.
+   * ⚠ No es un `destacada` ni un `urgente`: el color no marca
+   * importancia. Marca que esta cola tiene a alguien del otro lado, y por
+   * eso el cuadro de gajo se pinta aunque el contador esté en cero — cinco
+   * filas del mismo grupo se leen como un grupo, y dos de ellas
+   * apagándose según el día hacía parecer que eran otra cosa.
    *
-   * ⚠ Y nunca va solo: la fila que espera lleva además la palabra
-   * «Esperando» escrita (regla 9).
+   * Lo que el color NO dice es cuánta gente hay. Eso lo dicen tres señales
+   * que solo aparecen con el contador por encima de cero: el número dentro
+   * del cuadro —en vez del icono—, la sombra de cartel, y la palabra
+   * «Esperando N» escrita debajo (regla 9: el estado nunca depende solo
+   * del color).
    */
   espera?: boolean
 }
@@ -82,7 +85,10 @@ export function ColaTrabajo({ grupos }: { grupos: GrupoColas[] }) {
           </h2>
           <ul className="mt-2.5 space-y-3">
             {g.colas.map((c) => {
-              const esperando = !!c.espera && (c.cuantas ?? 0) > 0
+              // Dos cosas distintas, y antes eran una sola. La primera
+              // es de qué grupo es la fila; la segunda, si hay alguien.
+              const deEspera = !!c.espera
+              const esperando = deEspera && (c.cuantas ?? 0) > 0
               const gajo = c.gajo ?? 'azul'
               return (
                 <li key={c.href}>
@@ -92,16 +98,18 @@ export function ColaTrabajo({ grupos }: { grupos: GrupoColas[] }) {
                       esperando ? CARTEL[gajo] : 'shadow-canto hover:bg-muted'
                     }`}
                   >
-                    {/* El cuadro de color con el número dentro es de las
-                        colas que tienen a alguien esperando. El resto
-                        entra con su icono, que es lo que dice de qué es la
-                        cola sin gritar. */}
-                    {esperando ? (
+                    {/* El cuadro de gajo es de todo el grupo que espera a
+                        alguien. Dentro va el número cuando hay alguien, y
+                        el icono de la cola cuando no: así la fila vacía
+                        sigue diciendo de qué es, sin fingir un cero que
+                        parecería un contador. Las colas que no esperan a
+                        nadie entran con su icono suelto. */}
+                    {deEspera ? (
                       <span
                         aria-hidden="true"
                         className={`flex size-13 shrink-0 items-center justify-center rounded-xl font-heading text-2xl ${CUADRO[gajo]}`}
                       >
-                        {c.cuantas}
+                        {esperando ? c.cuantas : <c.Icono className="size-6" />}
                       </span>
                     ) : (
                       <c.Icono

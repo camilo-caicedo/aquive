@@ -97,7 +97,7 @@ export default async function AdminPage() {
                 etiqueta: 'Imágenes por revisar',
                 detalle: 'No se publican hasta que alguien las mire',
                 cuantas: v(n?.imagenes),
-                gajo: 'azul',
+                gajo: 'rojo',
                 espera: true,
               },
               {
@@ -109,7 +109,9 @@ export default async function AdminPage() {
                 etiqueta: 'PQR sin responder',
                 detalle: 'Habeas data. Consulta en 10 días, supresión en 15',
                 cuantas: v(n?.pqr),
-                gajo: 'amarillo',
+                // Los cuatro gajos en su orden, y la quinta fila vuelve al
+                // primero: el color agrupa, no ordena por importancia.
+                gajo: 'azul',
                 espera: true,
               },
             ],
