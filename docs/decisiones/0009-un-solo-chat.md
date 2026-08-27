@@ -119,6 +119,57 @@ el contacto sigue siendo el teléfono que esa persona publicó. Si algún día
 se quiere, el origen tendría que ser algo con fecha de vencimiento, no la
 ficha.
 
+## Corrección · 26 de agosto de 2026
+
+**La ficha sí abre chat.** El párrafo de arriba se queda escrito porque es lo
+que se decidió primero, y porque el argumento que lo tumbó importa más que la
+conclusión.
+
+El argumento era «una ficha no caduca, y un hilo colgado de ella no moriría
+nunca». **No se sostiene**, y bastaba mirar la tabla de la regla 3 para
+verlo: un producto de «Hecho en el barrio» tampoco caduca —vive «mientras su
+dueño lo deje»— y sí abre chat. Lo que la regla 3 pide no es que el origen
+caduque, sino que el hilo **muera con él**, y eso lo da la cascada:
+`chats.proveedor_id` con `on delete cascade`. Borrar la ficha borra sus
+hilos, igual que borrar el producto borra los suyos.
+
+Lo que quedaba en pie era una preferencia —«una ficha es una persona, no una
+cosa de la que hablar»— disfrazada de regla. La consecuencia práctica era
+mala: **a un prestador sin productos publicados solo se le podía escribir
+dando el teléfono propio**, que es justo el lado que este ADR vino a
+proteger.
+
+Así que son cinco orígenes, no cuatro, y el quinto se llama `ficha`. En la
+barra de contacto van los tres botones: WhatsApp ancho, llamar y chat.
+
+Migración `v6-a3-el-chat-de-la-ficha.sql`.
+
+## Añadido · Mensajes sin leer
+
+Pedido del responsable el mismo día: que la barra avise cuando hay algo sin
+leer.
+
+Sin tabla nueva y sin un `leido` por mensaje: dos columnas en `chats`
+—`visto_ofrece_at` y `visto_pide_at`— y un hilo tiene algo sin leer si el
+otro lado escribió después de la última vez que yo lo abrí. Marcar mensaje a
+mensaje costaría una fila por mensaje y por persona para responder la única
+pregunta que hace la interfaz: ¿hay algo o no?
+
+Se llaman por el papel y no por la persona porque el papel es lo que el hilo
+ya sabe, y es el mismo en los cinco orígenes.
+
+**Un punto, sin número.** La pregunta de quien mira la barra de reojo es «¿hay
+algo?». Un número obliga a enfocar —a 11 px, de pie y con prisa— para
+responder lo que el punto ya responde. El escudo de administración sí lleva
+número, y ahí sirve: son colas de trabajo, y tres o treinta cambia lo que uno
+hace. El número va igualmente en el `aria-label` de la celda, que es lo que
+oye quien no ve el punto.
+
+En la bandeja, el hilo sin leer va en negrita **y** con la palabra «Sin
+leer»: el estado no depende solo del color ni solo del grosor.
+
+Migración `v6-a4-mensajes-sin-leer.sql`.
+
 ## Consecuencias en `CLAUDE.md`
 
 Cambia la regla de producto 2, que decía «un chat se abre por un pedido de

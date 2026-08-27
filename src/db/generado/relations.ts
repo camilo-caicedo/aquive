@@ -19,6 +19,10 @@ export const chatsRelations = relations(chats, ({one, many}) => ({
 		fields: [chats.productoId],
 		references: [productos.id]
 	}),
+	proveedore: one(proveedores, {
+		fields: [chats.proveedorId],
+		references: [proveedores.id]
+	}),
 	publicacionesMuro: one(publicacionesMuro, {
 		fields: [chats.publicacionId],
 		references: [publicacionesMuro.id]
@@ -331,6 +335,7 @@ export const proveedoresRelations = relations(proveedores, ({one, many}) => ({
 		fields: [proveedores.zonaId],
 		references: [zonas.id]
 	}),
+	chats: many(chats),
 	productos: many(productos),
 	proveedorOficios: many(proveedorOficios),
 }));

@@ -20,7 +20,7 @@ import type { Autor, Hilo, HiloEnBandeja, Mensaje, Origen } from '@/contrato/cha
 // El chat, uno solo. Capa de dominio: sin `next/*`, sin cookies.
 //
 // Un hilo tiene siempre dos lados —quien ofrece y quien pide— y lo único que
-// cambia entre los cuatro módulos es de dónde salen esos dos lados. Eso vive
+// cambia entre los cinco orígenes es de dónde salen esos dos lados. Eso vive
 // en `partes()`, que es la única función que sabe que existen módulos. Todo
 // lo demás —el filtro, los mensajes, la bandeja— es común.
 
@@ -28,9 +28,10 @@ import type { Autor, Hilo, HiloEnBandeja, Mensaje, Origen } from '@/contrato/cha
  * Los dos lados de un hilo.
  *
  * Un lado en `null` significa «lo ocupa quien abra el hilo». Pasa cuando el
- * origen solo identifica a uno: un producto dice quién vende pero no quién
- * pregunta, y una publicación del muro dice quién dona pero no quién recibe.
- * Una respuesta —de servicio o de insumo— ya identifica a los dos.
+ * origen solo identifica a uno: una ficha dice quién trabaja pero no quién lo
+ * necesita, un producto dice quién vende pero no quién pregunta, y una
+ * publicación del muro dice quién dona pero no quién recibe. Una respuesta
+ * —de servicio o de insumo— ya identifica a los dos.
  */
 type Partes = {
   ofrece: string | null
@@ -46,6 +47,7 @@ const ANONIMO: Record<Origen['tipo'], { ofrece: string; pide: string }> = {
   insumo: { ofrece: 'Quien puede ayudar', pide: 'Quien pidió el insumo' },
   producto: { ofrece: 'Quien vende', pide: 'Quien preguntó' },
   muro: { ofrece: 'Quien lo ofrece', pide: 'Quien lo necesita' },
+  ficha: { ofrece: 'El prestador', pide: 'Quien preguntó' },
 }
 
 /** De dónde salen los dos lados. La única función que distingue módulos. */
@@ -84,6 +86,16 @@ async function partes(db: BaseDeDatos, origen: Origen): Promise<Partes | null> {
       .limit(1)
     // En insumos nadie publica nombre: ni quien pide ni quien responde.
     return f ? { ...f, nombreOfrece: null, nombrePide: null } : null
+  }
+
+  if (origen.tipo === 'ficha') {
+    const [f] = await db
+      .select({ ofrece: proveedores.perfilId, nombreOfrece: proveedores.nombreVisible })
+      .from(proveedores)
+      .where(eq(proveedores.id, origen.id))
+      .limit(1)
+    // Sin asunto: el hilo es con la persona, y su nombre ya va en `con`.
+    return f ? { ...f, pide: null, asunto: null, nombrePide: null } : null
   }
 
   if (origen.tipo === 'producto') {
@@ -158,6 +170,8 @@ function donde(origen: Origen, iniciadoPor: string | null): SQL {
       return and(eq(chats.productoId, origen.id), eq(chats.iniciadoPor, iniciadoPor!)) as SQL
     case 'muro':
       return and(eq(chats.publicacionId, origen.id), eq(chats.iniciadoPor, iniciadoPor!)) as SQL
+    case 'ficha':
+      return and(eq(chats.proveedorId, origen.id), eq(chats.iniciadoPor, iniciadoPor!)) as SQL
   }
 }
 
@@ -171,6 +185,8 @@ function valores(origen: Origen, iniciadoPor: string | null) {
       return { productoId: origen.id, iniciadoPor }
     case 'muro':
       return { publicacionId: origen.id, iniciadoPor }
+    case 'ficha':
+      return { proveedorId: origen.id, iniciadoPor }
   }
 }
 
@@ -232,6 +248,18 @@ export async function leer(
     .from(mensajesTabla)
     .where(and(eq(mensajesTabla.chatId, chat.id), eq(mensajesTabla.oculto, false)))
     .orderBy(asc(mensajesTabla.creadoAt))
+
+  // Queda mirado, para el contador del menú. Va después de leer los
+  // mensajes y no antes: si fallara la lectura, el hilo seguiría contando
+  // como sin leer, que es el error que no pierde nada.
+  await db
+    .update(chats)
+    .set(
+      autor === 'ofrece'
+        ? { vistoOfreceAt: sql`now()` }
+        : { vistoPideAt: sql`now()` },
+    )
+    .where(eq(chats.id, chat.id))
 
   const anonimo = ANONIMO[origen.tipo]
 
@@ -318,15 +346,93 @@ type FilaBandeja = {
   ultimo: string | null
   ultimo_at: string | null
   mensajes: number
+  sin_leer: boolean
 }
+
+/**
+ * El SQL que aplana los cinco orígenes a una sola forma de fila.
+ *
+ * Lo usan la bandeja y el contador del menú, y por eso está aquí fuera: dos
+ * copias de estos `join` se separarían el día que aparezca un sexto origen,
+ * y entonces el menú contaría hilos que la bandeja no enseña.
+ */
+const HILOS = sql`
+  select
+    c.id,
+    case
+      when c.respuesta_servicio_id is not null then 'servicio'
+      when c.respuesta_insumo_id is not null then 'insumo'
+      when c.producto_id is not null then 'producto'
+      when c.proveedor_id is not null then 'ficha'
+      else 'muro'
+    end as tipo,
+    coalesce(
+      c.respuesta_servicio_id, c.respuesta_insumo_id, c.producto_id,
+      c.proveedor_id, c.publicacion_id
+    ) as origen_id,
+    coalesce(
+      pv.perfil_id,
+      ri.autor_id,
+      pp.perfil_id,
+      pf.perfil_id,
+      case when pm.cara = 'ofrece' then pm.perfil_id else c.iniciado_por end
+    ) as ofrece_id,
+    coalesce(
+      ss.perfil_id,
+      si.perfil_id,
+      case when c.producto_id is not null or c.proveedor_id is not null
+           then c.iniciado_por end,
+      case when pm.cara = 'necesita' then pm.perfil_id else c.iniciado_por end
+    ) as pide_id,
+    c.visto_ofrece_at,
+    c.visto_pide_at,
+    coalesce(co.nombre, si.categoria, pr.nombre, pm.titulo) as asunto,
+    coalesce(
+      pv.nombre_visible,
+      pp.nombre_visible,
+      pf.nombre_visible,
+      case when pm.cara = 'ofrece' then pm.autor_nombre end
+    ) as nombre_ofrece,
+    case when pm.cara = 'necesita' then pm.autor_nombre end as nombre_pide
+  from chats c
+  left join respuestas_servicio rs on rs.id = c.respuesta_servicio_id
+  left join solicitudes_servicio ss on ss.id = rs.solicitud_id
+  left join proveedores pv on pv.id = rs.proveedor_id
+  left join catalogo_oficios co on co.id = ss.oficio_id
+  left join respuestas ri on ri.id = c.respuesta_insumo_id
+  left join solicitudes si on si.id = ri.solicitud_id
+  left join productos pr on pr.id = c.producto_id
+  left join proveedores pp on pp.id = pr.proveedor_id
+  left join proveedores pf on pf.id = c.proveedor_id
+  left join publicaciones_muro pm on pm.id = c.publicacion_id
+`
+
+/**
+ * Si el otro lado escribió después de la última vez que yo miré.
+ *
+ * `is null` cuenta como sin leer: un hilo que nunca abrí y ya tiene un
+ * mensaje del otro es exactamente lo que el menú tiene que avisar.
+ */
+const sinLeerDe = (yo: string) => sql`
+  exists (
+    select 1 from mensajes m
+    where m.chat_id = h.id
+      and not m.oculto
+      and m.autor <> (case when h.ofrece_id = ${yo} then 'ofrece' else 'pide' end)
+      and m.creado_at > coalesce(
+        case when h.ofrece_id = ${yo} then h.visto_ofrece_at else h.visto_pide_at end,
+        '-infinity'::timestamptz
+      )
+  )
+`
 
 /**
  * La bandeja: todos los hilos de quien está en sesión, de los dos lados y de
  * los cuatro módulos.
  *
- * En SQL crudo y no con el constructor de consultas a propósito. Son cuatro
- * orígenes con cuatro cadenas de `join` distintas que hay que aplanar a una
- * sola forma de fila; la alternativa —cuatro consultas y mezclar en
+ * En SQL crudo y no con el constructor de consultas a propósito. Son cinco
+ * orígenes con cinco cadenas de `join` distintas que hay que aplanar a una
+ * sola forma de fila; la alternativa —cinco consultas y mezclar en
  * TypeScript— sería exactamente la lógica repetida que este cambio vino a
  * quitar.
  */
@@ -337,52 +443,12 @@ export async function bandeja(
   if (!usuarioId) return []
 
   const { rows } = await db.execute<FilaBandeja>(sql`
-    with hilos as (
-      select
-        c.id,
-        case
-          when c.respuesta_servicio_id is not null then 'servicio'
-          when c.respuesta_insumo_id is not null then 'insumo'
-          when c.producto_id is not null then 'producto'
-          else 'muro'
-        end as tipo,
-        coalesce(
-          c.respuesta_servicio_id, c.respuesta_insumo_id, c.producto_id, c.publicacion_id
-        ) as origen_id,
-        coalesce(
-          pv.perfil_id,
-          ri.autor_id,
-          pp.perfil_id,
-          case when pm.cara = 'ofrece' then pm.perfil_id else c.iniciado_por end
-        ) as ofrece_id,
-        coalesce(
-          ss.perfil_id,
-          si.perfil_id,
-          case when c.producto_id is not null then c.iniciado_por end,
-          case when pm.cara = 'necesita' then pm.perfil_id else c.iniciado_por end
-        ) as pide_id,
-        coalesce(co.nombre, si.categoria, pr.nombre, pm.titulo) as asunto,
-        coalesce(
-          pv.nombre_visible,
-          pp.nombre_visible,
-          case when pm.cara = 'ofrece' then pm.autor_nombre end
-        ) as nombre_ofrece,
-        case when pm.cara = 'necesita' then pm.autor_nombre end as nombre_pide
-      from chats c
-      left join respuestas_servicio rs on rs.id = c.respuesta_servicio_id
-      left join solicitudes_servicio ss on ss.id = rs.solicitud_id
-      left join proveedores pv on pv.id = rs.proveedor_id
-      left join catalogo_oficios co on co.id = ss.oficio_id
-      left join respuestas ri on ri.id = c.respuesta_insumo_id
-      left join solicitudes si on si.id = ri.solicitud_id
-      left join productos pr on pr.id = c.producto_id
-      left join proveedores pp on pp.id = pr.proveedor_id
-      left join publicaciones_muro pm on pm.id = c.publicacion_id
-    )
+    with hilos as (${HILOS})
     select h.tipo, h.origen_id, h.ofrece_id, h.pide_id, h.asunto,
            h.nombre_ofrece, h.nombre_pide,
            u.cuerpo as ultimo, u.creado_at as ultimo_at,
-           coalesce(n.total, 0)::int as mensajes
+           coalesce(n.total, 0)::int as mensajes,
+           ${sinLeerDe(usuarioId)} as sin_leer
     from hilos h
     left join lateral (
       select m.cuerpo, m.creado_at from mensajes m
@@ -409,6 +475,29 @@ export async function bandeja(
       ultimo: f.ultimo,
       ultimo_at: f.ultimo_at ? String(f.ultimo_at) : null,
       mensajes: Number(f.mensajes),
+      sin_leer: f.sin_leer,
     }
   })
+}
+
+/**
+ * Cuántos hilos tienen algo sin leer. Para el punto de la barra.
+ *
+ * Cuenta hilos y no mensajes: la pregunta que responde el menú es «¿tengo
+ * algo?», y un número de mensajes obligaría a decidir si veinte mensajes de
+ * una persona son más urgentes que uno de tres.
+ */
+export async function sinLeer(
+  db: BaseDeDatos,
+  usuarioId: string | null,
+): Promise<number> {
+  if (!usuarioId) return 0
+
+  const { rows } = await db.execute<{ total: number }>(sql`
+    with hilos as (${HILOS})
+    select count(*)::int as total from hilos h
+    where ${usuarioId} in (h.ofrece_id, h.pide_id) and ${sinLeerDe(usuarioId)}
+  `)
+
+  return Number(rows[0]?.total ?? 0)
 }

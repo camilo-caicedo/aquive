@@ -111,27 +111,29 @@ de productos no la infringe.
 ### 2 · El chat vive dentro y muere con lo que lo abrió
 
 Hay mensajería interna, **una sola para toda la aplicación** (ADR 0009). Un
-hilo cuelga de una de cuatro cosas —una respuesta a un pedido de servicio, una
-respuesta a una solicitud de insumos, un producto o una publicación del muro—
-y se borra cuando se borra ella.
+hilo cuelga de una de cinco cosas —una respuesta a un pedido de servicio, una
+respuesta a una solicitud de insumos, un producto, una publicación del muro o
+una ficha de prestador— y se borra cuando se borra ella.
 
 - Son cuatro columnas con `on delete cascade`, no un par «tipo + id»: una
   llave polimórfica no puede cascadear, y entonces el borrado dependería de
   que algo se acuerde de cumplirlo.
-- Los dos papeles se llaman igual en los cuatro módulos: **`ofrece`** tiene la
+- Los dos papeles se llaman igual en los cinco orígenes: **`ofrece`** tiene la
   cosa o el trabajo, **`pide`** la necesita.
 - Una respuesta ya identifica a los dos lados. Un producto y una publicación
   solo a uno: el otro lo ocupa quien abra el hilo, y hay uno por persona.
 - No se archivan conversaciones. No hay bandeja histórica. `/mensajes` es una
-  sola lista, de los cuatro orígenes y de los dos lados.
+  sola lista, de los cinco orígenes y de los dos lados. Lo sin leer sale como
+  punto en la celda «Mensajes» y como palabra en la fila.
 - El chat **filtra datos de contacto**: `wa.me`, `t.me`, correos, arrobas
   sueltas, números colombianos y dígitos escritos con letras. Sin ese filtro el
   chat es solo una forma más lenta de pedir el número.
 - **Los botones de WhatsApp y de llamar se quedan** donde ya estaban. Quien
   publicó su teléfono lo hizo queriendo; lo que el chat protege es al otro
   lado, que tendría que entregar el suyo para empezar.
-- La ficha del prestador **no** abre chat: una ficha no caduca, y un hilo
-  colgado de ella no moriría nunca.
+- La ficha del prestador **también** abre chat, y el hilo muere con la ficha
+  por cascada. Lo que la regla 3 pide no es que el origen caduque, sino que
+  el hilo muera con él — y un producto tampoco caduca.
 
 ### 3 · Todo lo que se publica se puede borrar, y borrar es `DELETE`
 

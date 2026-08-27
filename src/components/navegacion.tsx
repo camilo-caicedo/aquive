@@ -199,6 +199,33 @@ function cuanCalza(ruta: string, href: string) {
   return mejor
 }
 
+/**
+ * El punto de «tienes algo sin leer».
+ *
+ * Sin número dentro, a propósito. La pregunta que se hace quien mira la
+ * barra de reojo es «¿hay algo?», y un número obliga a enfocar para leerlo
+ * —a 11 px, de pie y con prisa— para responder algo que el punto ya
+ * responde. El escudo de administración sí lo lleva, y ahí sirve: son colas
+ * de trabajo y saber si son tres o treinta cambia lo que uno hace.
+ *
+ * ⚠ No depende solo del color: el número va en el `aria-label` de la celda,
+ * que es lo que oye quien no ve el punto.
+ */
+function Punto() {
+  return (
+    <span
+      aria-hidden="true"
+      className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-primary ring-2 ring-background"
+    />
+  )
+}
+
+/** «Mensajes» a secas, o «Mensajes · 2 sin leer» para quien lo oye. */
+function etiquetaConPendientes(etiqueta: string, pendientes: number) {
+  if (pendientes === 0) return undefined
+  return `${etiqueta} · ${pendientes} sin leer`
+}
+
 function celdaActiva(ruta: string, lista: readonly { href: string }[]) {
   let ganadora: string | null = null
   let mejor = -1
@@ -222,7 +249,13 @@ function celdaActiva(ruta: string, lista: readonly { href: string }[]) {
  * Solo para pantallas medianas y grandes. En un teléfono la navegación es
  * `BarraInferior`, aquí abajo.
  */
-export function Navegacion({ coordinacion = null }: { coordinacion?: Coordinacion }) {
+export function Navegacion({
+  coordinacion = null,
+  sinLeer = 0,
+}: {
+  coordinacion?: Coordinacion
+  sinLeer?: number
+}) {
   const ruta = usePathname()
   const cual = celdaActiva(ruta, celdas(coordinacion))
 
@@ -231,11 +264,13 @@ export function Navegacion({ coordinacion = null }: { coordinacion?: Coordinacio
       <ul className="flex gap-1">
         {celdas(coordinacion).map(({ href, etiqueta, Icono }) => {
           const activa = href === cual
+          const pendientes = href === '/mensajes' ? sinLeer : 0
           return (
             <li key={href}>
               <Link
                 href={href}
                 aria-current={activa ? 'page' : undefined}
+                aria-label={etiquetaConPendientes(etiqueta, pendientes)}
                 // Color Y barra inferior: el subrayado se ve aunque no se
                 // distinga el color, y sobrevive al alto contraste.
                 className={`flex min-h-12 shrink-0 items-center gap-1.5 rounded-t-lg border-b-2 px-3 text-base transition-colors ${
@@ -244,7 +279,10 @@ export function Navegacion({ coordinacion = null }: { coordinacion?: Coordinacio
                     : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
-                <Icono className="size-4" aria-hidden="true" />
+                <span className="relative flex shrink-0">
+                  <Icono className="size-4" aria-hidden="true" />
+                  {pendientes > 0 && <Punto />}
+                </span>
                 {etiqueta}
               </Link>
             </li>
@@ -283,7 +321,13 @@ export function Navegacion({ coordinacion = null }: { coordinacion?: Coordinacio
  * 10 del sistema de diseño). Sin el atributo, un formulario de pantalla
  * completa vuelve a ofrecer cuatro salidas a medio llenar.
  */
-export function BarraInferior({ coordinacion = null }: { coordinacion?: Coordinacion }) {
+export function BarraInferior({
+  coordinacion = null,
+  sinLeer = 0,
+}: {
+  coordinacion?: Coordinacion
+  sinLeer?: number
+}) {
   const ruta = usePathname()
   const lista = celdas(coordinacion)
   const cual = celdaActiva(ruta, lista)
@@ -300,11 +344,13 @@ export function BarraInferior({ coordinacion = null }: { coordinacion?: Coordina
       <ul className={lista.length === 5 ? 'grid grid-cols-5' : 'grid grid-cols-4'}>
         {lista.map(({ href, etiqueta, Icono }) => {
           const activa = href === cual
+          const pendientes = href === '/mensajes' ? sinLeer : 0
           return (
             <li key={href}>
               <Link
                 href={href}
                 aria-current={activa ? 'page' : undefined}
+                aria-label={etiquetaConPendientes(etiqueta, pendientes)}
                 // La línea va ARRIBA de la celda, apuntando al contenido,
                 // igual que la de la fila de escritorio apunta hacia abajo.
                 className={`flex min-h-16 flex-col items-center justify-center gap-1 border-t-2 px-1 pt-0.5 transition-colors ${
@@ -313,7 +359,10 @@ export function BarraInferior({ coordinacion = null }: { coordinacion?: Coordina
                     : 'border-transparent text-muted-foreground'
                 }`}
               >
-                <Icono className="size-[1.375rem] shrink-0" aria-hidden="true" />
+                <span className="relative flex shrink-0">
+                  <Icono className="size-[1.375rem] shrink-0" aria-hidden="true" />
+                  {pendientes > 0 && <Punto />}
+                </span>
                 {/* Antes esto era una caja de dos líneas fija, para que los
                     iconos no subieran y bajaran celda a celda cuando una
                     etiqueta envolvía. Con cuatro destinos ninguna etiqueta

@@ -68,7 +68,13 @@ export default async function FichaPage({
       // puede verificar un teléfono que no existe—, pero la ficha no se cae
       // por eso: se queda sin barra de contacto y ya.
       accion={
-        ficha.telefono !== null ? <BarraContacto telefono={ficha.telefono} /> : undefined
+        ficha.telefono !== null ? (
+          <BarraContacto
+            telefono={ficha.telefono}
+            proveedorId={id}
+            nombre={ficha.nombre_visible}
+          />
+        ) : undefined
       }
     >
       <div>

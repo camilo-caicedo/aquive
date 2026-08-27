@@ -4,6 +4,7 @@ import Link from 'next/link'
 import isotipo from '@/../docs/marca/isotipo-carrito.png'
 import { ShieldCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
+import { servidor } from '@/orpc/local'
 import { BarraInferior, Navegacion, type Coordinacion } from '@/components/navegacion'
 import { BotonAvisos } from '@/components/boton-avisos'
 import { BotonInstalar } from '@/components/boton-instalar'
@@ -53,6 +54,10 @@ export async function Encabezado() {
   // solicitudes donde participa una cuenta, y sin perfil no hay cuenta.
   const tienePerfil = !!perfil?.data
   const encabezado = (estado?.data as EstadoEncabezado | null) ?? null
+
+  // El punto de «Mensajes». Solo con perfil, por lo mismo que la campana: un
+  // hilo tiene dos cuentas de los dos lados, y sin cuenta no hay ninguno.
+  const mensajesSinLeer = tienePerfil ? await servidor.chat.sinLeer() : 0
 
   return (
     // Fragmento y no un solo `<header>`: la barra del teléfono es hermana
@@ -137,10 +142,10 @@ export async function Encabezado() {
         </div>
       </div>
 
-      <Navegacion coordinacion={coordinacion} />
+      <Navegacion coordinacion={coordinacion} sinLeer={mensajesSinLeer} />
     </header>
 
-    <BarraInferior coordinacion={coordinacion} />
+    <BarraInferior coordinacion={coordinacion} sinLeer={mensajesSinLeer} />
     </>
   )
 }

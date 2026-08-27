@@ -13,6 +13,7 @@ const DE: Record<Origen['tipo'], string> = {
   insumo: 'Insumo',
   producto: 'Producto',
   muro: 'Comunidad',
+  ficha: 'Ficha',
 }
 
 /**
@@ -60,9 +61,22 @@ export default async function MensajesPage() {
                 className="shadow-canto block rounded-2xl bg-card p-4"
               >
                 <div className="flex items-baseline justify-between gap-3">
-                  <span className="font-heading text-base">{h.con}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {h.mensajes} {h.mensajes === 1 ? 'mensaje' : 'mensajes'}
+                  <span className={`font-heading text-base ${h.sin_leer ? 'font-bold' : ''}`}>
+                    {h.con}
+                  </span>
+                  {/* El estado no depende solo del color ni solo del grosor:
+                      lleva su palabra. El punto de la barra dice que hay
+                      algo; esta línea dice cuál. */}
+                  <span className="shrink-0 text-sm text-muted-foreground">
+                    {h.sin_leer ? (
+                      <span className="bg-primary text-primary-foreground rounded-full px-2.5 py-0.5 font-semibold">
+                        Sin leer
+                      </span>
+                    ) : (
+                      <>
+                        {h.mensajes} {h.mensajes === 1 ? 'mensaje' : 'mensajes'}
+                      </>
+                    )}
                   </span>
                 </div>
                 <p className="font-heading mt-0.5 text-xs tracking-[0.085em] text-muted-foreground uppercase">

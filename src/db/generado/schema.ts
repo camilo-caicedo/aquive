@@ -12,7 +12,8 @@ export const mensajes = pgTable("mensajes", {
 	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	oculto: boolean().default(false).notNull(),
 }, (table) => [
-	index("idx_mensajes_servicio_chat").using("btree", table.chatId.asc().nullsLast().op("timestamptz_ops"), table.creadoAt.asc().nullsLast().op("timestamptz_ops")),
+	index("idx_mensajes_chat_autor").using("btree", table.chatId.asc().nullsLast().op("timestamptz_ops"), table.autor.asc().nullsLast().op("uuid_ops"), table.creadoAt.desc().nullsFirst().op("uuid_ops")).where(sql`(NOT oculto)`),
+	index("idx_mensajes_servicio_chat").using("btree", table.chatId.asc().nullsLast().op("uuid_ops"), table.creadoAt.asc().nullsLast().op("uuid_ops")),
 	foreignKey({
 			columns: [table.chatId],
 			foreignColumns: [chats.id],
@@ -874,8 +875,12 @@ export const chats = pgTable("chats", {
 	productoId: uuid("producto_id"),
 	publicacionId: uuid("publicacion_id"),
 	iniciadoPor: uuid("iniciado_por"),
+	proveedorId: uuid("proveedor_id"),
+	vistoOfreceAt: timestamp("visto_ofrece_at", { withTimezone: true, mode: 'string' }),
+	vistoPideAt: timestamp("visto_pide_at", { withTimezone: true, mode: 'string' }),
 }, (table) => [
 	uniqueIndex("chats_producto_iniciado_key").using("btree", table.productoId.asc().nullsLast().op("uuid_ops"), table.iniciadoPor.asc().nullsLast().op("uuid_ops")).where(sql`(producto_id IS NOT NULL)`),
+	uniqueIndex("chats_proveedor_iniciado_key").using("btree", table.proveedorId.asc().nullsLast().op("uuid_ops"), table.iniciadoPor.asc().nullsLast().op("uuid_ops")).where(sql`(proveedor_id IS NOT NULL)`),
 	uniqueIndex("chats_publicacion_iniciado_key").using("btree", table.publicacionId.asc().nullsLast().op("uuid_ops"), table.iniciadoPor.asc().nullsLast().op("uuid_ops")).where(sql`(publicacion_id IS NOT NULL)`),
 	uniqueIndex("chats_respuesta_insumo_key").using("btree", table.respuestaInsumoId.asc().nullsLast().op("uuid_ops")).where(sql`(respuesta_insumo_id IS NOT NULL)`),
 	foreignKey({
@@ -887,6 +892,11 @@ export const chats = pgTable("chats", {
 			columns: [table.productoId],
 			foreignColumns: [productos.id],
 			name: "chats_producto_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.proveedorId],
+			foreignColumns: [proveedores.id],
+			name: "chats_proveedor_id_fkey"
 		}).onDelete("cascade"),
 	foreignKey({
 			columns: [table.publicacionId],
@@ -904,8 +914,8 @@ export const chats = pgTable("chats", {
 			name: "chats_respuesta_servicio_id_fkey"
 		}).onDelete("cascade"),
 	unique("chats_respuesta_servicio_id_key").on(table.respuestaServicioId),
-	check("chats_iniciado_por_donde_toca", sql`((producto_id IS NOT NULL) OR (publicacion_id IS NOT NULL)) = (iniciado_por IS NOT NULL)`),
-	check("chats_un_origen", sql`num_nonnulls(respuesta_servicio_id, respuesta_insumo_id, producto_id, publicacion_id) = 1`),
+	check("chats_iniciado_por_donde_toca", sql`((producto_id IS NOT NULL) OR (publicacion_id IS NOT NULL) OR (proveedor_id IS NOT NULL)) = (iniciado_por IS NOT NULL)`),
+	check("chats_un_origen", sql`num_nonnulls(respuesta_servicio_id, respuesta_insumo_id, producto_id, publicacion_id, proveedor_id) = 1`),
 ]);
 
 export const publicacionesMuro = pgTable("publicaciones_muro", {

@@ -5,7 +5,7 @@ import { z } from 'zod'
 //
 // Nació atado a los pedidos de servicio y era el único que había: productos,
 // donaciones e insumos no tenían ninguno y el contacto era por fuera. Ahora
-// un hilo cuelga de cualquiera de las cuatro cosas que dos personas pueden
+// un hilo cuelga de cualquiera de las cinco cosas que dos personas pueden
 // tener que acordar, y de ahí salen los dos papeles.
 //
 // Los botones de WhatsApp y de llamar se quedan donde están. Quien publica
@@ -14,7 +14,7 @@ import { z } from 'zod'
 
 /** De qué cuelga un hilo. Muere con ello — regla de producto 3. */
 export const Origen = z.object({
-  tipo: z.enum(['servicio', 'insumo', 'producto', 'muro']),
+  tipo: z.enum(['servicio', 'insumo', 'producto', 'muro', 'ficha']),
   id: z.uuid(),
 })
 
@@ -84,6 +84,8 @@ export const HiloEnBandeja = z.object({
   ultimo: z.string().nullable(),
   ultimo_at: z.string().nullable(),
   mensajes: z.number(),
+  /** Si el otro escribió después de la última vez que abrí el hilo. */
+  sin_leer: z.boolean(),
 })
 
 export type HiloEnBandeja = z.infer<typeof HiloEnBandeja>
@@ -95,6 +97,14 @@ export const contratoChat = {
    * estás hablando y de qué.
    */
   bandeja: oc.output(z.array(HiloEnBandeja)),
+
+  /**
+   * Cuántos hilos tienen algo sin leer. Lo pide la barra de navegación en
+   * cada carga con sesión, así que devuelve un número y nada más: la lista
+   * la sirve `bandeja`, y traerla entera para pintar un punto sería pagar
+   * cinco `join` en cada pantalla del sitio.
+   */
+  sinLeer: oc.output(z.number()),
 
   /** El hilo, con sus mensajes. Se crea al abrirlo. Pantalla 12. */
   leer: oc.errors(errores).input(z.object({ origen: Origen })).output(Hilo.nullable()),

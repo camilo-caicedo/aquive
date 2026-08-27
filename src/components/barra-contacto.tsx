@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { MessageCircle, Phone } from 'lucide-react'
 import { enlaceWhatsapp } from '@/lib/contacto'
+import { BotonChat } from '@/components/boton-chat'
 import { Button } from '@/components/ui/button'
 
 /**
@@ -11,10 +12,15 @@ import { Button } from '@/components/ui/button'
  * subir para escribir. Aquí están siempre, y el aviso corto va con ellos
  * porque es el momento en que se decide (regla 5).
  *
- * WhatsApp ancho y llamar en un botón redondo al lado, no dos botones
- * iguales: casi todo el mundo escribe primero, y llamar es la excepción
- * —quien no tiene datos, quien tiene prisa—. Dos botones del mismo tamaño
- * obligan a leer para elegir algo que casi siempre es lo mismo.
+ * WhatsApp ancho y los otros dos en botones redondos al lado, no tres
+ * botones iguales: casi todo el mundo escribe por WhatsApp primero, y los
+ * otros dos son la excepción —quien tiene prisa llama, quien no quiere dar
+ * su número escribe por aquí dentro—. Tres botones del mismo tamaño obligan
+ * a leer para elegir algo que casi siempre es lo mismo.
+ *
+ * El chat de la ficha existe desde la corrección del ADR 0009. El hilo
+ * cuelga de la ficha y muere con ella, igual que los otros cuatro orígenes:
+ * borrarla borra sus hilos por `on delete cascade`.
  *
  * El texto completo de `NO_PAGUES_POR_ADELANTADO` y `SEGURIDAD_DOMICILIO`
  * no cabe en una barra y no se recorta: se queda arriba, en la ficha. Aquí
@@ -28,7 +34,15 @@ import { Button } from '@/components/ui/button'
  * dejaba flotando a media pantalla con la ficha pasándole por debajo.
  * Colocarse es trabajo del marco; esta barra solo sabe qué botones lleva.
  */
-export function BarraContacto({ telefono }: { telefono: string }) {
+export function BarraContacto({
+  telefono,
+  proveedorId,
+  nombre,
+}: {
+  telefono: string
+  proveedorId: string
+  nombre: string
+}) {
   return (
     <>
       <p className="text-sm text-muted-foreground">
@@ -59,6 +73,11 @@ export function BarraContacto({ telefono }: { telefono: string }) {
         >
           <Phone className="size-6" aria-hidden="true" />
         </a>
+        <BotonChat
+          origen={{ tipo: 'ficha', id: proveedorId }}
+          etiqueta={`Escribir por AquíVe a ${nombre}`}
+          className="size-14 [&>svg]:size-6"
+        />
       </div>
     </>
   )
