@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { ArrowLeft, ChevronLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 
 /**
  * La flecha de volver.
@@ -72,9 +72,16 @@ export function BotonVolver({
   href: string
   /**
    * Con qué palabra. Sin ella la flecha va sola y en redondo, que es lo que
-   * lleva un flujo; con ella queda «‹ SALUD», que es lo que lleva una lista
+   * lleva un flujo; con ella queda «← Aseo», que es lo que lleva una lista
    * a la que se entró desde una categoría. La palabra dice de DÓNDE vienes,
    * y una flecha sola en una pantalla de destino no lo dice.
+   *
+   * ⚠ Va del MISMO tamaño que la flecha sola. Antes iba en `text-xs` gris
+   * mayúsculas, y el resultado era que la misma acción se veía de dos
+   * tamaños en dos pantallas seguidas: en «Categorías» un control grande y
+   * negro, y un toque después, en el listado de esa categoría, una línea
+   * gris que había que buscar. La palabra explica de dónde vienes; no es
+   * una etiqueta secundaria.
    */
   etiqueta?: string
 }) {
@@ -86,7 +93,7 @@ export function BotonVolver({
       aria-label={etiqueta ? `Volver a ${etiqueta}` : 'Volver'}
       className={
         etiqueta
-          ? 'font-heading -ml-1 inline-flex min-h-12 items-center gap-1 text-xs tracking-[0.085em] text-muted-foreground uppercase transition-colors hover:text-foreground'
+          ? 'font-heading -ml-3 inline-flex min-h-12 items-center gap-1.5 rounded-full pr-3 pl-3 text-base font-semibold text-foreground transition-colors hover:bg-muted'
           : '-ml-3 flex size-12 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted'
       }
       onClick={(e) => {
@@ -106,8 +113,8 @@ export function BotonVolver({
     >
       {etiqueta ? (
         <>
-          <ChevronLeft className="size-4" aria-hidden="true" />
-          {etiqueta}
+          <ArrowLeft className="size-6 shrink-0" aria-hidden="true" />
+          <span className="truncate">{etiqueta}</span>
         </>
       ) : (
         <ArrowLeft className="size-6" aria-hidden="true" />

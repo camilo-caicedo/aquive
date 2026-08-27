@@ -30,21 +30,36 @@ import { BotonVolver } from '@/components/volver'
 export function CabeceraPantalla({
   titulo,
   volver,
+  etiquetaVolver,
   children,
 }: {
   titulo: string
   volver?: string
+  /**
+   * La palabra de dónde vienes: «Aseo», «Categorías».
+   *
+   * Con ella la vuelta sube a su propio renglón encima del título, porque
+   * un título largo y una migaja larga no caben en la misma línea de un
+   * teléfono. Sin ella la flecha va al lado del título, que es lo de
+   * siempre.
+   */
+  etiquetaVolver?: string
   /** El segmentado, los chips de filtro: lo que va pegado al título. */
   children?: ReactNode
 }) {
   return (
     <div className="-mx-4 -mt-6 mb-4 border-b border-border px-4 pt-2 pb-3">
-      <div className="flex items-center gap-1">
-        {volver && (
-          <BotonVolver href={volver} />
-        )}
-        <h1 className="font-heading text-3xl leading-tight">{titulo}</h1>
-      </div>
+      {volver && etiquetaVolver ? (
+        <>
+          <BotonVolver href={volver} etiqueta={etiquetaVolver} />
+          <h1 className="font-heading text-3xl leading-tight">{titulo}</h1>
+        </>
+      ) : (
+        <div className="flex items-center gap-1">
+          {volver && <BotonVolver href={volver} />}
+          <h1 className="font-heading text-3xl leading-tight">{titulo}</h1>
+        </div>
+      )}
       {children}
     </div>
   )

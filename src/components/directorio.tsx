@@ -9,10 +9,10 @@ import { NOMBRE_GRUPO } from '@/contrato/servicios'
 import { TarjetaProveedor } from '@/components/tarjeta-proveedor'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { SelectFiltro } from '@/components/select-filtro'
 import { HojaFiltros, GrupoChips } from '@/components/hoja-filtros'
 import { MapaDeProveedores } from '@/components/mapa-de-proveedores'
-import { BotonVolver } from '@/components/volver'
 import { VueltaAlDestino } from '@/app/auth/vuelta'
 import type { ModalidadServicio, ModoPrecio } from '@/lib/types'
 
@@ -197,24 +197,22 @@ export async function Directorio({
     <main className="mx-auto max-w-2xl px-4 py-6">
       <VueltaAlDestino />
 
-      {/* ⚠ Aquí NO va `CabeceraPantalla`: se pega al encabezado global con
-          un margen negativo arriba, y esta pantalla lleva primero la migaja
-          de la categoría. */}
-      <section>
-        {/* La vuelta va SIEMPRE, con categoría o sin ella. Esta pantalla es
-            un destino y no un flujo, así que no lleva la flecha del marco, y
-            sin esto quien llegaba desde el inicio se quedaba sin más salida
-            que la barra de abajo.
+      {/* La vuelta va SIEMPRE, con categoría o sin ella. Esta pantalla es un
+          destino y no un flujo, así que no lleva la flecha del marco, y sin
+          esto quien llegaba desde el inicio se quedaba sin más salida que la
+          barra de abajo.
 
-            Vuelve a donde estabas de verdad; el `href` es el destino de
-            reserva para quien entró por un enlace pegado en WhatsApp. */}
-        <BotonVolver
-          href={deDonde ? '/categorias' : '/inicio'}
-          etiqueta={deDonde ?? 'Volver'}
-        />
-        <h1 className="font-heading text-3xl leading-tight font-extrabold tracking-tight">
-          {titular}
-        </h1>
+          Vuelve a donde estabas de verdad; el `href` es el destino de
+          reserva para quien entró por un enlace pegado en WhatsApp.
+
+          ⚠ Antes esto era marcado suelto, con la vuelta en letra pequeña y
+          gris y el `h1` sin la línea que lo cierra. Se veía como otra
+          aplicación que la pantalla de la que se venía. */}
+      <CabeceraPantalla
+        titulo={titular}
+        volver={deDonde ? '/categorias' : '/inicio'}
+        etiquetaVolver={deDonde ?? 'Volver'}
+      >
         <HojaFiltros
           action="/directorio"
           id="hoja-filtros-servicios"
@@ -329,7 +327,7 @@ export async function Directorio({
             opciones={MODOS_PRECIO.map((m) => ({ valor: m.valor, etiqueta: m.etiqueta }))}
           />
         </HojaFiltros>
-      </section>
+      </CabeceraPantalla>
 
       {/* ⚠ Aquí había también un «Quién está pidiendo». Se fue: esa lista
           es ahora un destino propio de la barra —«Solicitudes»— y tenerla
