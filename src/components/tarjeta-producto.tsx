@@ -32,7 +32,7 @@ export function TarjetaProducto({ producto }: { producto: Producto }) {
     // El ancla a la que llega quien tocó este producto en la portada.
     <li
       id={`prod-${producto.id}`}
-      className={`overflow-hidden rounded-2xl bg-card ${SOMBRA_CARTEL[familia]}`}
+      className={`animar-entrada overflow-hidden rounded-2xl bg-card ${SOMBRA_CARTEL[familia]}`}
     >
       {producto.imagen ? (
         <Image
@@ -66,7 +66,7 @@ export function TarjetaProducto({ producto }: { producto: Producto }) {
         <p className="mt-2 text-sm text-muted-foreground">
           <Link
             href={`/prestador/${producto.proveedor_id}`}
-            className="text-enlace underline-offset-4 hover:underline"
+            className="pulsable text-enlace underline-offset-4 hover:underline"
           >
             {producto.proveedor_nombre}
           </Link>
@@ -90,7 +90,7 @@ export function TarjetaProducto({ producto }: { producto: Producto }) {
             <a
               href={`tel:${producto.telefono}`}
               aria-label={`Llamar a ${producto.proveedor_nombre}`}
-              className="border-enlace text-enlace hover:bg-accent flex size-12 shrink-0 items-center justify-center rounded-full border transition-colors"
+              className="pulsable border-enlace text-enlace hover:bg-accent flex size-12 shrink-0 items-center justify-center rounded-full border transition-colors"
             >
               <Phone className="size-5" aria-hidden="true" />
             </a>

@@ -34,12 +34,12 @@ export function ListaEntidades({
   }
 
   return (
-    <ul className="mt-6 space-y-3">
+    <ul className="revelar mt-6 space-y-3">
       {entidades.map((e) => (
         <li
           key={e.id}
           id={`e-${e.id}`}
-          className="rounded-2xl bg-card p-4 shadow-canto"
+          className="animar-entrada rounded-2xl bg-card p-4 shadow-canto"
         >
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-sm font-medium text-muted-foreground">

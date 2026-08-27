@@ -44,7 +44,7 @@ export default async function MuroPage({
 
   return (
     <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
-      <CabeceraPantalla titulo="Muro" />
+      <CabeceraPantalla titulo="Muro" volver="/inicio" />
       <p className="text-base text-muted-foreground">
         Dos caras del mismo muro: quien tiene algo que dar y quien necesita
         algo. Se acuerda directamente con quien publicó y no pasa dinero por aquí.

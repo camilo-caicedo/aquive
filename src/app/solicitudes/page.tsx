@@ -86,7 +86,7 @@ export default async function SolicitudesDeServicioPage({
           presta y quién pide, cada uno en su celda. Con el segmentado
           puesto, la pantalla decía pertenecer a un sitio del que ya no
           cuelga. */}
-      <CabeceraPantalla titulo="Solicitudes">
+      <CabeceraPantalla titulo="Solicitudes" volver="/inicio">
         <p className="mt-1 text-base text-muted-foreground">
           Qué está pidiendo la gente. Si tienes cómo hacerlo, escríbele.
         </p>

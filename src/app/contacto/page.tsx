@@ -62,7 +62,7 @@ export default function ContactoPage() {
 
   return (
     <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
-      <CabeceraPantalla titulo="Hablemos" />
+      <CabeceraPantalla titulo="Hablemos" volver="/inicio" />
 
       <ul className="space-y-3">
         {filas.map((f) => (

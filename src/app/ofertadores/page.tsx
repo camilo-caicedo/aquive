@@ -59,7 +59,7 @@ export default async function OfertadoresPage({
       {/* El titulo era «Ayudas» y lo que decia cual de las tres listas era
           el segmentado. Sin segmentado (regla 3), el h1 tiene que nombrar lo
           que hay en la pantalla: «Quien ofrece». */}
-      <CabeceraPantalla titulo="Quién ofrece" />
+      <CabeceraPantalla titulo="Quién ofrece" volver="/inicio" />
       <p className="mt-1 text-base text-muted-foreground">
         Personas y negocios que ya dijeron con qué pueden ayudar.
       </p>

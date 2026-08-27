@@ -77,7 +77,7 @@ export default async function EntidadesPage({
 
   return (
     <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
-      <CabeceraPantalla titulo="Entidades">
+      <CabeceraPantalla titulo="Entidades" volver="/inicio">
         {mostrarFiltros && (
           <HojaFiltros
             action="/entidades"
