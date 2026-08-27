@@ -11,6 +11,8 @@ import {
   sugerenciasItem,
 } from '@/db/esquema'
 import { contienePII, validarNota } from '@/lib/validacion'
+import { avisar } from '@/server/avisos/push'
+import { notificarOfertadores } from '@/lib/push-ofertadores'
 import type { MiSolicitudInsumos, SolicitudParaResponder } from '@/contrato/insumos'
 
 export class InsumoRechazado extends Error {}
@@ -136,6 +138,31 @@ export async function publicar(
           cantidad: String(item.cantidad),
         })
       }
+    }
+
+    // Avisar a quien ofrece ayuda en ese municipio. Best-effort: la
+    // solicitud ya está publicada, y quien pide no tiene que esperar a que
+    // un servicio de push conteste.
+    //
+    // ⚠ `notificarOfertadores` existía completa y **no la llamaba nadie**:
+    // cero importadores en todo el repo. El aviso solo lleva municipio y
+    // categoría, que ya están en el tablero público; nunca el código, ni el
+    // barrio, ni la nota.
+    try {
+      const [m] = await db
+        .select({ nombre: municipios.nombre })
+        .from(municipios)
+        .where(eq(municipios.codigoDane, entrada.municipio))
+        .limit(1)
+
+      await notificarOfertadores(
+        entrada.municipio,
+        m?.nombre ?? 'tu municipio',
+        entrada.categoria,
+        entrada.items.map((i) => i.item_id).filter((x): x is string => Boolean(x)),
+      )
+    } catch {
+      // Silencioso a propósito, y sin loggear nada (regla de producto 9).
     }
 
     return { id: fila.id, codigo }
@@ -367,6 +394,22 @@ export async function responder(
     mensaje,
     puedeLlevar: entrada.puede_llevar === true,
   })
+
+  // Avisarle a quien pidió. Sin decir quién respondió ni qué ofrece: eso se
+  // lee dentro, con sesión.
+  const [duena] = await db
+    .select({ perfilId: solicitudes.perfilId })
+    .from(solicitudes)
+    .where(eq(solicitudes.id, s.id))
+    .limit(1)
+
+  if (duena?.perfilId && duena.perfilId !== llave.usuarioId) {
+    await avisar(db, duena.perfilId, {
+      cuerpo: `Alguien respondió a tu solicitud ${entrada.codigo.trim().toUpperCase()}`,
+      url: '/mis-solicitudes',
+      tag: `respuesta-${s.id}`,
+    })
+  }
 
   return { solicitud_id: s.id }
 }

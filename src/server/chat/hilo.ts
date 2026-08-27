@@ -2,6 +2,7 @@ import { and, asc, eq, sql } from 'drizzle-orm'
 import type { SQL } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
+import { avisar } from '@/server/avisos/push'
 import {
   chats,
   mensajes as mensajesTabla,
@@ -326,6 +327,24 @@ export async function escribir(
       cuerpo: mensajesTabla.cuerpo,
       creado_at: mensajesTabla.creadoAt,
     })
+
+  // Avisarle al otro lado. Best-effort y sin await bloqueante en la
+  // respuesta: el mensaje ya está guardado, y quien escribe no tiene que
+  // esperar a que un servicio de push conteste.
+  //
+  // ⚠ El aviso NO lleva el mensaje. Se ve en la pantalla bloqueada de un
+  // teléfono que puede estar en otra mano, y este chat existe justamente
+  // para que lo que se acuerda no salga de aquí.
+  const otro = autor === 'ofrece' ? p.pide : p.ofrece
+  if (otro && otro !== llave.usuarioId) {
+    await avisar(db, otro, {
+      cuerpo: 'Tienes un mensaje nuevo en AquíVe',
+      url: `/chat/${entrada.origen.tipo}/${entrada.origen.id}`,
+      // Un hilo, un aviso: los mensajes seguidos del mismo hilo se apilan
+      // en vez de sonar cinco veces.
+      tag: `chat-${entrada.origen.tipo}-${entrada.origen.id}`,
+    })
+  }
 
   return {
     mensaje: {

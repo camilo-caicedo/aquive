@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { chats, mensajes, catalogoItems, ofrecimientos, perfiles, sugerenciasItem, entregas, organizaciones, entidades, solicitudes, solicitudesContacto, municipios, zonas, invitacionesOrganizacion, servidores, administradores, pushSuscripciones, pushOfertadores, solicitudItems, respuestas, catalogoOficios, referencias, proveedores, accesosReferencia, respuestasServicio, solicitudesServicio, serviciosPrestados, resenas, productos, publicacionesMuro, imagenes, codigosAcceso, destapesContacto, proveedorOficios, miembrosOrganizacion } from "./schema";
+import { chats, mensajes, catalogoItems, ofrecimientos, perfiles, sugerenciasItem, entregas, organizaciones, entidades, solicitudes, solicitudesContacto, municipios, zonas, invitacionesOrganizacion, servidores, administradores, pushOfertadores, solicitudItems, respuestas, catalogoOficios, referencias, proveedores, accesosReferencia, respuestasServicio, solicitudesServicio, serviciosPrestados, resenas, productos, publicacionesMuro, imagenes, codigosAcceso, destapesContacto, proveedorOficios, miembrosOrganizacion } from "./schema";
 import { usersInAuth } from "../tipos";
 
 export const mensajesRelations = relations(mensajes, ({one}) => ({
@@ -188,7 +188,6 @@ export const solicitudesRelations = relations(solicitudes, ({one, many}) => ({
 		fields: [solicitudes.perfilId],
 		references: [perfiles.id]
 	}),
-	pushSuscripciones: many(pushSuscripciones),
 	solicitudItems: many(solicitudItems),
 	respuestas: many(respuestas),
 	destapesContactos: many(destapesContacto),
@@ -243,13 +242,6 @@ export const administradoresRelations = relations(administradores, ({one}) => ({
 	usersInAuth: one(usersInAuth, {
 		fields: [administradores.userId],
 		references: [usersInAuth.id]
-	}),
-}));
-
-export const pushSuscripcionesRelations = relations(pushSuscripciones, ({one}) => ({
-	solicitude: one(solicitudes, {
-		fields: [pushSuscripciones.solicitudId],
-		references: [solicitudes.id]
 	}),
 }));
 

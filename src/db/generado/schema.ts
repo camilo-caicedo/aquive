@@ -404,22 +404,6 @@ export const solicitudes = pgTable("solicitudes", {
 	check("solicitudes_nota_check", sql`char_length(nota) <= 140`),
 ]);
 
-export const pushSuscripciones = pgTable("push_suscripciones", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	solicitudId: uuid("solicitud_id").notNull(),
-	endpoint: text().notNull(),
-	p256Dh: text("p256dh").notNull(),
-	authKey: text("auth_key").notNull(),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-}, (table) => [
-	foreignKey({
-			columns: [table.solicitudId],
-			foreignColumns: [solicitudes.id],
-			name: "push_suscripciones_solicitud_id_fkey"
-		}).onDelete("cascade"),
-	unique("push_suscripciones_solicitud_id_endpoint_key").on(table.solicitudId, table.endpoint),
-]);
-
 export const pushOfertadores = pgTable("push_ofertadores", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	perfilId: uuid("perfil_id").notNull(),

@@ -22,6 +22,13 @@ type Estado = 'cargando' | 'activo' | 'inactivo' | 'trabajando' | 'ios' | 'error
  * estado en palabras. Cuando la tabla tenga columnas por tipo, cada fila se
  * convierte en su propio interruptor y esta pantalla no cambia de forma.
  */
+// ⚠ Esta lista dice qué llega DE VERDAD, y llevaba tiempo sin decirlo. Los
+// tres primeros salían como «Llega» y no llegaba ninguno: nadie enviaba —
+// `notificarOfertadores` no tenía un solo importador y el chat no avisaba— y
+// uno de ellos era del flujo acompañado, que el ADR 0007 retiró.
+//
+// Una pantalla que promete un aviso que no existe hace que quien lo espera
+// no vuelva a mirar. Si mañana se enchufa otro, se cambia el `hay` aquí.
 const TIPOS: { nombre: string; detalle: string; hay: boolean }[] = [
   {
     nombre: 'Alguien pidió algo en tus municipios',
@@ -30,13 +37,14 @@ const TIPOS: { nombre: string; detalle: string; hay: boolean }[] = [
     hay: true,
   },
   {
-    nombre: 'Mensaje nuevo en una conversación',
-    detalle: 'Solo de conversaciones abiertas por un pedido o una entrega.',
+    nombre: 'Mensaje nuevo en un chat',
+    detalle:
+      'Dice que hay un mensaje, no lo que dice: un aviso se lee en la pantalla bloqueada.',
     hay: true,
   },
   {
-    nombre: 'Una fundación empezó a acompañar algo tuyo',
-    detalle: 'Cuando alguien se pone a cargo de una solicitud donde ofreciste ayuda.',
+    nombre: 'Alguien respondió a lo que pediste',
+    detalle: 'Sin decir quién ni qué ofrece: eso se lee dentro, con tu cuenta.',
     hay: true,
   },
   {
