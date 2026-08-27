@@ -92,6 +92,12 @@ export type GrupoOficio =
   | 'cuidado'
   | 'reparacion'
   | 'otros'
+  // ADR 0012. Gemelo de `GrupoOficio` en `@/contrato/servicios` y de los
+  // dos `CHECK` de Postgres.
+  | 'construccion'
+  | 'ensenanza'
+  | 'eventos'
+  | 'digital'
 /** `alto` = si quien lo presta es un mal actor, el daño no es económico. */
 export type RiesgoOficio = 'bajo' | 'alto'
 export type ModoPrecio = 'gratis' | 'aporte' | 'solidario' | 'normal'

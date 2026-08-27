@@ -21,8 +21,9 @@ export class SolicitudRechazada extends Error {}
  * de eso lo identifica.
  *
  * ⚠ Desde el ADR 0011 el oficio del catálogo NO entra aquí. Entra una de
- * las ocho categorías y una línea que escribe quien pide, porque el
- * rebusque es justo el trabajo que no está en ninguna lista.
+ * las doce categorías —ocho hasta el ADR 0012— y una línea que escribe
+ * quien pide, porque el rebusque es justo el trabajo que no está en
+ * ninguna lista.
  */
 
 /** Cuatro letras y dos dígitos, para decirlo por teléfono sin deletrear. */

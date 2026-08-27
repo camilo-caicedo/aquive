@@ -171,11 +171,18 @@ export const MiFicha = z.object({
 export type MiFicha = z.infer<typeof MiFicha>
 
 /**
- * Los ocho grupos de oficio, con su nombre legible.
+ * Los doce grupos de oficio, con su nombre legible.
  *
  * Vive en el contrato y no en `lib/servicios.ts` porque es dato compartido:
  * la aplicación de Expo va a pintar las mismas categorías y no tiene por qué
  * llevar una segunda copia de esta tabla que se desincronice.
+ *
+ * ⚠ Los cuatro últimos entran con el ADR 0012. Esta lista se repite en
+ * cuatro sitios y no puede ser uno solo: aquí, en el union de
+ * `src/lib/types.ts`, y en los dos `CHECK` de Postgres —el de
+ * `catalogo_oficios` y el de `solicitudes_servicio`—. Los `CHECK` son la
+ * garantía; estos dos son tipos, y un tipo no defiende una tabla. Si se
+ * añade un grupo, se tocan los cuatro.
  */
 export const GrupoOficio = z.enum([
   'comida',
@@ -186,6 +193,10 @@ export const GrupoOficio = z.enum([
   'cuidado',
   'reparacion',
   'otros',
+  'construccion',
+  'ensenanza',
+  'eventos',
+  'digital',
 ])
 
 export type GrupoOficio = z.infer<typeof GrupoOficio>
@@ -198,6 +209,14 @@ export const NOMBRE_GRUPO: Record<string, string> = {
   aseo: 'Aseo',
   cuidado: 'Cuidado',
   reparacion: 'Reparaciones',
+  // «Arreglos de la casa» y no «Construcción»: lo que hay dentro es
+  // pintura, enchape y goteras, y lo estructural sigue fuera por matrícula
+  // (regla de producto 7). El nombre no debe prometer lo que el grupo no
+  // tiene.
+  construccion: 'Arreglos de la casa',
+  ensenanza: 'Clases y refuerzo',
+  eventos: 'Fiestas y eventos',
+  digital: 'Computador y trámites',
   otros: 'Otros',
 }
 

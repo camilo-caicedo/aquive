@@ -1,6 +1,6 @@
 import type { GrupoOficio } from '@/lib/types'
 
-// Los cuatro gajos de la sombrilla, repartidos entre los ocho grupos de
+// Los cuatro gajos de la sombrilla, repartidos entre los doce grupos de
 // oficio. Un solo sitio: si el reparto vive en cada pantalla, dos pantallas
 // pintan el mismo grupo de distinto color y el código de color deja de
 // significar nada.
@@ -12,8 +12,16 @@ import type { GrupoOficio } from '@/lib/types'
 //
 // El reparto no es arbitrario: los que se confunden entre sí van en colores
 // distintos. Comida y aseo se piden por cosas parecidas; cuidado y
-// transporte son los dos de riesgo alto y conviene que no compartan color
-// con nada más.
+// transporte llevan los oficios de riesgo alto y conviene que no compartan
+// color con nada más.
+//
+// ⚠ Con el ADR 0012 son doce grupos y cuatro colores, o sea tres por color.
+// Que un color se repita tres veces no rompe nada mientras la palabra del
+// grupo vaya encima, que es lo que la regla de interfaz 9 exige. Lo que sí
+// se cuida es que los confundibles queden separados: reparación (azul) es
+// de neveras y celulares y construcción (rojo) es de la casa; cuidado
+// (rojo) y enseñanza (verde) se tocan por los niños; belleza (rojo) y
+// eventos (azul) por el maquillaje de fiesta.
 
 export type Familia = 'azul' | 'amarillo' | 'verde' | 'rojo'
 
@@ -26,6 +34,10 @@ const POR_GRUPO: Record<GrupoOficio, Familia> = {
   cuidado: 'rojo',
   reparacion: 'azul',
   otros: 'amarillo',
+  construccion: 'rojo',
+  ensenanza: 'verde',
+  eventos: 'azul',
+  digital: 'amarillo',
 }
 
 export function familiaDe(grupo: string | null | undefined): Familia {

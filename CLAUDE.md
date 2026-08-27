@@ -45,6 +45,7 @@ archivo, y detrás de él:
 | `docs/decisiones/0008-*.md` | El aliado es un centro de acopio |
 | `docs/decisiones/0010-*.md` | La portada es siempre la bienvenida |
 | `docs/decisiones/0011-*.md` | Quien pide escribe qué necesita |
+| `docs/decisiones/0012-*.md` | Doce categorías de oficio, no ocho |
 | `docs/marca/AquiVe-Flujo.dc.html` | Prototipo de las 40 pantallas |
 | `docs/marca/Manual-de-Marca-AquiVe.pdf` | Manual de marca |
 | `docs/PENDIENTES-LEGALES.md` | Bloqueantes que no son código |
@@ -194,7 +195,8 @@ Quien **pide** —un servicio o un insumo— publica con cuenta, desde el ADR
 no lo lleva.
 
 Y desde el ADR 0011, **quien pide un servicio no elige de un catálogo**: elige
-una de las ocho categorías y escribe con sus palabras qué necesita. El rebusque
+una de las doce categorías —eran ocho hasta el ADR 0012— y escribe con sus
+palabras qué necesita. El rebusque
 es justo el trabajo que no está en ninguna lista. Se publica de inmediato
 —quien pide necesita respuesta hoy— y entra en la cola «Solicitudes por
 revisar» de `/admin`, donde se marca revisada o se borra.
@@ -228,15 +230,31 @@ No inventes scraping de esos registros: la verificación es manual.
 ### 7 · El oficio de riesgo alto no se publica sin respaldo
 
 `catalogo_oficios.riesgo = 'alto'` para cuidado de niños, cuidado de personas
-dependientes y transporte de pasajeros. La consulta pública **esconde** esos
-oficios si el prestador no tiene teléfono verificado **y** una referencia
-confirmada. Lo sostiene la consulta del servidor, no la interfaz.
+dependientes, transporte de pasajeros y **refuerzo escolar** (ADR 0012). La
+consulta pública **esconde** esos oficios si el prestador no tiene teléfono
+verificado **y** una referencia confirmada. Lo sostiene la consulta del
+servidor, no la interfaz.
 
-Los oficios que exigen matrícula —reconstrucción estructural, salud, gas,
-instalaciones eléctricas, asesoría jurídica— no entran en `catalogo_oficios`:
-van en `catalogo_servicios`, que sí la verifica. Fuera de todo: rescate,
-búsqueda de personas, urgencias y atención prehospitalaria, que son competencia
-de bomberos, Defensa Civil y la línea 123.
+El criterio de `alto` es uno solo, y por eso entró el cuarto: **quedar a solas
+con alguien que no puede defenderse**. Que la excusa sea una tarea de
+matemáticas y no un biberón no cambia la exposición. Por el mismo criterio
+`animacion_infantil` es bajo —una fiesta ocurre con la familia delante— y
+ningún oficio de construcción es alto: ahí el daño de un mal actor es
+económico, que es justo lo que `alto` no significa.
+
+Los oficios que exigen matrícula —reconstrucción, refuerzo o revisión
+estructural, dictamen de habitabilidad, salud, gas, instalaciones eléctricas,
+asesoría jurídica— no entran en `catalogo_oficios`: van en
+`catalogo_servicios`, que sí la verifica. Fuera de todo: rescate, búsqueda de
+personas, urgencias y atención prehospitalaria, que son competencia de
+bomberos, Defensa Civil y la línea 123.
+
+⚠ El ADR 0012 abrió el grupo `construccion` —pintura, estuco, enchape,
+goteras, plomería de fugas, carpintería, rejas, ayudante de obra— y **no movió
+esa frontera**. El límite va escrito en el nombre de cada oficio: es «Plomería:
+fugas y destapes», no «Plomería», porque el gas queda fuera; y es «Ayudante de
+obra», no «albañil», porque un ayudante trabaja bajo la dirección de alguien.
+Tampoco entran cerrajería, fumigación ni lavado de tanques.
 
 ### 8 · Imágenes: cualquiera, hasta 2 MB, moderada antes de publicarse
 
