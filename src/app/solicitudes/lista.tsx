@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { HojaAccion } from '@/components/hoja-accion'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useAviso } from '@/components/avisos'
+import { RevelarLista } from '@/components/revelar'
 
 export interface SolicitudDeServicio {
   id: string
@@ -86,7 +87,7 @@ export function ListaSolicitudesServicio({
   }
 
   return (
-    <ul className="mt-6 space-y-3">
+    <RevelarLista className="mt-6 space-y-3">
       {solicitudes.map((s) => {
         const zona = zonaLegible(s.zona_nombre, s.zona_texto)
         return (
@@ -240,6 +241,6 @@ export function ListaSolicitudesServicio({
           </li>
         )
       })}
-    </ul>
+    </RevelarLista>
   )
 }

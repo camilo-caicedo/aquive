@@ -15,6 +15,7 @@ import { HojaFiltros, GrupoChips } from '@/components/hoja-filtros'
 import { MapaDeProveedores } from '@/components/mapa-de-proveedores'
 import { VueltaAlDestino } from '@/app/auth/vuelta'
 import type { ModalidadServicio, ModoPrecio } from '@/lib/types'
+import { RevelarLista } from '@/components/revelar'
 
 /**
  * El directorio del rebusque.
@@ -466,11 +467,11 @@ export async function Directorio({
           )}
         </div>
       ) : (
-        <ul className="mt-6 space-y-3">
+        <RevelarLista className="mt-6 space-y-3">
           {proveedores.map((p) => (
             <TarjetaProveedor key={p.id} proveedor={p} />
           ))}
-        </ul>
+        </RevelarLista>
       )}
 
       {/* Debajo de la lista, no encima. Es una advertencia de qué hacer

@@ -85,7 +85,7 @@ export default async function CategoriasPage({
             <li key={c.grupo}>
               <Link
                 href={href}
-                className={`block h-full overflow-hidden rounded-2xl bg-card ${SOMBRA_CARTEL[familia]} transition-transform hover:-translate-y-0.5`}
+                className={`pulsable-tarjeta block h-full overflow-hidden rounded-2xl bg-card ${SOMBRA_CARTEL[familia]} transition-transform hover:-translate-y-0.5`}
               >
                 <div className={`px-3 py-2 ${CINTA[familia]} ${TINTA_CINTA[familia]}`}>
                   <p className="font-heading text-base leading-tight font-extrabold text-balance">

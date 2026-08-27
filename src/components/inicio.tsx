@@ -109,7 +109,7 @@ export async function Inicio({ municipio }: { municipio?: string }) {
                 <li key={p.id} className="w-64 shrink-0">
                   <Link
                     href={`/prestador/${p.id}`}
-                    className={`block h-full overflow-hidden rounded-2xl bg-card ${SOMBRA_CARTEL[familia]}`}
+                    className={`pulsable-tarjeta block h-full overflow-hidden rounded-2xl bg-card ${SOMBRA_CARTEL[familia]}`}
                   >
                     <div
                       className={`flex items-center justify-between gap-2 px-3 py-1.5 ${CINTA[familia]} ${TINTA_CINTA[familia]}`}

@@ -130,7 +130,7 @@ export function TarjetaProveedor({ proveedor }: { proveedor: EnListado }) {
               tarjetas ninguna de las veinte lo es. */}
           <Link
             href={`/prestador/${proveedor.id}`}
-            className="shadow-canto ml-auto inline-flex min-h-12 shrink-0 items-center rounded-full bg-card px-5 text-base font-semibold transition-colors hover:bg-primary hover:text-primary-foreground"
+            className="pulsable shadow-canto ml-auto inline-flex min-h-12 shrink-0 items-center rounded-full bg-card px-5 text-base font-semibold transition-colors hover:bg-primary hover:text-primary-foreground"
           >
             Ver ficha
           </Link>

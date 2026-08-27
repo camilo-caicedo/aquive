@@ -266,8 +266,20 @@
   }
 }
 
+/* ⚠ `backwards` y NO `both`, y no es un detalle.
+
+   Una animación que RELLENA gana sobre cualquier otra declaración de la
+   misma propiedad, para siempre. Con `both`, estas animaciones dejaban
+   `transform: none` pegado al elemento al terminar, y entonces un
+   `:active { transform: scale(0.97) }` encima NO HACÍA NADA: la tarjeta
+   se quedaba sin señal al pulsarla y no había forma de verlo leyendo el
+   marcado, porque las dos clases están bien puestas.
+
+   `backwards` aplica el fotograma inicial ANTES de empezar —que es lo
+   único que hacía falta para que no haya parpadeo— y suelta la propiedad
+   al acabar. Se ve exactamente igual y deja pulsar. */
 .animar-entrada {
-  animation: aparecer var(--dur-media) var(--curva-entrada) both;
+  animation: aparecer var(--dur-media) var(--curva-entrada) backwards;
 }
 
 /* La pantalla entera al montarse.
@@ -297,7 +309,7 @@
  * La subida de 8 px no se pierde: la ponen las tarjetas de dentro con
  * `.animar-entrada` y `.lista-escalonada`, que no contienen nada fijo. */
 .animar-pantalla {
-  animation: entrar-pantalla var(--dur-media) var(--curva-entrada) both;
+  animation: entrar-pantalla var(--dur-media) var(--curva-entrada) backwards;
 }
 
 @keyframes entrar-pantalla {
@@ -324,7 +336,7 @@
 }
 
 .animar-hoja {
-  animation: subir-hoja var(--dur-hoja) var(--curva-entrada) both;
+  animation: subir-hoja var(--dur-hoja) var(--curva-entrada) backwards;
 }
 
 /* La barra de carga al cambiar de pantalla. Solo `transform`, como todo lo
@@ -422,7 +434,7 @@ body:has(dialog[open]) {
 }
 
 .animar-hoja::backdrop {
-  animation: aparecer-fondo var(--dur-hoja) var(--curva-suave) both;
+  animation: aparecer-fondo var(--dur-hoja) var(--curva-suave) backwards;
 }
 
 @keyframes aparecer-fondo {
@@ -452,6 +464,80 @@ body:has(dialog[open]) {
    tiene prisa vuelve a tocar. */
 .lista-escalonada > * {
   pointer-events: auto;
+}
+
+/* --------------------------------------------------------------------
+   Que se note el dedo.
+
+   ⚠ El botón compartido ya responde al pulsarse, pero media aplicación
+   son enlaces escritos a mano —el nombre de una ficha, «Ver ficha», la
+   fila de un acopio, una tarjeta del muro— y esos no daban NINGUNA señal
+   de haber recibido el toque. En un teléfono con señal mala eso se
+   resuelve tocando otra vez, que es exactamente lo que no queremos.
+
+   Solo transform, y hacia adentro: encoger dice «te oí» sin mover a los
+   vecinos ni provocar reflow. El 0.97 es lo que se nota en una pantalla
+   al sol sin llegar a parecer un rebote.
+
+   ⚠ No se le pone a nada que contenga un elemento `position: fixed`: un
+   ancestro con transform se vuelve su bloque contenedor, y eso ya
+   desancló una vez la píldora de «Necesito un servicio».
+   -------------------------------------------------------------------- */
+.pulsable {
+  transition: transform var(--dur-toque) var(--curva-entrada);
+}
+
+.pulsable:active {
+  transform: scale(0.97);
+}
+
+/* Una tarjeta entera encoge menos que un botón: es más grande, y el mismo
+   porcentaje sobre 300 px de ancho se lee como un salto. */
+.pulsable-tarjeta {
+  transition: transform var(--dur-toque) var(--curva-entrada);
+}
+
+.pulsable-tarjeta:active {
+  transform: scale(0.99);
+}
+
+/* --------------------------------------------------------------------
+   Lo que entra en pantalla al desplazar, aparece.
+
+   ⚠⚠ EMPIEZA VISIBLE. Nada de esto esconde por su cuenta: hace falta
+   `data-listo` en el contenedor, que lo pone el efecto de `revelar.tsx`
+   y SOLO cuando ya tiene el observador montado y lo visible marcado.
+
+   Si el JavaScript no llega —este público entra con señal mala, así que
+   a veces no llega—, si revienta, o si el navegador congela la pestaña
+   antes de que el efecto corra, no hay ninguna regla que ponga
+   `opacity: 0` y la página se ve entera. Lo contrario —esconder en el
+   CSS y devolver con JavaScript— deja la pantalla en blanco con el
+   contenido servido y escondido, y eso aquí no se puede.
+
+   ⚠ El `transform` acaba en los elementos de la lista, nunca en un
+   contenedor de página: un ancestro con transform se vuelve el bloque
+   contenedor de sus descendientes `position: fixed`. Eso ya desancló una
+   vez la píldora de «Necesito un servicio».
+   -------------------------------------------------------------------- */
+[data-revelar-lista][data-listo] > *:not([data-dentro]) {
+  /* ⚠ `animation: none` no sobra: las tarjetas ya traen su propia
+     entrada con `.animar-entrada`, y dentro de una lista que se revela
+     eso son DOS sistemas haciendo el mismo trabajo. Dentro manda el
+     revelado; fuera —/ayudas, con `.lista-escalonada`— la tarjeta sigue
+     con la suya. */
+  animation: none;
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+[data-revelar-lista][data-listo] > [data-dentro] {
+  animation: none;
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--dur-media) var(--curva-entrada),
+    transform var(--dur-media) var(--curva-entrada);
 }
 
 .punto-urgente {

@@ -58,7 +58,7 @@ export default async function MensajesPage() {
             <li key={`${h.origen.tipo}-${h.origen.id}`}>
               <Link
                 href={`/chat/${h.origen.tipo}/${h.origen.id}`}
-                className="shadow-canto block rounded-2xl bg-card p-4"
+                className="pulsable-tarjeta shadow-canto block rounded-2xl bg-card p-4"
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <span className={`font-heading text-base ${h.sin_leer ? 'font-bold' : ''}`}>

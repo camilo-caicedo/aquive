@@ -9,6 +9,7 @@ import { TarjetaProducto } from '@/components/tarjeta-producto'
 import { BuscadorDelBarrio } from './buscador'
 import { NOMBRE_GRUPO } from '@/contrato/servicios'
 import { MODOS_PRECIO } from '@/lib/servicios'
+import { RevelarLista } from '@/components/revelar'
 
 export const metadata = { title: 'Productos' }
 
@@ -132,11 +133,11 @@ export default async function BarrioPage({
             : 'Todavía no hay productos publicados. Si haces algo para vender, puedes ser el primero.'}
         </p>
       ) : (
-        <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+        <RevelarLista className="mt-6 grid gap-3 sm:grid-cols-2">
           {productos.map((p) => (
             <TarjetaProducto key={p.id} producto={p} />
           ))}
-        </ul>
+        </RevelarLista>
       )}
 
       {/* Pegado a los precios, que es donde nace la duda. */}
