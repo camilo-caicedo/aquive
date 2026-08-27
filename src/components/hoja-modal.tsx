@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { ContenedorHoja } from '@/components/contenedor-hoja'
 
 /**
  * El caparazón de una pantalla interceptada.
@@ -22,6 +23,18 @@ import { usePathname, useRouter } from 'next/navigation'
  * superior, sin pelear con ningún `z-index`— los da el navegador. Escritos
  * a mano, la parte que siempre falta es la del foco, y es la que decide si
  * esto se puede usar con lector de pantalla.
+ *
+ * ⚠ Y por eso mismo los desplegables de dentro se portalizan AQUÍ y no al
+ * `body`. Estar en la capa superior es lo que hace que el diálogo se pinte
+ * encima de todo sin z-index, y también lo que deja debajo a cualquier cosa
+ * que se monte fuera de él: una lista de municipios portalizada al `body`
+ * se abría de verdad —`aria-expanded="true"`— y quedaba tapada por el
+ * propio diálogo. Es el mismo motivo, la misma causa y el mismo remedio que
+ * en `HojaAccion` y `HojaFiltros`; lo explica `contenedor-hoja.ts`.
+ *
+ * Los tres formularios que se abren así —publicar en el muro, pedir ayuda y
+ * pedir un servicio— tienen todos un municipio que elegir, así que esto no
+ * era un caso raro: era el caso normal.
  */
 export function HojaModal({
   etiqueta,
@@ -45,7 +58,10 @@ export function HojaModal({
 }) {
   const router = useRouter()
   const rutaActual = usePathname()
-  const ref = useRef<HTMLDialogElement>(null)
+  // Estado y no `useRef`: el contenedor de los desplegables tiene que
+  // provocar un render cuando el nodo existe, o el primero que se abra lo
+  // recibe en nulo y vuelve a portalizarse al `body`.
+  const [dialogo, setDialogo] = useState<HTMLDialogElement | null>(null)
 
   // Le toca cuando la URL es la suya. Deja de tocarle en cuanto lo de
   // debajo navega a otra parte, y vuelve a tocarle si se regresa con la
@@ -56,7 +72,6 @@ export function HojaModal({
     if (!leToca) return
 
     const abrir = () => {
-      const dialogo = ref.current
       if (dialogo && !dialogo.open) dialogo.showModal()
     }
     abrir()
@@ -73,7 +88,7 @@ export function HojaModal({
     // al navegar por debajo —Next conserva el slot—, así que un efecto que
     // solo corriera al montar dejaría el diálogo cerrado para siempre en
     // cuanto se volviera aquí con la flecha atrás.
-  }, [leToca])
+  }, [leToca, dialogo])
 
   // Cerrar es volver: la entrada anterior de la historia es la lista, así
   // que la URL y lo que se ve vuelven juntos.
@@ -90,14 +105,14 @@ export function HojaModal({
 
   return (
     <dialog
-      ref={ref}
+      ref={setDialogo}
       aria-label={etiqueta}
       onCancel={(e) => {
         e.preventDefault()
         cerrar()
       }}
       onClick={(e) => {
-        if (e.target === ref.current) cerrar()
+        if (e.target === dialogo) cerrar()
       }}
       className="animar-hoja m-0 mt-auto max-h-[92dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-3xl bg-background p-0 text-foreground backdrop:bg-foreground/40 sm:mx-auto sm:my-auto sm:max-h-[88dvh] sm:rounded-3xl"
     >
@@ -107,7 +122,7 @@ export function HojaModal({
       <div className="flex shrink-0 justify-center pt-2 pb-1">
         <span aria-hidden="true" className="h-1 w-10 rounded-full bg-border" />
       </div>
-      {children}
+      <ContenedorHoja.Provider value={dialogo}>{children}</ContenedorHoja.Provider>
     </dialog>
   )
 }
