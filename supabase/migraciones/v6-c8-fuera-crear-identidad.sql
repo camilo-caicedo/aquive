@@ -1,0 +1,32 @@
+-- =====================================================================
+-- v6 · Fase C · 8 — se retira `crear_identidad`
+--
+-- Se escapó del barrido de v6-c7 porque aquella consulta buscaba
+-- funciones sin llamador, y esta sí tiene uno: `crear_referencia` la
+-- nombra… dentro de un comentario. El `prosrc like` no distingue código
+-- de comentario, así que la dio por viva.
+--
+-- Está rota desde el ADR 0007: inserta en `public.identidades`, que ya no
+-- existe. Cualquier llamada moría con «relation does not exist». No la
+-- llama nadie desde `src/` —el flujo acompañado se fue entero—, así que
+-- nunca se notó.
+--
+-- Idempotente.
+-- =====================================================================
+
+drop function if exists public.crear_identidad(text, text, text, text, uuid, uuid);
+
+-- ⚠ NO se toca `miembros_organizacion.puede_ver_identidad`, ni su trigger
+-- `bloquear_permiso_identidad`, ni `puede_leer_referencia`.
+--
+-- Parecen del mismo lote y no lo son: ese booleano dejó de gobernar
+-- identidades y hoy es lo único que gobierna **quién puede descifrar una
+-- referencia** —el nombre y el teléfono de un tercero que no está en la
+-- plataforma, mínimo legal 4—. El ADR 0007 quitó del panel del aliado el
+-- interruptor que lo concedía, así que hoy no hay forma de encenderlo y
+-- solo los administradores leen una referencia. Cero filas lo tienen.
+--
+-- Borrarlo «por limpieza» abriría esa lectura a todo miembro activo de un
+-- centro de acopio, que es exactamente lo contrario de limpiar. Si se
+-- quiere que un coordinador pueda leerlas, eso es una decisión de
+-- producto sobre datos de terceros y va como ADR, no como barrido.

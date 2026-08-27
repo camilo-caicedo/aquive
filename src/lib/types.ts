@@ -22,10 +22,12 @@ export type TipoOrganizacion =
   | 'junta'
   | 'otra'
 export type RolMiembro = 'coordinador' | 'miembro'
-// Regla O: sin datos de menores. TI y RC no están, y no es un olvido —
-// un CHECK de la base los rechaza aunque alguien los escriba a mano.
-export type TipoDocumento = 'CC' | 'CE' | 'PEP' | 'PPT'
-export type TitularIdentidad = 'solicitante' | 'ofertador' | 'aliado'
+// ⚠ Aquí vivían `TipoDocumento` y `TitularIdentidad`. Se van con
+// `crear_identidad`, la última función que los usaba: no hay ninguna
+// columna de documento en la base desde el ADR 0007, así que ese dato ya
+// no se pide ni se guarda. La garantía del mínimo legal 1 es hoy más
+// fuerte que el CHECK que la sostenía — no es que se acepten CC, CE, PEP
+// y PPT: es que no se acepta ninguno.
 export type EstadoMiembro = 'pendiente' | 'activo' | 'inactivo'
 export type AccionMiembro =
   | 'aprobar'
@@ -1349,15 +1351,6 @@ export interface Database {
           calza: boolean
         }>
       }
-      destinatarios_respondieron: {
-        Args: { p_solicitud_id: string }
-        Returns: Array<{
-          suscripcion_id: string
-          endpoint: string
-          p256dh: string
-          auth_key: string
-        }>
-      }
       // Devuelve cada sugerencia pendiente con los ítems parecidos del
       // catálogo, para que fusionar cueste lo mismo que aprobar.
       sugerencias_pendientes: {
@@ -1503,40 +1496,12 @@ export interface Database {
         Args: Record<string, never>
         Returns: boolean
       }
-      // Identidad cifrada (Fase E). `identidades` y `accesos_identidad` NO
-      // están tipadas como tablas, y es deliberado: están revocadas enteras
-      // y no hay ninguna lectura legítima que no pase por estas RPC, ni
-      // siquiera del lado del servidor. Tiparlas sería una invitación a
-      // hacer el `select` que no debe existir.
-      //
-      // Interna: la llama el servidor con la llave de servicio, como
-      // `destinatarios_aviso`. No cifra en el cliente y no devuelve nada
-      // descifrado.
-      crear_identidad: {
-        Args: {
-          p_titular_tipo: TitularIdentidad
-          p_nombre: string
-          p_documento_tipo: TipoDocumento
-          p_documento: string
-          p_autorizacion_version: string
-          p_telefono?: string | null
-          p_solicitud_id?: string | null
-          p_perfil_id?: string | null
-        }
-        Returns: string
-      }
       crear_item_catalogo: {
         Args: { p_nombre: string; p_categoria: Categoria; p_unidad?: string }
         Returns: string
       }
       mis_ofrecimientos: {
         Args: Record<string, never>
-        Returns: Json
-      }
-      // Módulo de Servicios. Devuelven jsonb; el llamante lo estrecha a
-      // `FichaProveedor` o `MiProveedor`, que es la forma real.
-      ficha_proveedor: {
-        Args: { p_id: string }
         Returns: Json
       }
       mi_proveedor: {
@@ -1607,10 +1572,6 @@ export interface Database {
         Returns: undefined
       }
       referencias_por_revisar: {
-        Args: Record<string, never>
-        Returns: Json
-      }
-      accesos_a_referencias: {
         Args: Record<string, never>
         Returns: Json
       }
@@ -1724,11 +1685,6 @@ export interface Database {
         Args: { p_codigo: string }
         Returns: boolean
       }
-      // Lo que ya declaró en su perfil, para precargar la casilla.
-      mi_movilidad: {
-        Args: Record<string, never>
-        Returns: boolean
-      }
       // Devuelve SolicitudAdmin[]. Vacío para quien no es administrador.
       solicitudes_admin: {
         Args: Record<string, never>
@@ -1739,15 +1695,6 @@ export interface Database {
       admin_anotar_solicitud: {
         Args: { p_codigo: string; p_nota: string | null; p_cerrar?: boolean }
         Returns: Json
-      }
-      crear_reporte: {
-        Args: {
-          p_tipo_objeto: TipoObjetoReporte
-          p_objeto_id: string
-          p_motivo: MotivoReporte
-          p_nota?: string | null
-        }
-        Returns: undefined
       }
       verificar_servidor: {
         Args: { p_perfil_id: string; p_verificado: boolean }
@@ -1766,10 +1713,6 @@ export interface Database {
       listar_municipios: {
         Args: Record<string, never>
         Returns: Json
-      }
-      generar_codigo: {
-        Args: Record<string, never>
-        Returns: string
       }
       es_admin: {
         Args: { uid: string }
