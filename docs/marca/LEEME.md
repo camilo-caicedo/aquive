@@ -150,13 +150,29 @@ actual, o si el rediseño coincide con su apagado.
 
 ## Lo que falta de origen
 
-- Logo en **SVG**, no PNG a 1033 px.
-- **Versión simplificada** para menos de 32 px — el manual la exige pero no la
-  incluye. Es la que se necesita para favicon e iconos de la PWA.
-- Versión sobre **fondo oscuro** y versión de **una tinta**.
+- ~~Logo en **SVG**, no PNG a 1033 px.~~ Llegó el 27 de agosto de 2026.
+- ~~**Versión simplificada** para menos de 32 px.~~ Llegó, en 16, 24 y 32 px.
+- Versión sobre **fondo oscuro** y versión de **una tinta**. Siguen faltando. No
+  bloquean nada hoy: la aplicación no tiene modo oscuro y no hay impresión a una
+  tinta pendiente.
 
 El mapeo de tokens ya no falta: está resuelto en el ADR 0002.
 
-Qué pasa con los assets del gato ya repartidos —`public/icono-192.png`,
-`public/icono-512.png`, `public/favicon-32.png`, el material impreso y el QR de
-`difusion/`— es parte del plan del ADR 0002, y depende del SVG.
+## Lo que llegó, y qué se hace con ello
+
+El arte final vive en `docs/marca/Logo/`: veinte SVG y los PNG mini. Los PNG de
+4267 px y el `.ai` están en `.gitignore` —59 MB que el SVG regenera—.
+
+Los iconos de la aplicación salen de ahí con `node scripts/iconos.mjs`, que deja
+escrito de cuál variante sale cada archivo. Con arte nueva se corre otra vez; no
+se editan a mano. Lo que se sirve es PNG con paleta, no el SVG: cada SVG pesa
+entre 300 y 700 KB porque el trazo de boceto son miles de paths.
+
+⚠ El crema del arte es `#F3E8DF`, un par de puntos más cálido que
+`--background` `#F5EEE2` del ADR 0002. Invisible salvo al rellenar el fondo del
+icono enmascarable, donde el token deja una costura visible.
+
+De los assets del gato que estaban repartidos, `public/icono-192.png`,
+`public/icono-512.png` y `public/favicon-32.png` ya son la carreta, y
+`marca.tsx` se borró. **Queda el material impreso**, que no es código. El QR de
+`difusion/` no lleva el logo dentro, así que no le afecta.

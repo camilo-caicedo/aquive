@@ -62,3 +62,12 @@ next-env.d.ts
 
 # Ayudante local para aplicar migraciones contra la base de pruebas.
 .aplicar.mjs
+
+# Original del diseñador (docs/marca/Logo). Los PNG de 4267 px y el .ai pesan
+# 59 MB y se regeneran desde el SVG, que es la fuente y sí se versiona —igual
+# que los PNG mini, que son de 67 a 134 px—. Los iconos de la aplicación salen
+# de ahí con `node scripts/iconos.mjs`.
+/docs/marca/Logo/*.png
+/docs/marca/Logo/*.ai
+/docs/marca/Logo/PNG/*1024X1024*.png
+/docs/marca/Logo/PNG/*ENMASCARABLE*.png

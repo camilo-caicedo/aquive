@@ -149,6 +149,16 @@ la simplificada no se pueden rehacer el favicon ni los iconos de la PWA.
 
 Lo demás puede avanzar sin eso.
 
+> ⚠ **Levantado a medias el 27 de agosto de 2026.** El diseñador entregó el
+> SVG y las versiones mini de 16, 24 y 32 px, en `docs/marca/Logo/`. Con eso se
+> rehicieron el favicon, el `.ico` y los iconos de la PWA
+> (`scripts/iconos.mjs`), y se borró `marca.tsx` en vez de reescribirlo: ya no
+> lo importaba nadie.
+>
+> **Siguen faltando** la versión sobre fondo oscuro y la de una tinta. No
+> bloquean nada hoy porque la aplicación no tiene modo oscuro y no hay
+> impresión a una tinta pendiente.
+
 ## Plan
 
 1. Tokens de `globals.css` y fuentes de `layout.tsx`. Cambio pequeño, efecto
