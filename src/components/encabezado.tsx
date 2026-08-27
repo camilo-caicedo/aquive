@@ -48,7 +48,7 @@ export async function Encabezado() {
     : { data: null }
   const indice = indiceData as unknown as IndiceAdmin | null
   const pendientes = indice
-    ? indice.matriculas + indice.telefonos + indice.hilos_sin_fundacion + indice.reportes
+    ? indice.matriculas + indice.telefonos + indice.reportes
     : 0
   // La campana solo tiene sentido con perfil: los avisos son de hilos y
   // solicitudes donde participa una cuenta, y sin perfil no hay cuenta.

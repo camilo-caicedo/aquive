@@ -299,8 +299,7 @@ export interface ContactoDestapado {
 // las pestañas que reemplaza.
 export interface IndiceAdmin {
   matriculas: number
-  telefonos: number
-  hilos_sin_fundacion: number
+  telefonos: number
   reportes: number
   sugerencias: number
   items_activos: number
@@ -683,18 +682,6 @@ export interface MisDatos {
   }>
 }
 
-// Lo que devuelve `panel_admin_flujo2()`. Sin PII: la bitácora dice quién
-// leyó y por qué, nunca qué leyó.
-export interface PanelFlujo2 {
-  sin_aliado: Array<{ id: string; codigo: string; municipio: string; creada_at: string }>
-  accesos: Array<{
-    rol: 'admin' | 'aliado'
-    motivo: string
-    cuando: string
-    huerfano: boolean
-  }>
-  hilos_abiertos: number
-}
 
 // Una respuesta propia, tal como la ve quien ofreció ayuda. Solo salen las
 // de solicitudes que siguen vivas: `respuestas` cuelga de `solicitudes` por
@@ -1871,15 +1858,6 @@ export interface Database {
       // titular, dejando rol y fecha.
       suprimir_mis_datos: {
         Args: { p_token: string }
-        Returns: Json
-      }
-      bloquear_ofertador: {
-        Args: { p_conversacion_id: string; p_motivo: string }
-        Returns: undefined
-      }
-      // Devuelve PanelFlujo2.
-      panel_admin_flujo2: {
-        Args: Record<string, never>
         Returns: Json
       }
       // Coincidencias y entregas (Fase H).

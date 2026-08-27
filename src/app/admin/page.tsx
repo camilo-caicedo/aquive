@@ -1,7 +1,6 @@
 import {
   BadgeCheck,
   PhoneCall,
-  HeartHandshake,
   Flag,
   Lightbulb,
   Building2,
@@ -42,8 +41,7 @@ export default async function AdminPage() {
   const v = (x: number | undefined) => x ?? 0
   // El número del encabezado es la suma del primer grupo y nada más: es
   // cuánta gente está esperando, no cuánto trabajo hay.
-  const esperando =
-    v(n?.matriculas) + v(n?.telefonos) + v(n?.hilos_sin_fundacion) + v(n?.reportes)
+  const esperando = v(n?.matriculas) + v(n?.telefonos) + v(n?.reportes)
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
@@ -76,15 +74,6 @@ export default async function AdminPage() {
                 detalle: 'Llamar y confirmar que contesta esa persona',
                 cuantas: v(n?.telefonos),
                 gajo: 'amarillo',
-                espera: true,
-              },
-              {
-                href: '/admin/aliados',
-                Icono: HeartHandshake,
-                etiqueta: 'Hilos sin fundación',
-                detalle: 'Dos personas esperando a que alguien decida',
-                cuantas: v(n?.hilos_sin_fundacion),
-                gajo: 'rojo',
                 espera: true,
               },
               {
