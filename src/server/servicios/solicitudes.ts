@@ -132,6 +132,10 @@ export async function mias(
       estado: solicitudesServicio.estado,
       creada_at: solicitudesServicio.creadaAt,
       expira_at: solicitudesServicio.expiraAt,
+      num_respuestas: sql<number>`(
+        select count(*)::int from respuestas_servicio r
+         where r.solicitud_id = ${solicitudesServicio.id}
+      )`,
     })
     .from(solicitudesServicio)
     .where(eq(solicitudesServicio.perfilId, llave.usuarioId))
@@ -143,6 +147,7 @@ export async function mias(
     grupo: f.grupo as MiSolicitudServicio['grupo'],
     detalle: f.detalle,
     estado: f.estado,
+    num_respuestas: Number(f.num_respuestas),
     creada_at: String(f.creada_at),
     expira_at: String(f.expira_at),
   }))

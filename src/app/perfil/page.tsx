@@ -11,6 +11,7 @@ import {
   ListOrdered,
   ShoppingBag,
   Heart,
+  Eye,
   Smartphone,
   Star,
   UserPen,
@@ -273,6 +274,18 @@ export default async function PerfilPage() {
     { href: '/perfil/avisos', Icono: Bell, nombre: 'Avisos' },
     { href: '/perfil/privacidad', Icono: KeyRound, nombre: 'Privacidad y cuenta' },
     { href: '/servicios/soy-proveedor', Icono: IdCard, nombre: 'Mi ficha publicada' },
+    // ⚠ La fila de arriba lleva al RESUMEN, no a la ficha. Ningún enlace de
+    // toda la aplicación llevaba a ver la propia como la ve cualquiera, que
+    // es lo único que responde «¿qué está viendo la gente de mí?».
+    ...(proveedor
+      ? [
+          {
+            href: `/prestador/${proveedor.id}`,
+            Icono: Eye,
+            nombre: 'Ver mi ficha como la ven',
+          },
+        ]
+      : []),
   ]
 
 

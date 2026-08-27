@@ -37,6 +37,28 @@ export const contratoCuentas = {
     )
     .output(z.object({ perfil_id: z.uuid(), codigo: z.string() })),
 
+  /**
+   * Las que ha creado un admin, para poder encontrarlas.
+   *
+   * ⚠ Faltaba, y sin ella el botón de regenerar era inalcanzable aunque
+   * existiera: no había forma de dar con la persona. Quien perdía su enlace
+   * —la única llave de quien no tiene Google— quedaba fuera para siempre.
+   *
+   * NO devuelve el código ni su hash. De él solo se sabe cuándo se creó y
+   * cuándo se usó por última vez.
+   */
+  creadas: oc.output(
+    z.array(
+      z.object({
+        perfil_id: z.uuid(),
+        nombre_visible: z.string(),
+        tipo: z.string(),
+        creado_at: z.string(),
+        usado_at: z.string().nullable(),
+      }),
+    ),
+  ),
+
   /** Cuando alguien pierde el papel, o se lo quitan. */
   regenerar: oc
     .errors(errores)

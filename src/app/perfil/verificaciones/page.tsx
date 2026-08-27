@@ -88,6 +88,12 @@ export default async function VerificacionesPage() {
     .maybeSingle()
 
   const confirmadas = referencias.filter((r) => r.estado === 'confirmada').length
+  // ⚠ Una referencia rechazada o que no contesta se le enseñaba igual que
+  // una pendiente: solo se contaban las confirmadas, así que quien esperaba
+  // seguía esperando algo que ya se había decidido. Se dicen aparte.
+  const cerradas = referencias.filter(
+    (r) => r.estado === 'rechazada' || r.estado === 'no_contesta',
+  ).length
   const entidad = servidor
     ? (ENTIDADES_MATRICULA.find((e) => e.valor === servidor.entidad_matricula)?.etiqueta ??
       servidor.entidad_matricula)
@@ -128,7 +134,7 @@ export default async function VerificacionesPage() {
           dice={
             referencias.length === 0
               ? 'Es el contacto de un cliente al que ya le trabajaste. La fundación lo llama una vez. Ese dato queda cifrado y no aparece en tu ficha.'
-              : `Diste ${referencias.length} ${referencias.length === 1 ? 'contacto' : 'contactos'} de clientes anteriores. ${confirmadas === 0 ? 'Todavía no hemos podido confirmar ninguno.' : `${confirmadas === 1 ? 'Uno confirmó' : `${confirmadas} confirmaron`} que les prestaste el servicio.`}`
+              : `Diste ${referencias.length} ${referencias.length === 1 ? 'contacto' : 'contactos'} de clientes anteriores. ${confirmadas === 0 ? 'Todavía no hemos podido confirmar ninguno.' : `${confirmadas === 1 ? 'Uno confirmó' : `${confirmadas} confirmaron`} que les prestaste el servicio.`}${cerradas > 0 ? ` ${cerradas === 1 ? 'Uno no' : `${cerradas} no`} se pudo confirmar: puedes dar otro contacto.` : ''}`
           }
           estado={
             referencias.length === 0

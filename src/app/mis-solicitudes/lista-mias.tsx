@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 import { rpc } from '@/orpc/cliente'
 import { Button } from '@/components/ui/button'
@@ -85,6 +86,14 @@ export function ListaMias({ solicitudes }: { solicitudes: MiSolicitudServicio[] 
                   y ahí importa distinguir un cero de una o. */}
               <p className="mt-1 font-mono text-sm text-muted-foreground">{s.codigo}</p>
 
+              {/* Si alguien respondió. Sin esto, quien pide publicaba, veía
+                  un código y no volvía a saber nada. */}
+              <p className="mt-1 text-base">
+                {s.num_respuestas === 0
+                  ? 'Nadie ha respondido todavía.'
+                  : `${s.num_respuestas} ${s.num_respuestas === 1 ? 'persona respondió' : 'personas respondieron'}. Mira tus mensajes.`}
+              </p>
+
               <p className="mt-1 text-sm text-muted-foreground">
                 {abierta
                   ? `Se borra sola el ${new Date(s.expira_at).toLocaleDateString('es-CO')}.`
@@ -92,6 +101,14 @@ export function ListaMias({ solicitudes }: { solicitudes: MiSolicitudServicio[] 
               </p>
 
               <div className="mt-3 flex flex-wrap gap-2">
+                {s.num_respuestas > 0 && (
+                  <Button
+                    nativeButton={false}
+                    render={<Link href="/mensajes" />}
+                  >
+                    Ver mensajes
+                  </Button>
+                )}
                 <Button variant="outline" onClick={() => actuar(s.id, 'renovar')}>
                   {abierta ? 'Renovar 15 días' : 'Volver a abrirla'}
                 </Button>

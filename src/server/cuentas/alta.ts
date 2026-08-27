@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto'
 
-import { eq } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
 import { codigosAcceso, perfiles } from '@/db/esquema'
@@ -205,4 +205,41 @@ export async function canjear(
     .where(eq(codigosAcceso.perfilId, fila.perfilId))
 
   return { url: data.properties.action_link }
+}
+
+/**
+ * Las cuentas que ha creado un admin.
+ *
+ * ⚠ Esta lista faltaba, y sin ella `regenerar` era inalcanzable: la pantalla
+ * prometía «ese es el botón para cuando lo pierde» y no había forma de dar
+ * con la persona. Quien perdía su enlace —la única llave de quien no tiene
+ * Google— quedaba fuera para siempre.
+ *
+ * De aquí NO sale el código ni su hash: solo cuándo se creó y cuándo se usó
+ * por última vez, que es lo que deja ver si alguien sigue entrando y notar
+ * una entrada que su dueño no hizo.
+ */
+export async function creadas(
+  db: BaseDeDatos,
+  llave: { usuarioId: string | null },
+) {
+  await exigirAdmin(db, llave.usuarioId)
+
+  const filas = await db
+    .select({
+      perfil_id: codigosAcceso.perfilId,
+      nombre_visible: perfiles.nombreVisible,
+      tipo: perfiles.tipo,
+      creado_at: codigosAcceso.creadoAt,
+      usado_at: codigosAcceso.usadoAt,
+    })
+    .from(codigosAcceso)
+    .innerJoin(perfiles, eq(perfiles.id, codigosAcceso.perfilId))
+    .orderBy(desc(codigosAcceso.creadoAt))
+
+  return filas.map((f) => ({
+    ...f,
+    creado_at: String(f.creado_at),
+    usado_at: f.usado_at ? String(f.usado_at) : null,
+  }))
 }

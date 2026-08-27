@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import { Search } from 'lucide-react'
 
 import { servidor } from '@/orpc/local'
@@ -26,11 +25,44 @@ export default async function CategoriasPage({
   const { municipio } = await searchParams
   const categorias = await servidor.servicios.categorias({ municipio })
 
-  if (categorias.length === 0) notFound()
-
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Categorías" volver="/inicio" />
+
+      {/* ⚠ Aquí había un `notFound()` cuando no hay ninguna categoría con
+          gente detrás. Esta pantalla es la celda «Buscar» de la barra: un
+          destino fijo de navegación que devuelve «esta página no existe» —
+          y basta un municipio sin fichas en la URL para provocarlo. Una
+          lista vacía se dice, no se convierte en un error. */}
+      {categorias.length === 0 ? (
+        <div className="shadow-canto rounded-2xl bg-card p-6">
+          <p className="text-base">
+            Todavía no hay nadie publicado
+            {municipio ? ' en ese municipio' : ''}.
+          </p>
+          <p className="mt-2 text-base text-muted-foreground">
+            Si vives de tu trabajo, tu ficha puede ser la primera: la ve
+            cualquiera que busque cerca.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <Link
+              href="/servicios/soy-proveedor"
+              className="text-enlace text-base underline underline-offset-4"
+            >
+              Publicar mi ficha
+            </Link>
+            {municipio && (
+              <Link
+                href="/categorias"
+                className="text-enlace text-base underline underline-offset-4"
+              >
+                Ver todos los municipios
+              </Link>
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
       <p className="text-base text-muted-foreground">
         Cada color es un lado de la sombrilla.
       </p>
@@ -81,6 +113,8 @@ export default async function CategoriasPage({
           Buscar en el directorio
         </Link>
       </p>
+        </>
+      )}
     </main>
   )
 }

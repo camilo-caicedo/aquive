@@ -251,6 +251,14 @@ export const MiSolicitudServicio = z.object({
   estado: z.string(),
   creada_at: z.string(),
   expira_at: z.string(),
+  /**
+   * Cuántos respondieron.
+   *
+   * ⚠ Faltaba, y sin él quien pedía un servicio publicaba, veía un código y
+   * no volvía a saber nada: ninguna pantalla le decía si alguien se había
+   * movido. La vista SQL ya lo calculaba.
+   */
+  num_respuestas: z.number(),
 })
 
 export type MiSolicitudServicio = z.infer<typeof MiSolicitudServicio>

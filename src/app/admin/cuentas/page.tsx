@@ -1,7 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { listarMunicipios } from '@/lib/municipios'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
+import { servidor } from '@/orpc/local'
 import { FormularioCuenta } from './formulario-cuenta'
+import { ListaCuentas } from './lista-cuentas'
 
 export const metadata = {
   title: 'Cuentas',
@@ -23,7 +25,10 @@ export default async function CuentasPage() {
   // para las nueve rutas. Repetirla aquí sería la décima copia, que es la
   // que algún día se olvida.
   const supabase = await createClient()
-  const municipios = await listarMunicipios(supabase)
+  const [municipios, cuentas] = await Promise.all([
+    listarMunicipios(supabase),
+    servidor.cuentas.creadas(),
+  ])
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
@@ -42,8 +47,10 @@ export default async function CuentasPage() {
         El enlace es como una contraseña en un papel, y es a propósito: quien
         no tiene correo tampoco tiene cómo recuperar una cuenta. Cada persona
         tiene uno solo — darle otro deja el anterior sin servir, y ese es el
-        botón para cuando lo pierde o se lo quitan.
+        botón de abajo para cuando lo pierde o se lo quitan.
       </p>
+
+      <ListaCuentas cuentas={cuentas} />
     </main>
   )
 }

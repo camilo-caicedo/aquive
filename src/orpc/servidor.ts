@@ -177,6 +177,9 @@ export const enrutador = os.router({
         throw e
       }
     }),
+    creadas: os.cuentas.creadas.handler(({ context }) =>
+      cuentas.creadas(db, { usuarioId: context.usuarioId }),
+    ),
     regenerar: os.cuentas.regenerar.handler(async ({ input, context, errors }) => {
       try {
         return await cuentas.regenerar(db, input.perfil_id, {
