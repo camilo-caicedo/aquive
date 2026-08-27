@@ -75,6 +75,20 @@ export const enrutador = os.router({
         }
       },
     ),
+    editarProducto: os.comunidad.editarProducto.handler(
+      async ({ input, context, errors }) => {
+        const { id, ...cambios } = input
+        try {
+          await productos.editar(db, id, cambios, { usuarioId: context.usuarioId })
+          return { ok: true as const }
+        } catch (e) {
+          if (e instanceof productos.ProductoRechazado) {
+            throw errors.RECHAZADO({ data: { motivo: e.message } })
+          }
+          throw e
+        }
+      },
+    ),
     disponibilidadProducto: os.comunidad.disponibilidadProducto.handler(
       async ({ input, context, errors }) => {
         try {

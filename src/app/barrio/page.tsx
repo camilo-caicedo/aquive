@@ -90,7 +90,7 @@ export default async function BarrioPage({
                 href="/barrio/mios"
                 className="shadow-canto inline-flex min-h-12 shrink-0 items-center rounded-full bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
               >
-                Lo que vendo · {mios.length}
+                Mis productos · {mios.length}
               </Link>
             ) : undefined
           }

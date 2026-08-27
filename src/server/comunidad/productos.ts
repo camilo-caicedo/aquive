@@ -76,6 +76,42 @@ export async function mios(
   }))
 }
 
+/**
+ * Lo que tiene que cumplir un producto, se esté creando o corrigiendo.
+ *
+ * En una sola función a propósito: comprobarlo solo al crear dejaría la
+ * puerta de publicar algo limpio y editarlo después para meterle un
+ * teléfono.
+ */
+function comprobar(entrada: {
+  nombre: string
+  detalle?: string
+  modo: string
+  precio_desde?: number
+  unidad?: string
+}) {
+  // Los dos campos libres, con su filtro. Es la regla de producto 4 y es la
+  // misma que el muro: un nombre de producto con un teléfono dentro
+  // convierte esta lista en un directorio de teléfonos.
+  for (const texto of [entrada.nombre, entrada.detalle ?? '']) {
+    if (texto && contienePII(texto)) {
+      throw new ProductoRechazado(
+        'No escribas teléfonos, correos ni cédulas. Quien lo quiera te escribe por los datos de tu ficha.',
+      )
+    }
+  }
+
+  // Un precio sin unidad no dice nada —«desde $3.500» ¿de qué?— y una
+  // unidad sin precio tampoco. O van los dos, o no va ninguno.
+  const hayPrecio = entrada.precio_desde !== undefined && entrada.precio_desde !== null
+  if (hayPrecio !== Boolean(entrada.unidad)) {
+    throw new ProductoRechazado('El precio va con su unidad: «desde $3.500 la unidad».')
+  }
+  if (entrada.modo === 'gratis' && hayPrecio) {
+    throw new ProductoRechazado('Si lo regalas, no lleva precio.')
+  }
+}
+
 export async function publicar(
   db: BaseDeDatos,
   entrada: {
@@ -98,27 +134,9 @@ export async function publicar(
     throw new ProductoRechazado('Tu ficha está suspendida, así que no aparece nada tuyo.')
   }
 
-  // Los dos campos libres, con su filtro. Es la regla de producto 4 y es la
-  // misma que el muro: un nombre de producto con un teléfono dentro
-  // convierte esta lista en un directorio de teléfonos.
-  for (const texto of [entrada.nombre, entrada.detalle ?? '']) {
-    if (texto && contienePII(texto)) {
-      throw new ProductoRechazado(
-        'No escribas teléfonos, correos ni cédulas. Quien lo quiera te escribe por los datos de tu ficha.',
-      )
-    }
-  }
+  comprobar(entrada)
 
-  // Un precio sin unidad no dice nada —«desde $3.500» ¿de qué?— y una
-  // unidad sin precio tampoco. O van los dos, o no va ninguno.
   const hayPrecio = entrada.precio_desde !== undefined && entrada.precio_desde !== null
-  if (hayPrecio !== Boolean(entrada.unidad)) {
-    throw new ProductoRechazado('El precio va con su unidad: «desde $3.500 la unidad».')
-  }
-  if (entrada.modo === 'gratis' && hayPrecio) {
-    throw new ProductoRechazado('Si lo regalas, no lleva precio.')
-  }
-
   const [fila] = await db
     .insert(productos)
     .values({
@@ -133,6 +151,72 @@ export async function publicar(
 
   if (entrada.imagen_id) await enlazar(db, entrada.imagen_id, fila.id)
   return { id: fila.id }
+}
+
+/**
+ * Corregirlo.
+ *
+ * Un precio se equivoca, una foto sale mal y el nombre se queda corto. Sin
+ * esto la única salida era borrar y volver a escribirlo, que además pierde
+ * la fecha —y con ella el sitio en la lista, que va de lo más nuevo a lo
+ * más viejo—.
+ *
+ * ⚠ Mismo filtro de PII y misma regla del par precio/unidad que al
+ * publicar, y por eso comparten función: si se comprobara solo al crear,
+ * bastaría con publicar algo limpio y editarlo después para meter un
+ * teléfono.
+ */
+export async function editar(
+  db: BaseDeDatos,
+  id: string,
+  entrada: {
+    nombre: string
+    detalle?: string
+    modo: 'gratis' | 'aporte' | 'solidario' | 'normal'
+    precio_desde?: number
+    unidad?: 'unidad' | 'libra' | 'kilo' | 'docena' | 'plato' | 'trabajo'
+    imagen_id?: string
+  },
+  llave: { usuarioId: string | null },
+) {
+  const ficha = await fichaDe(db, llave.usuarioId)
+  if (!ficha) throw new ProductoRechazado('Esto no es tuyo.')
+
+  comprobar(entrada)
+
+  const filas = await db
+    .update(productos)
+    .set({
+      nombre: entrada.nombre,
+      detalle: entrada.detalle ?? null,
+      modo: entrada.modo,
+      precioDesde:
+        entrada.precio_desde === undefined ? null : String(entrada.precio_desde),
+      unidad: entrada.unidad ?? null,
+    })
+    .where(and(eq(productos.id, id), eq(productos.proveedorId, ficha.id)))
+    .returning({ id: productos.id })
+
+  if (filas.length === 0) throw new ProductoRechazado('Esto no es tuyo.')
+
+  // Una foto nueva reemplaza a la anterior: se enlaza la nueva y la vieja
+  // se va con su objeto. Dos fotos en la misma cosa no las enseña nadie —la
+  // vista coge la primera aprobada— y la que sobra se queda ocupando sitio.
+  if (entrada.imagen_id) {
+    const viejas = await db
+      .select({ id: imagenes.id, ruta: imagenes.ruta, estado: imagenes.estado })
+      .from(imagenes)
+      .where(and(eq(imagenes.objetoTipo, 'producto'), eq(imagenes.objetoId, id)))
+
+    await enlazar(db, entrada.imagen_id, id)
+
+    for (const vieja of viejas) {
+      if (vieja.id === entrada.imagen_id) continue
+      await db.delete(imagenes).where(eq(imagenes.id, vieja.id))
+      const bucket = vieja.estado === 'aprobada' ? 'publico' : 'cuarentena'
+      await borrar(bucket, `${vieja.ruta}.webp`).catch(() => {})
+    }
+  }
 }
 
 /**

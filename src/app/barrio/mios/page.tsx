@@ -6,7 +6,7 @@ import { AccionPrincipal } from '@/components/accion-principal'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { ListaMios } from './lista-mios'
 
-export const metadata = { title: 'Lo que vendo' }
+export const metadata = { title: 'Mis productos' }
 
 /**
  * Lo mío en «Hecho en el barrio».
@@ -23,7 +23,7 @@ export default async function MisProductosPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-6">
-      <CabeceraPantalla titulo="Lo que vendo" volver="/barrio" />
+      <CabeceraPantalla titulo="Mis productos" volver="/barrio" />
 
       <p className="text-base text-muted-foreground">
         Lo que tienes puesto en Productos. Aparece con tu nombre y con el

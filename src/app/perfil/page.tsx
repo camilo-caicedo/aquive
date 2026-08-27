@@ -9,6 +9,7 @@ import {
   IdCard,
   KeyRound,
   ListOrdered,
+  ShoppingBag,
   Smartphone,
   Star,
   UserPen,
@@ -22,6 +23,7 @@ import { CerrarSesion } from '@/app/registro/cerrar-sesion'
 import { ListaLocal } from '@/app/mis-solicitudes/lista-local'
 import { ListaServicios } from '@/app/mis-solicitudes/lista-servicios'
 import { createClient } from '@/lib/supabase/server'
+import { servidor } from '@/orpc/local'
 import { listarMunicipios, nombreConDepartamento } from '@/lib/municipios'
 import { CINTA, TINTA_CINTA, type Familia } from '@/lib/familias'
 import { GRUPOS } from '@/lib/servicios'
@@ -31,6 +33,9 @@ import type { MiReferencia } from '@/components/campos-referencia'
 import { codigosSinUsar, promedioResenas } from './cargar'
 
 export const metadata = { title: 'Perfil' }
+
+/** Los cuatro gajos de la sombrilla, en el orden en que se recorren. */
+const FAMILIAS: Familia[] = ['azul', 'amarillo', 'verde', 'rojo']
 
 /**
  * Una fila del menú. Glifo, nombre y pista numérica.
@@ -150,6 +155,7 @@ export default async function PerfilPage() {
     { data: refs },
     municipios,
     { data: perfilOfertador },
+    misProductos,
   ] = await Promise.all([
       supabase.rpc('mi_proveedor', {}),
       supabase.rpc('mis_servicios', {}),
@@ -160,6 +166,9 @@ export default async function PerfilPage() {
       // unas pestañas que este menú reemplaza, y sin esto se quedarían sin
       // ninguna puerta.
       supabase.from('perfiles').select('id').eq('id', user.id).maybeSingle(),
+      // Lo que tiene puesto en «Hecho en el barrio». Va por el contrato,
+      // que ya filtra por la ficha de quien llama.
+      servidor.comunidad.misProductos(),
     ])
 
   const proveedor = (mio as MiProveedor | null) ?? null
@@ -180,6 +189,77 @@ export default async function PerfilPage() {
   // Qué falta comprobar, contado igual que lo cuenta /perfil/verificaciones.
   const verificacionesPendientes =
     (proveedor && !proveedor.telefono_verificado ? 1 : 0) + refsPendientes
+
+  // Las filas del menú, en orden y ya filtradas. El color lo pone el
+  // recorrido de abajo, no cada una.
+  const filas: { href: string; Icono: LucideIcon; nombre: string; pista?: string }[] = [
+    { href: '/perfil/datos', Icono: UserPen, nombre: 'Mis datos y contacto' },
+    {
+      href: '/perfil/oficios',
+      Icono: ListOrdered,
+      nombre: 'Mis oficios y precios',
+      pista: proveedor ? String(proveedor.oficios.length) : undefined,
+    },
+    // Detrás de los oficios y sus precios, que es lo más parecido que hay:
+    // las dos son cosas que esa persona ofrece con un precio. Solo si tiene
+    // ficha — sin ella no se puede vender aquí, y una fila que lleva a «no
+    // tienes nada» no dice qué falta.
+    ...(proveedor
+      ? [
+          {
+            href: '/barrio/mios',
+            Icono: ShoppingBag,
+            nombre: 'Mis productos',
+            pista:
+              misProductos.length > 0
+                ? `${misProductos.length} publicado${misProductos.length === 1 ? '' : 's'}`
+                : undefined,
+          },
+        ]
+      : []),
+    { href: '/perfil/disponibilidad', Icono: Clock, nombre: 'Cuándo y dónde atiendo' },
+    { href: '/mis-solicitudes', Icono: ClipboardList, nombre: 'Mis solicitudes' },
+    // Las dos vistas del módulo de emergencia. Solo salen si esa persona
+    // tiene ese rol: son de quien OFRECE ayuda, que es otro papel que el de
+    // prestar un servicio. Vivían tras unas pestañas que se retiraron al
+    // llegar este menú, y sin estas dos filas se habrían quedado sin
+    // ninguna puerta.
+    ...(esOfertador
+      ? [
+          {
+            href: '/registro?ver=respuestas',
+            Icono: ClipboardList,
+            nombre: 'Mis respuestas',
+          },
+          { href: '/registro', Icono: UserRound, nombre: 'Mi perfil de ayuda' },
+        ]
+      : []),
+    {
+      href: '/perfil/resenas',
+      Icono: Star,
+      nombre: 'Reseñas recibidas',
+      pista: sinResponder > 0 ? `${sinResponder} sin responder` : undefined,
+    },
+    {
+      href: '/perfil/verificaciones',
+      Icono: BadgeCheck,
+      nombre: 'Verificaciones',
+      pista:
+        verificacionesPendientes > 0
+          ? `${verificacionesPendientes} pendiente${verificacionesPendientes === 1 ? '' : 's'}`
+          : undefined,
+    },
+    {
+      href: '/perfil/codigos',
+      Icono: Hash,
+      nombre: 'Códigos que generé',
+      pista: sinUsar > 0 ? `${sinUsar} sin usar` : undefined,
+    },
+    { href: '/perfil/avisos', Icono: Bell, nombre: 'Avisos' },
+    { href: '/perfil/privacidad', Icono: KeyRound, nombre: 'Privacidad y cuenta' },
+    { href: '/servicios/soy-proveedor', Icono: IdCard, nombre: 'Mi ficha publicada' },
+  ]
+
 
   return (
     <main className="mx-auto max-w-lg px-4 py-6">
@@ -259,92 +339,24 @@ export default async function PerfilPage() {
         </section>
       )}
 
+      {/* ⚠ El color NO se declara fila por fila. Declarado a mano salían
+          tres verdes seguidos y dos amarillos pegados, porque las filas
+          que aparecen dependen de quién mire —hay dos que solo salen si
+          tiene ficha y dos si ofrece ayuda— y a ojo no se puede prever qué
+          queda junto a qué.
+
+          Aquí se recorren los cuatro gajos de la sombrilla en orden,
+          después de quitar las que no van. Así ninguna toca a otra de su
+          color y la secuencia es la misma para todo el mundo.
+
+          El color sigue sin significar nada por sí solo (regla 9): lo que
+          dice qué es cada fila es su nombre, y la pista numérica va en
+          palabras. */}
       <nav aria-label="Perfil" className="mt-6">
         <ul className="flex flex-col gap-2">
-          <Fila
-            href="/perfil/datos"
-            Icono={UserPen}
-            nombre="Mis datos y contacto"
-            familia="azul"
-          />
-          <Fila
-            href="/perfil/oficios"
-            Icono={ListOrdered}
-            nombre="Mis oficios y precios"
-            pista={proveedor ? String(proveedor.oficios.length) : undefined}
-            familia="amarillo"
-          />
-          <Fila
-            href="/perfil/disponibilidad"
-            Icono={Clock}
-            nombre="Cuándo y dónde atiendo"
-            familia="verde"
-          />
-          <Fila
-            href="/mis-solicitudes"
-            Icono={ClipboardList}
-            nombre="Mis solicitudes"
-            familia="azul"
-          />
-          {/* Las dos vistas del módulo de emergencia. Solo salen si esa
-              persona tiene ese rol: son de quien OFRECE ayuda, que es otro
-              papel que el de prestar un servicio. Vivían tras unas pestañas
-              que se retiraron al llegar este menú, y sin estas dos filas se
-              habrían quedado sin ninguna puerta. */}
-          {esOfertador && (
-            <>
-              <Fila
-                href="/registro?ver=respuestas"
-                Icono={ClipboardList}
-                nombre="Mis respuestas"
-                familia="verde"
-              />
-              <Fila
-                href="/registro"
-                Icono={UserRound}
-                nombre="Mi perfil de ayuda"
-                familia="verde"
-              />
-            </>
-          )}
-          <Fila
-            href="/perfil/resenas"
-            Icono={Star}
-            nombre="Reseñas recibidas"
-            pista={sinResponder > 0 ? `${sinResponder} sin responder` : undefined}
-            familia="amarillo"
-          />
-          <Fila
-            href="/perfil/verificaciones"
-            Icono={BadgeCheck}
-            nombre="Verificaciones"
-            pista={
-              verificacionesPendientes > 0
-                ? `${verificacionesPendientes} pendiente${verificacionesPendientes === 1 ? '' : 's'}`
-                : undefined
-            }
-            familia="verde"
-          />
-          <Fila
-            href="/perfil/codigos"
-            Icono={Hash}
-            nombre="Códigos que generé"
-            pista={sinUsar > 0 ? `${sinUsar} sin usar` : undefined}
-            familia="rojo"
-          />
-          <Fila href="/perfil/avisos" Icono={Bell} nombre="Avisos" familia="azul" />
-          <Fila
-            href="/perfil/privacidad"
-            Icono={KeyRound}
-            nombre="Privacidad y cuenta"
-            familia="rojo"
-          />
-          <Fila
-            href="/servicios/soy-proveedor"
-            Icono={IdCard}
-            nombre="Mi ficha publicada"
-            familia="amarillo"
-          />
+          {filas.map((fila, indice) => (
+            <Fila key={fila.href} {...fila} familia={FAMILIAS[indice % FAMILIAS.length]} />
+          ))}
         </ul>
       </nav>
 

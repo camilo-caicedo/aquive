@@ -9,6 +9,7 @@ import { MarcoFlujo } from '@/components/marco-flujo'
 import { SubirImagen } from '@/components/subir-imagen'
 import { Button } from '@/components/ui/button'
 import {
+  type MiProducto,
   NOMBRE_UNIDAD,
   UNIDADES_PRODUCTO,
   type UnidadProducto,
@@ -39,14 +40,20 @@ const MODOS: { valor: Modo; etiqueta: string; ayuda: string }[] = [
  * que aquí no se vuelve a pedir el nombre ni el municipio: salen de ella. Es
  * también lo que hace que su autorización de nombre público, con su fecha,
  * siga siendo la misma y no haya que firmar otra.
+ *
+ * Sirve para poner algo y para corregirlo, con `producto` o sin él. Son la
+ * misma pantalla porque son los mismos campos y las mismas reglas: dos
+ * copias se separarían en la primera corrección que se hiciera en una sola.
  */
-export function FormularioProducto() {
+export function FormularioProducto({ producto }: { producto?: MiProducto }) {
   const router = useRouter()
-  const [nombre, setNombre] = useState('')
-  const [detalle, setDetalle] = useState('')
-  const [modo, setModo] = useState<Modo>('normal')
-  const [precio, setPrecio] = useState('')
-  const [unidad, setUnidad] = useState<UnidadProducto | ''>('')
+  const [nombre, setNombre] = useState(producto?.nombre ?? '')
+  const [detalle, setDetalle] = useState(producto?.detalle ?? '')
+  const [modo, setModo] = useState<Modo>(producto?.modo ?? 'normal')
+  const [precio, setPrecio] = useState(
+    producto?.precio_desde == null ? '' : String(producto.precio_desde),
+  )
+  const [unidad, setUnidad] = useState<UnidadProducto | ''>(producto?.unidad ?? '')
   const [imagenId, setImagenId] = useState<string | null>(null)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -63,17 +70,23 @@ export function FormularioProducto() {
   async function enviar() {
     setEnviando(true)
     setError(null)
+    const campos = {
+      nombre: nombre.trim(),
+      detalle: detalle.trim() || undefined,
+      modo,
+      precio_desde:
+        llevaPrecio && precioNumero !== '' ? Number(precioNumero) : undefined,
+      unidad: llevaPrecio && unidad !== '' ? unidad : undefined,
+      imagen_id: imagenId ?? undefined,
+    }
     try {
-      const { id } = await rpc.comunidad.publicarProducto({
-        nombre: nombre.trim(),
-        detalle: detalle.trim() || undefined,
-        modo,
-        precio_desde:
-          llevaPrecio && precioNumero !== '' ? Number(precioNumero) : undefined,
-        unidad: llevaPrecio && unidad !== '' ? unidad : undefined,
-        imagen_id: imagenId ?? undefined,
-      })
-      router.push(`/barrio/mios?nuevo=${id}`)
+      if (producto) {
+        await rpc.comunidad.editarProducto({ id: producto.id, ...campos })
+      } else {
+        await rpc.comunidad.publicarProducto(campos)
+      }
+      router.push('/barrio/mios')
+      router.refresh()
     } catch (e) {
       const motivo =
         e && typeof e === 'object' && 'data' in e
@@ -86,11 +99,11 @@ export function FormularioProducto() {
 
   return (
     <MarcoFlujo
-      titulo="Vender algo"
-      volver="/barrio"
+      titulo={producto ? 'Corregirlo' : 'Vender algo'}
+      volver={producto ? '/barrio/mios' : '/barrio'}
       accion={
         <Button className="w-full" disabled={!puede} onClick={enviar}>
-          {enviando ? 'Publicando…' : 'Publicar'}
+          {enviando ? 'Guardando…' : producto ? 'Guardar' : 'Publicar'}
         </Button>
       }
     >
@@ -217,6 +230,7 @@ export function FormularioProducto() {
         <p className="mt-1 text-sm text-muted-foreground">
           Máximo 2 MB. Una persona la revisa antes de que se vea: si tiene datos
           de alguien, un documento o a un menor, no se publica.
+          {producto ? ' Si no subes otra, se queda la que ya tenía.' : ''}
         </p>
       </div>
 
@@ -226,6 +240,7 @@ export function FormularioProducto() {
         </p>
       )}
 
+      {!producto && (
       <p className="mt-4 text-base text-muted-foreground">
         ¿Todavía no tienes ficha?{' '}
         <Link href="/servicios/soy-proveedor" className="text-enlace underline underline-offset-4">
@@ -233,6 +248,7 @@ export function FormularioProducto() {
         </Link>
         : es la que lleva tu nombre y tu contacto.
       </p>
+      )}
     </MarcoFlujo>
   )
 }

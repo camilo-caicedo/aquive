@@ -202,6 +202,23 @@ export const contratoComunidad = {
     )
     .output(z.object({ id: z.uuid() })),
 
+  /** Corregir el precio, el nombre, el detalle o la foto. */
+  editarProducto: oc
+    .errors(errores)
+    .input(
+      z.object({
+        id: z.uuid(),
+        nombre: z.string().trim().min(2).max(140),
+        detalle: z.string().trim().max(300).optional(),
+        modo: z.enum(['gratis', 'aporte', 'solidario', 'normal']),
+        precio_desde: z.number().int().positive().max(99999999).optional(),
+        unidad: UnidadProducto.optional(),
+        /** Solo si se cambió: la anterior se borra con su objeto. */
+        imagen_id: z.uuid().optional(),
+      }),
+    )
+    .output(z.object({ ok: z.literal(true) })),
+
   /** «Hoy no hay», sin tener que escribirlo otra vez mañana. */
   disponibilidadProducto: oc
     .errors(errores)

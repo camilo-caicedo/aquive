@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2 } from 'lucide-react'
+import Link from 'next/link'
+import { Pencil, Trash2 } from 'lucide-react'
 
 import { rpc } from '@/orpc/cliente'
 import { precioLegible } from '@/lib/servicios'
@@ -11,9 +12,10 @@ import type { MiProducto } from '@/contrato/comunidad'
 import type { UnidadPrecio } from '@/lib/types'
 
 /**
- * Lo que vendo, con sus dos acciones.
+ * Mis productos, con sus tres acciones.
  *
- * «Hoy no hay» y «borrar» son cosas distintas y por eso son dos botones:
+ * «Hoy no hay», «corregir» y «borrar» son cosas distintas y por eso son tres
+ * botones:
  * los tamales del domingo se apagan el lunes y vuelven el sábado, y
  * obligar a escribirlos otra vez cada semana es lo que hace que la lista se
  * llene de cosas que ya no están.
@@ -103,6 +105,14 @@ export function ListaMios({ productos }: { productos: MiProducto[] }) {
               </div>
             ) : (
               <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  nativeButton={false}
+                  render={<Link href={`/barrio/mios/${p.id}`} />}
+                >
+                  <Pencil className="size-4" aria-hidden="true" />
+                  Corregir
+                </Button>
                 <Button
                   variant="outline"
                   onClick={() =>
