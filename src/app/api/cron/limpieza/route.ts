@@ -13,16 +13,28 @@ import { barrerHuerfanas } from '@/server/imagenes/recorrido'
  * alguien empezó a escribir, subió una foto y se fue. Sin esto, cada abandono
  * deja un archivo pagando almacenamiento para siempre.
  *
- * Autenticada con la misma llave que el resto del mantenimiento. Sin ella
- * cualquiera podría dispararla, y aunque el daño sería pequeño —borra lo que
- * ya iba a borrarse— un endpoint que escribe y está abierto es un endpoint
- * abierto.
+ * Autenticada. Sin ello cualquiera podría dispararla, y aunque el daño sería
+ * pequeño —borra lo que ya iba a borrarse— un endpoint que escribe y está
+ * abierto es un endpoint abierto.
+ *
+ * ⚠ Acepta DOS llaves, y no es por comodidad: Vercel Cron manda
+ * `Authorization: Bearer $CRON_SECRET`, que es una variable suya, y aquí
+ * solo se comprobaba `MANTENIMIENTO_LLAVE`, que es la del modo
+ * mantenimiento y sirve para otra cosa. Salvo que las dos tuvieran el mismo
+ * valor por casualidad, la tarea respondía 401 todos los días a las 4 y las
+ * imágenes huérfanas no se barrieron nunca.
+ *
+ * Se conservan las dos: `CRON_SECRET` para la tarea programada y
+ * `MANTENIMIENTO_LLAVE` para poder dispararla a mano desde una terminal, que
+ * es lo que `.env.local.example` describe.
  */
 export async function GET(peticion: Request) {
-  const llave = process.env.MANTENIMIENTO_LLAVE
   const dada = peticion.headers.get('authorization')?.replace(/^Bearer /, '')
+  const validas = [process.env.CRON_SECRET, process.env.MANTENIMIENTO_LLAVE].filter(
+    Boolean,
+  )
 
-  if (!llave || dada !== llave) {
+  if (validas.length === 0 || !dada || !validas.includes(dada)) {
     return new Response('No autorizado', { status: 401 })
   }
 

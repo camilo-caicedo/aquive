@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Heart, ShoppingBag, Wrench } from 'lucide-react'
+import { ChevronRight, HandHelping, Heart, ShoppingBag, Wrench } from 'lucide-react'
 
 import { servidor } from '@/orpc/local'
 import { GRUPOS, precioLegible, zonaLegible } from '@/lib/servicios'
@@ -70,6 +70,31 @@ export async function Inicio({ municipio }: { municipio?: string }) {
           </li>
         </ul>
       </nav>
+
+      {/* El otro lado del directorio, y la única puerta que tenía.
+          `/solicitudes` —qué está pidiendo la gente— no estaba enlazado desde
+          NINGUNA parte: ni aquí, ni en la barra, ni en el perfil, ni en la
+          ficha. Un solo `href` en todo el repo, y era el autoenlace de su
+          propia pantalla vacía. Con él caía además la única entrada al chat
+          de tipo servicio.
+
+          Va como fila y no como cuarta tarjeta: las tres de arriba son «qué
+          buscas», y esto es lo contrario — quién te busca a ti. */}
+      <Link
+        href="/solicitudes"
+        className="shadow-canto mt-3 flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
+      >
+        <span className="bg-familia-verde flex size-10 shrink-0 items-center justify-center rounded-full text-foreground">
+          <HandHelping className="size-5" aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-lg font-medium">Quién está pidiendo</span>
+          <span className="block text-base text-muted-foreground">
+            Si tienes cómo hacerlo, escríbele
+          </span>
+        </span>
+        <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+      </Link>
 
       <section className="mt-8">
         <div className="flex items-baseline justify-between gap-3">

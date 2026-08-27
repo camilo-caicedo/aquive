@@ -1,5 +1,14 @@
 import Link from 'next/link'
-import { BadgeCheck, Camera, Check, ChevronRight, Eye, Hash, Pencil } from 'lucide-react'
+import {
+  BadgeCheck,
+  Camera,
+  Check,
+  ChevronRight,
+  Eye,
+  HandHelping,
+  Hash,
+  Pencil,
+} from 'lucide-react'
 import { MarcoFlujo } from '@/components/marco-flujo'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { Carne } from '@/components/carne'
@@ -189,6 +198,23 @@ export default async function SoyProveedorPage() {
               {proveedor.acepto_foto && proveedor.foto
                 ? 'Publicada en tu ficha'
                 : 'Opcional. Ayuda a que te reconozcan'}
+            </span>
+          </span>
+          <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+        </Link>
+
+        {/* La otra mitad del módulo, desde el lado de quien ofrece. */}
+        <Link
+          href="/solicitudes"
+          className="shadow-canto flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
+        >
+          <span className="bg-familia-azul flex size-10 shrink-0 items-center justify-center rounded-full text-white">
+            <HandHelping className="size-5" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-lg font-medium">Quién está pidiendo</span>
+            <span className="block text-base text-muted-foreground">
+              Lo que la gente necesita, para responder
             </span>
           </span>
           <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
