@@ -163,28 +163,40 @@ export function Chat({
                   fila.empiezaTanda ? 'pt-2' : ''
                 }`}
               >
-                {/* La burbuja propia en arena y no en lima: un hilo de veinte
-                    mensajes en lima es lima dominante, que es justo lo que el
-                    manual prohíbe. El lima es la acción de enviar.
+                {/* Lo mío en blanco y lo suyo en amarillo, por decisión del
+                    responsable. Antes lo propio iba en arena, que sobre el
+                    crema son dos tonos que se distinguen en una muestra de
+                    color y no en un teléfono al sol.
 
-                    Las dos llevan canto —la sombra de 1 px del sistema— y no
-                    borde: sin él, la arena sobre el crema no se leía como
-                    burbuja, sino como un párrafo con el fondo mal puesto. */}
+                    El amarillo es uno de los cuatro gajos de la sombrilla, y
+                    aquí va como RELLENO con tinta encima, que es la única
+                    forma en que la paleta admite un color. No es lima: el
+                    lima es la acción de enviar, una por pantalla, y veinte
+                    burbujas lima serían lima dominante.
+
+                    Que no lleve la palabra al lado no rompe la regla de las
+                    familias. Aquí el color no dice «confección»: dice «esto
+                    lo escribió el otro», y eso lo dicen además el lado y la
+                    esquina de la cola. */}
                 <div
-                  className={`shadow-canto max-w-[85%] px-4 py-2.5 ${
+                  className={`shadow-canto max-w-[85%] rounded-2xl px-4 py-2.5 ${
                     fila.mio
-                      ? `bg-secondary rounded-2xl ${fila.cierraTanda ? 'rounded-br-sm' : ''}`
-                      : `bg-card rounded-2xl ${fila.cierraTanda ? 'rounded-bl-sm' : ''}`
+                      ? `bg-card ${fila.cierraTanda ? 'rounded-br-sm' : ''}`
+                      : `bg-familia-amarillo text-foreground ${fila.cierraTanda ? 'rounded-bl-sm' : ''}`
                   }`}
                 >
                   <p className="text-base whitespace-pre-line">{fila.cuerpo}</p>
                   {/* Solo en el último de una tanda: cinco mensajes seguidos
                       del mismo minuto con cinco horas iguales debajo es ruido
-                      que hay que saltarse para leer la conversación. */}
+                      que hay que saltarse para leer la conversación.
+
+                      Sobre el amarillo no sirve `muted-foreground`: ese pardo
+                      sobre ese amarillo no llega a AA. Va tinta rebajada, que
+                      da la misma jerarquía sin perder el contraste. */}
                   {fila.cierraTanda && (
                     <p
-                      className={`mt-0.5 text-sm text-muted-foreground ${
-                        fila.mio ? 'text-right' : ''
+                      className={`mt-0.5 text-sm ${
+                        fila.mio ? 'text-right text-muted-foreground' : 'text-foreground/75'
                       }`}
                     >
                       {hidratado ? horaLegible(fila.iso) : ' '}
