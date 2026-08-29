@@ -1,6 +1,6 @@
-import { redirect } from 'next/navigation'
 import { FormularioProveedor } from '@/app/servicios/soy-proveedor/formulario-proveedor'
 import { cargarPerfil } from '../cargar'
+import { SinCarne } from '../sin-carne'
 
 export const metadata = { title: 'Mi foto' }
 
@@ -17,7 +17,14 @@ export const metadata = { title: 'Mi foto' }
 export default async function FotoPage() {
   const { proveedor, municipios, oficios, zonas } = await cargarPerfil()
 
-  if (!proveedor) redirect('/servicios/soy-proveedor')
+  if (!proveedor) {
+    return (
+      <SinCarne
+        titulo="Mi foto"
+        porque="La foto va en tu ficha del directorio, y publicar tu cara lleva su propia autorización. Sin ficha no hay dónde ponerla."
+      />
+    )
+  }
 
   return (
     <FormularioProveedor

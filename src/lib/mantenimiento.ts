@@ -122,8 +122,8 @@ const PAGINA = `<!doctype html>
 <main>
   <span class="marca">AquíVe</span>
   <p class="que-es">Conecta, en Colombia, a quien necesita algo con quien
-  puede darlo: insumos, servicios con matrícula y el trabajo de quien vive
-  de su oficio.</p>
+  puede darlo: el trabajo de quien vive de su oficio, los servicios con
+  matrícula y lo que el barrio comparte.</p>
   <h1>Estamos haciendo un ajuste</h1>
   <p>La página vuelve a funcionar en un rato. No hace falta que hagas nada:
   vuelve a entrar más tarde.</p>

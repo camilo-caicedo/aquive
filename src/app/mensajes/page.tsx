@@ -10,7 +10,6 @@ export const metadata = { title: 'Mensajes' }
 /** De dónde salió el hilo. Va como palabra, nunca como color solo. */
 const DE: Record<Origen['tipo'], string> = {
   servicio: 'Servicio',
-  insumo: 'Insumo',
   producto: 'Producto',
   muro: 'Comunidad',
   ficha: 'Ficha',

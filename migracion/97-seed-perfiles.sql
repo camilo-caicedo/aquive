@@ -4,9 +4,9 @@
 -- 🔴 NUNCA en producción.
 --
 -- Para qué existe: casi nada de lo que hay que mirar necesita *entrar*
--- como cinco personas distintas. El tablero, el directorio de
--- profesionales, los avisos push y el cruce de la Fase B necesitan que esas
--- personas **existan**, no que inicien sesión.
+-- como cinco personas distintas. El directorio de profesionales y los
+-- avisos push necesitan que esas personas **existan**, no que inicien
+-- sesión.
 --
 -- Un perfil necesita una fila en `auth.users` porque `perfiles.id` la
 -- referencia, pero nada obliga a que esa fila pueda autenticarse: estas no
@@ -57,85 +57,80 @@ on conflict (id) do nothing;
 
 -- ---------------------------------------------------------------------
 -- 2. Los perfiles
---
--- Van por `crear_perfil` y no por `insert` directo, para que pasen por las
--- mismas validaciones que la aplicación: longitud del nombre, al menos un
--- municipio, matrícula sin repetir y servicios que existan en el catálogo.
--- `auth.uid()` lee el `sub` de `request.jwt.claims`, así que suplantar es
--- ponerle ese valor antes de cada llamada.
 -- ---------------------------------------------------------------------
 
--- Ofertador con bastante inventario, en dos municipios del Valle.
-select set_config('request.jwt.claims',
-  '{"sub":"00000000-0000-4000-8000-000000000001"}', false);
-select public.crear_perfil(
-  'PRUEBA — Tienda La Esperanza', 'ofertador',
-  array['76001','76109'], '3001110001', 'whatsapp',
-  'Tienda de barrio. Podemos separar mercado y entregarlo en la mañana.');
-select public.guardar_ofrecimientos('[
-  {"item_id":"agua","cantidad":100},
-  {"item_id":"arroz","cantidad":50},
-  {"item_id":"aceite","cantidad":20},
-  {"item_id":"panela","cantidad":30},
-  {"item_id":"atun","cantidad":40}
-]'::jsonb);
+-- ⚠ Van por `insert` directo y no por una RPC. Antes iban por
+-- `crear_perfil`, que se retiró con el módulo de insumos (ADR 0014): hacía
+-- tres cosas a la vez y el navegador la llamaba directo. Lo que hoy la
+-- reemplaza son procedimientos del contrato, que no se pueden llamar desde
+-- SQL. Las validaciones que importan siguen puestas donde tienen que estar
+-- —los CHECK de la tabla—, y son las que esta semilla tiene que respetar.
 
--- Ofertador en el Eje Cafetero, con un ítem sin cantidad a propósito:
--- "tengo cobijas, no sé cuántas" es el caso honesto más común.
-select set_config('request.jwt.claims',
-  '{"sub":"00000000-0000-4000-8000-000000000002"}', false);
-select public.crear_perfil(
-  'PRUEBA — Bodega San Nicolas', 'ofertador',
-  array['66001','17001'], '3001110002', 'telefono',
-  'Bodega con enseres. Hay que venir a recoger.');
-select public.guardar_ofrecimientos('[
-  {"item_id":"cobija","cantidad":40},
-  {"item_id":"colchoneta","cantidad":25},
-  {"item_id":"jabon"},
-  {"item_id":"papel_h","cantidad":60}
-]'::jsonb);
+-- Tres vecinos: la cuenta de cualquiera. Sin teléfono público y sin
+-- autorización, que es como nace una cuenta desde el ADR 0015.
+insert into public.perfiles (
+  id, nombre_visible, tipo, municipios, contacto_publico,
+  contacto_tipo, descripcion, acepto_publicacion, autorizacion_version)
+values
+  ('00000000-0000-4000-8000-000000000001'::uuid,
+   'PRUEBA — Tienda La Esperanza', 'vecino', array['76001','76109'],
+   null, 'whatsapp', null, false, null),
+  ('00000000-0000-4000-8000-000000000002'::uuid,
+   'PRUEBA — Bodega San Nicolas', 'vecino', array['66001','17001'],
+   null, 'telefono', null, false, null),
+  ('00000000-0000-4000-8000-000000000005'::uuid,
+   'PRUEBA — Deposito Suspendido', 'vecino', array['76001'],
+   null, 'whatsapp', null, false, null)
+on conflict (id) do update set
+  nombre_visible = excluded.nombre_visible,
+  tipo           = excluded.tipo,
+  municipios     = excluded.municipios;
 
--- Servidora con matrícula Y con insumos. Es el caso que existe desde que
--- el inventario dejó de ser exclusivo de los ofertadores: alguien con
--- matrícula también puede tener acetaminofén y suero en la casa.
-select set_config('request.jwt.claims',
-  '{"sub":"00000000-0000-4000-8000-000000000003"}', false);
-select public.crear_perfil(
-  'PRUEBA — Marina Solis', 'servidor',
-  array['76001'], '3001110003', 'whatsapp',
-  'Medica general. Atiendo en albergues los fines de semana.',
-  'Médica general', 'ReTHUS', 'PRUEBA-RM-0003',
-  (select array_agg(c.id) from public.catalogo_servicios c
-    where c.area = 'salud' and c.activo limit 1));
-select public.guardar_ofrecimientos('[
-  {"item_id":"acetaminofen","cantidad":10},
-  {"item_id":"suero_oral","cantidad":50},
-  {"item_id":"gasas"}
-]'::jsonb);
+-- Y dos profesionales con matrícula. Estos sí publican nombre y teléfono
+-- —es lo que hace `servidores_publicos`— así que llevan su autorización
+-- con su versión, igual que la escribiría `servicios.guardarMatricula`.
+insert into public.perfiles (
+  id, nombre_visible, tipo, municipios, contacto_publico,
+  contacto_tipo, descripcion, acepto_publicacion, autorizacion_version)
+values
+  ('00000000-0000-4000-8000-000000000003'::uuid,
+   'PRUEBA — Marina Solis', 'servidor', array['76001'],
+   '3001110003', 'whatsapp',
+   'Medica general. Atiendo en albergues los fines de semana.',
+   true, 'perfil-2026-08-19'),
+  ('00000000-0000-4000-8000-000000000004'::uuid,
+   'PRUEBA — Pablo Renteria', 'servidor', array['27001','27361'],
+   '3001110004', 'whatsapp',
+   'Ingeniero civil. Puedo revisar casas afectadas.',
+   true, 'perfil-2026-08-19')
+on conflict (id) do update set
+  nombre_visible       = excluded.nombre_visible,
+  tipo                 = excluded.tipo,
+  municipios           = excluded.municipios,
+  contacto_publico     = excluded.contacto_publico,
+  contacto_tipo        = excluded.contacto_tipo,
+  descripcion          = excluded.descripcion,
+  acepto_publicacion   = excluded.acepto_publicacion,
+  autorizacion_version = excluded.autorizacion_version;
 
--- Servidor SIN verificar y sin inventario: es como se ve un perfil recién
--- registrado en el directorio, con su advertencia.
-select set_config('request.jwt.claims',
-  '{"sub":"00000000-0000-4000-8000-000000000004"}', false);
-select public.crear_perfil(
-  'PRUEBA — Pablo Renteria', 'servidor',
-  array['27001','27361'], '3001110004', 'whatsapp',
-  'Ingeniero civil. Puedo revisar casas afectadas.',
-  'Ingeniero civil', 'COPNIA', 'PRUEBA-IC-0004',
-  (select array_agg(c.id) from public.catalogo_servicios c
-    where c.area = 'ingenieria' and c.activo limit 2));
-
--- Ofertador suspendido. El inventario se guarda ANTES de suspenderlo,
--- porque `guardar_ofrecimientos` ya no deja escribir a un perfil suspendido.
-select set_config('request.jwt.claims',
-  '{"sub":"00000000-0000-4000-8000-000000000005"}', false);
-select public.crear_perfil(
-  'PRUEBA — Deposito Suspendido', 'ofertador',
-  array['76001'], '3001110005', 'whatsapp',
-  'Perfil suspendido a proposito, para ver que desaparece del tablero.');
-select public.guardar_ofrecimientos('[{"item_id":"carpa","cantidad":5}]'::jsonb);
-
-select set_config('request.jwt.claims', '', false);
+insert into public.servidores (
+  perfil_id, profesion, entidad_matricula, numero_matricula, servicios)
+values
+  ('00000000-0000-4000-8000-000000000003'::uuid,
+   'Médica general', 'ReTHUS', 'PRUEBA-RM-0003',
+   coalesce((select array_agg(c.id) from (
+      select id from public.catalogo_servicios
+       where area = 'salud' and activo order by orden limit 1) c), '{}')),
+  ('00000000-0000-4000-8000-000000000004'::uuid,
+   'Ingeniero civil', 'COPNIA', 'PRUEBA-IC-0004',
+   coalesce((select array_agg(c.id) from (
+      select id from public.catalogo_servicios
+       where area = 'ingenieria' and activo order by orden limit 2) c), '{}'))
+on conflict (perfil_id) do update set
+  profesion         = excluded.profesion,
+  entidad_matricula = excluded.entidad_matricula,
+  numero_matricula  = excluded.numero_matricula,
+  servicios         = excluded.servicios;
 
 -- ---------------------------------------------------------------------
 -- 3. Estados que no se pueden poner desde el formulario
@@ -169,7 +164,6 @@ update public.perfiles
 
 select p.nombre_visible, p.tipo, p.suspendido,
        coalesce(sv.verificado, false) as matricula_verificada,
-       (select count(*) from public.ofrecimientos o where o.perfil_id = p.id) as items,
        p.municipios
   from public.perfiles p
   left join public.servidores sv on sv.perfil_id = p.id
@@ -177,5 +171,4 @@ select p.nombre_visible, p.tipo, p.suspendido,
  order by p.nombre_visible;
 
 -- Y lo que se ve desde fuera, sin sesión:
---   select * from public.ofertadores_publicos;
 --   select nombre_visible, verificado from public.servidores_publicos;

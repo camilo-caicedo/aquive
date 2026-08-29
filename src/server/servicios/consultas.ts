@@ -2,6 +2,7 @@ import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
 import {
+  catalogoServicios,
   municipios,
   municipiosConProveedores,
   oficiosConProveedores,
@@ -22,8 +23,10 @@ import type {
   Facetas,
   Ficha,
   Filtros,
+  Entidad,
   EntidadBreve,
   MiFicha,
+  Profesional,
   ProfesionalBreve,
   ZonaConGente,
 } from '@/contrato/servicios'
@@ -628,5 +631,108 @@ export async function inicio(
       subtitulo: e.subtitulo,
       cobertura: e.cobertura ?? 'local',
     })),
+  }
+}
+
+/**
+ * Un profesional con matrícula, por su id.
+ *
+ * De `servidores_publicos` y no de `perfiles`: la vista es la que esconde
+ * al suspendido y al que no autorizó publicar, y esta pantalla no puede
+ * olvidarse de ninguno de los dos.
+ *
+ * Los servicios salen del catálogo aquí y no en la pantalla. Eran dos
+ * consultas sueltas desde el directorio, y la segunda es justo la que se
+ * habría quedado sin repetir en la aplicación de Expo.
+ */
+export async function profesional(
+  db: BaseDeDatos,
+  id: string,
+): Promise<Profesional | null> {
+  const [fila] = await db
+    .select()
+    .from(servidoresPublicos)
+    .where(eq(servidoresPublicos.id, id))
+    .limit(1)
+
+  if (!fila) return null
+
+  const ids = fila.servicios ?? []
+  const catalogo = ids.length
+    ? await db
+        .select({ id: catalogoServicios.id, nombre: catalogoServicios.nombre })
+        .from(catalogoServicios)
+        .where(inArray(catalogoServicios.id, ids))
+        .orderBy(asc(catalogoServicios.orden))
+    : []
+
+  const nombre = new Map(catalogo.map((c) => [c.id, c.nombre]))
+
+  return {
+    id: fila.id!,
+    nombre_visible: fila.nombreVisible ?? '',
+    profesion: fila.profesion,
+    verificado: fila.verificado ?? false,
+    municipios: fila.municipios ?? [],
+    entidad_matricula: fila.entidadMatricula ?? '',
+    numero_matricula: fila.numeroMatricula ?? '',
+    descripcion: fila.descripcion,
+    contacto_tipo: fila.contactoTipo ?? 'telefono',
+    contacto_publico: fila.contactoPublico ?? '',
+    // El orden del catálogo, no el del arreglo de la fila: así la lista de
+    // servicios se lee igual en todas las fichas.
+    servicios: ids.map((s) => nombre.get(s) ?? s),
+  }
+}
+
+/**
+ * Una entidad del directorio informativo, por su id.
+ *
+ * Los municipios salen con nombre. `cobertura = 'nacional'` los ignora —la
+ * pantalla dice «Todo el país»—, así que solo se consultan cuando hacen
+ * falta.
+ */
+export async function entidad(db: BaseDeDatos, id: string): Promise<Entidad | null> {
+  const [fila] = await db
+    .select()
+    .from(entidadesPublicas)
+    .where(eq(entidadesPublicas.id, id))
+    .limit(1)
+
+  if (!fila) return null
+
+  const codigos = fila.municipios ?? []
+  const nombres =
+    fila.cobertura !== 'nacional' && codigos.length
+      ? await db
+          .select({ codigo: municipios.codigoDane, nombre: municipios.nombre })
+          .from(municipios)
+          .where(inArray(municipios.codigoDane, codigos))
+      : []
+
+  const porCodigo = new Map(nombres.map((m) => [m.codigo, m.nombre]))
+
+  // `enlaces` es `jsonb` y la base no garantiza su forma. Lo que no tenga
+  // etiqueta y url de texto no llega a la pantalla: allí ya no habría manera
+  // de distinguir un enlace roto de uno que no se pintó.
+  const crudos = Array.isArray(fila.enlaces) ? fila.enlaces : []
+  const enlaces = crudos.flatMap((e) =>
+    e &&
+    typeof e === 'object' &&
+    typeof (e as { etiqueta?: unknown }).etiqueta === 'string' &&
+    typeof (e as { url?: unknown }).url === 'string'
+      ? [{ etiqueta: (e as { etiqueta: string }).etiqueta, url: (e as { url: string }).url }]
+      : [],
+  )
+
+  return {
+    id: fila.id!,
+    nombre: fila.nombre ?? '',
+    subtitulo: fila.subtitulo,
+    cobertura: fila.cobertura ?? 'local',
+    descripcion: fila.descripcion,
+    pie: fila.pie,
+    enlaces,
+    municipios: codigos.map((c) => porCodigo.get(c) ?? c),
   }
 }

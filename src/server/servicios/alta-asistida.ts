@@ -154,12 +154,12 @@ export async function registrar(
     db,
     {
       nombre_visible: nombre,
-      // El teléfono es público en la ficha, así que también es el contacto
-      // del perfil: son el mismo número y la misma autorización.
+      // El teléfono es público EN LA FICHA, que lleva su propia
+      // autorización con su versión y su fecha. En el perfil se guarda el
+      // mismo número pero no se publica: la cuenta nace `vecino` (ADR 0015).
       contacto_publico: telefono,
       contacto_tipo: 'whatsapp',
       municipios: [entrada.municipio],
-      tipo: 'servidor',
     },
     llave.usuarioId,
     async (perfilId) => {

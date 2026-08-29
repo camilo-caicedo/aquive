@@ -64,7 +64,6 @@ export async function crearCuenta(
     contacto_publico?: string
     contacto_tipo?: 'whatsapp' | 'telefono'
     municipios: string[]
-    tipo: 'vecino' | 'ofertador' | 'servidor'
   },
   creadoPor: string | null,
   /** Qué hacer con la cuenta recién creada, antes de darla por buena. */
@@ -77,12 +76,6 @@ export async function crearCuenta(
       'El nombre no puede llevar teléfonos, correos ni cédulas.',
     )
   }
-  if (entrada.tipo !== 'vecino' && !entrada.contacto_publico) {
-    throw new CuentaRechazada(
-      'Quien va a ofrecer algo necesita un teléfono público: es por donde le escriben.',
-    )
-  }
-
   const admin = createServiceClient()
 
   const { data, error } = await admin.auth.admin.createUser({
@@ -100,11 +93,27 @@ export async function crearCuenta(
     await db.insert(perfiles).values({
       id: data.user.id,
       nombreVisible: entrada.nombre_visible,
-      tipo: entrada.tipo,
+      // ⚠ SIEMPRE `vecino`, y no un tipo que venga de fuera (ADR 0015).
+      //
+      // Antes esto recibía el tipo y escribía `acepto_publicacion` a partir
+      // de él, pero **sin** la versión de la autorización — y el CHECK
+      // `perfiles_autorizacion_completa` es `(NOT acepto_publicacion) OR
+      // (autorizacion_version IS NOT NULL)`. O sea que dar de alta a alguien
+      // que no fuera `vecino` reventaba contra la base, desde
+      // `/admin/cuentas` y desde el alta asistida de un aliado.
+      //
+      // El arreglo no es rellenar la versión: es que un admin no puede
+      // autorizar la publicación de los datos de otra persona (mínimo legal
+      // 2). Lo que abre aquí es una cuenta, y publicar viene después y con
+      // su propia firma — el carné en `/servicios/soy-proveedor`, la
+      // matrícula en `/perfil/matricula`. Escrito así, el fallo no puede
+      // volver.
+      tipo: 'vecino',
       municipios: entrada.municipios,
       contactoPublico: entrada.contacto_publico ?? null,
       contactoTipo: entrada.contacto_tipo ?? 'whatsapp',
-      aceptoPublicacion: entrada.tipo !== 'vecino',
+      aceptoPublicacion: false,
+      autorizacionVersion: null,
       aceptoPoliticaAt: new Date().toISOString(),
     })
     await db.insert(codigosAcceso).values({
@@ -136,7 +145,6 @@ export async function crear(
     contacto_publico?: string
     contacto_tipo?: 'whatsapp' | 'telefono'
     municipios: string[]
-    tipo: 'vecino' | 'ofertador' | 'servidor'
   },
   llave: { usuarioId: string | null },
 ): Promise<{ perfil_id: string; codigo: string }> {

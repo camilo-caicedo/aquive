@@ -24,12 +24,11 @@ export default function TerminosPage() {
 
       <h2 className="font-heading mt-8 text-2xl">1. Qué es esto.</h2>
       <p className="mt-3 text-base">
-        Un tablón de anuncios gratuito, con dos partes. La ayuda de emergencia permite publicar qué
-        artículos se necesitan y a otras personas ofrecerlos; nació para el sismo del 10 de agosto de
-        2026 y dejará de operar cuando deje de ser útil. El directorio de servicios permite a quien
-        vive de un oficio publicar su ficha, y a quien necesita ese oficio encontrarlo; no tiene fecha
-        de cierre. Es un proyecto gratuito y sin ánimo de lucro, operado por {RESPONSABLE}. La
-        plataforma no cobra nada a nadie ni recibe dinero de nadie.
+        Un tablón de anuncios gratuito. El directorio de servicios permite a quien vive de un
+        oficio publicar su ficha, y a quien necesita ese oficio encontrarlo. Alrededor de él hay un
+        muro de comunidad, una lista de lo que se hace en el barrio y los centros de acopio. Es un
+        proyecto gratuito y sin ánimo de lucro, operado por {RESPONSABLE}. La plataforma no cobra
+        nada a nadie ni recibe dinero de nadie.
       </p>
 
       <h2 className="font-heading mt-8 text-2xl">2. Qué NO es.</h2>
@@ -47,9 +46,7 @@ export default function TerminosPage() {
         quien lo usa, su experiencia ni sus intenciones. Un perfil sin ese sello no ha sido revisado en absoluto.
       </p>
       <p className="mt-3 text-base">
-        Tampoco recomendamos a nadie, en ninguna parte del sitio. En la ayuda de emergencia no hay
-        calificaciones y no las va a haber: sin nada que sostenga la identidad de quien califica, un
-        sistema así solo sirve para que quien quiera estafar acumule apariencia de confianza.
+        Tampoco recomendamos a nadie, en ninguna parte del sitio.
       </p>
       <p className="mt-3 text-base">
         En el directorio de servicios <strong>sí hay calificaciones</strong>, y existen porque ahí no
@@ -101,9 +98,8 @@ export default function TerminosPage() {
       <p className="mt-3 text-base">
         Publicar datos personales de terceros o de menores; pedir o entregar dinero a través de la
         plataforma; ofrecer alojamiento de personas; ofrecer medicamentos de control; suplantar a
-        alguien; recolectar datos de otros usuarios. En la ayuda de emergencia queda además prohibido
-        ofrecer cuidado de menores o transporte de personas; en el directorio de servicios esos dos
-        oficios sí se pueden ofrecer, con las condiciones de la §12.
+        alguien; recolectar datos de otros usuarios. El cuidado de personas y el transporte de
+        pasajeros sí se pueden ofrecer en el directorio, con las condiciones de la §12.
       </p>
 
       <h2 className="font-heading mt-8 text-2xl">7. Contenido efímero.</h2>

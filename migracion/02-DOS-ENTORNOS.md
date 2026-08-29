@@ -168,11 +168,11 @@ on conflict do nothing;
 Y verifica los dos con `99-verificar.sql`. En pruebas, el bloque 4 dará
 números distintos (los tuyos), no 5/5/5/1/1 — todo lo demás debe coincidir.
 
-Para tener algo que mirar en el tablero de pruebas, `98-seed-pruebas.sql`
-crea cinco solicitudes en cinco municipios y categorías distintas. Va por
-`crear_solicitud`, así que pasa por las mismas validaciones que la
-aplicación. Expiran solas a las 72 horas y se puede volver a ejecutar.
-**Nunca en producción**: sus tokens están escritos en el archivo.
+Para tener algo que mirar en pruebas, `96-seed-servicios-pruebas.sql` crea
+fichas de prestador y solicitudes de servicio. **Nunca en producción.**
+
+⚠ `98-seed-pruebas.sql` se fue con el módulo de insumos (ADR 0014): sembraba
+solicitudes de un tablero que ya no existe.
 
 ---
 

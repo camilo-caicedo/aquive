@@ -32,13 +32,13 @@ export async function cargarPerfil() {
   if (!user) redirect('/login')
 
   const [
-    { data: mio },
+    { data: mio, error: errorFicha },
     { data: oficios },
     { data: zonas },
     municipios,
     { data: refs },
     { data: servicios },
-    { data: perfilOfertador },
+    cuenta,
     oficiosPropuestos,
   ] = await Promise.all([
     supabase.rpc('mi_proveedor', {}),
@@ -50,16 +50,24 @@ export async function cargarPerfil() {
     listarMunicipios(supabase),
     supabase.rpc('mis_referencias', {}),
     supabase.rpc('mis_servicios', {}),
-    // ¿Tiene perfil de ofertador? Es el rol del módulo de emergencia y es
-    // otro que el de prestador: quien lo tiene guarda respuestas y ajustes
-    // en /registro, y sin esta comprobación esas dos vistas se quedarían sin
-    // ninguna puerta al retirar las pestañas viejas.
-    supabase.from('perfiles').select('id').eq('id', user.id).maybeSingle(),
+    // Los datos de la CUENTA, que son otra cosa que los de la ficha: el
+    // nombre y el municipio los tiene cualquiera desde que entra, y la ficha
+    // solo quien armó el carné (ADR 0015). Va por el contrato y no por un
+    // `supabase.from('perfiles')`, que es lo que hacían tres pantallas por su
+    // cuenta y ninguna de las tres serviría desde Expo.
+    servidor.cuentas.mia(),
     // Las subcategorías que escribió y todavía no existen (ADR 0013). No
     // están en `mi_proveedor` porque no son oficios todavía: no tienen id
     // de catálogo y no se publican.
     servidor.servicios.oficiosPropuestos(),
   ])
+
+  // ⚠ Un error del RPC NO es «no tienes ficha». Antes esto era
+  // `(mio as … ) ?? null` y el error se descartaba: quien sí tenía carné y
+  // pillaba un fallo de red veía las seis subpantallas rebotarlo al alta,
+  // como si su ficha no existiera. Lo dejó escrito
+  // `v6-b4-vuelve-el-proveedor-del-llamante.sql`, y seguía sin manejarse.
+  if (errorFicha) throw new Error(`No se pudo leer tu ficha: ${errorFicha.message}`)
 
   const proveedor = (mio as MiProveedor | null) ?? null
 
@@ -67,8 +75,8 @@ export async function cargarPerfil() {
     supabase,
     user,
     proveedor,
-    /** Tiene perfil en el módulo de emergencia, que es otro rol. */
-    esOfertador: Boolean(perfilOfertador),
+    /** Nombre, municipios y contacto de la cuenta. Existe siempre. */
+    cuenta,
     oficios: (oficios ?? []) as Oficio[],
     oficiosPropuestos,
     zonas: (zonas ?? []) as Zona[],

@@ -18,26 +18,6 @@ import {
 import { contienePII } from '@/lib/validacion'
 import type { MunicipioBasico } from '@/lib/municipios'
 
-type Tipo = 'vecino' | 'ofertador' | 'servidor'
-
-const TIPOS: { valor: Tipo; etiqueta: string; ayuda: string }[] = [
-  {
-    valor: 'vecino',
-    etiqueta: 'Solo va a pedir',
-    ayuda: 'No publica nada: ni nombre, ni teléfono, ni ficha. No hace falta su número.',
-  },
-  {
-    valor: 'servidor',
-    etiqueta: 'Va a ofrecer su trabajo',
-    ayuda: 'Su nombre y su teléfono van a ser públicos en su ficha.',
-  },
-  {
-    valor: 'ofertador',
-    etiqueta: 'Va a ofrecer ayuda',
-    ayuda: 'Responde solicitudes de insumos. Su contacto es público.',
-  },
-]
-
 /**
  * Dar de alta a alguien que no tiene cuenta de Google (ADR 0006).
  *
@@ -54,7 +34,6 @@ const TIPOS: { valor: Tipo; etiqueta: string; ayuda: string }[] = [
 export function FormularioCuenta({ municipios }: { municipios: MunicipioBasico[] }) {
   const [abierto, setAbierto] = useState(false)
   const [nombre, setNombre] = useState('')
-  const [tipo, setTipo] = useState<Tipo>('vecino')
   const [telefono, setTelefono] = useState('')
   const [municipio, setMunicipio] = useState('')
   const [lei, setLei] = useState(false)
@@ -63,7 +42,6 @@ export function FormularioCuenta({ municipios }: { municipios: MunicipioBasico[]
   // El código en claro. Vive solo aquí y desaparece al recargar.
   const [listo, setListo] = useState<{ nombre: string; url: string } | null>(null)
 
-  const publica = tipo !== 'vecino'
   const municipioElegido = municipios.find((m) => m.codigo_dane === municipio)
   const errorNombre =
     nombre.trim() && contienePII(nombre)
@@ -74,7 +52,7 @@ export function FormularioCuenta({ municipios }: { municipios: MunicipioBasico[]
     nombre.trim().length >= 3 &&
     !errorNombre &&
     municipio !== '' &&
-    (!publica || /^[0-9+()\- ]{7,20}$/.test(telefono.trim())) &&
+    (telefono.trim() === '' || /^[0-9+()\- ]{7,20}$/.test(telefono.trim())) &&
     lei &&
     !guardando
 
@@ -84,10 +62,9 @@ export function FormularioCuenta({ municipios }: { municipios: MunicipioBasico[]
     try {
       const { codigo } = await rpc.cuentas.crear({
         nombre_visible: nombre.trim(),
-        contacto_publico: publica ? telefono.trim() : undefined,
-        contacto_tipo: publica ? 'whatsapp' : undefined,
+        contacto_publico: telefono.trim() || undefined,
+        contacto_tipo: telefono.trim() ? 'whatsapp' : undefined,
         municipios: [municipio],
-        tipo,
       })
       setListo({
         nombre: nombre.trim(),
@@ -150,30 +127,6 @@ export function FormularioCuenta({ municipios }: { municipios: MunicipioBasico[]
         </span>
       </p>
 
-      <fieldset>
-        <legend className="text-base font-medium">¿Qué va a hacer?</legend>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {TIPOS.map((t) => (
-            <button
-              key={t.valor}
-              type="button"
-              aria-pressed={tipo === t.valor}
-              onClick={() => setTipo(t.valor)}
-              className={`inline-flex min-h-12 items-center rounded-full px-4 text-base transition-colors ${
-                tipo === t.valor
-                  ? 'bg-foreground font-semibold text-background'
-                  : 'shadow-canto bg-card hover:bg-muted'
-              }`}
-            >
-              {t.etiqueta}
-            </button>
-          ))}
-        </div>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {TIPOS.find((t) => t.valor === tipo)?.ayuda}
-        </p>
-      </fieldset>
-
       <div>
         <label htmlFor="c-nombre" className="text-base font-medium">
           Cómo quiere que la llamen
@@ -190,26 +143,29 @@ export function FormularioCuenta({ municipios }: { municipios: MunicipioBasico[]
         )}
       </div>
 
-      {publica && (
-        <div>
-          <label htmlFor="c-telefono" className="text-base font-medium">
-            Teléfono
-          </label>
-          <input
-            id="c-telefono"
-            type="tel"
-            inputMode="tel"
-            value={telefono}
-            onChange={(e) => setTelefono(e.target.value)}
-            maxLength={20}
-            className="bg-card border border-input focus-visible:ring-ring mt-1 min-h-12 w-full rounded-full px-4 text-base focus-visible:ring-2 focus-visible:outline-none"
-          />
-          <p className="mt-1 text-sm text-muted-foreground">
-            Va a ser público. Nace sin verificar: alguien tiene que llamar a
-            este número y marcarlo (regla de producto 6).
-          </p>
-        </div>
-      )}
+      {/* ⚠ Opcional, y PRIVADO. Antes esto solo salía si el tipo elegido
+          publicaba, y guardaba el número como dato público. Ya no hay tipo
+          que elegir: la cuenta nace `vecino` y publicar lo firma su dueño
+          (ADR 0015). El número se guarda para poder volver a llamarla, y no
+          lo ve nadie más. */}
+      <div>
+        <label htmlFor="c-telefono" className="text-base font-medium">
+          Teléfono (opcional)
+        </label>
+        <input
+          id="c-telefono"
+          type="tel"
+          inputMode="tel"
+          value={telefono}
+          onChange={(e) => setTelefono(e.target.value)}
+          maxLength={20}
+          className="bg-card border border-input focus-visible:ring-ring mt-1 min-h-12 w-full rounded-full px-4 text-base focus-visible:ring-2 focus-visible:outline-none"
+        />
+        <p className="mt-1 text-sm text-muted-foreground">
+          No se publica: sirve para poder volver a llamarla. Su teléfono se
+          hace público cuando ella misma arma su ficha o declara su matrícula.
+        </p>
+      </div>
 
       <div>
         <span className="text-base font-medium">¿En qué municipio?</span>

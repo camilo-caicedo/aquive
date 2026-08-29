@@ -28,16 +28,11 @@ import {
 // organización» a 11,5 px mide unos 86. Con `whitespace-nowrap` se
 // desbordaba, y sin él la etiqueta envuelve y los iconos vuelven a subir y
 // bajar celda a celda, que es justo lo que ese `nowrap` vino a arreglar.
-//
-// «Lo mío» apunta a /mis-solicitudes y no a /registro a propósito:
-// /registro rebota a /login sin sesión, y quien publicó una solicitud sin
-// cuenta —que es el rol central de este sitio— se quedaría fuera de lo
-// suyo. /registro cuelga de aquí a través de TAMBIEN.
 const ENLACES = [
   // ⚠ Servicios es la portada desde el 20 de agosto de 2026, por decisión
   // del responsable: pasó tiempo desde el sismo y lo que queda vivo es la
-  // reactivación económica. El módulo de emergencia no se retira —sigue
-  // entero en /solicitudes— pero deja de ser lo primero que se ve.
+  // reactivación económica. El módulo de emergencia acabó retirándose entero
+  // (ADR 0014).
   //
   // ⚠ Apunta a /inicio y NO a `/`. La portada decide a quién le sirve qué:
   // sin sesión y sin filtros da la bienvenida, y eso está bien para quien
@@ -53,21 +48,10 @@ const ENLACES = [
   // para quien no sabe qué escribir. Debajo cuelgan el listado, el mapa por
   // zonas y la ficha.
   { href: '/categorias', etiqueta: 'Buscar', Icono: Search },
-  // ⚠ Toda la emergencia en una sola celda. Eran dos destinos de la barra
-  // —«Solicitudes» y «Quién ofrece»— más un segmentado propio dentro del
-  // primero: tres capas de navegación para tres listas de la misma
-  // pregunta, y encima compitiendo por sitio con el módulo de servicios,
-  // que es el que hoy recibe a la gente. Las tres se reparten ahora en
-  // `PestanasAyudas`.
-  // ⚠ La emergencia sale de la barra (ADR 0003, decisión del 26 de agosto de
-  // 2026): se entra a ella desde el inicio. No se retira nada —/ayudas sigue
-  // entero— pero deja de gastar una de las cuatro celdas, que ahora las pide
-  // el chat.
   { href: '/mensajes', etiqueta: 'Mensajes', Icono: MessageSquare },
-  // ⚠ Apunta a /perfil y NO a /registro: aquel rebota a /login sin sesión, y
-  // quien publicó una solicitud sin cuenta —que es el rol central de este
-  // sitio— se quedaría fuera de lo suyo. /perfil sirve las dos caras: con
-  // sesión el menú del prototipo, sin ella las solicitudes de este teléfono.
+  // ⚠ Apunta a /perfil y NO a la pantalla de abrir cuenta: aquella rebota a
+  // /login sin sesión, y /perfil sirve las dos caras — con sesión el menú de
+  // lo propio, sin ella la explicación de cómo conseguir una cuenta.
   { href: '/perfil', etiqueta: 'Perfil', Icono: UserRound },
 ]
 
@@ -109,15 +93,10 @@ function celdas(coordinacion: Coordinacion) {
 // pantalla de habeas data viven en rutas propias y las dos son «lo mío».
 // /aliado ya no cuelga de aquí: tiene celda propia cuando corresponde.
 const TAMBIEN: Record<string, string[]> = {
-  // La portada es el directorio, así que las otras dos listas de la misma
-  // pregunta cuelgan de ella, y también la puerta vieja /servicios y todo
-  // lo que hay debajo: publicar una ficha, una ficha concreta, la demanda.
-  // Todo lo que se entra a MIRAR cuelga del inicio, incluida la emergencia:
-  // sale de la barra pero no del sitio, así que sus pantallas encienden
-  // «Inicio» en vez de apagar las cuatro celdas.
-  // Lo que se entra a MIRAR desde el inicio: la emergencia entera y la
-  // comunidad. Ninguna de las dos gasta celda, y sus pantallas encienden
-  // «Inicio» en vez de apagar las cuatro.
+  // Todo lo que se entra a MIRAR cuelga del inicio y no gasta celda: las
+  // tres listas de servicios, sus fichas de una en una, la demanda y la
+  // comunidad. Sus pantallas encienden «Inicio» en vez de apagar las cuatro
+  // celdas, que es lo que hace que la barra parezca de otra aplicación.
   '/inicio': [
     '/',
     '/directorio',
@@ -125,18 +104,14 @@ const TAMBIEN: Record<string, string[]> = {
     '/prestador',
     '/profesionales',
     '/entidades',
-    '/ayudas',
-    '/ofertadores',
-    '/publicar',
-    '/responder',
+    '/producto',
+    '/profesional',
+    '/entidad',
     '/solicitudes',
     '/muro',
     '/barrio',
   ],
-  // Las otras dos listas de la emergencia, y los dos extremos de una
-  // solicitud. La propia no está aquí: vive
-  // en «Lo mío».
-  // Buscar: categorías es la puerta, y debajo el mapa, las zonas y la ficha.
+  // Buscar: categorías es la puerta, y debajo el mapa y las zonas.
   '/categorias': ['/zonas', '/mapa'],
   // La ruta vieja de la bandeja acompañada redirige aquí, pero alguien puede
   // llegar por un enlace guardado.
@@ -148,7 +123,7 @@ const TAMBIEN: Record<string, string[]> = {
   // cuelgue del módulo de servicios: quien la abre viene a mirar lo suyo.
   '/perfil': [
     '/mis-solicitudes',
-    '/registro',
+    '/empezar',
     '/mis-datos',
     '/solicitud',
     '/servicios/soy-proveedor',

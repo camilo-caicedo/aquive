@@ -3,15 +3,12 @@ import { Plus, Info, Inbox, Briefcase } from 'lucide-react'
 import { AccionPrincipal } from '@/components/accion-principal'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { createClient } from '@/lib/supabase/server'
-import { ENTIDADES_MATRICULA } from '@/lib/config'
-import { enlaceWhatsapp } from '@/lib/contacto'
-import { AVISO_CONTACTO, AVISO_CONTACTO_VERIFICADO } from '@/lib/honestidad'
-import { BotonReportar } from '@/components/boton-reportar'
-import type { EntidadMatricula, AreaServicio } from '@/lib/types'
+import type { AreaServicio } from '@/lib/types'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { SelectFiltro } from '@/components/select-filtro'
 import { HojaFiltros } from '@/components/hoja-filtros'
+import { FichaProfesional } from './ficha-profesional'
 
 export const metadata = { title: 'Profesionales' }
 
@@ -21,10 +18,6 @@ const AREAS: Record<AreaServicio, string> = {
   psicologia: 'Psicología',
   salud: 'Salud',
   derecho: 'Derecho',
-}
-
-function etiquetaEntidad(valor: EntidadMatricula) {
-  return ENTIDADES_MATRICULA.find((e) => e.valor === valor)?.etiqueta ?? valor
 }
 
 /**
@@ -199,80 +192,21 @@ export default async function ProfesionalesPage({
               id={`p-${s.id}`}
               className="animar-entrada rounded-2xl bg-card p-4 shadow-canto"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-lg font-bold">{s.nombre_visible}</span>
-                {s.verificado ? (
-                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-foreground">
-                    <span aria-hidden="true">✓</span> Matrícula verificada
-                  </span>
-                ) : (
-                  <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-enlace/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
-                    <span aria-hidden="true">!</span> Sin verificar
-                  </span>
-                )}
-              </div>
-
-              <p className="mt-1 text-base">{s.profesion}</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {etiquetaEntidad(s.entidad_matricula)} · Matrícula {s.numero_matricula}
-              </p>
-
-              {s.servicios.length > 0 && (
-                <ul className="mt-3 flex flex-wrap gap-1.5">
-                  {s.servicios.map((id) => (
-                    <li key={id} className="rounded-full bg-muted px-3.5 py-1.5 text-sm">
-                      {nombreServicio.get(id) ?? id}
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {s.descripcion && <p className="mt-2 text-base">{s.descripcion}</p>}
-
-              {!s.verificado && (
-                <Alert variant="warning" className="mt-3">
-                  <AlertDescription>
-                    Esta persona no ha verificado su matrícula profesional.
-                    Verifica su identidad antes de recibir cualquier servicio.
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {/* Pegado al botón, no en el aviso del final de la lista:
-                  cada profesional es una decisión distinta y en un teléfono
-                  ese aviso queda a varias pantallas de aquí. */}
-              <p className="mt-3 text-sm text-muted-foreground">
-                {s.verificado ? AVISO_CONTACTO_VERIFICADO : AVISO_CONTACTO}{' '}
-                <Link href="/seguridad" className="text-enlace underline underline-offset-4">
-                  Cómo cuidarte
-                </Link>
-              </p>
-
-              {/* Arena y no lima, aunque sea la acción de la tarjeta: en una
-                  lista de veinte fichas ninguna de las veinte es la acción
-                  principal de la pantalla (regla 1). */}
-              <Button
-                variant="secondary"
-                className="mt-3 w-full"
-                nativeButton={false}
-                render={
-                  <a
-                    href={
-                      s.contacto_tipo === 'whatsapp'
-                        ? enlaceWhatsapp(s.contacto_publico)
-                        : `tel:${s.contacto_publico}`
-                    }
-                    target={s.contacto_tipo === 'whatsapp' ? '_blank' : undefined}
-                    rel={s.contacto_tipo === 'whatsapp' ? 'noopener noreferrer' : undefined}
-                  />
-                }
-              >
-                {s.contacto_tipo === 'whatsapp' ? 'Escribir por WhatsApp' : 'Llamar'}
-              </Button>
-
-              <div className="mt-2">
-                <BotonReportar tipoObjeto="perfil" objetoId={s.id} />
-              </div>
+              <FichaProfesional
+                profesional={{
+                  id: s.id,
+                  nombre_visible: s.nombre_visible,
+                  profesion: s.profesion,
+                  verificado: s.verificado,
+                  municipios: s.municipios,
+                  entidad_matricula: s.entidad_matricula,
+                  numero_matricula: s.numero_matricula,
+                  descripcion: s.descripcion,
+                  contacto_tipo: s.contacto_tipo,
+                  contacto_publico: s.contacto_publico,
+                  servicios: s.servicios.map((id) => nombreServicio.get(id) ?? id),
+                }}
+              />
             </li>
           ))}
         </ul>

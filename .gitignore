@@ -71,3 +71,7 @@ next-env.d.ts
 /docs/marca/Logo/*.ai
 /docs/marca/Logo/PNG/*1024X1024*.png
 /docs/marca/Logo/PNG/*ENMASCARABLE*.png
+
+# Estado local de la CLI de Supabase: a qué proyecto está enlazada ESTA
+# máquina. Es de quien programa, no del repositorio.
+/supabase/.temp/

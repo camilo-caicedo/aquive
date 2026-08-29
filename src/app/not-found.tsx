@@ -12,14 +12,14 @@ export default function NoEncontrado() {
       <Estado
         Icono={Compass}
         titulo="Esta página no existe"
-        detalle="Puede que el enlace esté mal escrito, o que la solicitud ya se haya borrado. Las solicitudes se borran solas a las 72 horas."
+        detalle="Puede que el enlace esté mal escrito, o que lo que buscabas ya se haya borrado. Una solicitud de servicio dura 15 días, y quien publica algo puede quitarlo cuando quiera."
         accion={
           <>
-            <Button nativeButton={false} render={<Link href="/ayudas" />}>
-              Ver solicitudes abiertas
+            <Button nativeButton={false} render={<Link href="/inicio" />}>
+              Ir al inicio
             </Button>
-            <Button variant="outline" nativeButton={false} render={<Link href="/publicar" />}>
-              Publicar una solicitud
+            <Button variant="outline" nativeButton={false} render={<Link href="/directorio" />}>
+              Buscar a alguien
             </Button>
           </>
         }

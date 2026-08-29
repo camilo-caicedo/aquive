@@ -245,6 +245,14 @@ export const contratoComunidad = {
     )
     .output(z.array(Producto)),
 
+  /**
+   * Uno solo, por su id. Lo que hay detrás de una tarjeta de la portada.
+   *
+   * Antes esa tarjeta llevaba a `/barrio#prod-<id>`: la lista entera para
+   * enseñar un producto, y el ancla acertando solo si ya estaba pintada.
+   */
+  producto: oc.input(z.object({ id: z.uuid() })).output(Producto.nullable()),
+
   /** Los míos, incluidos los que tengo apagados. */
   misProductos: oc.output(z.array(MiProducto)),
 

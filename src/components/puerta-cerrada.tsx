@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
  * Una pantalla que pide cuenta, en vez de un `redirect` mudo.
  *
  * Tres rutas rebotaban a `/login` o a `/registro` sin decir nada:
- * `/responder/[codigo]` sin perfil, `/servicios/soy-proveedor` sin sesión y
+ * `/servicios/soy-proveedor` sin sesión y
  * `/unirse` sin sesión. Quien venía de tocar «Puedo ayudar» en una
  * solicitud concreta aterrizaba en una pantalla de login que no mencionaba
  * la solicitud, y al entrar caía en la portada.
@@ -62,8 +62,8 @@ export function PuertaCerrada({
       {/* La salida. Quien viene a pedir ayuda no necesita nada de esto. */}
       <p className="mt-3 text-base text-muted-foreground">
         ¿Solo querías mirar?{' '}
-        <Link href="/ayudas" className="underline">
-          Volver al tablero
+        <Link href="/inicio" className="underline">
+          Volver al inicio
         </Link>
       </p>
     </div>

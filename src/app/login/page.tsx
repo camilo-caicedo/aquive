@@ -27,7 +27,7 @@ export default async function LoginPage({
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (user) redirect('/registro')
+  if (user) redirect('/empezar')
 
   return (
     <MarcoFlujo titulo="Entrar" volver="/inicio">

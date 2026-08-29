@@ -15,12 +15,11 @@ import {
   Smartphone,
   Star,
   UserPen,
-  UserRound,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { InsigniasProveedor } from '@/components/insignias-proveedor'
-import { CerrarSesion } from '@/app/registro/cerrar-sesion'
+import { CerrarSesion } from '@/components/cerrar-sesion'
 import { createClient } from '@/lib/supabase/server'
 import { servidor } from '@/orpc/local'
 import { listarMunicipios, nombreConDepartamento } from '@/lib/municipios'
@@ -35,6 +34,13 @@ export const metadata = { title: 'Perfil' }
 
 /** Los cuatro gajos de la sombrilla, en el orden en que se recorren. */
 const FAMILIAS: Familia[] = ['azul', 'amarillo', 'verde', 'rojo']
+
+type Fila = {
+  href: string
+  Icono: LucideIcon
+  nombre: string
+  pista?: string
+}
 
 /**
  * Una fila del menú. Glifo, nombre y pista numérica.
@@ -141,36 +147,28 @@ export default async function PerfilPage() {
     { data: servicios },
     { data: refs },
     municipios,
-    { data: perfilOfertador },
     misProductos,
     misSolicitudes,
-    misInsumos,
     misPublicaciones,
+    matricula,
   ] = await Promise.all([
       supabase.rpc('mi_proveedor', {}),
       supabase.rpc('mis_servicios', {}),
       supabase.rpc('mis_referencias', {}),
       listarMunicipios(supabase),
-      // ¿Tiene también perfil de ofertador? Es el rol del módulo de
-      // emergencia, distinto del de prestador. Sus dos vistas vivían tras
-      // unas pestañas que este menú reemplaza, y sin esto se quedarían sin
-      // ninguna puerta.
-      supabase.from('perfiles').select('id').eq('id', user.id).maybeSingle(),
       // Lo que tiene puesto en «Hecho en el barrio». Va por el contrato,
       // que ya filtra por la ficha de quien llama.
       servidor.comunidad.misProductos(),
       // Lo que ha pedido. Antes vivía en `localStorage` y por eso el perfil
       // no lo sabía; desde el ADR 0006 cuelga de la cuenta.
       servidor.servicios.misSolicitudes(),
-      // Y lo que ha pedido de insumos. El procedimiento existía desde el
-      // ADR 0006 y no lo llamaba ninguna pantalla: quien publicaba un
-      // insumo no podía verlo, ni renovarlo, ni cerrarlo.
-      servidor.insumos.mias(),
       servidor.comunidad.misPublicaciones(),
+      // El otro papel público, y el que se quedó sin puerta al retirarse
+      // `/registro` con el módulo de insumos (ADR 0014).
+      servidor.servicios.miMatricula(),
     ])
 
   const proveedor = (mio as MiProveedor | null) ?? null
-  const esOfertador = Boolean(perfilOfertador)
   const misServicios = (servicios as unknown as MisServicios | null) ?? {
     codigos: [],
     resenas: [],
@@ -188,34 +186,17 @@ export default async function PerfilPage() {
   const verificacionesPendientes =
     (proveedor && !proveedor.telefono_verificado ? 1 : 0) + refsPendientes
 
-  // Las filas del menú, en orden y ya filtradas. El color lo pone el
-  // recorrido de abajo, no cada una.
-  const filas: { href: string; Icono: LucideIcon; nombre: string; pista?: string }[] = [
+  // Las filas del menú, en dos mitades. El color lo pone el recorrido de
+  // abajo, no cada una.
+  //
+  // ⚠ El criterio, desde el ADR 0015: una fila que lleva a una pantalla que
+  // va a rebotar NO se dibuja. Antes salían las trece para todo el mundo, y
+  // cinco de ellas —datos, oficios, disponibilidad, verificaciones,
+  // códigos— hacían `redirect` al alta del carné en cuanto se tocaban. El
+  // perfil de quien solo viene a buscar se leía como el panel a medio
+  // llenar de un prestador.
+  const deLaCuenta: Fila[] = [
     { href: '/perfil/datos', Icono: UserPen, nombre: 'Mis datos y contacto' },
-    {
-      href: '/perfil/oficios',
-      Icono: ListOrdered,
-      nombre: 'Mis oficios y precios',
-      pista: proveedor ? String(proveedor.oficios.length) : undefined,
-    },
-    // Detrás de los oficios y sus precios, que es lo más parecido que hay:
-    // las dos son cosas que esa persona ofrece con un precio. Solo si tiene
-    // ficha — sin ella no se puede vender aquí, y una fila que lleva a «no
-    // tienes nada» no dice qué falta.
-    ...(proveedor
-      ? [
-          {
-            href: '/barrio/mios',
-            Icono: ShoppingBag,
-            nombre: 'Mis productos',
-            pista:
-              misProductos.length > 0
-                ? `${misProductos.length} publicado${misProductos.length === 1 ? '' : 's'}`
-                : undefined,
-          },
-        ]
-      : []),
-    { href: '/perfil/disponibilidad', Icono: Clock, nombre: 'Cuándo y dónde atiendo' },
     // ⚠ Faltaba, y con ella faltaba la única salida: `publicaciones_muro`
     // solo se INSERTABA. La regla de producto 3 dice que una publicación
     // vive «mientras su dueño la deje», y su dueño no tenía cómo dejarla.
@@ -223,71 +204,86 @@ export default async function PerfilPage() {
       href: '/muro/mios',
       Icono: Heart,
       nombre: 'Mis publicaciones del muro',
-      pista:
-        misPublicaciones.length > 0 ? String(misPublicaciones.length) : undefined,
+      pista: misPublicaciones.length > 0 ? String(misPublicaciones.length) : undefined,
     },
     {
       href: '/mis-solicitudes',
       Icono: ClipboardList,
       nombre: 'Mis solicitudes',
-      pista:
-        misSolicitudes.length + misInsumos.length > 0
-          ? String(misSolicitudes.length + misInsumos.length)
-          : undefined,
-    },
-    // Las dos vistas del módulo de emergencia. Solo salen si esa persona
-    // tiene ese rol: son de quien OFRECE ayuda, que es otro papel que el de
-    // prestar un servicio. Vivían tras unas pestañas que se retiraron al
-    // llegar este menú, y sin estas dos filas se habrían quedado sin
-    // ninguna puerta.
-    ...(esOfertador
-      ? [
-          {
-            href: '/registro?ver=respuestas',
-            Icono: ClipboardList,
-            nombre: 'Mis respuestas',
-          },
-          { href: '/registro', Icono: UserRound, nombre: 'Mi perfil de ayuda' },
-        ]
-      : []),
-    {
-      href: '/perfil/resenas',
-      Icono: Star,
-      nombre: 'Reseñas recibidas',
-      pista: sinResponder > 0 ? `${sinResponder} sin responder` : undefined,
-    },
-    {
-      href: '/perfil/verificaciones',
-      Icono: BadgeCheck,
-      nombre: 'Verificaciones',
-      pista:
-        verificacionesPendientes > 0
-          ? `${verificacionesPendientes} pendiente${verificacionesPendientes === 1 ? '' : 's'}`
-          : undefined,
-    },
-    {
-      href: '/perfil/codigos',
-      Icono: Hash,
-      nombre: 'Códigos que generé',
-      pista: sinUsar > 0 ? `${sinUsar} sin usar` : undefined,
+      pista: misSolicitudes.length > 0 ? String(misSolicitudes.length) : undefined,
     },
     { href: '/perfil/avisos', Icono: Bell, nombre: 'Avisos' },
     { href: '/perfil/privacidad', Icono: KeyRound, nombre: 'Privacidad y cuenta' },
-    { href: '/servicios/soy-proveedor', Icono: IdCard, nombre: 'Mi ficha publicada' },
-    // ⚠ La fila de arriba lleva al RESUMEN, no a la ficha. Ningún enlace de
-    // toda la aplicación llevaba a ver la propia como la ve cualquiera, que
-    // es lo único que responde «¿qué está viendo la gente de mí?».
-    ...(proveedor
-      ? [
-          {
-            href: `/prestador/${proveedor.id}`,
-            Icono: Eye,
-            nombre: 'Ver mi ficha como la ven',
-          },
-        ]
-      : []),
   ]
 
+  const delCarne: Fila[] = proveedor
+    ? [
+        {
+          href: '/perfil/oficios',
+          Icono: ListOrdered,
+          nombre: 'Mis oficios y precios',
+          pista: String(proveedor.oficios.length),
+        },
+        // Detrás de los oficios y sus precios, que es lo más parecido que
+        // hay: las dos son cosas que esa persona ofrece con un precio.
+        {
+          href: '/barrio/mios',
+          Icono: ShoppingBag,
+          nombre: 'Mis productos',
+          pista:
+            misProductos.length > 0
+              ? `${misProductos.length} publicado${misProductos.length === 1 ? '' : 's'}`
+              : undefined,
+        },
+        { href: '/perfil/disponibilidad', Icono: Clock, nombre: 'Cuándo y dónde atiendo' },
+        {
+          href: '/perfil/resenas',
+          Icono: Star,
+          nombre: 'Reseñas recibidas',
+          pista: sinResponder > 0 ? `${sinResponder} sin responder` : undefined,
+        },
+        {
+          href: '/perfil/verificaciones',
+          Icono: BadgeCheck,
+          nombre: 'Verificaciones',
+          pista:
+            verificacionesPendientes > 0
+              ? `${verificacionesPendientes} pendiente${verificacionesPendientes === 1 ? '' : 's'}`
+              : undefined,
+        },
+        {
+          href: '/perfil/codigos',
+          Icono: Hash,
+          nombre: 'Códigos que generé',
+          pista: sinUsar > 0 ? `${sinUsar} sin usar` : undefined,
+        },
+        { href: '/servicios/soy-proveedor', Icono: IdCard, nombre: 'Mi ficha publicada' },
+        // ⚠ La fila de arriba lleva al RESUMEN, no a la ficha. Ningún enlace
+        // de toda la aplicación llevaba a ver la propia como la ve
+        // cualquiera, que es lo único que responde «¿qué está viendo la
+        // gente de mí?».
+        {
+          href: `/prestador/${proveedor.id}`,
+          Icono: Eye,
+          nombre: 'Ver mi ficha como la ven',
+        },
+      ]
+    : []
+
+  // Solo con matrícula declarada. Es el otro papel público, y el que la
+  // pantalla no tenía forma de abrir desde que se fue `/registro`.
+  const deLaMatricula: Fila[] = matricula
+    ? [
+        {
+          href: '/perfil/matricula',
+          Icono: BadgeCheck,
+          nombre: 'Mi matrícula',
+          pista: matricula.verificado ? undefined : 'sin verificar',
+        },
+      ]
+    : []
+
+  const filas = [...deLaCuenta, ...delCarne, ...deLaMatricula]
 
   return (
     <main className="animar-pantalla mx-auto max-w-lg px-4 py-6">
@@ -350,13 +346,19 @@ export default async function PerfilPage() {
           </dl>
         </section>
       ) : (
+        // ⚠ Esto se queda, y ahora por fin es coherente: es la ÚNICA acción
+        // principal de la pantalla (regla de interfaz 2) y ya no compite con
+        // siete filas de menú que prometían lo mismo. Es la vía por la que
+        // alguien pasa de buscar a ofrecer, y sin ella el directorio deja de
+        // crecer. Lo que cambia es el tono: no es una carencia de la cuenta,
+        // que está completa, sino una invitación.
         <section className="shadow-cartel-amarillo rounded-2xl bg-card p-4">
           <h2 className="font-heading text-xl leading-tight">
-            Todavía no tienes carné de prestador
+            ¿Vives de un oficio?
           </h2>
           <p className="mt-1 text-base text-muted-foreground">
-            Con él apareces en el directorio y quien necesite tu trabajo te
-            encuentra. Publicarlo no cuesta nada.
+            Con tu carné apareces en el directorio y quien necesite tu trabajo
+            te encuentra. Publicarlo no cuesta nada.
           </p>
           <Link
             href="/servicios/soy-proveedor"

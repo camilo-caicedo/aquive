@@ -1,9 +1,9 @@
-import { redirect } from 'next/navigation'
 import { CircleDot } from 'lucide-react'
 import { DIAS, etiquetaFranja } from '@/lib/servicios'
 import type { DiaSemana } from '@/lib/types'
 import { FormularioProveedor } from '@/app/servicios/soy-proveedor/formulario-proveedor'
 import { cargarPerfil } from '../cargar'
+import { SinCarne } from '../sin-carne'
 
 export const metadata = { title: 'Cuándo y dónde atiendo' }
 
@@ -39,7 +39,14 @@ function diaDeHoy(): DiaSemana {
 export default async function DisponibilidadPage() {
   const { proveedor, municipios, oficios, zonas } = await cargarPerfil()
 
-  if (!proveedor) redirect('/servicios/soy-proveedor')
+  if (!proveedor) {
+    return (
+      <SinCarne
+        titulo="Cuándo y dónde atiendo"
+        porque="Los días, las franjas y la zona salen en tu ficha: son lo que hace que aparezcas cuando alguien busca a esta hora y por aquí cerca."
+      />
+    )
+  }
 
   const hoy = diaDeHoy()
   const nombreHoy = DIAS.find((d) => d.valor === hoy)?.etiqueta.toLowerCase() ?? ''

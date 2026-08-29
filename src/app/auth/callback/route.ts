@@ -29,13 +29,13 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}${siguiente}`)
   }
 
-  // El perfil no puede crearse aquí: nombre visible, municipios y contacto
-  // los escribe la persona en /registro. Aquí solo se decide a dónde va.
+  // El perfil no puede crearse aquí: el nombre visible y el municipio los
+  // escribe la persona en /empezar. Aquí solo se decide a dónde va.
   const { data: perfil } = await supabase
     .from('perfiles')
     .select('id')
     .eq('id', data.user.id)
     .maybeSingle()
 
-  return NextResponse.redirect(perfil ? `${origin}/` : `${origin}/registro`)
+  return NextResponse.redirect(perfil ? `${origin}/` : `${origin}/empezar`)
 }

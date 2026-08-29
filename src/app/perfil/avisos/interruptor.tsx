@@ -12,7 +12,7 @@ type Estado = 'cargando' | 'activo' | 'inactivo' | 'trabajando' | 'ios' | 'error
  * Los avisos de este dispositivo, tipo por tipo.
  *
  * ⚠ El prototipo (pantalla 24) dibuja un interruptor por tipo de aviso, y
- * eso hoy sería mentira: `push_ofertadores` guarda una suscripción por
+ * eso hoy sería mentira: `push_avisos` guarda una suscripción por
  * navegador y no tiene ninguna columna que diga qué tipos quiere quien la
  * creó. Cinco interruptores que hacen lo mismo enseñan a no creerle a
  * ninguno.
@@ -23,19 +23,14 @@ type Estado = 'cargando' | 'activo' | 'inactivo' | 'trabajando' | 'ios' | 'error
  * convierte en su propio interruptor y esta pantalla no cambia de forma.
  */
 // ⚠ Esta lista dice qué llega DE VERDAD, y llevaba tiempo sin decirlo. Los
-// tres primeros salían como «Llega» y no llegaba ninguno: nadie enviaba —
-// `notificarOfertadores` no tenía un solo importador y el chat no avisaba— y
-// uno de ellos era del flujo acompañado, que el ADR 0007 retiró.
+// tres primeros salían como «Llega» y no llegaba ninguno: nadie enviaba, y
+// uno de ellos era del flujo acompañado, que el ADR 0007 retiró. El de
+// «Alguien pidió algo en tus municipios» se fue con el módulo de insumos
+// (ADR 0014): su único emisor era `notificarOfertadores`.
 //
 // Una pantalla que promete un aviso que no existe hace que quien lo espera
 // no vuelva a mirar. Si mañana se enchufa otro, se cambia el `hay` aquí.
 const TIPOS: { nombre: string; detalle: string; hay: boolean }[] = [
-  {
-    nombre: 'Alguien pidió algo en tus municipios',
-    detalle:
-      'El aviso dice el municipio y la categoría, nunca quién pidió ni qué escribió.',
-    hay: true,
-  },
   {
     nombre: 'Mensaje nuevo en un chat',
     detalle:
@@ -59,7 +54,7 @@ const TIPOS: { nombre: string; detalle: string; hay: boolean }[] = [
   },
 ]
 
-export function InterruptorAvisos({ municipios }: { municipios: number }) {
+export function InterruptorAvisos() {
   const [estado, setEstado] = useState<Estado>('cargando')
 
   useEffect(() => {
@@ -177,9 +172,7 @@ export function InterruptorAvisos({ municipios }: { municipios: number }) {
         </ul>
         <p className="mt-2 text-base text-muted-foreground">
           Hoy se encienden y se apagan todos juntos: la suscripción es de este
-          navegador y no guarda qué tipos quieres. Los de «Alguien pidió algo»
-          son de{' '}
-          {municipios === 1 ? 'tu municipio' : `tus ${municipios} municipios`}.
+          navegador y no guarda qué tipos quieres.
         </p>
       </div>
 

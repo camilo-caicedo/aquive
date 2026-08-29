@@ -90,6 +90,57 @@ export function HojaModal({
     // cuanto se volviera aquí con la flecha atrás.
   }, [leToca, dialogo])
 
+  // ⚠ Safari de iOS no recorta la CAPA SUPERIOR contra la parte visible de
+  // la ventana, y sí recorta lo que es `position: fixed`. Se ve en la misma
+  // pantalla: la barra inferior de la aplicación queda encima de la barra
+  // del navegador, y la hoja —que está en la capa superior— se ancla al
+  // fondo de la pantalla entera y se mete detrás de ella. Lo que se va es
+  // el final de la hoja, que es justo donde vive el botón de la acción.
+  //
+  // No hay unidad de CSS que sirva: `100lvh - 100dvh` mide esa barra, pero
+  // vale lo mismo en Android, donde el navegador SÍ recorta y subir la hoja
+  // la dejaría flotando. Así que se mide la hoja de verdad y se sube lo que
+  // sobre, que en un navegador que ya recorta da cero y no hace nada.
+  useEffect(() => {
+    const ventana = window.visualViewport
+    if (!leToca || !dialogo || !ventana) return
+
+    const raiz = document.documentElement
+    // ⚠ Solo se mide con la hoja quieta. Sube con un `translateY` de 2 rem
+    // y `getBoundingClientRect()` lo incluye: medir en el primer fotograma
+    // daba 32 px de barra inventados, y la hoja se quedaba flotando a esa
+    // altura para siempre. `vivo` es para la promesa, que puede resolverse
+    // cuando la hoja ya se cerró.
+    let quieta = false
+    let vivo = true
+
+    const ajustar = () => {
+      if (!quieta || !vivo) return
+      raiz.style.setProperty('--barra-navegador', '0px')
+      const fondoVisible = ventana.offsetTop + ventana.height
+      const tapado = Math.round(dialogo.getBoundingClientRect().bottom - fondoVisible)
+      // El tope es lo que mide una barra de navegador. Sin él, el teclado
+      // —que encoge esta misma medida en varios cientos de píxeles— subiría
+      // la hoja hasta sacarle la cabecera por arriba.
+      if (tapado > 1) raiz.style.setProperty('--barra-navegador', `${Math.min(tapado, 160)}px`)
+    }
+
+    const asentar = () => {
+      quieta = true
+      ajustar()
+    }
+    Promise.all(dialogo.getAnimations().map((a) => a.finished)).then(asentar, asentar)
+
+    ventana.addEventListener('resize', ajustar)
+    ventana.addEventListener('scroll', ajustar)
+    return () => {
+      ventana.removeEventListener('resize', ajustar)
+      ventana.removeEventListener('scroll', ajustar)
+      vivo = false
+      raiz.style.removeProperty('--barra-navegador')
+    }
+  }, [leToca, dialogo])
+
   // Cerrar es volver: la entrada anterior de la historia es la lista, así
   // que la URL y lo que se ve vuelven juntos.
   //
@@ -114,7 +165,7 @@ export function HojaModal({
       onClick={(e) => {
         if (e.target === dialogo) cerrar()
       }}
-      className="animar-hoja m-0 mt-auto max-h-[92dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-3xl bg-background p-0 text-foreground backdrop:bg-foreground/40 sm:mx-auto sm:my-auto sm:max-h-[88dvh] sm:rounded-3xl"
+      className="animar-hoja m-0 mt-auto mb-[var(--barra-navegador,0px)] max-h-[92dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-3xl bg-background p-0 text-foreground backdrop:bg-foreground/40 sm:mx-auto sm:my-auto sm:mb-auto sm:max-h-[88dvh] sm:rounded-3xl"
     >
       {/* El asa. No hace nada —cerrar es `Escape`, la flecha de volver o el
           fondo—, pero es lo que dice que esto se puede cerrar sin haberlo

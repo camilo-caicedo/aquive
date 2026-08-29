@@ -11,19 +11,14 @@ export const metadata = { title: 'Avisos' }
  * `/perfil`. Sin barra inferior, con la flecha arriba.
  */
 export default async function AvisosPage() {
-  const { supabase, user } = await cargarPerfil()
-
-  // Los avisos de solicitudes son de TUS municipios, y esos viven en el
-  // perfil del módulo de emergencia, no en la ficha de prestador.
-  const { data: perfil } = await supabase
-    .from('perfiles')
-    .select('municipios')
-    .eq('id', user.id)
-    .maybeSingle()
+  // Solo para rebotar a `/login` sin sesión. La pantalla no necesita datos:
+  // los municipios se pedían para el aviso de «alguien pidió algo», que se
+  // fue con el módulo de insumos (ADR 0014).
+  await cargarPerfil()
 
   return (
     <MarcoFlujo titulo="Avisos" volver="/perfil">
-      <InterruptorAvisos municipios={perfil?.municipios.length ?? 0} />
+      <InterruptorAvisos />
     </MarcoFlujo>
   )
 }

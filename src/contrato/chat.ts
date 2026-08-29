@@ -3,10 +3,13 @@ import { z } from 'zod'
 
 // El chat, uno solo para toda la aplicación.
 //
-// Nació atado a los pedidos de servicio y era el único que había: productos,
-// donaciones e insumos no tenían ninguno y el contacto era por fuera. Ahora
-// un hilo cuelga de cualquiera de las cinco cosas que dos personas pueden
-// tener que acordar, y de ahí salen los dos papeles.
+// Nació atado a los pedidos de servicio y era el único que había: productos
+// y donaciones no tenían ninguno y el contacto era por fuera. Ahora un hilo
+// cuelga de cualquiera de las cuatro cosas que dos personas pueden tener que
+// acordar, y de ahí salen los dos papeles.
+//
+// ⚠ Eran cinco hasta el ADR 0014. La quinta era la respuesta a un pedido de
+// insumos, y se fue con su módulo.
 //
 // Los botones de WhatsApp y de llamar se quedan donde están. Quien publica
 // una ficha o un producto puso su teléfono a propósito; el chat es la puerta
@@ -14,14 +17,14 @@ import { z } from 'zod'
 
 /** De qué cuelga un hilo. Muere con ello — regla de producto 3. */
 export const Origen = z.object({
-  tipo: z.enum(['servicio', 'insumo', 'producto', 'muro', 'ficha']),
+  tipo: z.enum(['servicio', 'producto', 'muro', 'ficha']),
   id: z.uuid(),
 })
 
 export type Origen = z.infer<typeof Origen>
 
 /**
- * Los dos papeles, con los mismos nombres en los cuatro módulos.
+ * Los dos papeles, con los mismos nombres en los cuatro orígenes.
  *
  * `ofrece` tiene la cosa o el trabajo; `pide` la necesita. Antes eran
  * `prestador` y `quien_pide`, que solo sabían hablar de servicios.

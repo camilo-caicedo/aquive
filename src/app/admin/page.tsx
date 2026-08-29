@@ -141,15 +141,6 @@ export default async function AdminPage() {
                 ),
               },
               {
-                href: '/admin/solicitudes',
-                Icono: ClipboardList,
-                etiqueta: 'Solicitudes vivas',
-                detalle: detalle(
-                  `${v(n?.solicitudes_abiertas)} abiertas`,
-                  `${v(n?.solicitudes_sin_respuestas)} sin respuestas`
-                ),
-              },
-              {
                 // Texto que escribió alguien y que nadie ha mirado (ADR
                 // 0011). Se publica ya, así que esta cola no bloquea a
                 // nadie: es para leer lo que salió.

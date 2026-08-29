@@ -8,21 +8,19 @@ Contexto permanente del proyecto. Léelo completo antes de cualquier tarea.
 **Fundación Nodo Social**, que es la responsable del tratamiento de datos.
 
 Conecta a quien necesita algo con quien lo ofrece, en Colombia, sin cobrar
-comisión y sin mover dinero por la plataforma. Cinco cosas:
+comisión y sin mover dinero por la plataforma. Cuatro cosas:
 
 1. **Servicios.** Un prestador publica sus oficios, precios, zonas y horarios.
    Quien necesita busca, pide, acuerda por chat y califica con un código.
-2. **Insumos.** Quien necesita publica una solicitud; quien puede, responde.
-   Viene del módulo de emergencia y se queda.
-3. **Comunidad.** Un muro con dos caras —lo que sobra y lo que falta— y
+2. **Comunidad.** Un muro con dos caras —lo que sobra y lo que falta— y
    «Hecho en el barrio», donde quien tiene ficha pone lo que vende. Un
    producto cuelga de la ficha de quien lo vende: así aparece con el nombre
    y la autorización que esa persona ya firmó, se contacta por su mismo
    teléfono y se borra con ella.
-4. **Centros de acopio.** Lugares físicos con dirección y horario donde se
+3. **Centros de acopio.** Lugares físicos con dirección y horario donde se
    dejan donaciones y productos, y que registran lo que entra y lo que sale.
    Los lleva el rol de aliado (ADR 0008).
-5. **Moderación.** Colas de trabajo, verificación de matrículas y revisión de
+4. **Moderación.** Colas de trabajo, verificación de matrículas y revisión de
    imágenes.
 
 ## Estado: reescritura completa
@@ -47,6 +45,8 @@ archivo, y detrás de él:
 | `docs/decisiones/0011-*.md` | Quien pide escribe qué necesita |
 | `docs/decisiones/0012-*.md` | Doce categorías de oficio, no ocho |
 | `docs/decisiones/0013-*.md` | Categoría y subcategoría, en los dos lados |
+| `docs/decisiones/0014-*.md` | **Se retira el módulo de insumos** |
+| `docs/decisiones/0015-*.md` | La cuenta es de cualquiera, y no dice a qué vino |
 | `docs/marca/AquiVe-Flujo.dc.html` | Prototipo de las 40 pantallas |
 | `docs/marca/Manual-de-Marca-AquiVe.pdf` | Manual de marca |
 | `docs/PENDIENTES-LEGALES.md` | Bloqueantes que no son código |
@@ -122,19 +122,20 @@ de productos no la infringe.
 ### 2 · El chat vive dentro y muere con lo que lo abrió
 
 Hay mensajería interna, **una sola para toda la aplicación** (ADR 0009). Un
-hilo cuelga de una de cinco cosas —una respuesta a un pedido de servicio, una
-respuesta a una solicitud de insumos, un producto, una publicación del muro o
-una ficha de prestador— y se borra cuando se borra ella.
+hilo cuelga de una de cuatro cosas —una respuesta a un pedido de servicio, un
+producto, una publicación del muro o una ficha de prestador— y se borra cuando
+se borra ella. ⚠ Eran cinco hasta el ADR 0014: la quinta era la respuesta a un
+pedido de insumos, y se fue con su módulo.
 
-- Son cinco columnas con `on delete cascade`, no un par «tipo + id»: una
+- Son cuatro columnas con `on delete cascade`, no un par «tipo + id»: una
   llave polimórfica no puede cascadear, y entonces el borrado dependería de
-  que algo se acuerde de cumplirlo.
-- Los dos papeles se llaman igual en los cinco orígenes: **`ofrece`** tiene la
+  que algo se acuerde de cumplirlo. Lo sostiene el `CHECK chats_un_origen`.
+- Los dos papeles se llaman igual en los cuatro orígenes: **`ofrece`** tiene la
   cosa o el trabajo, **`pide`** la necesita.
 - Una respuesta ya identifica a los dos lados. Un producto y una publicación
   solo a uno: el otro lo ocupa quien abra el hilo, y hay uno por persona.
 - No se archivan conversaciones. No hay bandeja histórica. `/mensajes` es una
-  sola lista, de los cinco orígenes y de los dos lados. Lo sin leer sale como
+  sola lista, de los cuatro orígenes y de los dos lados. Lo sin leer sale como
   punto en la celda «Mensajes» y como palabra en la fila.
 - El chat **filtra datos de contacto**: `wa.me`, `t.me`, correos, arrobas
   sueltas, números colombianos y dígitos escritos con letras. Sin ese filtro el
@@ -152,13 +153,12 @@ Nunca `estado = 'eliminada'`.
 
 | Qué | Vive |
 | --- | --- |
-| Solicitud de insumos | 72 h, renovable |
 | Solicitud de servicio | 15 días, renovable |
 | Publicación del muro | mientras su dueño la deje |
 | Producto de «Hecho en el barrio» | mientras su dueño lo deje |
 | Ficha de prestador | permanente, hasta que la borre o la suspenda un admin |
 | Cuenta creada por un admin | hasta que su dueño la borre |
-| Chat | con lo que lo abrió: respuesta, producto o publicación |
+| Chat | con lo que lo abrió: respuesta, producto, publicación o ficha |
 | Código de servicio sin usar | 30 días |
 
 Borrar una fila borra **también sus imágenes en el almacenamiento**.
@@ -176,8 +176,9 @@ no es dato personal de quien lo escribió.
 
 ### 4 · Los campos libres tienen tope y filtro
 
-Los oficios de una **ficha** salen de `catalogo_oficios` y los ítems de
-`catalogo_items`. Los campos libres llevan los tres: tope de caracteres,
+Los oficios de una **ficha** salen de `catalogo_oficios`, y `catalogo_items`
+es el vocabulario con el que un centro de acopio registra lo que entra y lo
+que sale. Los campos libres llevan los tres: tope de caracteres,
 validación en servidor y filtro de patrones que **rechaza el envío** con
 mensaje explicativo.
 
@@ -185,14 +186,12 @@ mensaje explicativo.
 | --- | --- |
 | Presentación del prestador | 300 |
 | Detalle de solicitud de servicio | 80 |
-| Nota de solicitud | 140 |
 | Comentario de reseña | 140 |
 | Réplica del prestador | 140 |
 | Descripción del muro y de producto | 300 |
 | Mensaje de chat | 500 |
 
-Quien **pide** —un servicio o un insumo— publica con cuenta, desde el ADR
-0006. **Tener cuenta no es dar datos**: su nombre no se publica y su solicitud
+Quien **pide** un servicio publica con cuenta, desde el ADR 0006. **Tener cuenta no es dar datos**: su nombre no se publica y su solicitud
 no lo lleva.
 
 Pedir un servicio es **categoría, subcategoría y detalle opcional** (ADR
@@ -388,11 +387,11 @@ diferencia entre «el código no debería» y «la base no lo acepta».
 
 | Paso | Estado |
 | --- | --- |
-| 1 · Tipos de Drizzle desde el esquema | **hecho** — `npm run db:pull`, 60 objetos verificados contra el catálogo |
-| 2 · Eliminar el acceso a datos desde el navegador | en curso — quedan ~20 archivos: 10 en admin y aliado, el resto repartidos |
+| 1 · Tipos de Drizzle desde el esquema | **hecho** — `npm run db:pull`, 47 objetos verificados contra el catálogo |
+| 2 · Eliminar el acceso a datos desde el navegador | en curso — quedan ~15 archivos: 10 en admin y aliado, el resto repartidos. `crear_perfil` y `guardar_ofrecimientos` se fueron con los ADR 0014 y 0015 |
 | 3 · Contrato oRPC con las primeras lecturas | **hecho** — Servicios, chat, comunidad, moderación |
-| 4 · Migrar lecturas, luego escrituras | en curso — las escrituras de solicitudes (servicios e insumos) ya están en el contrato |
-| 5 · Cron y cifrado fuera del motor | **no** — el cron de imágenes huérfanas sí está fuera, pero `pg_cron` sigue programando los dos vencimientos y el cifrado de referencias sigue en Postgres con `pgp_sym_encrypt` y el Vault |
+| 4 · Migrar lecturas, luego escrituras | en curso — las escrituras de solicitudes de servicio y las de la cuenta ya están en el contrato |
+| 5 · Cron y cifrado fuera del motor | **no** — el cron de imágenes huérfanas sí está fuera, pero `pg_cron` sigue programando el vencimiento de servicios —ya solo uno, el de 72 h se fue con insumos— y el cifrado de referencias sigue en Postgres con `pgp_sym_encrypt` y el Vault |
 | 6 · better-auth; espacios de trabajo de npm | pendiente |
 | 7 · App Expo sobre el contrato | pendiente |
 
@@ -403,6 +402,26 @@ Actualiza esta tabla al avanzar.
 **Todo exige cuenta** (ADR 0006). Publicar una solicitud, un producto o una
 donación, y recibir cualquier cosa. Una sola manera de ser dueño de algo:
 `perfil_id`.
+
+**Y la cuenta no dice a qué vino** (ADR 0015). Se piden **dos cosas**: el
+nombre visible y el municipio, en `/empezar`. El perfil nace
+`tipo = 'vecino'`, con `acepto_publicacion = false`, sin teléfono y **sin
+casilla de autorización**: quien no publica nada no tiene ninguna finalidad
+que autorizar (mínimo legal 2, artículo 9). La autorización aparece donde
+aparece la publicación — al armar el carné, al declarar una matrícula, al
+publicar en el muro.
+
+⚠ Hasta el ADR 0015, el alta empezaba preguntando «¿Qué vas a ofrecer?» con
+dos casillas y ninguna salida, y quien entraba a buscar una modista tenía que
+declararse proveedor de algo. Los tres tipos que quedan son `vecino`,
+`servidor` —profesional con matrícula, que es lo único que publica
+`servidores_publicos`— y `aliado`, que no se elige: aparece al unirse a una
+organización.
+
+**Publicar es siempre un acto aparte.** `cuentas.guardarMia` no toca `tipo`,
+`acepto_publicacion` ni `autorizacion_version`; eso lo escriben las pantallas
+que publican, con su versión y su fecha. Un admin tampoco puede autorizar por
+otra persona: `cuentas.crear` abre una cuenta `vecino` y nada más.
 
 **Quien entra con Google.** Se persiste únicamente el identificador opaco del
 proveedor de identidad. El correo se descarta.
@@ -429,17 +448,16 @@ portar**.
 
 | Grupo | Pantallas | Dónde vive |
 | --- | --- | --- |
-| Entrada | 01 Bienvenida, 03 Entrar, 04 Carné | `components/bienvenida.tsx`, `app/login`, `app/servicios/soy-proveedor/listo` |
+| Entrada | 01 Bienvenida, 03 Entrar, 04 Carné | `components/bienvenida.tsx`, `app/login`, `app/empezar`, `app/servicios/soy-proveedor/listo` |
 | Buscar | 05 Inicio, 06 Categorías, 07 Listado, 08 Zonas + Mapa, 09 Ficha | `app/inicio`, `app/categorias`, `app/zonas`, `app/directorio` (lista y mapa), `app/prestador/[id]` |
 | Contratar | 10 Pedir, 11 Enviada, 12 Chat, 13 Calificar | `app/servicios/publicar`, `app/mensajes`, `app/chat/[tipo]/[id]`, `app/servicios/confirmar` |
 | Ofrecer | 14 Formulario, 15 Mi ficha | `app/servicios/soy-proveedor` |
-| Perfil | 16–25 | `app/perfil/**`, `app/mis-solicitudes` (20) |
-| Insumos | 26 Publicar, 27 Tablero, 29 Mis solicitudes | `app/publicar`, `app/ayudas`, `app/mis-solicitudes` |
+| Perfil | 16–25 | `app/perfil/**` (con `matricula`), `app/mis-solicitudes` (20) |
 | Comunidad | 30 Muro, 31 Hecho en el barrio | `app/muro`, `app/barrio` (con `publicar` y `mios`) |
 | Acopio | Lista pública y mapa, panel del centro con sus entregas | `app/acopios`, `app/aliado` |
 | Moderación | 35 Colas, 36 Matrículas, imágenes, PQR | `app/admin`, `app/admin/matriculas`, `app/admin/imagenes`, `app/admin/pqr`, `app/admin/cuentas` |
 | Información | 37 Ayuda, 38 PQR, 39 Contactos, 40 Quiénes somos | `app/ayuda`, `app/pqr` (y `app/pqr/[codigo]`), `app/contacto`, `app/quienes-somos` |
-| Fuera del prototipo | Directorios y puertas que el flujo de 40 pantallas no dibujó | `app/profesionales`, `app/entidades`, `app/ofertadores`, `app/solicitudes`, `app/registro`, `app/mapa`, `app/entrar/[codigo]`, `app/unirse/[...ruta]`, `app/responder/[codigo]`, `app/muro/mios` |
+| Fuera del prototipo | Directorios y puertas que el flujo de 40 pantallas no dibujó | `app/profesionales` (y `app/profesional/[id]`), `app/entidades` (y `app/entidad/[id]`), `app/producto/[id]`, `app/solicitudes`, `app/mapa`, `app/entrar/[codigo]`, `app/unirse/[...ruta]`, `app/muro/mios` |
 
 **Barra inferior: `Inicio · Buscar · Mensajes · Perfil`.** Cuatro celdas, las del
 prototipo, más una quinta condicional —«Acopio»— para quien pertenece al

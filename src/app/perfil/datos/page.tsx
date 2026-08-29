@@ -1,8 +1,11 @@
-import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { nombreConDepartamento } from '@/lib/municipios'
 import { etiquetaMedioPago, TIPOS_PROVEEDOR } from '@/lib/servicios'
 import { FormularioProveedor } from '@/app/servicios/soy-proveedor/formulario-proveedor'
+import { MarcoFlujo } from '@/components/marco-flujo'
+import { Button } from '@/components/ui/button'
 import { cargarPerfil } from '../cargar'
+import { FormularioCuentaPropia } from './formulario-cuenta-propia'
 
 export const metadata = { title: 'Mis datos y contacto' }
 
@@ -26,11 +29,43 @@ const SELLO = {
  * dejaría a quien mira la lista suponiendo que sí lo tenemos.
  */
 export default async function DatosPage() {
-  const { proveedor, municipios, oficios, zonas } = await cargarPerfil()
+  const { proveedor, cuenta, municipios, oficios, zonas } = await cargarPerfil()
 
-  // Sin ficha no hay datos de prestador que editar, y `guardar_proveedor`
-  // no sabe crear media ficha: el alta es la pantalla 14, entera.
-  if (!proveedor) redirect('/servicios/soy-proveedor')
+  // ⚠ Aquí había un `redirect('/servicios/soy-proveedor')`: sin ficha, tocar
+  // «Mis datos y contacto» abría «Arma tu carné». Los datos de la CUENTA —el
+  // nombre, el municipio, el teléfono— existen desde que alguien entra, y no
+  // tenían dónde editarse salvo en el formulario del módulo de insumos.
+  //
+  // La pantalla crece: siempre la cuenta, y debajo la ficha cuando la hay.
+  // Dos ramas y no una, porque el caparazón lo monta `FormularioProveedor`
+  // y dos `MarcoFlujo` anidados no existen.
+  if (!proveedor) {
+    return (
+      <MarcoFlujo titulo="Mis datos y contacto" volver="/perfil">
+        {cuenta && (
+          <FormularioCuentaPropia cuenta={cuenta} municipios={municipios} principal />
+        )}
+
+        <section className="shadow-cartel-amarillo mt-5 rounded-2xl bg-card p-4">
+          <h2 className="font-heading text-xl leading-tight">
+            Todavía no tienes ficha de prestador
+          </h2>
+          <p className="mt-1 text-base text-muted-foreground">
+            La ficha lleva sus propios datos —tu nombre público, tu teléfono,
+            tu zona y tus horarios— y su propia autorización. Se arma aparte.
+          </p>
+          <Button
+            variant="outline"
+            className="mt-3 w-full"
+            nativeButton={false}
+            render={<Link href="/servicios/soy-proveedor" />}
+          >
+            Armar mi carné
+          </Button>
+        </section>
+      </MarcoFlujo>
+    )
+  }
 
   const municipio = municipios.find((m) => m.codigo_dane === proveedor.municipio)
 
@@ -73,9 +108,17 @@ export default async function DatosPage() {
       secciones={['quien', 'figura', 'contacto', 'ciudad', 'presentacion']}
       encabezado={
         <>
+          {cuenta && (
+            <FormularioCuentaPropia cuenta={cuenta} municipios={municipios} />
+          )}
+
+          {/* ⚠ `proveedores.nombre_visible` y `perfiles.nombre_visible` son
+              dos columnas distintas y pueden divergir. Sin decirlo, alguien
+              cambia una esperando que cambie la otra. */}
           <p className="text-base text-muted-foreground">
-            Lo marcado como público es lo que ve cualquiera que abra tu ficha. El
-            resto no sale de aquí.
+            Lo de abajo es tu <strong>ficha</strong>, y es otra cosa: su nombre
+            puede ser distinto del de tu cuenta. Lo marcado como público es lo
+            que ve cualquiera que la abra.
           </p>
 
           <ul className="shadow-canto divide-y divide-border rounded-2xl bg-card">

@@ -29,11 +29,31 @@ export function TarjetaProducto({ producto }: { producto: Producto }) {
   const familia = familiaDe(producto.grupos[0] ?? null)
 
   return (
-    // El ancla a la que llega quien tocó este producto en la portada.
     <li
       id={`prod-${producto.id}`}
       className={`animar-entrada overflow-hidden rounded-2xl bg-card ${SOMBRA_CARTEL[familia]}`}
     >
+      <ContenidoProducto producto={producto} />
+    </li>
+  )
+}
+
+/**
+ * Lo de dentro de la tarjeta, sin el envoltorio de lista.
+ *
+ * Es lo que se pinta también en `/producto/<id>`, que es a donde lleva ahora
+ * una tarjeta de la portada. Allí el nombre ya está arriba —es el título del
+ * flujo— y el detalle se lee entero, que para eso se entró.
+ */
+export function ContenidoProducto({
+  producto,
+  completo = false,
+}: {
+  producto: Producto
+  completo?: boolean
+}) {
+  return (
+    <>
       {producto.imagen ? (
         <Image
           src={producto.imagen}
@@ -51,14 +71,18 @@ export function TarjetaProducto({ producto }: { producto: Producto }) {
       )}
 
       <div className="p-4">
-        <h3 className="font-heading text-base leading-tight">{producto.nombre}</h3>
+        {!completo && (
+          <h3 className="font-heading text-base leading-tight">{producto.nombre}</h3>
+        )}
 
         <p className="mt-2 text-base font-semibold">
           {precioDeProducto(producto.modo, producto.precio_desde, producto.unidad)}
         </p>
 
         {producto.detalle && (
-          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+          <p
+            className={`mt-1 text-sm text-muted-foreground ${completo ? '' : 'line-clamp-2'}`}
+          >
             {producto.detalle}
           </p>
         )}
@@ -115,6 +139,6 @@ export function TarjetaProducto({ producto }: { producto: Producto }) {
           </div>
         )}
       </div>
-    </li>
+    </>
   )
 }

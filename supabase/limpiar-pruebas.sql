@@ -24,16 +24,12 @@
 --   auth.users        uuid 00000000-0000-4000-8000-…  → perfiles y todo lo
 --                                              que cuelga de ellos. Las crea
 --                                              migracion/97-seed-perfiles.sql
---   solicitudes       es_prueba              → solicitud_items, respuestas,
---                                              push_suscripciones,
+--   solicitudes_servicio es_prueba           → respuestas_servicio,
 --                                              destapes_contacto
---   perfiles          nombre_visible PRUEBA  → ofrecimientos, servidores,
---                                              push_ofertadores, y también
---                                              RESPUESTAS: si un perfil de
---                                              prueba respondió una
---                                              solicitud real, esa respuesta
---                                              se va con él
---   metricas          es_prueba              (sin llave foránea: a mano)
+--   perfiles          nombre_visible PRUEBA  → servidores, push_avisos,
+--                                              proveedores, y todo lo que
+--                                              cuelgue de `perfil_id`
+--   metricas_servicio es_prueba              (sin llave foránea: a mano)
 --   sugerencias_item  es_prueba              (el remapeo borra su origen)
 --   catalogo_items    es_prueba              (`creado_por` es el admin real)
 --   entidades         es_prueba              (`creada_por` es el admin real;
@@ -45,13 +41,6 @@
 --   entregas          es_prueba              (SOBREVIVE a la solicitud a
 --                                              propósito: no tiene FK hacia
 --                                              ella, solo el código en texto)
---   accesos_identidad es_prueba              (sin llave foránea viva: la
---                                              bitácora SOBREVIVE a la
---                                              identidad a propósito, así que
---                                              hay que borrarla a mano. Las
---                                              `identidades` en cambio se van
---                                              solas con su solicitud o su
---                                              perfil)
 --
 -- Actualizar en CADA fase que agregue una tabla.
 -- =====================================================================
@@ -60,10 +49,6 @@
 -- Conteo previo — corre esto solo, primero
 -- ---------------------------------------------------------------------
 
-select 'metricas' as tabla, count(*) as filas from public.metricas where es_prueba
-union all
-select 'solicitudes', count(*) from public.solicitudes where es_prueba
-union all
 select 'perfiles', count(*) from public.perfiles where nombre_visible ilike 'prueba%'
 union all
 select 'cuentas de prueba (auth.users)', count(*) from auth.users
@@ -77,44 +62,17 @@ select 'entidades', count(*) from public.entidades where es_prueba
 union all
 select 'organizaciones', count(*) from public.organizaciones where es_prueba
 union all
-select 'accesos_identidad', count(*) from public.accesos_identidad where es_prueba
-union all
-select 'identidades', count(*) from public.identidades where es_prueba
-union all
 select 'entregas', count(*) from public.entregas where es_prueba
 order by 1;
 
 -- Lo que arrastra el CASCADE, para que el número no sorprenda:
-select 'solicitud_items' as tabla, count(*) as filas
-  from public.solicitud_items si
-  join public.solicitudes s on s.id = si.solicitud_id where s.es_prueba
-union all
-select 'respuestas', count(*)
-  from public.respuestas r
-  join public.solicitudes s on s.id = r.solicitud_id where s.es_prueba
-union all
-select 'push_suscripciones', count(*)
-  from public.push_suscripciones ps
-  join public.solicitudes s on s.id = ps.solicitud_id where s.es_prueba
-union all
-select 'ofrecimientos', count(*)
-  from public.ofrecimientos o
-  join public.perfiles p on p.id = o.perfil_id where p.nombre_visible ilike 'prueba%'
-union all
 select 'servidores', count(*)
   from public.servidores sv
   join public.perfiles p on p.id = sv.perfil_id where p.nombre_visible ilike 'prueba%'
 union all
-select 'push_ofertadores', count(*)
-  from public.push_ofertadores po
+select 'push_avisos', count(*)
+  from public.push_avisos po
   join public.perfiles p on p.id = po.perfil_id where p.nombre_visible ilike 'prueba%'
-union all
--- `respuestas.autor_id` también está en CASCADE desde `perfiles`. Si este
--- número no es cero, un perfil de prueba respondió solicitudes: mira cuáles
--- son reales antes de seguir.
-select 'respuestas de perfiles de prueba', count(*)
-  from public.respuestas r
-  join public.perfiles p on p.id = r.autor_id where p.nombre_visible ilike 'prueba%'
 union all
 select 'miembros_organizacion', count(*)
   from public.miembros_organizacion m
@@ -125,19 +83,12 @@ select 'invitaciones_organizacion', count(*)
   join public.organizaciones o on o.id = i.organizacion_id where o.es_prueba
 order by 1;
 
--- Y lo que NO debería salir nunca: filas de prueba enganchadas a algo real.
--- Si alguna de estas dos da distinto de cero, revísalo ANTES de borrar.
-select 'items de prueba usados por una solicitud real' as aviso, count(*) as filas
-  from public.solicitud_items si
-  join public.solicitudes s on s.id = si.solicitud_id
-  join public.catalogo_items c on c.id = si.item_id
- where c.es_prueba and not s.es_prueba
-union all
-select 'items de prueba en el inventario de un perfil real', count(*)
-  from public.ofrecimientos o
-  join public.perfiles p on p.id = o.perfil_id
-  join public.catalogo_items c on c.id = o.item_id
- where c.es_prueba and p.nombre_visible not ilike 'prueba%';
+-- Y lo que NO debería salir nunca: ítems de prueba enganchados a algo real.
+-- Si esto da distinto de cero, revísalo ANTES de borrar.
+select 'items de prueba usados por una entrega real' as aviso, count(*) as filas
+  from public.entregas e
+  join public.catalogo_items c on c.id = e.item_id
+ where c.es_prueba and not e.es_prueba;
 
 -- ---------------------------------------------------------------------
 -- Borrado — corre esto después de revisar el conteo
@@ -145,26 +96,17 @@ select 'items de prueba en el inventario de un perfil real', count(*)
 
 begin;
 
--- `metricas` no tiene ninguna llave foránea: no la alcanza ningún CASCADE
--- y hay que borrarla a mano ANTES de que desaparezca la solicitud que la
--- originó.
-delete from public.metricas where es_prueba;
-
--- La bitácora de lecturas de identidad sobrevive a la identidad por diseño
--- (regla N), así que ningún CASCADE se la lleva y hay que borrarla aquí.
--- Va ANTES que las solicitudes solo por claridad: con `identidad_id` en ON
--- DELETE SET NULL, el orden da igual, pero leerlo junto a `metricas`
--- —lo otro que no cuelga de nada— es lo que evita que se olvide.
-delete from public.accesos_identidad where es_prueba;
+-- `metricas_servicio` no tiene ninguna llave foránea: no la alcanza ningún
+-- CASCADE y hay que borrarla a mano ANTES de que desaparezca la solicitud
+-- que la originó.
+delete from public.metricas_servicio where es_prueba;
 
 -- Lo mismo con las entregas: no cuelgan de la solicitud a propósito —el
 -- código va copiado en texto— así que ningún CASCADE se las lleva.
 delete from public.entregas where es_prueba;
 
--- CASCADE: solicitud_items, respuestas, push_suscripciones,
--- destapes_contacto.
-delete from public.solicitudes where es_prueba;
-
+-- CASCADE: respuestas_servicio y sus chats.
+delete from public.solicitudes_servicio where es_prueba;
 -- ⚠ ANTES que `perfiles`, y el orden no es cosmético. `miembros_organizacion`
 -- cuelga de las dos por CASCADE, y hay un trigger que impide dejar una
 -- organización con miembros y sin ningún coordinador activo. Si se borraran
@@ -176,9 +118,8 @@ delete from public.solicitudes where es_prueba;
 -- CASCADE: invitaciones_organizacion, miembros_organizacion.
 delete from public.organizaciones where es_prueba;
 
--- CASCADE: ofrecimientos, servidores, push_ofertadores, y también
--- `respuestas`, que no está en la lista de arriba pero cuelga de
--- `respuestas.autor_id`.
+-- CASCADE: servidores, push_avisos, proveedores y todo lo que cuelgue de
+-- `perfil_id`.
 delete from public.perfiles where nombre_visible ilike 'prueba%';
 
 -- Las cuentas sin login que crea `migracion/97-seed-perfiles.sql`. Llevan
@@ -190,12 +131,9 @@ delete from public.perfiles where nombre_visible ilike 'prueba%';
 -- de Google puede tener un uuid así, pero míralo antes de correrlo.
 delete from auth.users where id::text like '00000000-0000-4000-8000-%';
 
--- Las sugerencias van después de sus dos referencias: `sugerencia_id` está
--- en `on delete restrict` en `solicitud_items` y en `ofrecimientos`
--- justamente para que borrarlas antes falle en vez de dejar filas violando
--- su propio CHECK. Para cuando llegamos aquí, las dos ya se fueron por
--- CASCADE. Si aquí salta una violación, es que una solicitud o un perfil
--- REAL usa esa sugerencia: no lo fuerces, averigua por qué.
+-- Las sugerencias van después de lo que las referencia. Si aquí salta una
+-- violación, es que algo REAL usa esa sugerencia: no lo fuerces, averigua
+-- por qué.
 delete from public.sugerencias_item where es_prueba;
 
 -- Y los ítems de catálogo creados durante las pruebas al final, por la
@@ -215,16 +153,14 @@ delete from public.entidades where es_prueba;
 do $$
 declare v_restantes integer;
 begin
-  select (select count(*) from public.metricas         where es_prueba)
-       + (select count(*) from public.solicitudes      where es_prueba)
+  select (select count(*) from public.metricas_servicio   where es_prueba)
+       + (select count(*) from public.solicitudes_servicio where es_prueba)
        + (select count(*) from public.perfiles         where nombre_visible ilike 'prueba%')
        + (select count(*) from public.sugerencias_item where es_prueba)
        + (select count(*) from public.catalogo_items   where es_prueba)
        + (select count(*) from public.entidades        where es_prueba)
        + (select count(*) from public.organizaciones   where es_prueba)
-       + (select count(*) from public.accesos_identidad where es_prueba)
-       + (select count(*) from public.entregas        where es_prueba)
-       + (select count(*) from public.identidades      where es_prueba)
+       + (select count(*) from public.entregas         where es_prueba)
        + (select count(*) from auth.users where id::text like '00000000-0000-4000-8000-%')
     into v_restantes;
 
@@ -240,6 +176,6 @@ commit;
 
 -- Y confirmar que lo real sigue intacto — estos números deben ser los
 -- mismos antes y después de correr el archivo:
---   select count(*) from public.solicitudes;
+--   select count(*) from public.solicitudes_servicio;
 --   select count(*) from public.perfiles;
 --   select count(*) from public.catalogo_items where origen = 'semilla';

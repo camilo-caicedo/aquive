@@ -42,7 +42,7 @@ export default function robots(): MetadataRoute.Robots {
           // de rutas que solo confunden a quien llega por un buscador.
           '/aliado',
           '/admin',
-          '/registro',
+          '/empezar',
           '/mis-solicitudes',
         ],
       },

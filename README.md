@@ -19,12 +19,11 @@ aquí dentro y califica con un código que le entregan al terminar.
 
 La plataforma no mueve dinero y no coordina la entrega. Conecta, y se aparta.
 
-## Los cinco módulos
+## Los cuatro módulos
 
 | Módulo | Qué es |
 |---|---|
 | **Servicios** | El directorio de prestadores y el tablero de quién está pidiendo |
-| **Insumos** | Quien necesita publica qué le falta; quien puede, responde. Nació del sismo del 10 de agosto de 2026 y se queda |
 | **Comunidad** | El muro —lo que sobra y lo que falta— y «Hecho en el barrio», los productos |
 | **Centros de acopio** | Lugares físicos donde se deja y se recoge, y que registran lo que entra y lo que sale |
 | **Moderación** | Colas de trabajo, verificación de matrículas, revisión de imágenes y PQR |
@@ -47,7 +46,8 @@ diseño. **Ver `CLAUDE.md` antes de tocar nada.**
 ## Estado
 
 En reescritura desde agosto de 2026: identidad, flujo y arquitectura nuevos
-sobre las bases anteriores. Lo que manda es `CLAUDE.md`, y detrás de él los
+sobre las bases anteriores. El módulo de emergencia se retiró en agosto (ADR
+0014) sin haberse usado nunca en producción. Lo que manda es `CLAUDE.md`, y detrás de él los
 ADR de `docs/decisiones/`.
 
 El backend se está migrando de PL/pgSQL a una capa de dominio en TypeScript
@@ -80,7 +80,7 @@ nombre**, y después las semillas:
 
 1. `supabase/seed-municipios.sql` — los 1.122 municipios con código DANE
 2. `supabase/seed-servicios.sql` — los servicios profesionales
-3. `supabase/seed-catalogo.sql` — los insumos y los servicios pedibles
+3. `supabase/seed-catalogo.sql` — el vocabulario del acopio y los servicios pedibles
 
 El 2 va antes del 3 y no es negociable: `seed-catalogo.sql` deriva los ítems
 `serv_*` con un `select` sobre `catalogo_servicios`. Al revés no deriva nada
@@ -112,7 +112,7 @@ Para que `/admin` sea accesible hay que insertar a mano la primera fila en
 | `src/server/<dominio>/` | La lógica de negocio, en TypeScript puro. |
 | `src/db/generado/` | Los tipos de Drizzle. **Generados, no se editan a mano.** |
 | `supabase/migraciones/` | Los cambios de la base, en orden de nombre. |
-| `supabase/seed-*.sql` | Municipios, insumos y servicios. Re-ejecutables. |
+| `supabase/seed-*.sql` | Municipios, catálogo de acopio, oficios y servicios. Re-ejecutables. |
 | `supabase/limpiar-pruebas.sql` | Borra lo marcado como prueba. Cuenta primero, borra después. |
 | `scripts/sembrar-fotos.mjs` | Fotos para los datos de prueba. `--limpiar` las deshace. |
 | `migracion/` | Levantar la base en un proyecto nuevo: runbook y verificación. |

@@ -199,25 +199,50 @@ export async function productos(
     .orderBy(desc(productosPublicos.creadoAt))
     .limit(filtros.limite ?? 60)
 
-  return filas.map((f) =>
-    conUrl({
-      id: f.id!,
-      proveedor_id: f.proveedorId!,
-      proveedor_nombre: f.proveedorNombre ?? '',
-      municipio: f.municipio ?? '',
-      zona_nombre: f.zonaNombre,
-      nombre: f.nombre ?? '',
-      detalle: f.detalle,
-      modo: (f.modo ?? 'normal') as Producto['modo'],
-      precio_desde: f.precioDesde === null ? null : Number(f.precioDesde),
-      unidad: f.unidad as Producto['unidad'],
-      imagen: f.imagen,
-      telefono: f.telefono,
-      telefono_verificado: f.telefonoVerificado ?? false,
-      grupos: f.grupos ?? [],
-      creado_at: f.creadoAt ?? '',
-    }),
-  )
+  return filas.map(comoProducto)
+}
+
+/**
+ * Una fila de `productos_publicos` como la ve el contrato.
+ *
+ * Está aparte porque la lista y el detalle tienen que devolver exactamente
+ * lo mismo: dos copias de este mapeo son dos sitios donde el precio puede
+ * empezar a leerse distinto según por dónde se haya llegado.
+ */
+function comoProducto(f: typeof productosPublicos.$inferSelect): Producto {
+  return conUrl({
+    id: f.id!,
+    proveedor_id: f.proveedorId!,
+    proveedor_nombre: f.proveedorNombre ?? '',
+    municipio: f.municipio ?? '',
+    zona_nombre: f.zonaNombre,
+    nombre: f.nombre ?? '',
+    detalle: f.detalle,
+    modo: (f.modo ?? 'normal') as Producto['modo'],
+    precio_desde: f.precioDesde === null ? null : Number(f.precioDesde),
+    unidad: f.unidad as Producto['unidad'],
+    imagen: f.imagen,
+    telefono: f.telefono,
+    telefono_verificado: f.telefonoVerificado ?? false,
+    grupos: f.grupos ?? [],
+    creado_at: f.creadoAt ?? '',
+  })
+}
+
+/**
+ * Un producto por su id.
+ *
+ * De la vista pública, igual que la lista: así el producto apagado y el de
+ * quien retiró su ficha desaparecen de las dos puertas a la vez.
+ */
+export async function producto(db: BaseDeDatos, id: string): Promise<Producto | null> {
+  const [fila] = await db
+    .select()
+    .from(productosPublicos)
+    .where(eq(productosPublicos.id, id))
+    .limit(1)
+
+  return fila ? comoProducto(fila) : null
 }
 
 /**

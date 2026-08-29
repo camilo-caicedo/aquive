@@ -33,6 +33,10 @@ El ADR se escribe **antes** del código. Si una tarea te obliga a contradecir
 | [0009](0009-un-solo-chat.md) | Un solo chat, para toda la aplicación | aceptada |
 | [0010](0010-la-portada-es-la-bienvenida.md) | La portada es siempre la bienvenida | aceptada |
 | [0011](0011-la-solicitud-dice-que-necesita.md) | Quien pide elige categoría y escribe qué necesita | aceptada |
+| [0012](0012-mas-categorias-de-oficio.md) | Doce categorías de oficio, no ocho | aceptada |
+| [0013](0013-categoria-y-subcategoria.md) | Categoría y subcategoría, en los dos lados | aceptada |
+| [0014](0014-fuera-el-modulo-de-insumos.md) | Se retira el módulo de insumos | aceptada |
+| [0015](0015-la-cuenta-es-de-cualquiera.md) | La cuenta es de cualquiera, y no dice a qué vino | aceptada |
 
 ## Plantilla
 

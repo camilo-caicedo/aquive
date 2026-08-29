@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import { BadgeCheck, Hash, IdCard, PhoneCall, Users } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
@@ -8,6 +7,7 @@ import { SOBRE_LAS_INSIGNIAS } from '@/lib/honestidad'
 import { ENTIDADES_MATRICULA, RESPONSABLE_SERVICIOS } from '@/lib/config'
 import { CINTA, SOMBRA_CARTEL, TINTA_CINTA, type Familia } from '@/lib/familias'
 import { cargarPerfil } from '../cargar'
+import { SinCarne } from '../sin-carne'
 
 export const metadata = { title: 'Verificaciones' }
 
@@ -79,7 +79,14 @@ function Tarjeta({
 export default async function VerificacionesPage() {
   const { supabase, user, proveedor, referencias, oficios } = await cargarPerfil()
 
-  if (!proveedor) redirect('/servicios/soy-proveedor')
+  if (!proveedor) {
+    return (
+      <SinCarne
+        titulo="Verificaciones"
+        porque="Las señales que se comprueban —tu teléfono y tus referencias— son de la ficha. Sin ficha no hay nada que comprobar todavía."
+      />
+    )
+  }
 
   const { data: servidor } = await supabase
     .from('servidores')

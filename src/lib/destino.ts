@@ -23,8 +23,11 @@ const CLAVE = 'aquive:destino'
 // comodines: cada una está aquí porque alguien llega a ella sin sesión y
 // se le pide una.
 const PERMITIDAS = [
-  /^\/responder\/[A-Za-z0-9]{4,12}$/,
   /^\/servicios\/soy-proveedor$/,
+  // ⚠ `/registro` se queda aunque la pantalla ya no exista. Quien salió a
+  // Google justo antes del despliegue trae ese valor en `sessionStorage` y
+  // vuelve con él; la ruta sigue viva como redirección a `/empezar`. Se
+  // retiran las dos —esta línea y la redirección— en la release siguiente.
   /^\/registro$/,
   /^\/aliado$/,
   /^\/coordinacion$/,

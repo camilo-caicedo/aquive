@@ -1,5 +1,25 @@
 # Contrato de transmisión de datos personales
 
+> ## ⚠ RETIRADO — no se firma, y no se reescribe sin el responsable
+>
+> Este contrato existía para el flujo acompañado del módulo de emergencia:
+> la fundación aliada era **responsable** del tratamiento y la plataforma
+> **encargada**, y esa transmisión es lo que el artículo 25 del Decreto 1377
+> de 2013 exige documentar.
+>
+> El flujo acompañado se retiró con el **ADR 0007** y el módulo de insumos
+> entero con el **ADR 0014**. Hoy no hay ninguna transmisión de datos
+> personales a un tercero: `identidades` y `accesos_identidad` no existen, y
+> los centros de acopio (ADR 0008) trabajan **dentro** de la plataforma, bajo
+> la misma responsable, sin recibir datos de nadie.
+>
+> Se conserva el documento y no se reescribe: es un texto legal, y decidir si
+> vuelve a hacer falta —o si el acopio necesita uno propio— es del
+> responsable del proyecto, no de quien programa. Ver
+> `docs/PENDIENTES-LEGALES.md`.
+
+---
+
 > **Borrador. No es asesoría jurídica.** Está escrito para que un abogado lo
 > revise y lo corrija, no para firmarlo tal cual. Consultorio jurídico
 > gratuito: Icesi, Javeriana Cali, Libre, Santiago de Cali, Univalle.

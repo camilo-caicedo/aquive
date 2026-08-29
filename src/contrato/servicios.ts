@@ -318,6 +318,14 @@ export const MiSolicitudServicio = z.object({
 
 export type MiSolicitudServicio = z.infer<typeof MiSolicitudServicio>
 
+const erroresMatricula = {
+  RECHAZADO: {
+    status: 400,
+    message: 'No se pudo guardar tu matrícula.',
+    data: z.object({ motivo: z.string() }),
+  },
+} as const
+
 const erroresUbicacion = {
   RECHAZADO: {
     status: 400,
@@ -343,8 +351,34 @@ export const EntidadBreve = z.object({
   cobertura: z.string(),
 })
 
+/**
+ * El profesional entero, para su propia pantalla.
+ *
+ * Los servicios vienen ya con nombre y no con el id del catálogo: quien
+ * pinta esto —web hoy, Expo mañana— no tiene por qué acordarse de traerse
+ * `catalogo_servicios` para poder escribir «Peritaje estructural».
+ */
+export const Profesional = ProfesionalBreve.extend({
+  entidad_matricula: z.string(),
+  numero_matricula: z.string(),
+  descripcion: z.string().nullable(),
+  contacto_tipo: z.string(),
+  contacto_publico: z.string(),
+  servicios: z.array(z.string()),
+})
+
+/** La entidad entera. Los municipios llegan con nombre, por lo mismo. */
+export const Entidad = EntidadBreve.extend({
+  descripcion: z.string().nullable(),
+  pie: z.string().nullable(),
+  enlaces: z.array(z.object({ etiqueta: z.string(), url: z.string() })),
+  municipios: z.array(z.string()),
+})
+
 export type ProfesionalBreve = z.infer<typeof ProfesionalBreve>
 export type EntidadBreve = z.infer<typeof EntidadBreve>
+export type Profesional = z.infer<typeof Profesional>
+export type Entidad = z.infer<typeof Entidad>
 
 export const contratoServicios = {
   /**
@@ -375,6 +409,60 @@ export const contratoServicios = {
 
   /** La ficha pública de un prestador. Pantalla 09. */
   ficha: oc.input(z.object({ id: z.uuid() })).output(Ficha.nullable()),
+
+  /**
+   * Un profesional y una entidad, de uno en uno.
+   *
+   * Existen porque tocar a alguien en la portada llevaba a su lista con un
+   * ancla —`/profesionales#p-<id>`—, y un ancla no es un destino: llega
+   * bien cuando la lista ya está pintada y llega a cualquier parte cuando
+   * todavía está cargando. Además obliga a traerse las cuarenta filas para
+   * enseñar una.
+   */
+  profesional: oc.input(z.object({ id: z.uuid() })).output(Profesional.nullable()),
+
+  /** Lo que esta persona declaró de su matrícula, o null. */
+  miMatricula: oc.output(
+    z
+      .object({
+        profesion: z.string(),
+        entidad_matricula: z.string(),
+        numero_matricula: z.string(),
+        servicios: z.array(z.string()),
+        verificado: z.boolean(),
+      })
+      .nullable(),
+  ),
+
+  /**
+   * Declarar —o corregir— la matrícula profesional.
+   *
+   * ⚠ Es lo único que sube una cuenta de `vecino` a `servidor`, y por eso
+   * lleva la casilla de autorización con su versión: aquí sí hay finalidad
+   * que autorizar, porque `servidores_publicos` publica el nombre y el
+   * teléfono de esta persona. `cuentas.guardarMia` no puede hacerlo: si el
+   * cambio de tipo cupiera en la pantalla que corrige un teléfono, el
+   * consentimiento se quedaría sin rastro de dónde se dio.
+   *
+   * Nada nace verificado (regla de producto 6): una persona de la fundación
+   * consulta el número en el registro de la entidad, a mano.
+   */
+  guardarMatricula: oc
+    .errors(erroresMatricula)
+    .input(
+      z.object({
+        profesion: z.string().trim().min(3).max(60),
+        entidad_matricula: z.enum(['COPNIA', 'CPNAA', 'COLPSIC', 'ReTHUS', 'SIRNA', 'OTRA']),
+        numero_matricula: z.string().trim().min(3).max(40),
+        servicios: z.array(z.string().trim().max(60)).max(40),
+        /** El teléfono por el que le escriben. Público desde que hay matrícula. */
+        contacto_publico: z.string().trim().min(7).max(40),
+        contacto_tipo: z.enum(['whatsapp', 'telefono']),
+        autorizacion_version: z.string().trim().min(3).max(60),
+      }),
+    )
+    .output(z.object({ ok: z.literal(true) })),
+  entidad: oc.input(z.object({ id: z.uuid() })).output(Entidad.nullable()),
 
   /**
    * El directorio con sus facetas. Pantallas 05, 06 y 07.

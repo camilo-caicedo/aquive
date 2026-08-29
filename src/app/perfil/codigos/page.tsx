@@ -1,7 +1,7 @@
-import { redirect } from 'next/navigation'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { PanelServiciosProveedor } from '@/components/panel-servicios-proveedor'
 import { cargarPerfil } from '../cargar'
+import { SinCarne } from '../sin-carne'
 
 export const metadata = { title: 'Códigos de servicio' }
 
@@ -15,9 +15,14 @@ export const metadata = { title: 'Códigos de servicio' }
 export default async function CodigosPage() {
   const { proveedor, servicios, misOficios } = await cargarPerfil()
 
-  // Sin ficha no hay a quién colgarle un código: `crear_codigo_servicio`
-  // arranca del proveedor del llamante.
-  if (!proveedor) redirect('/servicios/soy-proveedor')
+  if (!proveedor) {
+    return (
+      <SinCarne
+        titulo="Códigos que generé"
+        porque="Un código de servicio lo genera quien prestó el trabajo, al terminarlo. Sale de tu ficha, así que primero hace falta tenerla."
+      />
+    )
+  }
 
   return (
     <main className="animar-pantalla mx-auto max-w-lg px-4 py-6">

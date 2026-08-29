@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { Trash2 } from 'lucide-react'
 import { MarcoFlujo } from '@/components/marco-flujo'
-import { BorrarPerfil } from '@/app/registro/borrar-perfil'
+import { BorrarPerfil } from './borrar-perfil'
 import { servidor } from '@/orpc/local'
 import {
   AUTORIZACION_PROVEEDOR_VERSION,
@@ -60,8 +60,8 @@ export default async function PrivacidadPage() {
     ...(perfil
       ? [
           {
-            que: 'Tu perfil de quien ofrece ayuda',
-            vida: 'Permanente. Se va cuando borras tu cuenta.',
+            que: 'Tu cuenta',
+            vida: 'Permanente. Se va cuando la borras.',
             familia: 'azul' as const,
           },
         ]
@@ -69,11 +69,6 @@ export default async function PrivacidadPage() {
     {
       que: 'Tus solicitudes de servicio',
       vida: '15 días, renovables. Después se borran de verdad.',
-      familia: 'verde',
-    },
-    {
-      que: 'Tus solicitudes de insumos',
-      vida: '72 horas, renovables. Después se borran de verdad.',
       familia: 'verde',
     },
     {
@@ -137,7 +132,7 @@ export default async function PrivacidadPage() {
     ...(perfil?.acepto_publicacion
       ? [
           {
-            nombre: 'Publicar mi perfil de quien ofrece ayuda',
+            nombre: 'Publicar mi ficha de profesional con matrícula',
             version: 'perfil',
             cuando: `Aceptada el ${fecha(perfil.acepto_politica_at)}`,
           },

@@ -9,9 +9,7 @@ import {
   productos,
   proveedores,
   publicacionesMuro,
-  respuestas,
   respuestasServicio,
-  solicitudes,
   solicitudesServicio,
 } from '@/db/esquema'
 import { MENSAJE_CONTACTO, contieneContacto } from '@/lib/validacion'
@@ -31,7 +29,7 @@ import type { Autor, Hilo, HiloEnBandeja, Mensaje, Origen } from '@/contrato/cha
  * origen solo identifica a uno: una ficha dice quién trabaja pero no quién lo
  * necesita, un producto dice quién vende pero no quién pregunta, y una
  * publicación del muro dice quién dona pero no quién recibe. Una respuesta
- * —de servicio o de insumo— ya identifica a los dos.
+ * —de servicio— ya identifica a los dos.
  */
 type Partes = {
   ofrece: string | null
@@ -44,7 +42,6 @@ type Partes = {
 /** Cómo se llama el otro cuando no publicó su nombre. */
 const ANONIMO: Record<Origen['tipo'], { ofrece: string; pide: string }> = {
   servicio: { ofrece: 'El prestador', pide: 'Quien pidió el servicio' },
-  insumo: { ofrece: 'Quien puede ayudar', pide: 'Quien pidió el insumo' },
   producto: { ofrece: 'Quien vende', pide: 'Quien preguntó' },
   muro: { ofrece: 'Quien lo ofrece', pide: 'Quien lo necesita' },
   ficha: { ofrece: 'El prestador', pide: 'Quien preguntó' },
@@ -74,21 +71,6 @@ async function partes(db: BaseDeDatos, origen: Origen): Promise<Partes | null> {
       .limit(1)
     // Quien pide un servicio no publica su nombre, y no se le inventa uno.
     return f ? { ...f, nombrePide: null } : null
-  }
-
-  if (origen.tipo === 'insumo') {
-    const [f] = await db
-      .select({
-        ofrece: respuestas.autorId,
-        pide: solicitudes.perfilId,
-        asunto: solicitudes.categoria,
-      })
-      .from(respuestas)
-      .innerJoin(solicitudes, eq(solicitudes.id, respuestas.solicitudId))
-      .where(eq(respuestas.id, origen.id))
-      .limit(1)
-    // En insumos nadie publica nombre: ni quien pide ni quien responde.
-    return f ? { ...f, nombreOfrece: null, nombrePide: null } : null
   }
 
   if (origen.tipo === 'ficha') {
@@ -167,8 +149,6 @@ function donde(origen: Origen, iniciadoPor: string | null): SQL {
   switch (origen.tipo) {
     case 'servicio':
       return eq(chats.respuestaServicioId, origen.id)
-    case 'insumo':
-      return eq(chats.respuestaInsumoId, origen.id)
     case 'producto':
       return and(eq(chats.productoId, origen.id), eq(chats.iniciadoPor, iniciadoPor!)) as SQL
     case 'muro':
@@ -182,8 +162,6 @@ function valores(origen: Origen, iniciadoPor: string | null) {
   switch (origen.tipo) {
     case 'servicio':
       return { respuestaServicioId: origen.id }
-    case 'insumo':
-      return { respuestaInsumoId: origen.id }
     case 'producto':
       return { productoId: origen.id, iniciadoPor }
     case 'muro':
@@ -374,7 +352,7 @@ type FilaBandeja = {
  * El SQL que aplana los cinco orígenes a una sola forma de fila.
  *
  * Lo usan la bandeja y el contador del menú, y por eso está aquí fuera: dos
- * copias de estos `join` se separarían el día que aparezca un sexto origen,
+ * copias de estos `join` se separarían el día que aparezca un quinto origen,
  * y entonces el menú contaría hilos que la bandeja no enseña.
  */
 const HILOS = sql`
@@ -382,32 +360,29 @@ const HILOS = sql`
     c.id,
     case
       when c.respuesta_servicio_id is not null then 'servicio'
-      when c.respuesta_insumo_id is not null then 'insumo'
       when c.producto_id is not null then 'producto'
       when c.proveedor_id is not null then 'ficha'
       else 'muro'
     end as tipo,
     coalesce(
-      c.respuesta_servicio_id, c.respuesta_insumo_id, c.producto_id,
+      c.respuesta_servicio_id, c.producto_id,
       c.proveedor_id, c.publicacion_id
     ) as origen_id,
     coalesce(
       pv.perfil_id,
-      ri.autor_id,
       pp.perfil_id,
       pf.perfil_id,
       case when pm.cara = 'ofrece' then pm.perfil_id else c.iniciado_por end
     ) as ofrece_id,
     coalesce(
       ss.perfil_id,
-      si.perfil_id,
       case when c.producto_id is not null or c.proveedor_id is not null
            then c.iniciado_por end,
       case when pm.cara = 'necesita' then pm.perfil_id else c.iniciado_por end
     ) as pide_id,
     c.visto_ofrece_at,
     c.visto_pide_at,
-    coalesce(ss.detalle, si.categoria, pr.nombre, pm.titulo) as asunto,
+    coalesce(ss.detalle, pr.nombre, pm.titulo) as asunto,
     coalesce(
       pv.nombre_visible,
       pp.nombre_visible,
@@ -419,8 +394,6 @@ const HILOS = sql`
   left join respuestas_servicio rs on rs.id = c.respuesta_servicio_id
   left join solicitudes_servicio ss on ss.id = rs.solicitud_id
   left join proveedores pv on pv.id = rs.proveedor_id
-  left join respuestas ri on ri.id = c.respuesta_insumo_id
-  left join solicitudes si on si.id = ri.solicitud_id
   left join productos pr on pr.id = c.producto_id
   left join proveedores pp on pp.id = pr.proveedor_id
   left join proveedores pf on pf.id = c.proveedor_id

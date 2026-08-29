@@ -386,12 +386,33 @@ dialog:has([data-marco-flujo]) {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  /* Un suelo, por si algo de dentro vuelve a medir cero. Una hoja de 90 px
+     asomando por el borde inferior no se lee como una hoja: se lee como
+     que la aplicación se rompió, que es exactamente lo que pasaba en
+     iPhone. Con esto, el peor caso sigue siendo una hoja. */
+  min-height: min(24rem, 92dvh);
 }
 
+/* ⚠ `flex-basis` en `auto`, y el `min-height: 0` se queda.
+
+   Las dos cosas son necesarias y arreglan fallos distintos:
+
+   `flex-basis: auto` —o sea `flex: 1 1 auto` y no `flex: 1`— porque el
+   diálogo tiene el `height: fit-content` que le pone el navegador y su alto
+   sale del contenido. Con la base en cero, Safari de iOS resuelve la
+   aportación de este hijo como cero: el cuerpo desaparecía y la hoja se
+   quedaba en el asa más la cabecera, unos 90 px pegados al borde de abajo.
+   Chrome y el WebKit de escritorio sí miran el contenido, y por eso esto no
+   salía en pruebas de escritorio.
+
+   `min-height: 0` porque sin él este hijo no puede encoger por debajo de su
+   contenido: al tocar el techo de `max-height` la hoja no recortaba, se
+   desbordaba, y con el `overflow: hidden` de arriba el final del formulario
+   quedaba cortado y sin manera de llegar a él. */
 dialog > [data-marco-flujo] {
   display: flex;
   min-height: 0;
-  flex: 1;
+  flex: 1 1 auto;
   flex-direction: column;
 }
 

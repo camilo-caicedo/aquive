@@ -44,9 +44,8 @@ export type ResultadoAvisos = 'activado' | 'ios' | 'sin-permiso' | 'error'
  * botón grande y en el momento oportuno, no se disparan solos.
  *
  * Devuelve la suscripción para que quien llama la guarde. Desde el ADR 0006
- * hay un solo sitio donde guardarla —`push_ofertadores`, por cuenta—: la
- * otra mitad colgaba del token de una solicitud, y esos tokens ya no
- * existen.
+ * hay un solo sitio donde guardarla —`push_avisos`, por cuenta—: la otra
+ * mitad colgaba del token de una solicitud, y esos tokens ya no existen.
  */
 async function suscribirEsteDispositivo(): Promise<
   { ok: true; suscripcion: PushSubscription } | { ok: false; motivo: ResultadoAvisos }
@@ -89,7 +88,7 @@ export async function activarAvisos(): Promise<ResultadoAvisos> {
   if (!r.ok) return r.motivo
 
   const json = r.suscripcion.toJSON()
-  const { error } = await createClient().rpc('guardar_push_ofertador', {
+  const { error } = await createClient().rpc('guardar_push', {
     p_endpoint: r.suscripcion.endpoint,
     p_p256dh: json.keys?.p256dh ?? '',
     p_auth: json.keys?.auth ?? '',
@@ -104,7 +103,7 @@ export async function desactivarAvisos(): Promise<boolean> {
     const suscripcion = await registro?.pushManager.getSubscription()
 
     if (suscripcion) {
-      await createClient().rpc('quitar_push_ofertador', {
+      await createClient().rpc('quitar_push', {
         p_endpoint: suscripcion.endpoint,
       })
       await suscripcion.unsubscribe()

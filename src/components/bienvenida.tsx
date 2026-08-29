@@ -92,8 +92,18 @@ export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
           </span>
         </Link>
 
+        {/* ⚠ El `?volver=` no es cosmético. Sin él, entrar por aquí llevaba a
+            Google y de vuelta al alta de cuenta, y ahí se acababa el
+            recorrido: quien venía a publicar su oficio tenía que volver a
+            buscar esta pantalla. Con él, `PuertaCerrada` y esto hacen lo
+            mismo, que es lo que se espera de dos botones con el mismo texto.
+            La ruta está en la lista blanca de `lib/destino.ts`. */}
         <Link
-          href={conSesion ? '/servicios/soy-proveedor' : '/login'}
+          href={
+            conSesion
+              ? '/servicios/soy-proveedor'
+              : '/login?volver=%2Fservicios%2Fsoy-proveedor'
+          }
           className="pulsable-tarjeta shadow-cartel-amarillo mt-4 block rounded-2xl bg-card p-5 transition-transform hover:-translate-y-0.5"
         >
           <span className="font-heading block text-xl">Ofrezco mi trabajo</span>
@@ -123,11 +133,6 @@ export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
           </p>
         )}
 
-        <p className="mt-6 text-center text-base">
-          <Link href="/ayudas" className="text-enlace underline underline-offset-4">
-            ¿Necesitas ayuda de emergencia?
-          </Link>
-        </p>
       </main>
     </div>
   )

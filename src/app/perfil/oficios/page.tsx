@@ -1,7 +1,7 @@
-import { redirect } from 'next/navigation'
 import { TOPE_OFICIOS } from '@/lib/servicios'
 import { FormularioProveedor } from '@/app/servicios/soy-proveedor/formulario-proveedor'
 import { cargarPerfil } from '../cargar'
+import { SinCarne } from '../sin-carne'
 
 export const metadata = { title: 'Mis oficios y precios' }
 
@@ -19,7 +19,14 @@ export default async function OficiosPage() {
   const { proveedor, municipios, oficios, oficiosPropuestos, zonas } =
     await cargarPerfil()
 
-  if (!proveedor) redirect('/servicios/soy-proveedor')
+  if (!proveedor) {
+    return (
+      <SinCarne
+        titulo="Mis oficios y precios"
+        porque="Los oficios y sus precios son lo que se publica en tu ficha. Sin ficha no hay dónde ponerlos."
+      />
+    )
+  }
 
   const escondidos = proveedor.oficios.filter((o) => !o.publicado)
 

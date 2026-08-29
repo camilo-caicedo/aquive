@@ -1,10 +1,8 @@
 import Link from 'next/link'
 import {
   HandHeart,
-  PackageOpen,
   Stethoscope,
   Briefcase,
-  Building2,
   BadgeCheck,
   TriangleAlert,
 } from 'lucide-react'
@@ -75,65 +73,19 @@ const ROLES: Rol[] = [
     accion: { href: '/servicios/soy-proveedor', texto: 'Publicar mi ficha' },
   },
   {
-    id: 'pedir',
-    Icono: HandHeart,
-    titulo: 'Si necesitas insumos de la emergencia',
-    para: 'No hace falta cuenta ni dar tus datos.',
-    pasos: [
-      'Toca «Necesito ayuda» y elige tu municipio y tu barrio. No pedimos la dirección exacta.',
-      'Escoge de la lista qué te hace falta y cuánto. Si algo no está, puedes proponerlo hasta tres veces.',
-      'Si quieres, agrega una nota corta y marca «Puedo recoger» cuando puedas ir a buscarlo. Así no tienen que preguntártelo después.',
-      'Si en tu municipio hay una fundación, te preguntamos si prefieres que ella coordine la entrega. Es opcional: tu solicitud se publica igual y sin ningún dato tuyo.',
-      'Guarda el enlace que te damos. Desde ahí ves quién respondió y también quién tiene lo que pediste, y decides tú a quién le escribes.',
-    ],
-    ojo: 'Ese enlace es la única forma de volver a tu solicitud, y no podemos recuperarlo: no guardamos a quién pertenece. Mándatelo por WhatsApp a ti mismo o guarda la captura del código.',
-    accion: { href: '/publicar', texto: 'Publicar una solicitud' },
-  },
-  {
-    id: 'ofrecer',
-    Icono: PackageOpen,
-    titulo: 'Si quieres entregar insumos',
-    para: 'Entras con Google. De esa cuenta solo guardamos un identificador: el correo se descarta.',
-    pasos: [
-      'Crea tu perfil: cómo te llamas, en qué municipios puedes ayudar y una forma de contacto pública.',
-      'Marca «Puedo trasladarme a entregar» si puedes llevar las cosas. Aparece en tu ficha y viene marcado cuando respondas.',
-      'Si quieres, escribe qué tienes. Es opcional, pero es lo que hace que te avisemos cuando alguien pida justo eso, y lo que te pone delante de quien lo necesita.',
-      'En «Ayudas» mira quién está pidiendo, o marca lo que puedes dar y te salen las solicitudes que lo piden.',
-      'Responde diciendo qué puedes aportar. Quien pidió ayuda ve tu respuesta y te escribe si le sirve: el primer mensaje lo da esa persona, no tú.',
-    ],
-    ojo: 'Nunca envíes nada por adelantado ni pidas plata. Si la solicitud tiene fundación, la entrega ocurre en su punto de acopio y la conversación pasa por aquí, con los tres a la vez.',
-    accion: { href: '/registro', texto: 'Crear mi perfil' },
-  },
-  {
     id: 'servicios',
     Icono: BadgeCheck,
     titulo: 'Si eres profesional con matrícula',
     para: 'Ingeniería, arquitectura, psicología, salud o derecho.',
     pasos: [
-      'Crea tu perfil y marca «Servicios profesionales». Puedes marcar también insumos: no es una cosa o la otra.',
+      'Entra con Google y abre tu cuenta: tu nombre y tu municipio, nada más.',
       'Indica tu profesión, la entidad de tu matrícula (COPNIA, CPNAA, COLPSIC, ReTHUS o SIRNA) y el número.',
       'Elige qué servicios puedes prestar de la lista.',
       'Una persona consulta tu número en el registro de tu entidad, a mano. No es automático y puede tardar.',
       'Mientras tanto tu ficha se publica con un aviso de «Sin verificar» bien visible, y cualquiera puede verlo.',
     ],
     ojo: 'El sello verificado significa solo que ese número aparece en el registro. No dice nada sobre tu experiencia ni te respalda, y así se lo explicamos a quien te contacte.',
-    accion: { href: '/registro', texto: 'Registrar mi matrícula' },
-  },
-  {
-    id: 'fundacion',
-    Icono: Building2,
-    titulo: 'Si trabajas en una fundación aliada',
-    para: 'No se entra por aquí: hace falta el enlace que reparte tu coordinador.',
-    pasos: [
-      'Un administrador da de alta la organización después de mirar su certificado del RUES y su NIT. Las organizaciones no se registran solas.',
-      'El coordinador entra con su enlace y, desde «Mi equipo», reparte invitaciones al resto: un código con QR, con fecha de vencimiento y número de usos.',
-      'Quien llega con código queda activo de una vez. Quien llega sin él espera aprobación y mientras tanto no ve nada.',
-      'En «Conversaciones» aparecen los hilos. Alguien tiene que hacerse cargo de cada uno: hasta que eso pase, nadie puede escribir.',
-      'En «Solicitudes por atender» está lo que acompaña tu organización. Si lo tienes en la bodega, ábrelo con «Lo entregamos nosotros»; si lo tiene otra persona, invítala a coordinar.',
-      'Llama a los proveedores que esperan verificación. Hasta que alguien marque su número, su ficha no se ve en el directorio.',
-      'En el acopio, registra qué entregaste y descarga la planilla en ese momento. Desde ahí la custodia es de la fundación.',
-    ],
-    ojo: 'Ver el nombre de alguien exige un permiso que un coordinador otorga persona por persona, y cada consulta queda registrada con quién fue y por qué. En el chat no se pueden intercambiar teléfonos: la coordinación ocurre aquí para que quede constancia.',
+    accion: { href: '/perfil/matricula', texto: 'Registrar mi matrícula' },
   },
 ]
 
@@ -143,12 +95,6 @@ const PARTES = [
     titulo: 'El directorio de servicios',
     texto:
       'Gente que vive de su oficio y quiere que la encuentren. Estas fichas no se borran solas: se quedan mientras la persona quiera. Es lo que ves al entrar.',
-  },
-  {
-    Icono: HandHeart,
-    titulo: 'La ayuda de emergencia',
-    texto:
-      'Quien necesita insumos tras el sismo del 10 de agosto de 2026 y quien puede darlos. Las solicitudes se borran solas a las 72 horas, y esta parte dejará de operar cuando deje de ser útil.',
   },
 ]
 

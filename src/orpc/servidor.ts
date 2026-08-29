@@ -9,7 +9,7 @@ import * as chat from '@/server/chat/hilo'
 import * as comunidad from '@/server/comunidad/muro'
 import * as acopios from '@/server/acopios/consultas'
 import * as cuentas from '@/server/cuentas/alta'
-import * as insumos from '@/server/insumos/solicitudes'
+import * as propia from '@/server/cuentas/propia'
 import * as productos from '@/server/comunidad/productos'
 import * as imagenes from '@/server/imagenes/recorrido'
 import * as moderacion from '@/server/moderacion/comandos'
@@ -17,6 +17,7 @@ import * as pqr from '@/server/pqr/buzon'
 import * as servicios from '@/server/servicios/consultas'
 import * as pedidos from '@/server/servicios/solicitudes'
 import * as propuestos from '@/server/servicios/oficios-propuestos'
+import * as matricula from '@/server/servicios/matricula'
 import * as ubicacion from '@/server/servicios/ubicacion'
 import * as foto from '@/server/servicios/foto'
 import * as altaAsistida from '@/server/servicios/alta-asistida'
@@ -36,6 +37,25 @@ export const enrutador = os.router({
   servicios: {
     inicio: os.servicios.inicio.handler(({ input }) => servicios.inicio(db, input)),
     ficha: os.servicios.ficha.handler(({ input }) => servicios.ficha(db, input.id)),
+    profesional: os.servicios.profesional.handler(({ input }) =>
+      servicios.profesional(db, input.id),
+    ),
+    miMatricula: os.servicios.miMatricula.handler(({ context }) =>
+      matricula.mia(db, { usuarioId: context.usuarioId }),
+    ),
+    guardarMatricula: os.servicios.guardarMatricula.handler(
+      async ({ input, context, errors }) => {
+        try {
+          return await matricula.guardar(db, input, { usuarioId: context.usuarioId })
+        } catch (e) {
+          if (e instanceof matricula.MatriculaRechazada) {
+            throw errors.RECHAZADO({ data: { motivo: e.message } })
+          }
+          throw e
+        }
+      },
+    ),
+    entidad: os.servicios.entidad.handler(({ input }) => servicios.entidad(db, input.id)),
     directorio: os.servicios.directorio.handler(({ input }) => servicios.directorio(db, input)),
     miFicha: os.servicios.miFicha.handler(({ context }) =>
       servicios.miFicha(db, context.usuarioId),
@@ -143,46 +163,6 @@ export const enrutador = os.router({
   moderacion: {
     reportar: os.moderacion.reportar.handler(({ input }) => moderacion.reportar(db, input)),
   },
-  insumos: {
-    publicar: os.insumos.publicar.handler(async ({ input, context, errors }) => {
-      try {
-        return await insumos.publicar(db, input, { usuarioId: context.usuarioId })
-      } catch (e) {
-        if (e instanceof insumos.InsumoRechazado) {
-          throw errors.RECHAZADO({ data: { motivo: e.message } })
-        }
-        throw e
-      }
-    }),
-    mias: os.insumos.mias.handler(({ context }) =>
-      insumos.mias(db, { usuarioId: context.usuarioId }),
-    ),
-    porCodigo: os.insumos.porCodigo.handler(({ input, context }) =>
-      insumos.porCodigo(db, input.codigo, { usuarioId: context.usuarioId }),
-    ),
-    responder: os.insumos.responder.handler(async ({ input, context, errors }) => {
-      try {
-        return await insumos.responder(db, input, { usuarioId: context.usuarioId })
-      } catch (e) {
-        if (e instanceof insumos.InsumoRechazado) {
-          throw errors.RECHAZADO({ data: { motivo: e.message } })
-        }
-        throw e
-      }
-    }),
-    gestionar: os.insumos.gestionar.handler(async ({ input, context, errors }) => {
-      try {
-        return await insumos.gestionar(db, input.id, input.accion, {
-          usuarioId: context.usuarioId,
-        })
-      } catch (e) {
-        if (e instanceof insumos.InsumoRechazado) {
-          throw errors.RECHAZADO({ data: { motivo: e.message } })
-        }
-        throw e
-      }
-    }),
-  },
   acopios: {
     lista: os.acopios.lista.handler(({ input }) => acopios.lista(db, input)),
     movimientos: os.acopios.movimientos.handler(({ input, context }) =>
@@ -229,6 +209,31 @@ export const enrutador = os.router({
         throw e
       }
     }),
+    // La cuenta propia (ADR 0015). Sin `exigirAdmin`: cada quien abre y edita
+    // la suya, y el dominio comprueba que haya sesión.
+    mia: os.cuentas.mia.handler(({ context }) =>
+      propia.mia(db, { usuarioId: context.usuarioId }),
+    ),
+    abrir: os.cuentas.abrir.handler(async ({ input, context, errors }) => {
+      try {
+        return await propia.abrir(db, input, { usuarioId: context.usuarioId })
+      } catch (e) {
+        if (e instanceof cuentas.CuentaRechazada) {
+          throw errors.RECHAZADO({ data: { motivo: e.message } })
+        }
+        throw e
+      }
+    }),
+    guardarMia: os.cuentas.guardarMia.handler(async ({ input, context, errors }) => {
+      try {
+        return await propia.guardar(db, input, { usuarioId: context.usuarioId })
+      } catch (e) {
+        if (e instanceof cuentas.CuentaRechazada) {
+          throw errors.RECHAZADO({ data: { motivo: e.message } })
+        }
+        throw e
+      }
+    }),
   },
   comunidad: {
     muro: os.comunidad.muro.handler(({ input }) => comunidad.muro(db, input)),
@@ -250,6 +255,7 @@ export const enrutador = os.router({
       },
     ),
     productos: os.comunidad.productos.handler(({ input }) => comunidad.productos(db, input)),
+    producto: os.comunidad.producto.handler(({ input }) => comunidad.producto(db, input.id)),
     misProductos: os.comunidad.misProductos.handler(({ context }) =>
       productos.mios(db, context.usuarioId),
     ),
