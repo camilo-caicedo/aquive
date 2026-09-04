@@ -29,7 +29,7 @@ const SIGUIENTES: Partial<
 }
 
 /**
- * La orden que abrió este hilo (ADR 0015), fija arriba de la conversación:
+ * La orden que abrió este hilo (ADR 0017), fija arriba de la conversación:
  * qué se pidió, con qué precio y en qué estado — para los dos lados.
  *
  * Los botones de transición solo los ve el prestador (`soy === 'ofrece'`):

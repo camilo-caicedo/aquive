@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { HojaAccion } from '@/components/hoja-accion'
 
-// El menú de la sombrilla (ADR 0016). La bienvenida va primera: es lo que
+// El menú de la sombrilla (ADR 0018). La bienvenida va primera: es lo que
 // se pierde en un toque —ir directo a «/»— y lo que este menú compensa.
 // «Aliados» y «Datos abiertos» no cuelgan de ninguna celda de la barra,
 // igual que estas otras tres: son información del sitio, no «lo mío»
@@ -30,7 +30,7 @@ const ENLACES_MENU: { href: string; etiqueta: string; Icono: LucideIcon }[] = [
 ]
 
 /**
- * La marca del encabezado, que desde el ADR 0016 abre el menú.
+ * La marca del encabezado, que desde el ADR 0018 abre el menú.
  *
  * ⚠ Vive en su propio archivo cliente y no dentro de `Encabezado` por una
  * razón que no se ve hasta ejecutarlo: `HojaAccion` recibe su disparador

@@ -1,13 +1,13 @@
 -- =====================================================================
 -- v6 · Fase F · 5 — las vistas que se llevó el cascade
 --
--- `v6-f3` (línea 434) hizo `drop view if exists public.proveedores_publicos
+-- `v6-f5` (línea 434) hizo `drop view if exists public.proveedores_publicos
 -- cascade` para poder meterle a la vista el filtro de dirección del ADR
 -- 0017. El `cascade` derriba TODO lo que cuelga de la vista, no solo lo
 -- que el autor tenía en mente: recreó `municipios_con_proveedores` y
 -- `oficios_con_proveedores` (línea 483 y siguientes) pero se dejó dos, y
 -- de paso la vista principal perdió `foto`, que nunca estuvo en el
--- `select` que `v6-f3` volvió a escribir.
+-- `select` que `v6-f5` volvió a escribir.
 --
 -- Comprobado contra la base de pruebas antes de escribir esto, con
 -- `information_schema.view_table_usage` y `pg_depend`: hoy, con la vista
@@ -17,17 +17,17 @@
 -- `catalogo_oficios`-- así que un `cascade` sobre `proveedores_publicos`
 -- no la toca y no hace falta recrearla aquí. Y `muro_publico` y
 -- `productos_publicos` no aparecen en esa lista por la razón mala: ya no
--- existen, se las llevó el `cascade` de `v6-f3` y nadie las devolvió.
+-- existen, se las llevó el `cascade` de `v6-f5` y nadie las devolvió.
 --
 -- Esta migración repara las tres cosas:
---   1. `proveedores_publicos` recuperada TAL CUAL queda en `v6-f3`
---      (mismo filtro de dirección del ADR 0017, mismo `where`), más la
---      columna `foto` que traía `v6-b7` y que `v6-f3` no copió.
+--   1. `proveedores_publicos` recuperada TAL CUAL queda en `v6-f5`
+--      (mismo filtro de dirección del ADR 0019, mismo `where`), más la
+--      columna `foto` que traía `v6-b7` y que `v6-f5` no copió.
 --   2. `municipios_con_proveedores`, que el `cascade` de este archivo se
 --      vuelve a llevar por delante --se recrea a continuación, idéntica
---      a como está en `v6-f3`--.
---   3. `muro_publico`, recuperada de `v6-f1` (la forma buena, SIN `cara`:
---      el ADR 0014 dejó al muro una sola cara y no hay que devolverle la
+--      a como está en `v6-f5`--.
+--   3. `muro_publico`, recuperada de `v6-f3` (la forma buena, SIN `cara`:
+--      el ADR 0016 dejó al muro una sola cara y no hay que devolverle la
 --      que se quitó a propósito).
 --   4. `productos_publicos`, recuperada de `v4-f1`, que es la versión más
 --      reciente que la toca --comprobado con grep, nada posterior a
@@ -46,15 +46,15 @@
 -- (`proveedores.acepto_foto`), su propia versión y su propia fecha. La
 -- vista devuelve la foto SOLO si la persona la autorizó y la imagen está
 -- aprobada por moderación; si no, NULL. Es el mismo `case` que ya usan
--- las coordenadas del mapa (ADR 0004) y la dirección (ADR 0017), copiado
+-- las coordenadas del mapa (ADR 0004) y la dirección (ADR 0019), copiado
 -- tal cual de `v6-b7`, que fue la última migración que definió esta
--- columna antes de que `v6-f3` la perdiera.
+-- columna antes de que `v6-f5` la perdiera.
 --
 -- Idempotente. Se puede volver a correr.
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
--- 1 · `proveedores_publicos`, igual que en `v6-f3` + `foto` de `v6-b7`
+-- 1 · `proveedores_publicos`, igual que en `v6-f5` + `foto` de `v6-b7`
 -- ---------------------------------------------------------------------
 
 drop view if exists public.proveedores_publicos cascade;
@@ -129,11 +129,11 @@ grant select on public.municipios_con_proveedores to anon, authenticated;
 
 -- `oficios_con_proveedores` NO depende de `proveedores_publicos` (depende
 -- de `proveedor_oficios_publicos` y `catalogo_oficios`), así que el
--- `cascade` de arriba no la tocó y sigue en pie tal cual la dejó `v6-f3`.
+-- `cascade` de arriba no la tocó y sigue en pie tal cual la dejó `v6-f5`.
 -- No hace falta recrearla.
 
 -- ---------------------------------------------------------------------
--- 3 · `muro_publico`, recuperada de `v6-f1` (sin `cara`, ADR 0014)
+-- 3 · `muro_publico`, recuperada de `v6-f3` (sin `cara`, ADR 0016)
 -- ---------------------------------------------------------------------
 
 create view public.muro_publico as

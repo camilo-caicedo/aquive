@@ -22,7 +22,7 @@ const TIPO_ETIQUETA: Record<string, string> = {
 }
 
 /**
- * `/aliados`, pública y nueva (ADR 0016 y CLAUDE.md § Pantallas · Acopio).
+ * `/aliados`, pública y nueva (ADR 0018 y CLAUDE.md § Pantallas · Acopio).
  *
  * ⚠ No existe una tabla de «aliados» con logo, descripción o sitio web —
  * `organizaciones` (`db/esquema.ts`) solo tiene nombre, tipo, municipios y

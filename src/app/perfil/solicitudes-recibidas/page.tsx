@@ -7,7 +7,7 @@ import { ListaOrdenes } from './lista-ordenes'
 export const metadata = { title: 'Solicitudes recibidas' }
 
 /**
- * La bandeja del prestador (ADR 0015): las órdenes que le llegaron a su
+ * La bandeja del prestador (ADR 0017): las órdenes que le llegaron a su
  * ficha, con su estado y los botones para aceptarlas, rechazarlas o
  * cerrarlas.
  *

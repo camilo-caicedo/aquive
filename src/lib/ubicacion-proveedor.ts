@@ -3,7 +3,7 @@
 // probarse con `node src/lib/servicios.ubicacion.test.mjs` y nada más.
 
 /**
- * Si la ubicación de una ficha se puede guardar (ADR 0017).
+ * Si la ubicación de una ficha se puede guardar (ADR 0019).
  *
  * El barrio es el dato principal y obligatorio. La comuna no entra aquí
  * ni falta que entre: es secundaria y nunca bloquea, así que no tiene nada

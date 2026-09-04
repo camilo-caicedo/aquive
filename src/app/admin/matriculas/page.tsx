@@ -31,7 +31,7 @@ export default async function MatriculasPage() {
   // mano declaran `Relationships: []`, así que PostgREST no puede resolver
   // `servidores -> perfiles` a nivel de tipos.
   const [{ data: servidores }, { data: perfiles }, municipios] = await Promise.all([
-    // v6-f3: la matrícula salió del registro y ahora es opcional y
+    // v6-f5: la matrícula salió del registro y ahora es opcional y
     // posterior, así que `verificado = false` ya no basta -incluye a
     // quien todavía no ha escrito ninguna-. Solo entra a la cola quien de
     // verdad puso un número.

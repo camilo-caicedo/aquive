@@ -181,7 +181,7 @@ export interface MiProveedor {
   foto_at: string | null
   /** La dirección lleva la suya, aparte de la del mapa y la de publicar
    *  la ficha: publicar dónde vive o atiende alguien es otra finalidad
-   *  (ADR 0017, mismo criterio que el ADR 0004). Se guarda siempre que se
+   *  (ADR 0019, mismo criterio que el ADR 0004). Se guarda siempre que se
    *  escriba, autorizada o no — es la vista pública la que filtra. */
   direccion: string | null
   acepto_direccion: boolean
@@ -646,7 +646,7 @@ export interface Database {
         Row: {
           perfil_id: string
           profesion: string
-          // v6-f3: opcionales desde que la matrícula salió del registro
+          // v6-f5: opcionales desde que la matrícula salió del registro
           // (ADR de la tarea del 3 de septiembre de 2026). NULL significa
           // "todavía no la dio", no "no tiene" — se llena después desde
           // /perfil/matricula.
@@ -1242,7 +1242,7 @@ export interface Database {
           p_oficios: Json
           p_acepto_publicacion: boolean
           p_autorizacion_version: string
-          // v6-f3 (ADR 0017): la dirección, opcional, con su propia
+          // v6-f5 (ADR 0019): la dirección, opcional, con su propia
           // autorización aparte.
           p_direccion?: string | null
           p_acepto_direccion?: boolean

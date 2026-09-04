@@ -297,7 +297,7 @@ export const OficioPropuesto = z.object({
 export type OficioPropuesto = z.infer<typeof OficioPropuesto>
 
 /**
- * Los cinco estados de una orden (ADR 0015). `pendiente` es el estado de
+ * Los cinco estados de una orden (ADR 0017). `pendiente` es el estado de
  * nacimiento; `aceptada` y `rechazada` son la respuesta del prestador;
  * `realizada` cierra bien; `no_concretada` cierra sin trabajo, sin decir de
  * quién fue la culpa. Gemelo del `CHECK` de la base y de
@@ -332,7 +332,7 @@ export const MiSolicitudServicio = z.object({
   estado: EstadoSolicitud,
   creada_at: z.string(),
   expira_at: z.string(),
-  /** A quién se le pidió (ADR 0015): con qué ficha seguir hablando. */
+  /** A quién se le pidió (ADR 0017): con qué ficha seguir hablando. */
   proveedor_id: z.uuid(),
   /** Nulo si esa ficha ya se borró: la fila sigue, huérfana de nombre. */
   proveedor_nombre: z.string().nullable(),
@@ -349,7 +349,7 @@ const erroresMatricula = {
 } as const
 
 /**
- * Una orden en la bandeja del prestador (ADR 0015). Sin datos de quien
+ * Una orden en la bandeja del prestador (ADR 0017). Sin datos de quien
  * pide —el mínimo legal no cambia: la cuenta no se publica— y sin
  * `proveedor_id`: la bandeja ya está filtrada por la ficha de quien mira.
  */
@@ -545,7 +545,7 @@ export const contratoServicios = {
   /**
    * Pedir un servicio.
    *
-   * ⚠ ADR 0015: deja de ser un pedido al aire y pasa a nacer dirigido —
+   * ⚠ ADR 0017: deja de ser un pedido al aire y pasa a nacer dirigido —
    * `proveedor_id` es obligatorio—. El formulario corto que abre la ficha ya
    * sabe a quién se le pide, así que municipio y zona los copia el dominio
    * de esa ficha en vez de volver a preguntarlos; y urgencia y capacidad de
@@ -568,7 +568,7 @@ export const contratoServicios = {
     .errors(erroresUbicacion)
     .input(
       z.object({
-        /** A quién se le pide (ADR 0015). */
+        /** A quién se le pide (ADR 0017). */
         proveedor_id: z.uuid(),
         /** Uno de los oficios que ESA ficha ya ofrece, nunca del catálogo entero. */
         oficio_id: z.string().trim().min(1).max(60),
@@ -582,7 +582,7 @@ export const contratoServicios = {
   misSolicitudes: oc.output(z.array(MiSolicitudServicio)),
 
   /**
-   * La bandeja del prestador (ADR 0015): sus órdenes, para aceptar,
+   * La bandeja del prestador (ADR 0017): sus órdenes, para aceptar,
    * rechazar, o cerrar las que ya aceptó.
    */
   misOrdenes: oc.output(z.array(OrdenProveedor)),
@@ -710,7 +710,7 @@ export const contratoServicios = {
 
   /**
    * Quien pide gestiona la suya: renovarla 15 días más —solo mientras sigue
-   * pendiente, ADR 0015— o cancelarla.
+   * pendiente, ADR 0017— o cancelarla.
    *
    * ⚠ No hay acción «rechazar» de este lado: eso es del prestador, y va por
    * `cambiarEstadoSolicitud`. Cancelar aterriza en `no_concretada`, no en

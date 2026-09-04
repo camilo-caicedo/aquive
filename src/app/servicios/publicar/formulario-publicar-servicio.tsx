@@ -15,11 +15,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
 /**
- * Pedirle un servicio a un prestador concreto (ADR 0015).
+ * Pedirle un servicio a un prestador concreto (ADR 0017).
  *
  * ⚠ Solo ofrece lo que ESTA ficha ya declaró — `ficha.oficios`, no el
  * catálogo de 81 oficios en doce categorías—. Ofrecerle a una modista un
- * oficio que no hace es el mismo tablero abierto que el ADR 0014 acaba de
+ * oficio que no hace es el mismo tablero abierto que el ADR 0016 acaba de
  * retirar, con un paso de categoría de más. Por eso tampoco hay paso de
  * categoría ni «¿no encuentras lo tuyo?»: el universo ya es pequeño y es
  * exactamente lo que ese prestador ofrece. Si la ficha tiene un solo

@@ -1,8 +1,8 @@
 -- =====================================================================
 -- v6 · Fase F · 2 — la solicitud es una orden dirigida a un prestador
--- (ADR 0015)
+-- (ADR 0017)
 --
--- El ADR 0014 (v6-f1) retiró el tablero público de solicitudes de
+-- El ADR 0016 (v6-f3) retiró el tablero público de solicitudes de
 -- servicio: la tabla `solicitudes_servicio` se quedó viva —es lo que
 -- pide quien busca un servicio y lo que enseña `/mis-solicitudes`— pero
 -- sin nada que la dirigiera a nadie. Esto la convierte en lo que el
@@ -34,7 +34,7 @@
 --
 -- Las solicitudes que ya existen nacieron del tablero abierto: no tienen
 -- destinatario, y no hay de dónde deducir uno sensato —`respuestas_
--- servicio`, que habría dicho quién contestó, ya se borró en v6-f1—.
+-- servicio`, que habría dicho quién contestó, ya se borró en v6-f3—.
 -- Inventar un proveedor sería fabricar una orden que nadie aceptó, así
 -- que se van. Mismo criterio que v5-a3 con lo que se quedó sin
 -- `perfil_id` al llegar el ADR 0006.
@@ -49,7 +49,7 @@ alter table public.solicitudes_servicio
   alter column proveedor_id set not null;
 
 comment on column public.solicitudes_servicio.proveedor_id is
-  'A quién se le pide (ADR 0015). Obligatoria desde el nacimiento de la fila, nunca se rellena después. ON DELETE CASCADE: la orden muere con la ficha, regla de producto 3.';
+  'A quién se le pide (ADR 0017). Obligatoria desde el nacimiento de la fila, nunca se rellena después. ON DELETE CASCADE: la orden muere con la ficha, regla de producto 3.';
 
 -- ---------------------------------------------------------------------
 -- 2 · Cinco estados
@@ -76,7 +76,7 @@ alter table public.solicitudes_servicio
   check (estado = any (array['pendiente','aceptada','realizada','rechazada','no_concretada']));
 
 comment on column public.solicitudes_servicio.estado is
-  'pendiente | aceptada | realizada | rechazada | no_concretada (ADR 0015). Transiciones válidas: pendiente -> aceptada | rechazada; aceptada -> realizada | no_concretada. Las comprueba el dominio, no esta columna.';
+  'pendiente | aceptada | realizada | rechazada | no_concretada (ADR 0017). Transiciones válidas: pendiente -> aceptada | rechazada; aceptada -> realizada | no_concretada. Las comprueba el dominio, no esta columna.';
 
 -- ---------------------------------------------------------------------
 -- 3 · Fuera `urgencia` y `capacidad_pago`
@@ -105,7 +105,7 @@ create index if not exists idx_solicitudes_servicio_proveedor
 drop index if exists public.idx_solicitudes_servicio_vigentes;
 
 comment on table public.solicitudes_servicio is
-  'Una orden dirigida a un prestador (ADR 0015), no un pedido al aire. Regla 1 completa del mínimo legal: describe un servicio que hace falta, no a quien lo pide. Borrado duro a los 15 días SOLO mientras está pendiente (`expirar_servicios`); aceptada no vence sola.';
+  'Una orden dirigida a un prestador (ADR 0017), no un pedido al aire. Regla 1 completa del mínimo legal: describe un servicio que hace falta, no a quien lo pide. Borrado duro a los 15 días SOLO mientras está pendiente (`expirar_servicios`); aceptada no vence sola.';
 
 -- ---------------------------------------------------------------------
 -- 5 · `expirar_servicios()` solo vence lo pendiente
@@ -124,7 +124,7 @@ as $function$
 begin
   -- 1. Métrica anónima ANTES del borrado, que es cuando todavía hay de
   --    dónde sacarla. Solo de lo PENDIENTE: una orden aceptada no se
-  --    vence aquí (ADR 0015), así que nunca llega a esta consulta.
+  --    vence aquí (ADR 0017), así que nunca llega a esta consulta.
   insert into public.metricas_servicio (
     municipio, oficio, grupo, hubo_respuesta, hubo_confirmacion,
     horas_hasta_respuesta, es_prueba
@@ -146,7 +146,7 @@ $function$;
 revoke execute on function public.expirar_servicios() from public, anon, authenticated;
 
 comment on function public.expirar_servicios() is
-  'Solo lo llama pg_cron (trabajo "expirar-servicios"). Borrado duro (regla 4), y SOLO de solicitudes_servicio en estado pendiente (ADR 0015): una orden aceptada no vence sola. No toca proveedores: esa tabla no expira.';
+  'Solo lo llama pg_cron (trabajo "expirar-servicios"). Borrado duro (regla 4), y SOLO de solicitudes_servicio en estado pendiente (ADR 0017): una orden aceptada no vence sola. No toca proveedores: esa tabla no expira.';
 
 -- ---------------------------------------------------------------------
 -- 6 · El chat nace con la orden: `chats.solicitud_servicio_id`
@@ -192,7 +192,7 @@ alter table public.chats add constraint chats_un_origen check (
 );
 
 comment on column public.chats.solicitud_servicio_id is
-  'De qué orden nace el hilo (ADR 0015). ON DELETE CASCADE: el hilo muere con la orden, regla de producto 3. UNIQUE simple, no por iniciado_por: la orden ya identifica a los dos lados.';
+  'De qué orden nace el hilo (ADR 0017). ON DELETE CASCADE: el hilo muere con la orden, regla de producto 3. UNIQUE simple, no por iniciado_por: la orden ya identifica a los dos lados.';
 
 -- Comprobar:
 --   select conname, pg_get_constraintdef(oid) from pg_constraint

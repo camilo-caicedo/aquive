@@ -217,7 +217,7 @@ export function FormularioProveedor({
   const [municipio, setMunicipio] = useState(proveedor?.municipio ?? '')
   const [zonaId, setZonaId] = useState(proveedor?.zona_id ?? '')
   const [zonaTexto, setZonaTexto] = useState(proveedor?.zona_texto ?? '')
-  // La dirección, opcional, con su propia autorización (ADR 0017): otra
+  // La dirección, opcional, con su propia autorización (ADR 0019): otra
   // finalidad que publicar el nombre o el punto del mapa, artículo 9.
   const [direccion, setDireccion] = useState(proveedor?.direccion ?? '')
   const [autorizoDireccion, setAutorizoDireccion] = useState(
@@ -380,7 +380,7 @@ export function FormularioProveedor({
 
   // El barrio es el dato principal y obligatorio; la comuna es secundaria
   // y nunca bloquea -«muchas personas no saben a cuál pertenecen»-; y la
-  // dirección solo hace falta si se autoriza publicarla (ADR 0017).
+  // dirección solo hace falta si se autoriza publicarla (ADR 0019).
   const hayUbicacion = ubicacionCompleta({
     municipio,
     barrio: zonaTexto,
@@ -490,7 +490,7 @@ export function FormularioProveedor({
       p_acepto_publicacion: true,
       p_autorizacion_version: AUTORIZACION_PROVEEDOR_VERSION,
       // La dirección se guarda siempre que se escriba, autorizada o no
-      // (ADR 0017): es la vista pública la que decide qué enseña.
+      // (ADR 0019): es la vista pública la que decide qué enseña.
       p_direccion: direccion.trim() || null,
       p_acepto_direccion: autorizoDireccion,
       p_direccion_version: autorizoDireccion ? AUTORIZACION_DIRECCION_VERSION : null,
@@ -751,7 +751,7 @@ export function FormularioProveedor({
               <legend className="text-base font-medium">¿En qué parte?</legend>
 
               {/* El barrio es el dato principal y obligatorio; la comuna
-                  queda del todo aparte y nunca bloquea (ADR 0017): muchas
+                  queda del todo aparte y nunca bloquea (ADR 0019): muchas
                   personas no saben a cuál comuna pertenecen. */}
               <div className="mt-2">
                 <Label htmlFor="zona">{etiquetaZona}</Label>
@@ -806,7 +806,7 @@ export function FormularioProveedor({
               )}
 
               {/* La dirección: opcional, y publicarla es OTRA finalidad que
-                  publicar el nombre o el punto del mapa (ADR 0017, artículo 9
+                  publicar el nombre o el punto del mapa (ADR 0019, artículo 9
                   de la Ley 1581). Se guarda siempre que se escriba; lo que la
                   casilla decide es si se muestra. */}
               <div className="mt-4">
@@ -1463,7 +1463,7 @@ export function FormularioProveedor({
       resumen: autorizo ? 'Aceptado' : 'Falta tu autorización',
       falta: !autorizo,
       cuerpo: (
-        /* ADR 0017: la casilla dice una frase corta -sin el nombre de la
+        /* ADR 0019: la casilla dice una frase corta -sin el nombre de la
            Fundación en la línea que se ve de entrada-, y el texto legal
            completo -con el nombre y el NIT, palabra por palabra, sin
            recortar- va en un <details> debajo, plegado. El artículo 12 de

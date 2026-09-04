@@ -24,7 +24,7 @@ comisión y sin mover dinero por la plataforma. Cuatro cosas:
    imágenes.
 
 ⚠ Hubo un quinto módulo, **Insumos**: quien necesitaba algo publicaba una
-solicitud y quien podía, respondía. El ADR 0014 lo retiró entero, junto con
+solicitud y quien podía, respondía. El ADR 0016 lo retiró entero, junto con
 el tablero público de solicitudes de servicio y la cara «necesita» del
 muro — las tres eran la misma forma de conectar, «publica y espera», y el
 cliente la rechazó tras probar la aplicación. Lo que queda para todo lo que
@@ -136,7 +136,7 @@ Hay mensajería interna, **una sola para toda la aplicación** (ADR 0009). Un
 hilo cuelga de una de tres cosas —un producto, una publicación del muro o
 una ficha de prestador— y se borra cuando se borra ella.
 
-⚠ Eran cinco. El ADR 0014 retiró las otras dos —una respuesta a un pedido de
+⚠ Eran cinco. El ADR 0016 retiró las otras dos —una respuesta a un pedido de
 servicio y una respuesta a una solicitud de insumos— con el tablero de
 solicitudes de servicio y el módulo de insumos enteros. El chat de la ficha
 pasa a ser el único canal de todo lo de servicios.
@@ -401,8 +401,8 @@ diferencia entre «el código no debería» y «la base no lo acepta».
 
 | Paso | Estado |
 | --- | --- |
-| 1 · Tipos de Drizzle desde el esquema | **hecho** — regenerado con `npm run db:pull` el 3 de septiembre de 2026 contra la base de pruebas ya migrada; `verificar-esquema` da 45 objetos y 460 columnas |
-| 2 · Eliminar el acceso a datos desde el navegador | en curso — quedan ~15 archivos: 10 en admin y aliado, el resto repartidos. `crear_perfil` y `guardar_ofrecimientos` se fueron con los ADR 0014 y 0015 |
+| 1 · Tipos de Drizzle desde el esquema | **hecho** — regenerado con `npm run db:pull` el 3 de septiembre de 2026, contra la base de pruebas ya migrada. `verificar-esquema` da 45 objetos y 460 columnas |
+| 2 · Eliminar el acceso a datos desde el navegador | en curso — quedan ~20 archivos: 10 en admin y aliado, el resto repartidos. `crear_perfil` y `guardar_ofrecimientos` se fueron con los ADR 0014 y 0015 |
 | 3 · Contrato oRPC con las primeras lecturas | **hecho** — Servicios, chat, comunidad, moderación |
 | 4 · Migrar lecturas, luego escrituras | en curso — las escrituras de solicitudes de servicio y las de la cuenta ya están en el contrato |
 | 5 · Cron y cifrado fuera del motor | **no** — el cron de imágenes huérfanas sí está fuera, pero `pg_cron` sigue programando el vencimiento de servicios —ya solo uno, el de 72 h se fue con insumos, y desde el ADR 0017 solo vence lo que sigue en `pendiente`— y el cifrado de referencias sigue en Postgres con `pgp_sym_encrypt` y el Vault |

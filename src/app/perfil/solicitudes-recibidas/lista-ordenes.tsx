@@ -4,7 +4,7 @@ import { NOMBRE_GRUPO, type OrdenProveedor } from '@/contrato/servicios'
 import { SelloEstadoSolicitud } from '@/components/sello-estado-solicitud'
 
 /**
- * El índice de órdenes del prestador (ADR 0015): qué, cuándo, estado y una
+ * El índice de órdenes del prestador (ADR 0017): qué, cuándo, estado y una
  * acción — la fila entera, que lleva a su chat.
  *
  * ⚠ Ya no lleva los botones de aceptar/rechazar/cerrar: el sitio donde se

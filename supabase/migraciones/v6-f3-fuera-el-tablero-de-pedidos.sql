@@ -1,5 +1,5 @@
 -- =====================================================================
--- v6 · Fase F · 1 — Fuera el tablero de pedidos (ADR 0014)
+-- v6 · Fase F · 1 — Fuera el tablero de pedidos (ADR 0016)
 --
 -- El cliente probó la aplicación en el teléfono y volvió con un rechazo
 -- literal a que un prestador tenga que vigilar una cola de pedidos ajenos

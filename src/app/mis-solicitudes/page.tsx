@@ -16,10 +16,10 @@ export const metadata = { title: 'Mis solicitudes' }
  * servidor: el aviso sobra y el fallo que el README tenía abierto —la lista
  * que no siempre aparecía— desaparece con él.
  *
- * ⚠ Llevaba también una sección de Insumos, retirada por el ADR 0014 con el
+ * ⚠ Llevaba también una sección de Insumos, retirada por el ADR 0016 con el
  * módulo entero: ya no hay solicitud de insumos que pedir ni mostrar aquí.
  *
- * ⚠ ADR 0015: la solicitud es ahora una orden dirigida a un prestador. Ya
+ * ⚠ ADR 0017: la solicitud es ahora una orden dirigida a un prestador. Ya
  * no se puede «pedir un servicio» sin más —hay que elegir a quién—, así que
  * la acción principal deja de llevar a un formulario y lleva a buscar: es
  * el mismo recorrido que ya usa esta aplicación (buscar → ficha → pedir).

@@ -3,7 +3,7 @@ import { CheckCircle2, Clock, MinusCircle, XCircle, type LucideIcon } from 'luci
 import type { EstadoSolicitud } from '@/contrato/servicios'
 
 /**
- * Los cinco estados de una orden (ADR 0015), con su sello, su texto y su
+ * Los cinco estados de una orden (ADR 0017), con su sello, su texto y su
  * icono. Nunca solo el color (accesibilidad de `CLAUDE.md`).
  *
  * Compartido entre `/perfil/solicitudes-recibidas` y la tarjeta del chat:

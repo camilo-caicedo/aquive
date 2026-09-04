@@ -7,7 +7,7 @@ import { TarjetaCategoria } from '@/components/tarjeta-categoria'
 /**
  * La portada de quien ya está dentro.
  *
- * ADR 0014, «la versión mínima»: el cliente probó la aplicación y pidió
+ * ADR 0016, «la versión mínima»: el cliente probó la aplicación y pidió
  * literalmente «El inicio debe ser extremadamente sencillo». Se van la tira
  * «Disponibles ahora», productos, profesionales y entidades — cualquier cosa
  * que compitiera con las tres acciones de arriba. Lo que queda:

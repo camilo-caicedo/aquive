@@ -47,7 +47,7 @@ const ANONIMO: Record<Origen['tipo'], { ofrece: string; pide: string }> = {
   producto: { ofrece: 'Quien vende', pide: 'Quien preguntó' },
   muro: { ofrece: 'Quien lo ofrece', pide: 'Quien lo necesita' },
   ficha: { ofrece: 'El prestador', pide: 'Quien preguntó' },
-  // El mínimo legal no cambia con el ADR 0015: quien pide sigue sin publicar
+  // El mínimo legal no cambia con el ADR 0017: quien pide sigue sin publicar
   // su nombre, así que del lado del prestador este texto es el único que
   // sale de verdad, nunca un nombre real.
   solicitud: { ofrece: 'El prestador', pide: 'Quien pidió' },
@@ -66,7 +66,7 @@ async function partes(db: BaseDeDatos, origen: Origen): Promise<Partes | null> {
   }
 
   if (origen.tipo === 'solicitud') {
-    // La orden ya identifica a los dos lados desde que nace (ADR 0015): a
+    // La orden ya identifica a los dos lados desde que nace (ADR 0017): a
     // diferencia de la ficha, el producto y el muro, aquí nunca hay un lado
     // que «lo ocupe quien abra el hilo».
     const [f] = await db
@@ -108,7 +108,7 @@ async function partes(db: BaseDeDatos, origen: Origen): Promise<Partes | null> {
     return f ? { ...f, pide: null, nombrePide: null } : null
   }
 
-  // El muro solo tiene la cara «ofrece» desde el ADR 0014: el dueño de la
+  // El muro solo tiene la cara «ofrece» desde el ADR 0016: el dueño de la
   // publicación siempre la tiene, nunca la necesita.
   const [f] = await db
     .select({
@@ -176,7 +176,7 @@ function valores(origen: Origen, iniciadoPor: string | null) {
 
 /**
  * La orden que abrió el hilo, para la tarjeta fija arriba de la
- * conversación (ADR 0015). `null` fuera del origen `solicitud`.
+ * conversación (ADR 0017). `null` fuera del origen `solicitud`.
  *
  * El precio sale de `proveedor_oficios`, no de un valor guardado en la
  * solicitud: si el prestador cambió su tarifa después de que le pidieran
@@ -409,9 +409,9 @@ type FilaBandeja = {
  * copias de estos `join` se separarían el día que aparezca un quinto origen,
  * y entonces el menú contaría hilos que la bandeja no enseña.
  *
- * ⚠ El muro solo tiene la cara «ofrece» desde el ADR 0014, así que
+ * ⚠ El muro solo tiene la cara «ofrece» desde el ADR 0016, así que
  * `pm.perfil_id` siempre es quien ofrece y el otro lado lo ocupa siempre
- * quien inició el hilo. La orden (ADR 0015) es la excepción: ya trae los dos
+ * quien inició el hilo. La orden (ADR 0017) es la excepción: ya trae los dos
  * lados, así que `pide_id` sale de ella y no de `iniciado_por`, que aquí
  * siempre es nulo.
  */

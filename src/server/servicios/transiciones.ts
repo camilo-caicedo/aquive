@@ -1,4 +1,4 @@
-// La máquina de estados de una orden (ADR 0015). Aparte de `solicitudes.ts`
+// La máquina de estados de una orden (ADR 0017). Aparte de `solicitudes.ts`
 // y sin ninguna dependencia porque es lo único de todo el módulo que se
 // puede —y debe— probar sin una base de datos detrás: es la lógica con la
 // que es más fácil equivocarse y la que más caro sale, un salto de estado

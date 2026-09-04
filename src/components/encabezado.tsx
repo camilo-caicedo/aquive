@@ -78,7 +78,7 @@ export async function Encabezado() {
             bienvenida: es la misma marca en los dos sitios y conviene que se
             reconozca igual.
 
-            Ya no es un `<Link>`: el ADR 0016 le da otro trabajo a la marca —
+            Ya no es un `<Link>`: el ADR 0018 le da otro trabajo a la marca —
             abrir el menú de las páginas informativas— y un botón dentro de
             un enlace es HTML inválido, además de que en móvil los dos se
             pelean por el toque.

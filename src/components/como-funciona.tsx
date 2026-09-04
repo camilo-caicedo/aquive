@@ -24,7 +24,7 @@ import { Button } from '@/components/ui/button'
  *
  * ⚠ El 3 de septiembre de 2026 se fueron dos roles: pedir insumos y
  * entregarlos. No es que se hayan movido de sitio —el módulo de emergencia
- * dejó de existir con el ADR 0014— así que aquí no hay nada que enlazar.
+ * dejó de existir con el ADR 0016— así que aquí no hay nada que enlazar.
  */
 
 interface Rol {

@@ -1,4 +1,4 @@
-# ADR 0014 · La versión mínima: fuera el muro de necesidades y las solicitudes abiertas
+# ADR 0016 · La versión mínima: fuera el muro de necesidades y las solicitudes abiertas
 
 - **Estado:** aceptada
 - **Fecha:** 2026-09-03
@@ -113,7 +113,7 @@ El ADR 0009 **no se rompe**: sigue siendo un solo chat para toda la
 aplicación, con menos puertas por las que entrar. El chat de la ficha
 (`proveedor_id`) pasa a ser el único canal de todo lo de servicios — lo que
 antes hacía `respuesta_servicio_id` para una solicitud puntual, ahora lo hace
-la conversación que ya vive en la ficha, y es sobre esa base que el ADR 0015
+la conversación que ya vive en la ficha, y es sobre esa base que el ADR 0017
 construye la orden dirigida.
 
 ## Alternativas consideradas
@@ -138,7 +138,7 @@ sin saber si algo de lo que ve en un tablero es para ella.
 | Regla | Hoy | Después |
 | --- | --- | --- |
 | Regla de producto 2 · `chats` con `on delete cascade` por columna | cinco columnas | **tres columnas**: `producto_id`, `publicacion_id`, `proveedor_id`. El `CHECK chats_un_origen` se reescribe sin las dos que se van |
-| Regla de producto 3 · qué vive y cuánto | «Solicitud de insumos: 72 h» y «Solicitud de servicio: 15 días» en la tabla | **las dos filas se retiran de la tabla**: la primera porque el módulo desaparece, la segunda porque el ADR 0015 la reemplaza por una orden con otro ciclo de vida |
+| Regla de producto 3 · qué vive y cuánto | «Solicitud de insumos: 72 h» y «Solicitud de servicio: 15 días» en la tabla | **las dos filas se retiran de la tabla**: la primera porque el módulo desaparece, la segunda porque el ADR 0017 la reemplaza por una orden con otro ciclo de vida |
 | Mínimo legal 1 y 2 | se aplicaban también al tablero de insumos y al de servicios | sin cambio de fondo: se aplican a menos superficie, no a menos garantía |
 
 Nada del mínimo legal se relaja: se elimina superficie, no se debilita ningún
@@ -168,7 +168,7 @@ a quién buscar, solo que necesita algo.
 Y una pérdida más chica pero real: quien ofrece un oficio dejaba de tener que
 salir a buscar trabajo — el tablero se lo traía. Eso también se va. La
 apuesta del cliente es que un directorio bien encontrado compensa lo que se
-pierde al apagar el descubrimiento pasivo, y el ADR 0015 es la primera pieza
+pierde al apagar el descubrimiento pasivo, y el ADR 0017 es la primera pieza
 de esa apuesta para el lado de servicios.
 
 ### Neutras

@@ -1,4 +1,4 @@
-# ADR 0016 · La sombrilla abre el menú
+# ADR 0018 · La sombrilla abre el menú
 
 - **Estado:** aceptada
 - **Fecha:** 2026-09-03

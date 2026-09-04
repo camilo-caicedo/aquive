@@ -3,19 +3,19 @@
 --
 -- `panel_admin_indice()` quedó rota, no desactualizada. Cuenta filas de
 -- `public.solicitudes` y `public.respuestas`, y las dos tablas se fueron
--- con el módulo de insumos en `v6-f1` (ADR 0014). Una función `stable`
+-- con el módulo de insumos en `v6-f3` (ADR 0016). Una función `stable`
 -- que consulta una tabla que no existe no devuelve un cero: revienta. Y
 -- la llama `/admin` al entrar, así que la pantalla de moderación entera
 -- deja de abrir.
 --
 -- El otro arreglo es más silencioso y por eso peor: el contador de
 -- solicitudes de servicio sin revisar filtra por `estado = 'abierta'`, y
--- desde `v6-f2` (ADR 0015) los estados son otros cinco. La consulta no
+-- desde `v6-f4` (ADR 0017) los estados son otros cinco. La consulta no
 -- falla; devuelve cero para siempre. Un cero permanente en una cola de
 -- moderación se lee como «no hay nada que revisar», que es justo lo que
 -- no se puede dejar creer a quien modera.
 --
--- Va después de `v6-f2` porque depende de sus estados nuevos.
+-- Va después de `v6-f4` porque depende de sus estados nuevos.
 --
 -- Idempotente. Se puede volver a correr.
 -- =====================================================================

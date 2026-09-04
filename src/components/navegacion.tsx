@@ -31,7 +31,7 @@ import {
 const ENLACES = [
   // ⚠ Servicios es la portada desde el 20 de agosto de 2026, por decisión
   // del responsable: pasó tiempo desde el sismo y lo que queda vivo es la
-  // reactivación económica. El ADR 0014 fue más allá y retiró el tablero de
+  // reactivación económica. El ADR 0016 fue más allá y retiró el tablero de
   // pedidos abiertos entero —insumos y el de servicios—: quien necesita algo
   // busca y contacta, no publica y espera.
   //

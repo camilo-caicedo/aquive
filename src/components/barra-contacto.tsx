@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
  * subir para escribir. Aquí están siempre, y el aviso corto va con ellos
  * porque es el momento en que se decide (regla 5).
  *
- * ⚠ ADR 0015: «Pedir este servicio» pasa a ser la acción principal —la
+ * ⚠ ADR 0017: «Pedir este servicio» pasa a ser la acción principal —la
  * única en lima (regla de interfaz 2)— porque es el flujo nuevo: una orden
  * que el prestador acepta o rechaza, con seguimiento en `/mis-solicitudes`.
  * WhatsApp y llamar se quedan visibles y sin relleno, no escondidos detrás

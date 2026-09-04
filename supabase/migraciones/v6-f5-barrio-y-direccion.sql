@@ -1,7 +1,7 @@
 -- =====================================================================
 -- v6 · Fase F · 3 — Municipio, barrio y dirección, cada uno con lo suyo
 --
--- ADR 0017. El barrio pasa a ser el dato principal y obligatorio de la
+-- ADR 0019. El barrio pasa a ser el dato principal y obligatorio de la
 -- ubicación de un prestador; la comuna pasa a ser secundaria y opcional
 -- -"muchas personas no saben a cuál pertenecen"-; y se agrega una
 -- dirección, opcional, con su propia autorización aparte, siguiendo el
@@ -62,7 +62,7 @@ begin
 end $$;
 
 comment on column public.proveedores.acepto_direccion is
-  'Autorización SEPARADA de acepto_publicacion y de acepto_mapa, artículo 9 de la Ley 1581 (ADR 0017): publicar dónde vive o atiende alguien es otra finalidad. Sin marcar, la dirección se guarda pero proveedores_publicos la devuelve NULL.';
+  'Autorización SEPARADA de acepto_publicacion y de acepto_mapa, artículo 9 de la Ley 1581 (ADR 0019): publicar dónde vive o atiende alguien es otra finalidad. Sin marcar, la dirección se guarda pero proveedores_publicos la devuelve NULL.';
 
 -- ---------------------------------------------------------------------
 -- 2 · `guardar_proveedor`: barrio obligatorio, comuna opcional, dirección
@@ -148,7 +148,7 @@ begin
     raise exception 'Municipio inválido';
   end if;
 
-  -- ADR 0017: el barrio es el único obligatorio. La comuna es secundaria
+  -- ADR 0019: el barrio es el único obligatorio. La comuna es secundaria
   -- y puede faltar -"muchas personas no saben a cuál pertenecen"-.
   if v_zona is null then
     raise exception 'Di tu barrio';
@@ -371,7 +371,7 @@ begin
     'acepto_foto', p.acepto_foto,
     'foto_version', p.foto_version,
     'foto_at', p.foto_at,
-    -- Lo que se añade en v6-f3 (ADR 0017): la dirección y su autorización
+    -- Lo que se añade en v6-f5 (ADR 0019): la dirección y su autorización
     -- aparte, igual que el mapa y la foto.
     'direccion', p.direccion,
     'acepto_direccion', p.acepto_direccion,
@@ -518,9 +518,9 @@ alter table public.servidores
   alter column numero_matricula drop not null;
 
 comment on column public.servidores.entidad_matricula is
-  'Opcional desde v6-f3: la matrícula se retiró del registro y ahora se llena, si se quiere, desde /perfil/verificaciones. NULL significa "todavía no la dio", no "no tiene".';
+  'Opcional desde v6-f5: la matrícula se retiró del registro y ahora se llena, si se quiere, desde /perfil/verificaciones. NULL significa "todavía no la dio", no "no tiene".';
 comment on column public.servidores.numero_matricula is
-  'Opcional desde v6-f3, mismo motivo que entidad_matricula.';
+  'Opcional desde v6-f5, mismo motivo que entidad_matricula.';
 
 create or replace function public.crear_perfil(
   p_nombre_visible text,
@@ -588,7 +588,7 @@ begin
     puede_trasladarse    = excluded.puede_trasladarse;
 
   if p_tipo = 'servidor' then
-    -- v6-f3: ya no se exige entidad ni número aquí. Eso es cosa de
+    -- v6-f5: ya no se exige entidad ni número aquí. Eso es cosa de
     -- /perfil/verificaciones, después, y opcional (regla de producto 6:
     -- nada nace verificado, y aquí ni siquiera nace declarado).
     if coalesce(trim(p_profesion), '') = '' then

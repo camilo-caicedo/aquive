@@ -1,6 +1,6 @@
 // node src/server/servicios/transiciones.test.mjs
 //
-// Comprobación de la máquina de estados de una orden (ADR 0015), sin base
+// Comprobación de la máquina de estados de una orden (ADR 0017), sin base
 // de datos ni framework: es la lógica con la que es más fácil equivocarse
 // —un salto de estado que no debería existir— y la que más caro sale.
 import assert from 'node:assert/strict'

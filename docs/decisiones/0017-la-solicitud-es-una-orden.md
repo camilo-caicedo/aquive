@@ -1,14 +1,14 @@
-# ADR 0015 · La solicitud es una orden dirigida a un prestador
+# ADR 0017 · La solicitud es una orden dirigida a un prestador
 
 - **Estado:** aceptada
 - **Fecha:** 2026-09-03
 - **Decide:** responsable del proyecto
-- **Depende de:** ADR 0014, que retira el tablero público que esta decisión
+- **Depende de:** ADR 0016, que retira el tablero público que esta decisión
   reemplaza
 
 ## Contexto
 
-El ADR 0014 retiró `/solicitudes` porque era un tablero público: cualquier
+El ADR 0016 retiró `/solicitudes` porque era un tablero público: cualquier
 prestador podía mirarlo y responder cualquier pedido. Lo que no retiró es la
 necesidad de fondo — quien busca un servicio sigue teniendo que poder pedirlo
 sin depender solo de un botón de WhatsApp.
@@ -18,7 +18,7 @@ en su comentario, `src/app/solicitudes/page.tsx:16-20`: «Es público —cualqui
 puede mirarlo, y no hay nada que identifique a quien pidió— pero responder
 exige tener ficha publicada.» La tabla, en `supabase/migraciones/v3-s1-
 esquema.sql:296-320`, no lleva ninguna columna que apunte a un prestador —
-quien responde lo hace desde `respuestas_servicio`, que el ADR 0014 también
+quien responde lo hace desde `respuestas_servicio`, que el ADR 0016 también
 retira. Y el `CHECK` de `estado` solo admite dos valores: `abierta`, `resuelta`.
 
 El cliente pide lo contrario de un tablero: que la solicitud nazca **para
@@ -85,7 +85,7 @@ subcategorias()` —el catálogo entero, 81 oficios en doce categorías— cuand
 con su precio.
 
 Ofrecerle a quien pide un oficio que el prestador elegido no hace es el
-mismo problema que el ADR 0014 vino a resolver, solo que con un paso de
+mismo problema que el ADR 0016 vino a resolver, solo que con un paso de
 categoría de más delante: un tablero abierto disfrazado de formulario
 dirigido. La solicitud nace con `proveedor_id`, así que su universo de
 oficios posibles ya no es el catálogo — es `ficha.oficios`.
@@ -148,7 +148,7 @@ ofrece—, así que:
   estado es la conversación, no dos pantallas compitiendo por lo mismo
   (regla de interfaz 3).
 
-Migración: extiende `v6-f2-la-solicitud-es-una-orden.sql`, que ya existía y
+Migración: extiende `v6-f4-la-solicitud-es-una-orden.sql`, que ya existía y
 no se había aplicado en ninguna base — se completa en vez de encadenarse
 otra. `chats_un_origen` pasa de tres a cuatro columnas: `producto_id`,
 `publicacion_id`, `proveedor_id`, `solicitud_servicio_id`.
@@ -157,7 +157,7 @@ otra. `chats_un_origen` pasa de tres a cuatro columnas: `producto_id`,
 
 **Mantener el tablero pero filtrado por oficio del prestador**, en vez de
 dirigir la solicitud a una ficha concreta. Se descarta porque no resuelve lo
-que el ADR 0014 vino a arreglar: seguiría siendo el prestador quien tiene que
+que el ADR 0016 vino a arreglar: seguiría siendo el prestador quien tiene que
 entrar a mirar, solo que a una lista más corta.
 
 **Un solo estado `activa` con un campo de texto libre para el detalle del
@@ -188,7 +188,7 @@ de discusión.
 ### Positivas
 
 - Un prestador recibe la orden en su perfil en vez de tener que ir a buscarla,
-  que es exactamente lo que el ADR 0014 retiró del lado del tablero.
+  que es exactamente lo que el ADR 0016 retiró del lado del tablero.
 - Los cinco estados dan a `/mis-solicitudes` y al panel del prestador algo
   concreto que mostrar, con sello y color, en vez de un genérico «abierta».
 - Una orden aceptada deja de estar a merced de un reloj que no sabe si el
@@ -200,7 +200,7 @@ de discusión.
 necesidad que nadie le dirigió — antes, aunque fuera mirando un tablero
 incómodo, veía pedidos de gente que no lo conocía. Ahora solo le llegan
 órdenes de quien ya encontró su ficha. Si el directorio no se encuentra bien,
-esta puerta tampoco se abre. Es la misma apuesta que anota el ADR 0014: que un
+esta puerta tampoco se abre. Es la misma apuesta que anota el ADR 0016: que un
 buen directorio compensa lo que se pierde al apagar el tablero.
 
 También se pierde la respuesta rápida de "cualquiera que esté libre ahora
@@ -210,7 +210,7 @@ sistema le muestre a quien sí respondió primero.
 
 ### Neutras
 
-`respuestas_servicio` ya se retiró con el ADR 0014; esta decisión no la
+`respuestas_servicio` ya se retiró con el ADR 0016; esta decisión no la
 resucita — la orden no necesita una tabla de respuestas porque solo hay un
 destinatario posible.
 

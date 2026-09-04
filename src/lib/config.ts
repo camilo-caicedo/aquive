@@ -79,7 +79,7 @@ export const CONSENTIMIENTO_REFERENCIA_VERSION = 'servicios-referencia-2026-08-1
 export const AUTORIZACION_FOTO_VERSION = 'servicios-foto-2026-08-27'
 // La dirección lleva la suya, aparte de la de publicar la ficha y aparte
 // de la del mapa: publicar dónde vive o atiende alguien es otra finalidad,
-// igual que el punto del ADR 0004 (ADR 0017, artículo 9 de la Ley 1581).
+// igual que el punto del ADR 0004 (ADR 0019, artículo 9 de la Ley 1581).
 // Quien firmó la ficha o el mapa no firmó esta.
 export const AUTORIZACION_DIRECCION_VERSION = 'servicios-direccion-2026-09-03'
 // El perfil también publica nombre y teléfono —en /profesionales— y

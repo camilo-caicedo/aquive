@@ -6,7 +6,7 @@ import { FormularioPublicarServicio } from './formulario-publicar-servicio'
 export const metadata = { title: 'Pedir servicio' }
 
 /**
- * Pedir un servicio, a un prestador concreto (ADR 0015).
+ * Pedir un servicio, a un prestador concreto (ADR 0017).
  *
  * ⚠ Ya no es un flujo abierto: nace desde el botón «Pedir este servicio»
  * de una ficha, que trae `?proveedor=<id>` en la URL. Sin ese parámetro —o
@@ -15,7 +15,7 @@ export const metadata = { title: 'Pedir servicio' }
  *
  * ⚠ Consecuencia que el ADR no previó: el formulario ya no ofrece el
  * catálogo entero (81 oficios en doce categorías) — eso sería el tablero
- * abierto que el ADR 0014 acaba de retirar, solo que con un paso extra.
+ * abierto que el ADR 0016 acaba de retirar, solo que con un paso extra.
  * Solo se ofrece `ficha.oficios`, que ya viene filtrado por lo que ese
  * prestador de verdad declaró. Una ficha sin ningún oficio publicado no
  * tiene qué pedir.

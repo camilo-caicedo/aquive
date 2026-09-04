@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
  * Puerta vieja.
  *
  * El muro se llamaba «/muro» cuando tenía dos caras —lo que sobra y lo que
- * falta—. El ADR 0014 quitó la cara de pedidos y con ella el nombre: lo que
+ * falta—. El ADR 0016 quitó la cara de pedidos y con ella el nombre: lo que
  * queda son donaciones, y vive en /donaciones.
  *
  * Se queda redirigiendo con los filtros puestos: hay enlaces repartidos —el

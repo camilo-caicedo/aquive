@@ -18,7 +18,7 @@ export class SolicitudRechazada extends Error {}
 /**
  * Pedir un servicio.
  *
- * ⚠ ADR 0015: deja de ser un pedido al aire. Nace dirigida a un
+ * ⚠ ADR 0017: deja de ser un pedido al aire. Nace dirigida a un
  * `proveedor_id` concreto — la ficha desde la que se abrió el formulario —
  * y el municipio y la zona los copia de esa ficha: son un hecho real (dónde
  * está el prestador), no una pregunta más que hacerle a quien pide.
@@ -30,7 +30,7 @@ export class SolicitudRechazada extends Error {}
  * encuentras lo tuyo?»: esa salida del ADR 0013 tenía sentido contra 81
  * oficios, no contra los tres o cuatro que un prestador concreto declaró.
  *
- * ⚠ El hilo nace en la misma operación (ADR 0015): la orden ya identifica a
+ * ⚠ El hilo nace en la misma operación (ADR 0017): la orden ya identifica a
  * los dos lados desde que se publica, así que no hay razón para esperar a
  * que alguien abra el chat para crearlo.
  *
@@ -145,7 +145,7 @@ export async function publicar(
         grupo: oficio.grupo!,
         oficioId: entrada.oficio_id,
         detalle: entrada.detalle?.trim() ?? null,
-        // Copiados de la ficha (ADR 0015): describen dónde está el
+        // Copiados de la ficha (ADR 0017): describen dónde está el
         // prestador, un hecho real, no una pregunta más para quien pide.
         municipio: proveedor.municipio,
         zonaId: proveedor.zonaId,
@@ -154,7 +154,7 @@ export async function publicar(
       })
       .returning({ id: solicitudesServicio.id })
 
-    // El hilo nace aquí mismo (ADR 0015): la orden ya identifica a los dos
+    // El hilo nace aquí mismo (ADR 0017): la orden ya identifica a los dos
     // lados, así que no hay razón para esperar a que alguien abra el chat.
     await db.insert(chats).values({ solicitudServicioId: fila.id })
 
@@ -221,7 +221,7 @@ export async function mias(
  * la solicitud de otro sabiendo su id, y va en la consulta y no en un `if`
  * de arriba: un `if` se puede saltar reordenando el código, un `where` no.
  *
- * ⚠ No hay un sexto estado «cancelada»: el cliente pidió cinco (ADR 0015).
+ * ⚠ No hay un sexto estado «cancelada»: el cliente pidió cinco (ADR 0017).
  * Cancelar aterriza en `no_concretada`, que es la que el ADR describe como
  * «cierra sin que el trabajo se haya hecho, sin necesidad de decir de quién
  * fue la culpa» — justo lo que es cancelar la propia. `rechazada` habría
@@ -249,7 +249,7 @@ export async function gestionar(
 
   if (accion === 'renovar') {
     // Solo tiene sentido mientras nadie ha contestado: una orden aceptada
-    // no vence sola (ADR 0015), así que «renovar» algo que no está
+    // no vence sola (ADR 0017), así que «renovar» algo que no está
     // pendiente no significa nada.
     if (actual.estado !== 'pendiente') {
       throw new SolicitudRechazada('Ya no se puede renovar: el prestador ya respondió.')

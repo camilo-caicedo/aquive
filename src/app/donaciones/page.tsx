@@ -21,10 +21,10 @@ const COLORES: Familia[] = ['amarillo', 'verde', 'rojo', 'azul']
  * Pantalla 30. Donaciones: lo que sobra, para dar.
  *
  * ⚠ Se llamaba «el muro» y tenía una segunda cara —lo que falta—, retirada
- * por el ADR 0014: era un tablero de pedidos abiertos, el mismo defecto que
+ * por el ADR 0016: era un tablero de pedidos abiertos, el mismo defecto que
  * el tablero de solicitudes de servicio. Esta cara sobrevive porque son
  * donaciones —objetos, no pedidos— y quien busca sigue buscando, no
- * publicando y esperando. El ADR 0014 le dio también el nombre y la ruta que
+ * publicando y esperando. El ADR 0016 le dio también el nombre y la ruta que
  * tiene ahora, `/donaciones`: sin la cara «necesita» ya no hay dos caras que
  * un nombre neutro tenga que cubrir.
  *

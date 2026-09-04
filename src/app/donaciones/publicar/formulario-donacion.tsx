@@ -28,7 +28,7 @@ import {
 import { CATEGORIAS_MURO, NOMBRE_CATEGORIA_MURO } from '@/contrato/comunidad'
 
 /**
- * Publicar una donación: solo lo que se ofrece (ADR 0014 quitó la cara de
+ * Publicar una donación: solo lo que se ofrece (ADR 0016 quitó la cara de
  * pedidos). Publica con nombre, y tiene que aceptarlo.
  */
 type MunicipioMuro = {

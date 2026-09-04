@@ -39,7 +39,7 @@ const ESTADOS: Record<EstadoSolicitud, { etiqueta: string; clase: string; Icono:
 
 /**
  * Las solicitudes de servicio propias: cada una es una orden dirigida a un
- * prestador (ADR 0015), con el estado en que va y sus acciones.
+ * prestador (ADR 0017), con el estado en que va y sus acciones.
  *
  * ⚠ Esto sustituye a `lista-local.tsx` y `lista-servicios.tsx`, que leían
  * de `localStorage` la lista de tokens de este teléfono. Desde el ADR 0006

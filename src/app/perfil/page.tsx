@@ -168,7 +168,7 @@ export default async function PerfilPage() {
       // El otro papel público, y el que se quedó sin puerta al retirarse
       // `/registro` con el módulo de insumos (ADR 0014).
       servidor.servicios.miMatricula(),
-      // Lo que le han pedido A ÉL (ADR 0015). Vacía sin ficha propia: la
+      // Lo que le han pedido A ÉL (ADR 0017). Vacía sin ficha propia: la
       // consulta ya filtra por dueño, así que no hace falta esperar a saber
       // si `proveedor` existe para pedirla.
       servidor.servicios.misOrdenes(),
@@ -219,7 +219,7 @@ export default async function PerfilPage() {
       nombre: 'Mis solicitudes',
       pista: misSolicitudes.length > 0 ? String(misSolicitudes.length) : undefined,
     },
-    // Lo que le pidieron A ÉL (ADR 0015). Solo con ficha: sin ella no hay
+    // Lo que le pidieron A ÉL (ADR 0017). Solo con ficha: sin ella no hay
     // dónde le llegaría una orden. La pista cuenta lo pendiente, que es lo
     // único que necesita que alguien lo mire.
     ...(proveedor

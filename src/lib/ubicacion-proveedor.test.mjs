@@ -1,6 +1,6 @@
 // node src/lib/servicios.ubicacion.test.mjs
 //
-// `ubicacionCompleta` (ADR 0017): barrio obligatorio, comuna nunca bloquea
+// `ubicacionCompleta` (ADR 0019): barrio obligatorio, comuna nunca bloquea
 // -por eso ni siquiera es un parámetro-, y dirección opcional salvo que se
 // autorice publicarla.
 import assert from 'node:assert/strict'
