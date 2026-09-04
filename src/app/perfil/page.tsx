@@ -41,6 +41,16 @@ type Fila = {
   href: string
   Icono: LucideIcon
   nombre: string
+  /**
+   * Qué hay detrás, en una línea, antes de entrar.
+   *
+   * ⚠ No es adorno. «Códigos que generé» no dice para qué sirven ni por qué
+   * existen, y quien lo lee tiene que abrir la pantalla para averiguarlo —y
+   * lo mismo con media lista—. El nombre dice CÓMO se llama; esto dice PARA
+   * QUÉ es. Nueve filas sin explicar son nueve pantallas que hay que abrir
+   * a ver qué son.
+   */
+  descripcion: string
   pista?: string
 }
 
@@ -55,12 +65,14 @@ function Fila({
   href,
   Icono,
   nombre,
+  descripcion,
   pista,
   familia,
 }: {
   href: string
   Icono: LucideIcon
   nombre: string
+  descripcion: string
   pista?: string
   familia: Familia
 }) {
@@ -70,12 +82,21 @@ function Fila({
         href={href}
         className="pulsable-tarjeta shadow-canto flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
       >
+        {/* El glifo se ancla arriba: con la descripción, una fila puede
+            ocupar dos renglones, y centrado quedaba bailando a media altura
+            de un bloque de texto en vez de al lado de su nombre. */}
         <span
-          className={`flex size-10 shrink-0 items-center justify-center rounded-full ${CINTA[familia]} ${TINTA_CINTA[familia]}`}
+          className={`mt-0.5 flex size-10 shrink-0 items-center justify-center self-start rounded-full ${CINTA[familia]} ${TINTA_CINTA[familia]}`}
         >
           <Icono className="size-5" aria-hidden="true" />
         </span>
-        <span className="min-w-0 flex-1 text-lg font-medium">{nombre}</span>
+        {/* El nombre y, debajo, para qué es. */}
+        <span className="min-w-0 flex-1">
+          <span className="block text-lg font-medium">{nombre}</span>
+          <span className="mt-0.5 block text-sm text-muted-foreground">
+            {descripcion}
+          </span>
+        </span>
         {pista && (
           <span className="shrink-0 text-base text-muted-foreground">{pista}</span>
         )}
@@ -127,6 +148,7 @@ export default async function PerfilPage() {
               href="/login"
               Icono={KeyRound}
               nombre="Entrar con Google"
+              descripcion="Del correo solo guardamos un identificador, y lo demás se descarta"
               familia="azul"
             />
           </ul>
@@ -204,7 +226,7 @@ export default async function PerfilPage() {
   // perfil de quien solo viene a buscar se leía como el panel a medio
   // llenar de un prestador.
   const deLaCuenta: Fila[] = [
-    { href: '/perfil/datos', Icono: UserPen, nombre: 'Mis datos y contacto' },
+    { href: '/perfil/datos', Icono: UserPen, nombre: 'Mis datos y contacto', descripcion: 'Tu nombre, tu teléfono y tu municipio' },
     // ⚠ Faltaba, y con ella faltaba la única salida: `publicaciones_muro`
     // solo se INSERTABA. La regla de producto 3 dice que una publicación
     // vive «mientras su dueño la deje», y su dueño no tenía cómo dejarla.
@@ -212,12 +234,14 @@ export default async function PerfilPage() {
       href: '/donaciones/mios',
       Icono: Heart,
       nombre: 'Mis donaciones',
+      descripcion: 'Lo que ofreciste y ya no usas. Bórralo cuando se entregue',
       pista: misPublicaciones.length > 0 ? String(misPublicaciones.length) : undefined,
     },
     {
       href: '/mis-solicitudes',
       Icono: ClipboardList,
       nombre: 'Mis solicitudes',
+      descripcion: 'Los servicios que pediste y en qué van',
       pista: misSolicitudes.length > 0 ? String(misSolicitudes.length) : undefined,
     },
     // Lo que le pidieron A ÉL (ADR 0017). Solo con ficha: sin ella no hay
@@ -229,6 +253,7 @@ export default async function PerfilPage() {
             href: '/perfil/solicitudes-recibidas',
             Icono: Inbox,
             nombre: 'Solicitudes recibidas',
+            descripcion: 'Lo que te pidieron a ti. Aquí lo aceptas o lo rechazas',
             pista:
               ordenesPendientes > 0
                 ? `${ordenesPendientes} pendiente${ordenesPendientes === 1 ? '' : 's'}`
@@ -236,8 +261,8 @@ export default async function PerfilPage() {
           },
         ]
       : []),
-    { href: '/perfil/avisos', Icono: Bell, nombre: 'Avisos' },
-    { href: '/perfil/privacidad', Icono: KeyRound, nombre: 'Privacidad y cuenta' },
+    { href: '/perfil/avisos', Icono: Bell, nombre: 'Avisos', descripcion: 'Cuándo te avisamos por mensaje nuevo o respuesta' },
+    { href: '/perfil/privacidad', Icono: KeyRound, nombre: 'Privacidad y cuenta', descripcion: 'Qué guardamos de ti, y borrar tu cuenta y todo lo tuyo' },
   ]
 
   const delCarne: Fila[] = proveedor
@@ -246,6 +271,7 @@ export default async function PerfilPage() {
           href: '/perfil/oficios',
           Icono: ListOrdered,
           nombre: 'Mis oficios y precios',
+          descripcion: 'Qué haces y desde cuánto cobras cada cosa',
           pista: String(proveedor.oficios.length),
         },
         // ⚠ Faltaba, y era la única puerta: `/perfil/foto` solo se enlazaba
@@ -257,6 +283,7 @@ export default async function PerfilPage() {
           href: '/perfil/foto',
           Icono: Camera,
           nombre: 'Mi foto',
+          descripcion: 'La que sale en tu ficha. Alguien la revisa antes de publicarla',
           pista:
             proveedor.foto_estado === 'en_cola'
               ? 'en revisión'
@@ -270,22 +297,25 @@ export default async function PerfilPage() {
           href: '/barrio/mios',
           Icono: ShoppingBag,
           nombre: 'Mis productos',
+          descripcion: 'Lo que vendes en «Hecho en el barrio»',
           pista:
             misProductos.length > 0
               ? `${misProductos.length} publicado${misProductos.length === 1 ? '' : 's'}`
               : undefined,
         },
-        { href: '/perfil/disponibilidad', Icono: Clock, nombre: 'Cuándo y dónde atiendo' },
+        { href: '/perfil/disponibilidad', Icono: Clock, nombre: 'Cuándo y dónde atiendo', descripcion: 'Tus días, tus horarios y si vas a domicilio' },
         {
           href: '/perfil/resenas',
           Icono: Star,
           nombre: 'Reseñas recibidas',
+          descripcion: 'Lo que dijo quien te contrató. Puedes responder una vez',
           pista: sinResponder > 0 ? `${sinResponder} sin responder` : undefined,
         },
         {
           href: '/perfil/verificaciones',
           Icono: BadgeCheck,
           nombre: 'Verificaciones',
+          descripcion: 'Tu teléfono, tu referencia y tu matrícula: qué está comprobado',
           pista:
             verificacionesPendientes > 0
               ? `${verificacionesPendientes} pendiente${verificacionesPendientes === 1 ? '' : 's'}`
@@ -295,9 +325,10 @@ export default async function PerfilPage() {
           href: '/perfil/codigos',
           Icono: Hash,
           nombre: 'Códigos que generé',
+          descripcion: 'Le das uno a quien atendiste y con él te califica. Sirve una vez',
           pista: sinUsar > 0 ? `${sinUsar} sin usar` : undefined,
         },
-        { href: '/servicios/soy-proveedor', Icono: IdCard, nombre: 'Mi ficha publicada' },
+        { href: '/servicios/soy-proveedor', Icono: IdCard, nombre: 'Mi ficha publicada', descripcion: 'El resumen de todo lo que tienes puesto' },
         // ⚠ La fila de arriba lleva al RESUMEN, no a la ficha. Ningún enlace
         // de toda la aplicación llevaba a ver la propia como la ve
         // cualquiera, que es lo único que responde «¿qué está viendo la
@@ -306,6 +337,7 @@ export default async function PerfilPage() {
           href: `/prestador/${proveedor.id}`,
           Icono: Eye,
           nombre: 'Ver mi ficha como la ven',
+          descripcion: 'Lo mismo que ve cualquiera que entra a buscarte',
         },
       ]
     : []
@@ -318,6 +350,9 @@ export default async function PerfilPage() {
       href: '/perfil/matricula',
       Icono: BadgeCheck,
       nombre: matricula ? 'Mi matrícula' : 'Agregar mi matrícula',
+      descripcion: matricula
+        ? 'Tu profesión y tu número. Una persona lo comprueba en el registro'
+        : 'Solo si tu profesión la exige: ingeniería, salud, derecho, psicología',
       pista: matricula && !matricula.verificado ? 'sin verificar' : undefined,
     },
   ]
