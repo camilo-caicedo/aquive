@@ -62,7 +62,7 @@ const POR_ARCHIVO = {
   // Se identificaron mirándolas. Las seis últimas repiten el primer lote —son
   // la misma toma— así que da igual de cuál de los dos se generen.
   '2.png': 'belleza', //  peluquería
-  '3.png': 'reparacion', //  arreglando un mueble con herramientas
+  '3.png': 'construccion', //  arreglando un mueble: mismo sitio que la lámpara
   '4.png': 'ensenanza', //  clase particular con libros
   '5.png': 'eventos', //  montaje de mesa para una fiesta
   '6.png': 'digital', //  atención con computador
@@ -73,6 +73,12 @@ const POR_ARCHIVO = {
   '11.png': 'construccion',
   '12.png': 'cuidado',
   '13.png': 'transporte',
+
+  // Tercer lote, el 4 de septiembre. `reparacion` tenía una foto prestada
+  // —alguien arreglando un mueble— porque en los dos primeros no había
+  // ninguna del oficio de verdad. Esta sí: un celular y una cafetera
+  // abiertos sobre la mesa, que es exactamente lo que dice el catálogo.
+  'reparaciones.png': 'reparacion',
 }
 
 const origen = process.argv[2]
