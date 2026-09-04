@@ -293,18 +293,17 @@ export default async function PerfilPage() {
       ]
     : []
 
-  // Solo con matrícula declarada. Es el otro papel público, y el que la
-  // pantalla no tenía forma de abrir desde que se fue `/registro`.
-  const deLaMatricula: Fila[] = matricula
-    ? [
-        {
-          href: '/perfil/matricula',
-          Icono: BadgeCheck,
-          nombre: 'Mi matrícula',
-          pista: matricula.verificado ? undefined : 'sin verificar',
-        },
-      ]
-    : []
+  // Siempre visible, se tenga o no matrícula declarada: es la única puerta
+  // a `/perfil/matricula` desde que se fue `/registro`, y quien no la tenía
+  // no tenía cómo llegar a declararla.
+  const deLaMatricula: Fila[] = [
+    {
+      href: '/perfil/matricula',
+      Icono: BadgeCheck,
+      nombre: matricula ? 'Mi matrícula' : 'Agregar mi matrícula',
+      pista: matricula && !matricula.verificado ? 'sin verificar' : undefined,
+    },
+  ]
 
   const filas = [...deLaCuenta, ...delCarne, ...deLaMatricula]
 

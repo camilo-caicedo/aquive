@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
 import { rpc } from '@/orpc/cliente'
 import { SubirImagen } from '@/components/subir-imagen'
@@ -77,6 +78,15 @@ import {
 type Oficio = Database['public']['Tables']['catalogo_oficios']['Row']
 type Zona = Database['public']['Tables']['zonas']['Row']
 
+// Solo se usa en el alta (ver el paso «Ubicación» más abajo): editando una
+// ficha ya publicada, el punto se pone desde `MiUbicacion` en «Mi ficha».
+const Mapa = dynamic(() => import('@/components/mapa').then((m) => m.Mapa), {
+  ssr: false,
+  loading: () => (
+    <div className="shadow-canto h-[260px] w-full animate-pulse rounded-2xl bg-muted" />
+  ),
+})
+
 /**
  * Las piezas del formulario, sueltas.
  *
@@ -95,6 +105,7 @@ export type ClaveSeccion =
   | 'oficios'
   | 'presentacion'
   | 'foto'
+  | 'matricula'
   | 'permiso'
 
 const TODAS: ClaveSeccion[] = [
@@ -107,6 +118,7 @@ const TODAS: ClaveSeccion[] = [
   'oficios',
   'presentacion',
   'foto',
+  'matricula',
   'permiso',
 ]
 
@@ -223,6 +235,16 @@ export function FormularioProveedor({
   const [autorizoDireccion, setAutorizoDireccion] = useState(
     proveedor?.acepto_direccion ?? false
   )
+  // El punto en el mapa (ADR 0004). Solo se pide en el alta —editando, está
+  // «Mi ficha»—, y aquí no hay una fila de `proveedores` de la que colgarlo
+  // todavía: se guarda en el estado, como la foto, y se manda con
+  // `guardarUbicacion` justo después de crear la ficha. Su propia casilla,
+  // aparte de `autorizo` y de `autorizoDireccion`: publicar dónde está
+  // alguien es otra finalidad (artículo 9 de la Ley 1581).
+  const [puntoMapa, setPuntoMapa] = useState<{ latitud: number; longitud: number } | null>(
+    null
+  )
+  const [autorizoMapa, setAutorizoMapa] = useState(false)
   const [modalidad, setModalidad] = useState<ModalidadServicio[]>(
     proveedor?.modalidad ?? []
   )
@@ -325,6 +347,8 @@ export function FormularioProveedor({
       zonaTexto,
       direccion,
       autorizoDireccion,
+      puntoMapa,
+      autorizoMapa,
       modalidad,
       dias,
       franjas,
@@ -348,6 +372,8 @@ export function FormularioProveedor({
       setZonaTexto(d.zonaTexto)
       setDireccion(d.direccion)
       setAutorizoDireccion(d.autorizoDireccion)
+      setPuntoMapa(d.puntoMapa)
+      setAutorizoMapa(d.autorizoMapa)
       setModalidad(d.modalidad)
       setDias(d.dias)
       setFranjas(d.franjas)
@@ -545,6 +571,26 @@ export function FormularioProveedor({
         // La ficha ya se guardó. Que falle la foto no puede tirar abajo lo
         // demás, pero sí hay que decirlo.
         setError('La ficha se guardó, pero la foto no. Inténtalo otra vez desde «Tu foto».')
+        setGuardando(false)
+        return
+      }
+    }
+
+    // El punto del mapa, con el mismo cuidado que la foto: antes de este
+    // guardado no había ficha de la que colgar una coordenada, así que se
+    // manda justo después de crearla. Solo en el alta —editando, el punto
+    // se guarda desde «Mi ficha», donde la fila ya existe.
+    if (!proveedor && puntoMapa) {
+      try {
+        await rpc.servicios.guardarUbicacion({
+          acepto: autorizoMapa,
+          latitud: puntoMapa.latitud,
+          longitud: puntoMapa.longitud,
+        })
+      } catch {
+        setError(
+          'La ficha se guardó, pero el mapa no. Puedes agregar tu punto después desde tu ficha.'
+        )
         setGuardando(false)
         return
       }
@@ -875,6 +921,65 @@ export function FormularioProveedor({
               ))}
             </div>
           </fieldset>
+
+          {/* El pin del mapa (ADR 0004). Solo en el alta: quien edita una
+              ficha ya publicada lo pone desde «Mi ficha», donde la fila ya
+              existe y `guardarUbicacion` puede escribir sobre ella. Es
+              opcional y no bloquea nada —quien no lo pone sigue en el
+              directorio igual. */}
+          {!proveedor && (
+            <fieldset className="mt-4">
+              <legend className="mb-2 text-base font-medium">
+                Tu punto en el mapa{' '}
+                <span className="font-normal text-muted-foreground">(opcional)</span>
+              </legend>
+              <p className="text-base text-muted-foreground">
+                Si no lo pones, igual apareces en el directorio — solo no sales
+                en el mapa. Lo puedes agregar más adelante desde tu ficha.
+              </p>
+              <div className="mt-2">
+                <Mapa
+                  puntos={
+                    puntoMapa
+                      ? [
+                          {
+                            id: 'yo',
+                            latitud: puntoMapa.latitud,
+                            longitud: puntoMapa.longitud,
+                            nombre: 'Tu punto',
+                            color: '#B8F000',
+                          },
+                        ]
+                      : []
+                  }
+                  centro={puntoMapa ?? undefined}
+                  zoom={13}
+                  alto={260}
+                  seleccionable
+                  alSeleccionar={setPuntoMapa}
+                />
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Toca el mapa donde quieras tu punto. No tiene que ser tu casa
+                exacta: puedes marcar la esquina o la cuadra donde trabajas.
+              </p>
+              <label className="mt-3 flex min-h-12 cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={autorizoMapa}
+                  onChange={(e) => setAutorizoMapa(e.target.checked)}
+                  disabled={!puntoMapa}
+                  className="mt-1 size-5 shrink-0"
+                />
+                <span className="text-base">
+                  Autorizo que este punto aparezca en el mapa público de
+                  AquíVe, junto a mi nombre y mi oficio, para que quien busque
+                  un servicio pueda saber en qué parte trabajo. Puedo
+                  quitarlo cuando quiera.
+                </span>
+              </label>
+            </fieldset>
+          )}
         </>
       ),
     },
@@ -1458,6 +1563,34 @@ export function FormularioProveedor({
       ),
     },
 
+    // Optativo y aparte: la matrícula es OTRO papel (`servidor`, sobre
+    // `catalogo_servicios`), no un oficio de este carné. Reusa lo que ya
+    // existe —`/perfil/matricula` habla con `servicios.guardarMatricula`—
+    // en vez de repetir el formulario aquí. La inmensa mayoría de los
+    // oficios de `catalogo_oficios` no piden esto, así que nunca `falta`.
+    matricula: {
+      titulo: 'Matrícula profesional',
+      resumen: 'Opcional',
+      falta: false,
+      cuerpo: (
+        <div>
+          <p className="text-base text-muted-foreground">
+            Si tu oficio es de ingeniería, arquitectura, psicología, salud o
+            derecho y tienes una matrícula vigente, la declaras aparte: sale
+            en el directorio de profesionales, no en este carné. La mayoría
+            de los oficios no la necesitan — si el tuyo no es uno de esos,
+            sigue de largo.
+          </p>
+          <Link
+            href="/perfil/matricula"
+            className="pulsable-tarjeta shadow-canto mt-3 flex min-h-12 items-center justify-center rounded-full bg-card px-4 text-base font-semibold"
+          >
+            Declarar mi matrícula
+          </Link>
+        </div>
+      ),
+    },
+
     permiso: {
       titulo: 'Permiso de publicación',
       resumen: autorizo ? 'Aceptado' : 'Falta tu autorización',
@@ -1669,7 +1802,7 @@ export function FormularioProveedor({
     { nombre: 'Ubicación', claves: ['ciudad', 'zonas'] },
     { nombre: 'Qué ofreces', claves: ['oficios', 'disponibilidad', 'presentacion'] },
     { nombre: 'Tu foto', claves: ['foto'] },
-    { nombre: 'Confirmar', claves: ['permiso'] },
+    { nombre: 'Confirmar', claves: ['matricula', 'permiso'] },
   ]
 
   // Falta algo más que lo que ya marca `BLOQUES[c].falta` en los pasos de
