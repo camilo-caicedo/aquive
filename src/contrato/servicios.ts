@@ -781,10 +781,11 @@ export const contratoServicios = {
 
   /**
    * Dónde centrar el mapa al elegir municipio (ADR 0004, reporte de alta de
-   * ficha). `municipios` no tiene coordenadas propias —solo `codigo_dane`,
-   * `nombre`, `departamento`—, así que esto es el centroide de quienes ya
+   * ficha). Desde v6-f11, `municipios.latitud`/`longitud` trae el centro
+   * oficial del DANE para los 1.122 municipios, y es lo que se devuelve
+   * primero; si faltara para alguno, se cae al centroide de quienes ya
    * aceptaron el mapa en ese municipio, sacado de `proveedores_publicos`.
-   * `null` si todavía no hay nadie: sin geocoding, no se inventa un punto.
+   * `null` si tampoco hay eso: sin geocoding, no se inventa un punto.
    */
   centroMunicipio: oc
     .input(z.object({ municipio: z.string().regex(/^[0-9]{5}$/) }))

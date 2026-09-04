@@ -1,7 +1,7 @@
 import { and, eq, isNotNull, sql } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
-import { proveedores, proveedoresPublicos } from '@/db/esquema'
+import { municipios, proveedores, proveedoresPublicos } from '@/db/esquema'
 
 /**
  * La versión del texto de autorización de ubicación que se está aceptando.
@@ -99,16 +99,30 @@ export async function miUbicacion(
 /**
  * Dónde centrar el mapa al elegir municipio (reporte de alta de ficha).
  *
- * `municipios` no tiene coordenadas propias, así que esto es el centroide de
- * quienes ya aceptaron el mapa en ese municipio —`proveedores_publicos` los
- * trae con `latitud`/`longitud`, `NULL` para quien no aceptó—. `null` si
- * todavía no hay ninguno: sin geocoding, no se inventa un punto (ADR 0004).
+ * Desde v6-f11, `municipios.latitud`/`longitud` trae el centro oficial del
+ * DANE para los 1.122 municipios del país, y es lo que se prefiere: es el
+ * mismo punto para todo el mundo y no depende de que alguien ya se haya
+ * registrado ahí. Si un municipio llegara a faltar en ese sembrado —hoy
+ * ninguno falta—, se cae al centroide de quienes ya aceptaron el mapa en
+ * ese municipio (`proveedores_publicos`, con `latitud`/`longitud` en `NULL`
+ * para quien no aceptó). `null` si tampoco hay eso: sin geocoding, no se
+ * inventa un punto (ADR 0004).
  */
 export async function centroMunicipio(
   db: BaseDeDatos,
   municipio: string,
 ): Promise<{ latitud: number; longitud: number } | null> {
   const [fila] = await db
+    .select({ latitud: municipios.latitud, longitud: municipios.longitud })
+    .from(municipios)
+    .where(eq(municipios.codigoDane, municipio))
+    .limit(1)
+
+  if (fila && fila.latitud !== null && fila.longitud !== null) {
+    return { latitud: Number(fila.latitud), longitud: Number(fila.longitud) }
+  }
+
+  const [respaldo] = await db
     .select({
       latitud: sql<number | null>`avg(${proveedoresPublicos.latitud})`,
       longitud: sql<number | null>`avg(${proveedoresPublicos.longitud})`,
@@ -118,7 +132,7 @@ export async function centroMunicipio(
       and(eq(proveedoresPublicos.municipio, municipio), isNotNull(proveedoresPublicos.latitud)),
     )
 
-  if (!fila || fila.latitud === null || fila.longitud === null) return null
+  if (!respaldo || respaldo.latitud === null || respaldo.longitud === null) return null
 
-  return { latitud: Number(fila.latitud), longitud: Number(fila.longitud) }
+  return { latitud: Number(respaldo.latitud), longitud: Number(respaldo.longitud) }
 }

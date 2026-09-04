@@ -246,9 +246,10 @@ export function FormularioProveedor({
   )
   const [autorizoMapa, setAutorizoMapa] = useState(false)
   // Dónde centrar el mapa al elegir municipio (reporte de alta de ficha).
-  // `undefined` mientras no hay municipio o todavía no llegó la respuesta;
-  // `null` cuando ya se preguntó y ese municipio no tiene a nadie en el
-  // mapa todavía —ahí no se adivina un punto, se avisa en pantalla—.
+  // `undefined` mientras no hay municipio o todavía no llegó la respuesta.
+  // Desde v6-f11 casi siempre hay un centro —el oficial del municipio,
+  // sembrado para los 1.122—; `null` solo puede pasar si algún municipio
+  // futuro llegara sin sembrar y tampoco tuviera prestadores en el mapa.
   const [centroMunicipio, setCentroMunicipio] = useState<
     { latitud: number; longitud: number } | null | undefined
   >(undefined)
@@ -986,10 +987,13 @@ export function FormularioProveedor({
                   alSeleccionar={setPuntoMapa}
                 />
               </div>
+              {/* Desde v6-f11 el mapa siempre tiene con qué centrarse —el
+                  centro oficial del municipio, no el de otros prestadores—,
+                  así que ya no hace falta avisar que «no hay nadie más»: el
+                  pin de quien pide sigue siendo el suyo, esté quien esté. */}
               <p className="mt-2 text-sm text-muted-foreground">
-                {!puntoMapa && municipio !== '' && centroMunicipio === null
-                  ? 'Todavía no hay nadie en el mapa en tu municipio. Arrastra el pin hasta tu zona.'
-                  : 'Toca el mapa donde quieras tu punto. No tiene que ser tu casa exacta: puedes marcar la esquina o la cuadra donde trabajas.'}
+                Toca el mapa donde quieras tu punto. No tiene que ser tu casa
+                exacta: puedes marcar la esquina o la cuadra donde trabajas.
               </p>
               <label className="mt-3 flex min-h-12 cursor-pointer items-start gap-3">
                 <input

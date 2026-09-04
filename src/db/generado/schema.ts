@@ -1,4 +1,4 @@
-import { pgTable, index, foreignKey, check, uuid, text, timestamp, boolean, numeric, pgPolicy, jsonb, integer, unique, bigserial, smallint, uniqueIndex, primaryKey, pgView, bigint } from "drizzle-orm/pg-core"
+import { pgTable, index, foreignKey, check, uuid, text, timestamp, boolean, numeric, pgPolicy, jsonb, integer, unique, doublePrecision, bigserial, smallint, uniqueIndex, primaryKey, pgView, bigint } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 import { bytea, usersInAuth } from "../tipos";
 
@@ -362,15 +362,6 @@ END)`),
 	check("perfiles_tipo_check", sql`tipo = ANY (ARRAY['vecino'::text, 'servidor'::text, 'aliado'::text])`),
 ]);
 
-export const municipios = pgTable("municipios", {
-	codigoDane: text("codigo_dane").primaryKey().notNull(),
-	nombre: text().notNull(),
-	departamento: text().notNull(),
-	afectado: boolean().default(true).notNull(),
-}, (table) => [
-	pgPolicy("municipios lectura publica", { as: "permissive", for: "select", to: ["public"], using: sql`true` }),
-]);
-
 export const catalogoServicios = pgTable("catalogo_servicios", {
 	id: text().primaryKey().notNull(),
 	area: text().notNull(),
@@ -401,6 +392,17 @@ export const catalogoItems = pgTable("catalogo_items", {
 	pgPolicy("catalogo lectura publica", { as: "permissive", for: "select", to: ["public"], using: sql`(activo = true)` }),
 	check("catalogo_items_categoria_check", sql`categoria = ANY (ARRAY['alimentacion'::text, 'aseo'::text, 'salud'::text, 'abrigo'::text, 'cocina'::text, 'otros'::text, 'servicios'::text, 'mascotas'::text])`),
 	check("catalogo_items_origen_check", sql`origen = ANY (ARRAY['semilla'::text, 'admin'::text, 'aliado'::text, 'sugerencia'::text])`),
+]);
+
+export const municipios = pgTable("municipios", {
+	codigoDane: text("codigo_dane").primaryKey().notNull(),
+	nombre: text().notNull(),
+	departamento: text().notNull(),
+	afectado: boolean().default(true).notNull(),
+	latitud: doublePrecision(),
+	longitud: doublePrecision(),
+}, (table) => [
+	pgPolicy("municipios lectura publica", { as: "permissive", for: "select", to: ["public"], using: sql`true` }),
 ]);
 
 export const metricasServicio = pgTable("metricas_servicio", {

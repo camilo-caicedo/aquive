@@ -90,9 +90,9 @@ export default async function SoyProveedorPage() {
   const ubicacion = await servidor.servicios.miUbicacion()
 
   // Sin punto propio todavía, el mapa de «Tu punto en el mapa» abre en el
-  // centroide de quienes ya aceptaron el mapa en el mismo municipio, y no en
-  // la vista general de Cali. Se salta la consulta si ya hay un punto: ese
-  // manda siempre (ver `MiUbicacion`).
+  // centro oficial del municipio (v6-f11) y no en la vista general de Cali.
+  // Se salta la consulta si ya hay un punto: ese manda siempre (ver
+  // `MiUbicacion`).
   const centroMunicipio =
     !ubicacion?.latitud && proveedor.municipio
       ? await servidor.servicios.centroMunicipio({ municipio: proveedor.municipio })
