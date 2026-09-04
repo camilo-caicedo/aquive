@@ -778,4 +778,15 @@ export const contratoServicios = {
   zonas: oc
     .input(z.object({ municipio: z.string().regex(/^[0-9]{5}$/).optional().catch(undefined) }))
     .output(z.array(ZonaConGente)),
+
+  /**
+   * Dónde centrar el mapa al elegir municipio (ADR 0004, reporte de alta de
+   * ficha). `municipios` no tiene coordenadas propias —solo `codigo_dane`,
+   * `nombre`, `departamento`—, así que esto es el centroide de quienes ya
+   * aceptaron el mapa en ese municipio, sacado de `proveedores_publicos`.
+   * `null` si todavía no hay nadie: sin geocoding, no se inventa un punto.
+   */
+  centroMunicipio: oc
+    .input(z.object({ municipio: z.string().regex(/^[0-9]{5}$/) }))
+    .output(z.object({ latitud: z.number(), longitud: z.number() }).nullable()),
 }

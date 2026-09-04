@@ -50,12 +50,29 @@ const CALIDAD = 78
 //     `transporte`, y entonces conviene revisar cuál de las dos ilustra
 //     mejor cada una.
 const POR_ARCHIVO = {
+  // Primer lote, con nombre. El cliente lo mandó el 3 de septiembre de 2026.
   'aseo.png': 'aseo',
   'arreglos.png': 'construccion',
   'confeccion.png': 'confeccion',
   'cuidados.png': 'cuidado',
   'domicilios.png': 'comida',
   'trasteos.png': 'transporte',
+
+  // Segundo lote, el 4 de septiembre, con las doce numeradas y sin nombre.
+  // Se identificaron mirándolas. Las seis últimas repiten el primer lote —son
+  // la misma toma— así que da igual de cuál de los dos se generen.
+  '2.png': 'belleza', //  peluquería
+  '3.png': 'reparacion', //  arreglando un mueble con herramientas
+  '4.png': 'ensenanza', //  clase particular con libros
+  '5.png': 'eventos', //  montaje de mesa para una fiesta
+  '6.png': 'digital', //  atención con computador
+  '7.png': 'otros', //  trabajo manual sin oficio reconocible: sirve de cajón
+  '8.png': 'aseo',
+  '9.png': 'comida',
+  '10.png': 'confeccion',
+  '11.png': 'construccion',
+  '12.png': 'cuidado',
+  '13.png': 'transporte',
 }
 
 const origen = process.argv[2]

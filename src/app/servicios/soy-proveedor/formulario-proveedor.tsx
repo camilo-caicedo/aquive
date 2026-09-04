@@ -3,7 +3,7 @@
 import { Check, Eye, EyeOff, PhoneCall } from 'lucide-react'
 
 import type { ReactNode } from 'react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
@@ -245,6 +245,27 @@ export function FormularioProveedor({
     null
   )
   const [autorizoMapa, setAutorizoMapa] = useState(false)
+  // Dónde centrar el mapa al elegir municipio (reporte de alta de ficha).
+  // `undefined` mientras no hay municipio o todavía no llegó la respuesta;
+  // `null` cuando ya se preguntó y ese municipio no tiene a nadie en el
+  // mapa todavía —ahí no se adivina un punto, se avisa en pantalla—.
+  const [centroMunicipio, setCentroMunicipio] = useState<
+    { latitud: number; longitud: number } | null | undefined
+  >(undefined)
+  useEffect(() => {
+    if (proveedor || municipio === '') {
+      setCentroMunicipio(undefined)
+      return
+    }
+    let cancelado = false
+    setCentroMunicipio(undefined)
+    rpc.servicios.centroMunicipio({ municipio }).then((c) => {
+      if (!cancelado) setCentroMunicipio(c)
+    })
+    return () => {
+      cancelado = true
+    }
+  }, [proveedor, municipio])
   const [modalidad, setModalidad] = useState<ModalidadServicio[]>(
     proveedor?.modalidad ?? []
   )
@@ -939,6 +960,12 @@ export function FormularioProveedor({
               </p>
               <div className="mt-2">
                 <Mapa
+                  // Cambiar de municipio remonta el mapa para recentrarlo en
+                  // el nuevo centroide (ver el efecto de arriba). Una vez hay
+                  // un punto propio, la llave deja de moverse con el
+                  // municipio: no hay que pisar un pin que la persona ya
+                  // arrastró.
+                  key={puntoMapa ? 'fijo' : municipio}
                   puntos={
                     puntoMapa
                       ? [
@@ -952,7 +979,7 @@ export function FormularioProveedor({
                         ]
                       : []
                   }
-                  centro={puntoMapa ?? undefined}
+                  centro={puntoMapa ?? centroMunicipio ?? undefined}
                   zoom={13}
                   alto={260}
                   seleccionable
@@ -960,8 +987,9 @@ export function FormularioProveedor({
                 />
               </div>
               <p className="mt-2 text-sm text-muted-foreground">
-                Toca el mapa donde quieras tu punto. No tiene que ser tu casa
-                exacta: puedes marcar la esquina o la cuadra donde trabajas.
+                {!puntoMapa && municipio !== '' && centroMunicipio === null
+                  ? 'Todavía no hay nadie en el mapa en tu municipio. Arrastra el pin hasta tu zona.'
+                  : 'Toca el mapa donde quieras tu punto. No tiene que ser tu casa exacta: puedes marcar la esquina o la cuadra donde trabajas.'}
               </p>
               <label className="mt-3 flex min-h-12 cursor-pointer items-start gap-3">
                 <input
@@ -1508,6 +1536,19 @@ export function FormularioProveedor({
             <p className="text-base">
               Ya tienes una foto: <strong>{estadoFoto.toLowerCase()}</strong>.
               Si subes otra, la anterior se borra.
+            </p>
+          )}
+
+          {/* El estado nunca depende solo del color (regla de interfaz 11):
+              aquí va en palabras, y si la rechazaron, con el motivo que
+              escribió quien la revisó — sin eso, «rechazada» a secas se lee
+              como que la foto se perdió. */}
+          {teniaFoto && !fotoNueva && proveedor?.foto_estado === 'rechazada' && (
+            <p className="rounded-2xl bg-accent p-3 text-base text-accent-foreground">
+              {proveedor.foto_motivo
+                ? `Motivo: ${proveedor.foto_motivo}`
+                : 'No cumplió los criterios de la fundación.'}{' '}
+              Puedes subir otra.
             </p>
           )}
 

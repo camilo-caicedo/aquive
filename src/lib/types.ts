@@ -191,6 +191,8 @@ export interface MiProveedor {
    *  aquí se la enseñamos a su dueña, para que pueda quitarla. */
   foto: string | null
   foto_estado: 'en_cola' | 'aprobada' | 'rechazada' | null
+  /** Por qué se rechazó, si se rechazó. `null` en cualquier otro estado. */
+  foto_motivo: string | null
   oficios: {
     oficio_id: string
     nombre: string

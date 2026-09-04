@@ -89,6 +89,15 @@ export default async function SoyProveedorPage() {
   // vista —con razón— se lo esconde a todo el mundo.
   const ubicacion = await servidor.servicios.miUbicacion()
 
+  // Sin punto propio todavía, el mapa de «Tu punto en el mapa» abre en el
+  // centroide de quienes ya aceptaron el mapa en el mismo municipio, y no en
+  // la vista general de Cali. Se salta la consulta si ya hay un punto: ese
+  // manda siempre (ver `MiUbicacion`).
+  const centroMunicipio =
+    !ubicacion?.latitud && proveedor.municipio
+      ? await servidor.servicios.centroMunicipio({ municipio: proveedor.municipio })
+      : null
+
   const municipio = municipios?.find((m) => m.codigo_dane === proveedor.municipio)
   const publicados = proveedor.oficios.filter((o) => o.publicado)
   const escondidos = proveedor.oficios.filter((o) => !o.publicado)
@@ -193,10 +202,19 @@ export default async function SoyProveedorPage() {
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-lg font-medium">Mi foto</span>
+            {/* Antes decía «Publicada en tu ficha» en cuanto había un
+                archivo, aunque siguiera en cola: quien acababa de subirla
+                creía que ya se veía, o —si la habían rechazado— que se
+                había perdido. El estado nunca depende solo del color
+                (regla de interfaz 11): aquí va en la propia palabra. */}
             <span className="block text-base text-muted-foreground">
-              {proveedor.acepto_foto && proveedor.foto
-                ? 'Publicada en tu ficha'
-                : 'Opcional. Ayuda a que te reconozcan'}
+              {!proveedor.acepto_foto || !proveedor.foto
+                ? 'Opcional. Ayuda a que te reconozcan'
+                : proveedor.foto_estado === 'aprobada'
+                  ? 'Publicada en tu ficha'
+                  : proveedor.foto_estado === 'rechazada'
+                    ? `Rechazada${proveedor.foto_motivo ? `: ${proveedor.foto_motivo}` : ''}`
+                    : 'En revisión'}
             </span>
           </span>
           <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -243,6 +261,7 @@ export default async function SoyProveedorPage() {
           latitudInicial={ubicacion?.latitud ?? null}
           longitudInicial={ubicacion?.longitud ?? null}
           aceptadoInicial={ubicacion?.acepto ?? false}
+          centroMunicipio={centroMunicipio ?? undefined}
         />
       </div>
     </main>

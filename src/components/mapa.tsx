@@ -131,9 +131,23 @@ export function Mapa({
       }
 
       if (seleccionable) {
+        // El pin que se arrastra: mismo `divIcon` que los puntos de arriba,
+        // pero en forma de gota y color `--primary` para que se distinga a
+        // simple vista de los puntos de otros prestadores —esos son
+        // información, este se mueve—. Sin `icon` aquí Leaflet cae a su
+        // marcador por defecto, que pide `marker-icon.png` a una URL que el
+        // empaquetador no resuelve: de ahí el círculo roto y el `alt`
+        // «marker icon» que se reportó.
+        const iconoArrastrable = L.divIcon({
+          className: '',
+          html: `<svg width="34" height="44" viewBox="0 0 34 44" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 2px 3px rgba(29,29,27,.45))"><path d="M17 0C7.61 0 0 7.61 0 17c0 12.75 17 27 17 27s17-14.25 17-27C34 7.61 26.39 0 17 0z" fill="var(--primary)" stroke="var(--foreground)" stroke-width="1.5"/><circle cx="17" cy="17" r="6.5" fill="var(--foreground)"/></svg>`,
+          iconSize: [34, 44],
+          iconAnchor: [17, 44],
+        })
         const inicial = conPunto[0]
         if (inicial) {
           marcadorRef.current = L.marker([inicial.latitud, inicial.longitud], {
+            icon: iconoArrastrable,
             draggable: true,
           }).addTo(mapa)
           marcadorRef.current.on('dragend', () => {
@@ -146,7 +160,10 @@ export function Mapa({
           if (marcadorRef.current) {
             marcadorRef.current.setLatLng([lat, lng])
           } else {
-            marcadorRef.current = L.marker([lat, lng], { draggable: true }).addTo(mapa!)
+            marcadorRef.current = L.marker([lat, lng], {
+              icon: iconoArrastrable,
+              draggable: true,
+            }).addTo(mapa!)
             marcadorRef.current.on('dragend', () => {
               const p = marcadorRef.current!.getLatLng()
               alSeleccionarRef.current?.({ latitud: p.lat, longitud: p.lng })

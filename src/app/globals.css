@@ -812,3 +812,31 @@ html {
    encabezado, arriba del todo, que ya dice cuál es. Si algún día se quiere
    la marca, tiene que ser un componente de cliente que lea el hash, no CSS.
    */
+
+/* --------------------------------------------------------------------
+   Leaflet, por debajo del cromo fijo
+   -------------------------------------------------------------------- */
+/* `leaflet.css` sube sus paneles a z-index 200-700 y sus controles y los
+   contenedores de esquina (`.leaflet-top`/`.leaflet-bottom`) a 800-1000. El
+   encabezado (`sticky z-40`) y la barra inferior (`fixed z-40`) se quedan
+   muy por debajo, así que al hacer scroll el mapa se les monta encima.
+
+   Se baja Leaflet, no se sube el cromo: si el encabezado o la barra
+   pasaran de z-40, quedarían por encima de las hojas modales y los diálogos
+   (z-50), y el fallo solo cambiaría de sitio. Los valores de abajo
+   mantienen el mismo orden relativo que trae Leaflet —teselas debajo de
+   overlays, debajo de sombras, debajo de marcadores, debajo de popups,
+   controles arriba de todo el mapa— pero todos por debajo de 40. El
+   prefijo `.leaflet-container` no acota nada nuevo —ya son clases propias
+   de Leaflet—: solo da más especificidad que el `leaflet.css` importado,
+   así el orden de import no decide quién gana. */
+.leaflet-container .leaflet-pane { z-index: 2; }
+.leaflet-container .leaflet-tile-pane { z-index: 1; }
+.leaflet-container .leaflet-overlay-pane { z-index: 3; }
+.leaflet-container .leaflet-shadow-pane { z-index: 4; }
+.leaflet-container .leaflet-marker-pane { z-index: 5; }
+.leaflet-container .leaflet-tooltip-pane { z-index: 6; }
+.leaflet-container .leaflet-popup-pane { z-index: 7; }
+.leaflet-container .leaflet-control { z-index: 8; }
+.leaflet-container .leaflet-top,
+.leaflet-container .leaflet-bottom { z-index: 9; }

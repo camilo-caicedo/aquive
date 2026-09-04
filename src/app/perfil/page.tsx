@@ -2,6 +2,7 @@ import Link from 'next/link'
 import {
   BadgeCheck,
   Bell,
+  Camera,
   ChevronRight,
   ClipboardList,
   Clock,
@@ -246,6 +247,22 @@ export default async function PerfilPage() {
           Icono: ListOrdered,
           nombre: 'Mis oficios y precios',
           pista: String(proveedor.oficios.length),
+        },
+        // ⚠ Faltaba, y era la única puerta: `/perfil/foto` solo se enlazaba
+        // desde «Mi ficha» (`/servicios/soy-proveedor`), así que quien
+        // buscaba cambiar su foto desde el menú del perfil no la encontraba.
+        // La pista dice el estado con la misma palabra que usa la propia
+        // pantalla de la foto: nada de inventar un vocabulario nuevo.
+        {
+          href: '/perfil/foto',
+          Icono: Camera,
+          nombre: 'Mi foto',
+          pista:
+            proveedor.foto_estado === 'en_cola'
+              ? 'en revisión'
+              : proveedor.foto_estado === 'rechazada'
+                ? 'rechazada'
+                : undefined,
         },
         // Detrás de los oficios y sus precios, que es lo más parecido que
         // hay: las dos son cosas que esa persona ofrece con un precio.

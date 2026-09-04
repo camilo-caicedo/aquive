@@ -1,7 +1,7 @@
-import { eq } from 'drizzle-orm'
+import { and, eq, isNotNull, sql } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
-import { proveedores } from '@/db/esquema'
+import { proveedores, proveedoresPublicos } from '@/db/esquema'
 
 /**
  * La versión del texto de autorización de ubicación que se está aceptando.
@@ -94,4 +94,31 @@ export async function miUbicacion(
     longitud: fila.longitud === null ? null : Number(fila.longitud),
     acepto: fila.acepto,
   }
+}
+
+/**
+ * Dónde centrar el mapa al elegir municipio (reporte de alta de ficha).
+ *
+ * `municipios` no tiene coordenadas propias, así que esto es el centroide de
+ * quienes ya aceptaron el mapa en ese municipio —`proveedores_publicos` los
+ * trae con `latitud`/`longitud`, `NULL` para quien no aceptó—. `null` si
+ * todavía no hay ninguno: sin geocoding, no se inventa un punto (ADR 0004).
+ */
+export async function centroMunicipio(
+  db: BaseDeDatos,
+  municipio: string,
+): Promise<{ latitud: number; longitud: number } | null> {
+  const [fila] = await db
+    .select({
+      latitud: sql<number | null>`avg(${proveedoresPublicos.latitud})`,
+      longitud: sql<number | null>`avg(${proveedoresPublicos.longitud})`,
+    })
+    .from(proveedoresPublicos)
+    .where(
+      and(eq(proveedoresPublicos.municipio, municipio), isNotNull(proveedoresPublicos.latitud)),
+    )
+
+  if (!fila || fila.latitud === null || fila.longitud === null) return null
+
+  return { latitud: Number(fila.latitud), longitud: Number(fila.longitud) }
 }
