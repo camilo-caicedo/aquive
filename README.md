@@ -138,7 +138,7 @@ Para que `/admin` sea accesible hay que insertar a mano la primera fila en
 - **Sin `Suspense` en ninguna parte.** ADR 0005: deja el subárbol sin
   hidratar, y la comprobación de septiembre lo amplió a cualquier límite,
   también en producción. El esqueleto que sí hay es el de la navegación
-  (ADR 0016), que es marcado normal y no un límite de carga.
+  (ADR 0020), que es marcado normal y no un límite de carga.
 
 ## Lo que decide si esto sirve
 

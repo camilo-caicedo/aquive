@@ -1,9 +1,14 @@
-# ADR 0016 · Vuelve el esqueleto, pero al navegar y sin `Suspense`
+# ADR 0020 · Vuelve el esqueleto, pero al navegar y sin `Suspense`
 
 - **Estado:** aceptada
 - **Fecha:** 2026-09-04
 - **Decide:** el responsable
 - **Cambia:** una consecuencia del ADR 0005. No lo sustituye
+
+⚠ Nació numerado 0016 y así quedó escrito en el commit `4701cb0`. El
+número ya era de «la versión mínima»: los ADR 0016-0019 entraron con el
+merge del PR #4 mientras esto se escribía. Se renumeró a 0020 en cuanto
+se vio; el mensaje de aquel commit es lo único que sigue diciendo 0016.
 
 ## Contexto
 

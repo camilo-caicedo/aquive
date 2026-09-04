@@ -875,7 +875,7 @@ html {
    `Suspense` y la dejaba sin hidratar; esto es marcado normal que se monta
    y se desmonta con estado de cliente, sin ningún límite de por medio. La
    consecuencia del ADR que sí cambia —«se queda la anterior»— va escrita
-   en el ADR 0016.
+   en el ADR 0020.
    -------------------------------------------------------------------- */
 body:has([data-esqueleto-navegacion]) #contenido {
   display: none;

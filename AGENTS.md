@@ -71,10 +71,13 @@ archivo, y detrás de él:
 | `docs/decisiones/0017-*.md` | La solicitud es una orden dirigida a un prestador |
 | `docs/decisiones/0018-*.md` | La sombrilla abre el menú |
 | `docs/decisiones/0019-*.md` | Municipio, barrio y dirección, cada uno con lo suyo |
+| `docs/decisiones/0020-*.md` | Siluetas al navegar, sin `Suspense` |
 | `docs/multiagente/protocolo.md` | Cómo colaboran Claude Code y Antigravity/Gemini en este repo |
 | `docs/marca/AquiVe-Flujo.dc.html` | Prototipo de las 40 pantallas |
 | `docs/marca/Manual-de-Marca-AquiVe.pdf` | Manual de marca |
 | `docs/PENDIENTES-LEGALES.md` | Bloqueantes que no son código |
+| `docs/DESPLIEGUE.md` | **Cómo se despliega.** El push a GitHub NO despliega |
+| `docs/PRUEBAS-EN-NAVEGADOR.md` | Trampas del entorno al probar con un navegador |
 
 Si el código y este archivo discrepan, gana el código, y actualizar este
 archivo es parte de la tarea que causó la discrepancia.
@@ -627,7 +630,7 @@ en un rediseño:
 
     Al navegar, `BarraDeCarga` en el layout, con dos señales: la línea de
     3 px sale de inmediato, y pasados 200 ms las siluetas de lo que viene,
-    con la forma del destino (ADR 0016). No salen para una hoja del slot
+    con la forma del destino (ADR 0020). No salen para una hoja del slot
     `@modal` ni para un enlace que solo cambia la query.
 
     ⚠ Nada de esto es —ni puede ser— un `loading.tsx`: el ADR 0005 lo
@@ -640,7 +643,7 @@ en un rediseño:
     ⚠ Y lleva `flushSync` en el manejador del clic a propósito: React
     agrupa ese `setState` con el `startTransition` de `Link`, y sin
     forzarlo el aviso solo se renderiza cuando la pantalla nueva ya
-    confirmó — o sea, nunca a tiempo. El ADR 0016 lo cuenta con las
+    confirmó — o sea, nunca a tiempo. El ADR 0020 lo cuenta con las
     medidas.
 
 12. **Lo que pone su fondo dentro de una cinta pone también su tinta.**

@@ -30,7 +30,7 @@ import { EsqueletoDeNavegacion } from '@/components/esqueleto-navegacion'
  * y éste es marcado normal que se monta y se desmonta con estado de
  * cliente. Ningún límite, nada suspendido, nada que dejar sin hidratar.
  * Lo que sí cambia es una consecuencia escrita de ese ADR —«se queda la
- * anterior»—, y por eso va con el ADR 0016.
+ * anterior»—, y por eso va con el ADR 0020.
  */
 
 /** Un tope, para no dejarla encendida si algo no llega nunca. */
