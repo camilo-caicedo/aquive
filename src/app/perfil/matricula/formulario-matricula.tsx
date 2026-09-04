@@ -43,8 +43,8 @@ const AREAS: Record<string, string> = {
 
 type MiMatricula = {
   profesion: string
-  entidad_matricula: string
-  numero_matricula: string
+  entidad_matricula: string | null
+  numero_matricula: string | null
   servicios: string[]
   verificado: boolean
 }

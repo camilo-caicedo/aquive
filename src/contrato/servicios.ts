@@ -467,8 +467,10 @@ export const contratoServicios = {
     z
       .object({
         profesion: z.string(),
-        entidad_matricula: z.string(),
-        numero_matricula: z.string(),
+        // v6-f5-barrio-y-direccion.sql las volvió opcionales: un `servidor`
+        // puede existir sin matrícula todavía declarada.
+        entidad_matricula: z.string().nullable(),
+        numero_matricula: z.string().nullable(),
         servicios: z.array(z.string()),
         verificado: z.boolean(),
       })

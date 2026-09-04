@@ -283,8 +283,8 @@ export const invitacionesOrganizacion = pgTable("invitaciones_organizacion", {
 export const servidores = pgTable("servidores", {
 	perfilId: uuid("perfil_id").primaryKey().notNull(),
 	profesion: text().notNull(),
-	entidadMatricula: text("entidad_matricula").notNull(),
-	numeroMatricula: text("numero_matricula").notNull(),
+	entidadMatricula: text("entidad_matricula"),
+	numeroMatricula: text("numero_matricula"),
 	verificado: boolean().default(false).notNull(),
 	verificadoAt: timestamp("verificado_at", { withTimezone: true, mode: 'string' }),
 	verificadoPor: uuid("verificado_por"),
@@ -478,25 +478,68 @@ export const accesosReferencia = pgTable("accesos_referencia", {
 	check("accesos_referencia_rol_lector_check", sql`rol_lector = ANY (ARRAY['admin'::text, 'aliado'::text])`),
 ]);
 
-export const respuestasServicio = pgTable("respuestas_servicio", {
+export const solicitudesServicio = pgTable("solicitudes_servicio", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
-	solicitudId: uuid("solicitud_id").notNull(),
-	proveedorId: uuid("proveedor_id").notNull(),
-	mensaje: text().notNull(),
+	codigo: text().notNull(),
+	oficioId: text("oficio_id"),
+	municipio: text().notNull(),
+	zonaId: uuid("zona_id"),
+	zonaTexto: text("zona_texto"),
+	nota: text(),
+	estado: text().default('pendiente').notNull(),
 	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '15 days'::interval)`).notNull(),
+	esPrueba: boolean("es_prueba").default(false).notNull(),
+	perfilId: uuid("perfil_id").notNull(),
+	grupo: text().notNull(),
+	detalle: text(),
+	revisadaAt: timestamp("revisada_at", { withTimezone: true, mode: 'string' }),
+	sugerenciaId: uuid("sugerencia_id"),
+	proveedorId: uuid("proveedor_id").notNull(),
 }, (table) => [
+	index("idx_solicitudes_servicio_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
+	index("idx_solicitudes_servicio_proveedor").using("btree", table.proveedorId.asc().nullsLast().op("text_ops"), table.estado.asc().nullsLast().op("text_ops")),
+	index("idx_solicitudes_servicio_sin_revisar").using("btree", table.creadaAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(revisada_at IS NULL)`),
+	index("solicitudes_servicio_oficio_idx").using("btree", table.oficioId.asc().nullsLast().op("text_ops")).where(sql`(oficio_id IS NOT NULL)`),
+	foreignKey({
+			columns: [table.municipio],
+			foreignColumns: [municipios.codigoDane],
+			name: "solicitudes_servicio_municipio_fkey"
+		}),
+	foreignKey({
+			columns: [table.oficioId],
+			foreignColumns: [catalogoOficios.id],
+			name: "solicitudes_servicio_oficio_id_fkey"
+		}),
+	foreignKey({
+			columns: [table.perfilId],
+			foreignColumns: [perfiles.id],
+			name: "solicitudes_servicio_perfil_id_fkey"
+		}).onDelete("cascade"),
 	foreignKey({
 			columns: [table.proveedorId],
 			foreignColumns: [proveedores.id],
-			name: "respuestas_servicio_proveedor_id_fkey"
+			name: "solicitudes_servicio_proveedor_id_fkey"
 		}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.solicitudId],
-			foreignColumns: [solicitudesServicio.id],
-			name: "respuestas_servicio_solicitud_id_fkey"
-		}).onDelete("cascade"),
-	unique("respuestas_servicio_solicitud_id_proveedor_id_key").on(table.solicitudId, table.proveedorId),
-	check("respuestas_servicio_mensaje_check", sql`(char_length(mensaje) >= 10) AND (char_length(mensaje) <= 200)`),
+			columns: [table.sugerenciaId],
+			foreignColumns: [sugerenciasItem.id],
+			name: "solicitudes_servicio_sugerencia_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.zonaId],
+			foreignColumns: [zonas.id],
+			name: "solicitudes_servicio_zona_id_fkey"
+		}).onDelete("set null"),
+	unique("solicitudes_servicio_codigo_key").on(table.codigo),
+	check("solicitudes_servicio_detalle_check", sql`(detalle IS NULL) OR ((char_length(btrim(detalle)) >= 3) AND (char_length(btrim(detalle)) <= 80))`),
+	check("solicitudes_servicio_dice_algo", sql`(num_nonnulls(oficio_id, sugerencia_id) = 1) OR (detalle IS NOT NULL)`),
+	check("solicitudes_servicio_estado_check", sql`estado = ANY (ARRAY['pendiente'::text, 'aceptada'::text, 'realizada'::text, 'rechazada'::text, 'no_concretada'::text])`),
+	check("solicitudes_servicio_grupo_check", sql`grupo = ANY (ARRAY['comida'::text, 'belleza'::text, 'confeccion'::text, 'transporte'::text, 'aseo'::text, 'cuidado'::text, 'reparacion'::text, 'otros'::text, 'construccion'::text, 'ensenanza'::text, 'eventos'::text, 'digital'::text])`),
+	check("solicitudes_servicio_nota_check", sql`char_length(nota) <= 140`),
+	check("solicitudes_servicio_tiene_zona", sql`num_nonnulls(zona_id, zona_texto) >= 1`),
+	check("solicitudes_servicio_una_subcategoria", sql`num_nonnulls(oficio_id, sugerencia_id) <= 1`),
+	check("solicitudes_servicio_zona_texto_check", sql`(char_length(zona_texto) >= 2) AND (char_length(zona_texto) <= 60)`),
 ]);
 
 export const serviciosPrestados = pgTable("servicios_prestados", {
@@ -592,6 +635,10 @@ export const proveedores = pgTable("proveedores", {
 	aceptoFoto: boolean("acepto_foto").default(false).notNull(),
 	fotoVersion: text("foto_version"),
 	fotoAt: timestamp("foto_at", { withTimezone: true, mode: 'string' }),
+	direccion: text(),
+	aceptoDireccion: boolean("acepto_direccion").default(false).notNull(),
+	direccionVersion: text("direccion_version"),
+	direccionAt: timestamp("direccion_at", { withTimezone: true, mode: 'string' }),
 }, (table) => [
 	index("idx_proveedores_municipio").using("btree", table.municipio.asc().nullsLast().op("text_ops")).where(sql`((NOT suspendido) AND acepto_publicacion)`),
 	index("idx_proveedores_organizacion").using("btree", table.organizacionId.asc().nullsLast().op("uuid_ops")).where(sql`(organizacion_id IS NOT NULL)`),
@@ -628,6 +675,8 @@ export const proveedores = pgTable("proveedores", {
 	check("proveedores_autorizacion_version_check", sql`(char_length(TRIM(BOTH FROM autorizacion_version)) >= 3) AND (char_length(TRIM(BOTH FROM autorizacion_version)) <= 60)`),
 	check("proveedores_coordenadas_colombia", sql`((latitud IS NULL) AND (longitud IS NULL)) OR (((latitud >= '-4.5'::numeric) AND (latitud <= 13.5)) AND ((longitud >= '-82.0'::numeric) AND (longitud <= '-66.0'::numeric)))`),
 	check("proveedores_descripcion_check", sql`char_length(descripcion) <= 300`),
+	check("proveedores_direccion_completa", sql`(NOT acepto_direccion) OR ((direccion IS NOT NULL) AND (direccion_version IS NOT NULL))`),
+	check("proveedores_direccion_tope", sql`(direccion IS NULL) OR (char_length(direccion) <= 120)`),
 	check("proveedores_foto_completa", sql`(NOT acepto_foto) OR ((foto_version IS NOT NULL) AND (foto_at IS NOT NULL))`),
 	check("proveedores_mapa_completo", sql`(NOT acepto_mapa) OR ((latitud IS NOT NULL) AND (longitud IS NOT NULL) AND (mapa_version IS NOT NULL))`),
 	check("proveedores_nombre_visible_check", sql`(char_length(nombre_visible) >= 3) AND (char_length(nombre_visible) <= 60)`),
@@ -637,71 +686,8 @@ export const proveedores = pgTable("proveedores", {
 	check("proveedores_zona_texto_check", sql`(char_length(zona_texto) >= 2) AND (char_length(zona_texto) <= 60)`),
 ]);
 
-export const solicitudesServicio = pgTable("solicitudes_servicio", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	codigo: text().notNull(),
-	oficioId: text("oficio_id"),
-	municipio: text().notNull(),
-	zonaId: uuid("zona_id"),
-	zonaTexto: text("zona_texto"),
-	urgencia: text().notNull(),
-	capacidadPago: text("capacidad_pago").notNull(),
-	nota: text(),
-	estado: text().default('abierta').notNull(),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }).default(sql`(now() + '15 days'::interval)`).notNull(),
-	esPrueba: boolean("es_prueba").default(false).notNull(),
-	perfilId: uuid("perfil_id").notNull(),
-	grupo: text().notNull(),
-	detalle: text(),
-	revisadaAt: timestamp("revisada_at", { withTimezone: true, mode: 'string' }),
-	sugerenciaId: uuid("sugerencia_id"),
-}, (table) => [
-	index("idx_solicitudes_servicio_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
-	index("idx_solicitudes_servicio_sin_revisar").using("btree", table.creadaAt.asc().nullsLast().op("timestamptz_ops")).where(sql`(revisada_at IS NULL)`),
-	index("idx_solicitudes_servicio_vigentes").using("btree", table.municipio.asc().nullsLast().op("text_ops"), table.grupo.asc().nullsLast().op("text_ops")).where(sql`(estado = 'abierta'::text)`),
-	index("solicitudes_servicio_oficio_idx").using("btree", table.oficioId.asc().nullsLast().op("text_ops")).where(sql`(oficio_id IS NOT NULL)`),
-	foreignKey({
-			columns: [table.municipio],
-			foreignColumns: [municipios.codigoDane],
-			name: "solicitudes_servicio_municipio_fkey"
-		}),
-	foreignKey({
-			columns: [table.oficioId],
-			foreignColumns: [catalogoOficios.id],
-			name: "solicitudes_servicio_oficio_id_fkey"
-		}),
-	foreignKey({
-			columns: [table.perfilId],
-			foreignColumns: [perfiles.id],
-			name: "solicitudes_servicio_perfil_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.sugerenciaId],
-			foreignColumns: [sugerenciasItem.id],
-			name: "solicitudes_servicio_sugerencia_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.zonaId],
-			foreignColumns: [zonas.id],
-			name: "solicitudes_servicio_zona_id_fkey"
-		}).onDelete("set null"),
-	unique("solicitudes_servicio_codigo_key").on(table.codigo),
-	check("solicitudes_servicio_capacidad_pago_check", sql`capacidad_pago = ANY (ARRAY['puedo_pagar'::text, 'pago_poco'::text, 'no_puedo_pagar'::text])`),
-	check("solicitudes_servicio_detalle_check", sql`(detalle IS NULL) OR ((char_length(btrim(detalle)) >= 3) AND (char_length(btrim(detalle)) <= 80))`),
-	check("solicitudes_servicio_dice_algo", sql`(num_nonnulls(oficio_id, sugerencia_id) = 1) OR (detalle IS NOT NULL)`),
-	check("solicitudes_servicio_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'resuelta'::text])`),
-	check("solicitudes_servicio_grupo_check", sql`grupo = ANY (ARRAY['comida'::text, 'belleza'::text, 'confeccion'::text, 'transporte'::text, 'aseo'::text, 'cuidado'::text, 'reparacion'::text, 'otros'::text, 'construccion'::text, 'ensenanza'::text, 'eventos'::text, 'digital'::text])`),
-	check("solicitudes_servicio_nota_check", sql`char_length(nota) <= 140`),
-	check("solicitudes_servicio_tiene_zona", sql`num_nonnulls(zona_id, zona_texto) >= 1`),
-	check("solicitudes_servicio_una_subcategoria", sql`num_nonnulls(oficio_id, sugerencia_id) <= 1`),
-	check("solicitudes_servicio_urgencia_check", sql`urgencia = ANY (ARRAY['hoy'::text, 'esta_semana'::text, 'sin_prisa'::text])`),
-	check("solicitudes_servicio_zona_texto_check", sql`(char_length(zona_texto) >= 2) AND (char_length(zona_texto) <= 60)`),
-]);
-
 export const chats = pgTable("chats", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
-	respuestaServicioId: uuid("respuesta_servicio_id"),
 	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 	cerradoAt: timestamp("cerrado_at", { withTimezone: true, mode: 'string' }),
 	productoId: uuid("producto_id"),
@@ -710,6 +696,7 @@ export const chats = pgTable("chats", {
 	proveedorId: uuid("proveedor_id"),
 	vistoOfreceAt: timestamp("visto_ofrece_at", { withTimezone: true, mode: 'string' }),
 	vistoPideAt: timestamp("visto_pide_at", { withTimezone: true, mode: 'string' }),
+	solicitudServicioId: uuid("solicitud_servicio_id"),
 }, (table) => [
 	uniqueIndex("chats_producto_iniciado_key").using("btree", table.productoId.asc().nullsLast().op("uuid_ops"), table.iniciadoPor.asc().nullsLast().op("uuid_ops")).where(sql`(producto_id IS NOT NULL)`),
 	uniqueIndex("chats_proveedor_iniciado_key").using("btree", table.proveedorId.asc().nullsLast().op("uuid_ops"), table.iniciadoPor.asc().nullsLast().op("uuid_ops")).where(sql`(proveedor_id IS NOT NULL)`),
@@ -735,60 +722,13 @@ export const chats = pgTable("chats", {
 			name: "chats_publicacion_id_fkey"
 		}).onDelete("cascade"),
 	foreignKey({
-			columns: [table.respuestaServicioId],
-			foreignColumns: [respuestasServicio.id],
-			name: "chats_respuesta_servicio_id_fkey"
+			columns: [table.solicitudServicioId],
+			foreignColumns: [solicitudesServicio.id],
+			name: "chats_solicitud_servicio_id_fkey"
 		}).onDelete("cascade"),
-	unique("chats_respuesta_servicio_id_key").on(table.respuestaServicioId),
+	unique("chats_solicitud_servicio_id_key").on(table.solicitudServicioId),
 	check("chats_iniciado_por_donde_toca", sql`((producto_id IS NOT NULL) OR (publicacion_id IS NOT NULL) OR (proveedor_id IS NOT NULL)) = (iniciado_por IS NOT NULL)`),
-	check("chats_un_origen", sql`num_nonnulls(respuesta_servicio_id, producto_id, publicacion_id, proveedor_id) = 1`),
-]);
-
-export const publicacionesMuro = pgTable("publicaciones_muro", {
-	id: uuid().defaultRandom().primaryKey().notNull(),
-	cara: text().notNull(),
-	perfilId: uuid("perfil_id").notNull(),
-	autorNombre: text("autor_nombre"),
-	autorizacionVersion: text("autorizacion_version"),
-	autorizacionAt: timestamp("autorizacion_at", { withTimezone: true, mode: 'string' }),
-	categoria: text().notNull(),
-	titulo: text().notNull(),
-	detalle: text(),
-	municipio: text().notNull(),
-	zonaId: uuid("zona_id"),
-	estado: text().default('abierta').notNull(),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
-	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }),
-	esPrueba: boolean("es_prueba").default(false).notNull(),
-	acopioId: uuid("acopio_id"),
-}, (table) => [
-	index("idx_muro_abierta").using("btree", table.cara.asc().nullsLast().op("text_ops"), table.municipio.asc().nullsLast().op("text_ops"), table.creadaAt.desc().nullsFirst().op("timestamptz_ops")).where(sql`(estado = 'abierta'::text)`),
-	index("idx_muro_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
-	foreignKey({
-			columns: [table.acopioId],
-			foreignColumns: [organizaciones.id],
-			name: "publicaciones_muro_acopio_id_fkey"
-		}).onDelete("set null"),
-	foreignKey({
-			columns: [table.municipio],
-			foreignColumns: [municipios.codigoDane],
-			name: "publicaciones_muro_municipio_fkey"
-		}),
-	foreignKey({
-			columns: [table.perfilId],
-			foreignColumns: [perfiles.id],
-			name: "publicaciones_muro_perfil_id_fkey"
-		}).onDelete("cascade"),
-	foreignKey({
-			columns: [table.zonaId],
-			foreignColumns: [zonas.id],
-			name: "publicaciones_muro_zona_id_fkey"
-		}).onDelete("set null"),
-	check("muro_ofrece_con_nombre", sql`(cara <> 'ofrece'::text) OR ((perfil_id IS NOT NULL) AND (autor_nombre IS NOT NULL) AND (autorizacion_version IS NOT NULL))`),
-	check("publicaciones_muro_cara_check", sql`cara = ANY (ARRAY['ofrece'::text, 'necesita'::text])`),
-	check("publicaciones_muro_detalle_check", sql`char_length(detalle) <= 300`),
-	check("publicaciones_muro_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'resuelta'::text])`),
-	check("publicaciones_muro_titulo_check", sql`(char_length(titulo) >= 3) AND (char_length(titulo) <= 140)`),
+	check("chats_un_origen", sql`num_nonnulls(producto_id, publicacion_id, proveedor_id, solicitud_servicio_id) = 1`),
 ]);
 
 export const productos = pgTable("productos", {
@@ -862,6 +802,53 @@ export const pqr = pgTable("pqr", {
 	check("pqr_tipo_check", sql`tipo = ANY (ARRAY['peticion'::text, 'queja'::text, 'reclamo'::text, 'sugerencia'::text])`),
 ]);
 
+export const publicacionesMuro = pgTable("publicaciones_muro", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	cara: text().notNull(),
+	perfilId: uuid("perfil_id").notNull(),
+	autorNombre: text("autor_nombre"),
+	autorizacionVersion: text("autorizacion_version"),
+	autorizacionAt: timestamp("autorizacion_at", { withTimezone: true, mode: 'string' }),
+	categoria: text().notNull(),
+	titulo: text().notNull(),
+	detalle: text(),
+	municipio: text().notNull(),
+	zonaId: uuid("zona_id"),
+	estado: text().default('abierta').notNull(),
+	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }),
+	esPrueba: boolean("es_prueba").default(false).notNull(),
+	acopioId: uuid("acopio_id"),
+}, (table) => [
+	index("idx_muro_abierta").using("btree", table.cara.asc().nullsLast().op("text_ops"), table.municipio.asc().nullsLast().op("text_ops"), table.creadaAt.desc().nullsFirst().op("timestamptz_ops")).where(sql`(estado = 'abierta'::text)`),
+	index("idx_muro_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.acopioId],
+			foreignColumns: [organizaciones.id],
+			name: "publicaciones_muro_acopio_id_fkey"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.municipio],
+			foreignColumns: [municipios.codigoDane],
+			name: "publicaciones_muro_municipio_fkey"
+		}),
+	foreignKey({
+			columns: [table.perfilId],
+			foreignColumns: [perfiles.id],
+			name: "publicaciones_muro_perfil_id_fkey"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.zonaId],
+			foreignColumns: [zonas.id],
+			name: "publicaciones_muro_zona_id_fkey"
+		}).onDelete("set null"),
+	check("muro_ofrece_con_nombre", sql`(cara <> 'ofrece'::text) OR ((perfil_id IS NOT NULL) AND (autor_nombre IS NOT NULL) AND (autorizacion_version IS NOT NULL))`),
+	check("publicaciones_muro_cara_check", sql`cara = 'ofrece'::text`),
+	check("publicaciones_muro_detalle_check", sql`char_length(detalle) <= 300`),
+	check("publicaciones_muro_estado_check", sql`estado = ANY (ARRAY['abierta'::text, 'resuelta'::text])`),
+	check("publicaciones_muro_titulo_check", sql`(char_length(titulo) >= 3) AND (char_length(titulo) <= 140)`),
+]);
+
 export const codigosAcceso = pgTable("codigos_acceso", {
 	perfilId: uuid("perfil_id").primaryKey().notNull(),
 	codigoHash: text("codigo_hash").notNull(),
@@ -882,7 +869,7 @@ export const codigosAcceso = pgTable("codigos_acceso", {
 	unique("codigos_acceso_codigo_hash_key").on(table.codigoHash),
 ]);
 
-export const pushAvisos = pgTable("push_avisos", {
+export const pushOfertadores = pgTable("push_ofertadores", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
 	perfilId: uuid("perfil_id").notNull(),
 	endpoint: text().notNull(),
@@ -1015,31 +1002,6 @@ export const municipiosConEntidades = pgView("municipios_con_entidades", {	codig
 	departamento: text(),
 }).as(sql`SELECT DISTINCT m.codigo_dane, m.nombre, m.departamento FROM municipios m JOIN entidades e ON m.codigo_dane = ANY (e.municipios) WHERE e.activa AND e.cobertura = 'local'::text`);
 
-export const solicitudesServicioPublicas = pgView("solicitudes_servicio_publicas", {	id: uuid(),
-	codigo: text(),
-	grupo: text(),
-	detalle: text(),
-	municipio: text(),
-	zonaId: uuid("zona_id"),
-	zonaNombre: text("zona_nombre"),
-	zonaTexto: text("zona_texto"),
-	urgencia: text(),
-	capacidadPago: text("capacidad_pago"),
-	nota: text(),
-	creadaAt: timestamp("creada_at", { withTimezone: true, mode: 'string' }),
-	expiraAt: timestamp("expira_at", { withTimezone: true, mode: 'string' }),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	numRespuestas: bigint("num_respuestas", { mode: "number" }),
-	oficioId: text("oficio_id"),
-	oficioNombre: text("oficio_nombre"),
-	subcategoriaPropuesta: text("subcategoria_propuesta"),
-}).as(sql`SELECT s.id, s.codigo, s.grupo, s.detalle, s.municipio, s.zona_id, z.nombre AS zona_nombre, s.zona_texto, s.urgencia, s.capacidad_pago, s.nota, s.creada_at, s.expira_at, ( SELECT count(*) AS count FROM respuestas_servicio rs WHERE rs.solicitud_id = s.id) AS num_respuestas, s.oficio_id, o.nombre AS oficio_nombre, sg.nombre_propuesto AS subcategoria_propuesta FROM solicitudes_servicio s LEFT JOIN zonas z ON z.id = s.zona_id LEFT JOIN catalogo_oficios o ON o.id = s.oficio_id LEFT JOIN sugerencias_item sg ON sg.id = s.sugerencia_id WHERE s.estado = 'abierta'::text AND s.expira_at > now()`);
-
-export const municipiosConServidores = pgView("municipios_con_servidores", {	codigoDane: text("codigo_dane"),
-	nombre: text(),
-	departamento: text(),
-}).as(sql`SELECT DISTINCT m.codigo_dane, m.nombre, m.departamento FROM municipios m JOIN perfiles p ON m.codigo_dane = ANY (p.municipios) WHERE p.tipo = 'servidor'::text AND p.suspendido = false AND p.acepto_publicacion = true`);
-
 export const servidoresPublicos = pgView("servidores_publicos", {	id: uuid(),
 	nombreVisible: text("nombre_visible"),
 	municipios: text().array(),
@@ -1051,7 +1013,12 @@ export const servidoresPublicos = pgView("servidores_publicos", {	id: uuid(),
 	numeroMatricula: text("numero_matricula"),
 	verificado: boolean(),
 	servicios: text().array(),
-}).as(sql`SELECT p.id, p.nombre_visible, p.municipios, p.contacto_publico, p.contacto_tipo, p.descripcion, sv.profesion, sv.entidad_matricula, sv.numero_matricula, sv.verificado, sv.servicios FROM perfiles p JOIN servidores sv ON sv.perfil_id = p.id WHERE p.tipo = 'servidor'::text AND p.suspendido = false AND p.acepto_publicacion = true`);
+}).as(sql`SELECT p.id, p.nombre_visible, p.municipios, p.contacto_publico, p.contacto_tipo, p.descripcion, sv.profesion, sv.entidad_matricula, sv.numero_matricula, sv.verificado, sv.servicios FROM perfiles p JOIN servidores sv ON sv.perfil_id = p.id WHERE p.tipo = 'servidor'::text AND p.suspendido = false AND p.acepto_publicacion = true AND sv.numero_matricula IS NOT NULL`);
+
+export const municipiosConServidores = pgView("municipios_con_servidores", {	codigoDane: text("codigo_dane"),
+	nombre: text(),
+	departamento: text(),
+}).as(sql`SELECT DISTINCT m.codigo_dane, m.nombre, m.departamento FROM municipios m JOIN perfiles p ON m.codigo_dane = ANY (p.municipios) JOIN servidores sv ON sv.perfil_id = p.id WHERE p.tipo = 'servidor'::text AND p.suspendido = false AND p.acepto_publicacion = true AND sv.numero_matricula IS NOT NULL`);
 
 export const proveedorOficiosPublicos = pgView("proveedor_oficios_publicos", {	proveedorId: uuid("proveedor_id"),
 	oficioId: text("oficio_id"),
@@ -1086,48 +1053,11 @@ export const datosServicios = pgView("datos_servicios", {	municipio: text(),
 	horasPromedio: numeric("horas_promedio"),
 }).as(sql`SELECT municipio, grupo, oficio, count(*) AS solicitudes, count(*) FILTER (WHERE hubo_respuesta) AS con_respuesta, count(*) FILTER (WHERE hubo_confirmacion) AS resueltas, round(avg(horas_hasta_respuesta), 1) AS horas_promedio FROM metricas_servicio m WHERE NOT es_prueba GROUP BY municipio, grupo, oficio`);
 
-export const municipiosConProveedores = pgView("municipios_con_proveedores", {	codigoDane: text("codigo_dane"),
-	nombre: text(),
-	departamento: text(),
-}).as(sql`SELECT DISTINCT m.codigo_dane, m.nombre, m.departamento FROM municipios m JOIN proveedores_publicos p ON p.municipio = m.codigo_dane`);
-
 export const oficiosConProveedores = pgView("oficios_con_proveedores", {	id: text(),
 	nombre: text(),
 	grupo: text(),
 	orden: integer(),
 }).as(sql`SELECT DISTINCT o.id, o.nombre, o.grupo, o.orden FROM catalogo_oficios o JOIN proveedor_oficios_publicos pop ON pop.oficio_id = o.id`);
-
-export const proveedoresPublicos = pgView("proveedores_publicos", {	id: uuid(),
-	nombreVisible: text("nombre_visible"),
-	tipo: text(),
-	telefono: text(),
-	telefonoVerificado: boolean("telefono_verificado"),
-	municipio: text(),
-	zonaId: uuid("zona_id"),
-	zonaNombre: text("zona_nombre"),
-	zonaTexto: text("zona_texto"),
-	modalidad: text().array(),
-	dias: text().array(),
-	franjas: text().array(),
-	mediosPago: text("medios_pago").array(),
-	descripcion: text(),
-	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }),
-	latitud: numeric(),
-	longitud: numeric(),
-	oficios: text().array(),
-	grupos: text().array(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	referenciasConfirmadas: bigint("referencias_confirmadas", { mode: "number" }),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	serviciosConfirmados: bigint("servicios_confirmados", { mode: "number" }),
-	cumplimiento: numeric(),
-	trato: numeric(),
-	puntualidad: numeric(),
-	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
-	totalResenas: bigint("total_resenas", { mode: "number" }),
-	modos: text().array(),
-	foto: text(),
-}).as(sql`SELECT p.id, p.nombre_visible, p.tipo, p.telefono, p.telefono_verificado, p.municipio, p.zona_id, z.nombre AS zona_nombre, p.zona_texto, p.modalidad, p.dias, p.franjas, p.medios_pago, p.descripcion, p.creado_at, CASE WHEN p.acepto_mapa THEN p.latitud ELSE NULL::numeric END AS latitud, CASE WHEN p.acepto_mapa THEN p.longitud ELSE NULL::numeric END AS longitud, COALESCE(ofi.oficios, '{}'::text[]) AS oficios, COALESCE(ofi.grupos, '{}'::text[]) AS grupos, COALESCE(ref.confirmadas, 0::bigint) AS referencias_confirmadas, COALESCE(sp.confirmados, 0::bigint) AS servicios_confirmados, res.cumplimiento, res.trato, res.puntualidad, COALESCE(res.total, 0::bigint) AS total_resenas, COALESCE(ofi.modos, '{}'::text[]) AS modos, CASE WHEN p.acepto_foto THEN ( SELECT i.ruta FROM imagenes i WHERE i.objeto_tipo = 'proveedor'::text AND i.objeto_id = p.id AND i.estado = 'aprobada'::text ORDER BY i.subida_at LIMIT 1) ELSE NULL::text END AS foto FROM proveedores p LEFT JOIN zonas z ON z.id = p.zona_id JOIN LATERAL ( SELECT array_agg(DISTINCT pop.oficio_id) AS oficios, array_agg(DISTINCT pop.grupo) AS grupos, array_agg(DISTINCT pop.modo) AS modos FROM proveedor_oficios_publicos pop WHERE pop.proveedor_id = p.id) ofi ON ofi.oficios IS NOT NULL LEFT JOIN LATERAL ( SELECT count(*) AS confirmadas FROM referencias r WHERE r.proveedor_id = p.id AND r.estado = 'confirmada'::text) ref ON true LEFT JOIN LATERAL ( SELECT count(*) AS confirmados FROM servicios_prestados s WHERE s.proveedor_id = p.id AND s.confirmado_at IS NOT NULL) sp ON true LEFT JOIN LATERAL ( SELECT count(*) AS total, round(avg(r.cumplimiento), 1) AS cumplimiento, round(avg(r.trato), 1) AS trato, round(avg(r.puntualidad), 1) AS puntualidad FROM resenas r WHERE r.proveedor_id = p.id AND NOT r.oculta) res ON true WHERE NOT p.suspendido AND p.acepto_publicacion AND p.telefono_verificado`);
 
 export const acopiosPublicos = pgView("acopios_publicos", {	id: uuid(),
 	nombre: text(),
@@ -1158,8 +1088,45 @@ export const productosPublicos = pgView("productos_publicos", {	id: uuid(),
 	grupos: text().array(),
 }).as(sql`SELECT p.id, p.proveedor_id, pp.nombre_visible AS proveedor_nombre, pp.municipio, pp.zona_nombre, p.nombre, p.detalle, p.modo, p.precio_desde, p.unidad, p.creado_at, ( SELECT i.ruta FROM imagenes i WHERE i.objeto_tipo = 'producto'::text AND i.objeto_id = p.id AND i.estado = 'aprobada'::text ORDER BY i.subida_at LIMIT 1) AS imagen, pp.telefono, pp.telefono_verificado, pp.grupos FROM productos p JOIN proveedores_publicos pp ON pp.id = p.proveedor_id WHERE p.disponible`);
 
+export const proveedoresPublicos = pgView("proveedores_publicos", {	id: uuid(),
+	nombreVisible: text("nombre_visible"),
+	tipo: text(),
+	telefono: text(),
+	telefonoVerificado: boolean("telefono_verificado"),
+	municipio: text(),
+	zonaId: uuid("zona_id"),
+	zonaNombre: text("zona_nombre"),
+	zonaTexto: text("zona_texto"),
+	modalidad: text().array(),
+	dias: text().array(),
+	franjas: text().array(),
+	mediosPago: text("medios_pago").array(),
+	descripcion: text(),
+	creadoAt: timestamp("creado_at", { withTimezone: true, mode: 'string' }),
+	latitud: numeric(),
+	longitud: numeric(),
+	direccion: text(),
+	oficios: text().array(),
+	grupos: text().array(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	referenciasConfirmadas: bigint("referencias_confirmadas", { mode: "number" }),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	serviciosConfirmados: bigint("servicios_confirmados", { mode: "number" }),
+	cumplimiento: numeric(),
+	trato: numeric(),
+	puntualidad: numeric(),
+	// You can use { mode: "bigint" } if numbers are exceeding js number limitations
+	totalResenas: bigint("total_resenas", { mode: "number" }),
+	modos: text().array(),
+	foto: text(),
+}).as(sql`SELECT p.id, p.nombre_visible, p.tipo, p.telefono, p.telefono_verificado, p.municipio, p.zona_id, z.nombre AS zona_nombre, p.zona_texto, p.modalidad, p.dias, p.franjas, p.medios_pago, p.descripcion, p.creado_at, CASE WHEN p.acepto_mapa THEN p.latitud ELSE NULL::numeric END AS latitud, CASE WHEN p.acepto_mapa THEN p.longitud ELSE NULL::numeric END AS longitud, CASE WHEN p.acepto_direccion THEN p.direccion ELSE NULL::text END AS direccion, COALESCE(ofi.oficios, '{}'::text[]) AS oficios, COALESCE(ofi.grupos, '{}'::text[]) AS grupos, COALESCE(ref.confirmadas, 0::bigint) AS referencias_confirmadas, COALESCE(sp.confirmados, 0::bigint) AS servicios_confirmados, res.cumplimiento, res.trato, res.puntualidad, COALESCE(res.total, 0::bigint) AS total_resenas, COALESCE(ofi.modos, '{}'::text[]) AS modos, CASE WHEN p.acepto_foto THEN ( SELECT i.ruta FROM imagenes i WHERE i.objeto_tipo = 'proveedor'::text AND i.objeto_id = p.id AND i.estado = 'aprobada'::text ORDER BY i.subida_at LIMIT 1) ELSE NULL::text END AS foto FROM proveedores p LEFT JOIN zonas z ON z.id = p.zona_id JOIN LATERAL ( SELECT array_agg(DISTINCT pop.oficio_id) AS oficios, array_agg(DISTINCT pop.grupo) AS grupos, array_agg(DISTINCT pop.modo) AS modos FROM proveedor_oficios_publicos pop WHERE pop.proveedor_id = p.id) ofi ON ofi.oficios IS NOT NULL LEFT JOIN LATERAL ( SELECT count(*) AS confirmadas FROM referencias r WHERE r.proveedor_id = p.id AND r.estado = 'confirmada'::text) ref ON true LEFT JOIN LATERAL ( SELECT count(*) AS confirmados FROM servicios_prestados s WHERE s.proveedor_id = p.id AND s.confirmado_at IS NOT NULL) sp ON true LEFT JOIN LATERAL ( SELECT count(*) AS total, round(avg(r.cumplimiento), 1) AS cumplimiento, round(avg(r.trato), 1) AS trato, round(avg(r.puntualidad), 1) AS puntualidad FROM resenas r WHERE r.proveedor_id = p.id AND NOT r.oculta) res ON true WHERE NOT p.suspendido AND p.acepto_publicacion AND p.telefono_verificado`);
+
+export const municipiosConProveedores = pgView("municipios_con_proveedores", {	codigoDane: text("codigo_dane"),
+	nombre: text(),
+	departamento: text(),
+}).as(sql`SELECT DISTINCT m.codigo_dane, m.nombre, m.departamento FROM municipios m JOIN proveedores_publicos p ON p.municipio = m.codigo_dane`);
+
 export const muroPublico = pgView("muro_publico", {	id: uuid(),
-	cara: text(),
 	categoria: text(),
 	titulo: text(),
 	detalle: text(),
@@ -1175,4 +1142,4 @@ export const muroPublico = pgView("muro_publico", {	id: uuid(),
 	telefonoVerificado: boolean("telefono_verificado"),
 	acopioNombre: text("acopio_nombre"),
 	acopioDireccion: text("acopio_direccion"),
-}).as(sql`SELECT m.id, m.cara, m.categoria, m.titulo, m.detalle, m.municipio, mu.nombre AS municipio_nombre, m.zona_id, z.nombre AS zona_nombre, m.autor_nombre, m.creada_at, ( SELECT i.ruta FROM imagenes i WHERE i.objeto_tipo = 'muro'::text AND i.objeto_id = m.id AND i.estado = 'aprobada'::text ORDER BY i.subida_at LIMIT 1) AS imagen, pp.id AS proveedor_id, pp.telefono, COALESCE(pp.telefono_verificado, false) AS telefono_verificado, ac.nombre AS acopio_nombre, ac.direccion_acopio AS acopio_direccion FROM publicaciones_muro m JOIN municipios mu ON mu.codigo_dane = m.municipio LEFT JOIN zonas z ON z.id = m.zona_id LEFT JOIN proveedores pr ON pr.perfil_id = m.perfil_id LEFT JOIN proveedores_publicos pp ON pp.id = pr.id LEFT JOIN acopios_publicos ac ON ac.id = m.acopio_id WHERE m.estado = 'abierta'::text AND (m.expira_at IS NULL OR m.expira_at > now())`);
+}).as(sql`SELECT m.id, m.categoria, m.titulo, m.detalle, m.municipio, mu.nombre AS municipio_nombre, m.zona_id, z.nombre AS zona_nombre, m.autor_nombre, m.creada_at, ( SELECT i.ruta FROM imagenes i WHERE i.objeto_tipo = 'muro'::text AND i.objeto_id = m.id AND i.estado = 'aprobada'::text ORDER BY i.subida_at LIMIT 1) AS imagen, pp.id AS proveedor_id, pp.telefono, COALESCE(pp.telefono_verificado, false) AS telefono_verificado, ac.nombre AS acopio_nombre, ac.direccion_acopio AS acopio_direccion FROM publicaciones_muro m JOIN municipios mu ON mu.codigo_dane = m.municipio LEFT JOIN zonas z ON z.id = m.zona_id LEFT JOIN proveedores pr ON pr.perfil_id = m.perfil_id LEFT JOIN proveedores_publicos pp ON pp.id = pr.id LEFT JOIN acopios_publicos ac ON ac.id = m.acopio_id WHERE m.estado = 'abierta'::text AND (m.expira_at IS NULL OR m.expira_at > now())`);

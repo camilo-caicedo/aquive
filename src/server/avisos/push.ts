@@ -1,7 +1,7 @@
 import { eq, inArray } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
-import { pushAvisos } from '@/db/esquema'
+import { pushOfertadores } from '@/db/esquema'
 import { configurarWebPush, enviarPush } from '@/lib/push-vapid'
 
 /**
@@ -14,9 +14,10 @@ import { configurarWebPush, enviarPush } from '@/lib/push-vapid'
  * sin importadores. Mientras tanto `/perfil/avisos` decía que tres tipos de
  * aviso «Llegan».
  *
- * ⚠ La tabla se llamaba `push_ofertadores` y no era de insumos: es la única
- * de suscripciones push de toda la aplicación. Se renombró a `push_avisos`
- * con el ADR 0014, que es lo que dice.
+ * ⚠ `push_ofertadores` no es del módulo de insumos: es la única tabla de
+ * suscripciones push de toda la aplicación. El ADR 0014 intentó renombrarla
+ * a `push_avisos`, pero producción ya usaba este nombre y el cambio nunca se
+ * guardó en una migración — la migración v6-f8 lo deshace.
  *
  * ⚠ Del payload no sale ni un dato personal. Ni nombres, ni teléfonos, ni el
  * texto del mensaje: un aviso se ve en la pantalla bloqueada de un teléfono
@@ -34,13 +35,13 @@ export async function avisar(
   try {
     const destinos = await db
       .select({
-        id: pushAvisos.id,
-        endpoint: pushAvisos.endpoint,
-        p256dh: pushAvisos.p256Dh,
-        auth_key: pushAvisos.authKey,
+        id: pushOfertadores.id,
+        endpoint: pushOfertadores.endpoint,
+        p256dh: pushOfertadores.p256Dh,
+        auth_key: pushOfertadores.authKey,
       })
-      .from(pushAvisos)
-      .where(eq(pushAvisos.perfilId, perfilId))
+      .from(pushOfertadores)
+      .where(eq(pushOfertadores.perfilId, perfilId))
 
     if (destinos.length === 0) return
 
@@ -62,7 +63,7 @@ export async function avisar(
     // Una suscripción que el navegador ya botó se borra, no se reintenta:
     // dejarla es pagar un envío fallido cada vez, para siempre.
     if (muertas.length > 0) {
-      await db.delete(pushAvisos).where(inArray(pushAvisos.id, muertas))
+      await db.delete(pushOfertadores).where(inArray(pushOfertadores.id, muertas))
     }
   } catch {
     // Silencioso a propósito, y sin loggear nada (regla de producto 9).

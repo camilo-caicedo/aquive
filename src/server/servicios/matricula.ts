@@ -18,8 +18,10 @@ export class MatriculaRechazada extends Error {}
 
 export type MiMatricula = {
   profesion: string
-  entidad_matricula: string
-  numero_matricula: string
+  // v6-f5-barrio-y-direccion.sql las volvió opcionales: un `servidor` puede
+  // existir sin matrícula todavía declarada.
+  entidad_matricula: string | null
+  numero_matricula: string | null
   servicios: string[]
   verificado: boolean
 }
