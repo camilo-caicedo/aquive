@@ -25,13 +25,26 @@ export function Estado({
   accion?: ReactNode
 }) {
   return (
-    <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+    // `lista-escalonada` reparte 40 ms entre los hijos y ya existe: el
+    // icono entra, el título detrás, el detalle después. Es de los pocos
+    // sitios donde la entrada puede notarse — un vacío se ve poco y se lee
+    // entero, al revés que una lista de veinte tarjetas.
+    <div className="lista-escalonada rounded-2xl border border-dashed border-border p-8 text-center">
       {Icono && (
-        <Icono className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
+        <Icono
+          className="animar-entrada mx-auto size-8 text-muted-foreground"
+          aria-hidden="true"
+        />
       )}
-      <p className="mt-2 text-lg font-medium">{titulo}</p>
-      {detalle && <p className="mt-1 text-base text-muted-foreground">{detalle}</p>}
-      {accion && <div className="mt-4 flex flex-wrap justify-center gap-2">{accion}</div>}
+      <p className="animar-entrada mt-2 text-lg font-medium">{titulo}</p>
+      {detalle && (
+        <p className="animar-entrada mt-1 text-base text-muted-foreground">{detalle}</p>
+      )}
+      {accion && (
+        <div className="animar-entrada mt-4 flex flex-wrap justify-center gap-2">
+          {accion}
+        </div>
+      )}
     </div>
   )
 }
@@ -46,7 +59,7 @@ export function Siluetas({ cuantas = 3 }: { cuantas?: number }) {
   return (
     <ul aria-hidden="true" className="space-y-3">
       {Array.from({ length: cuantas }, (_, i) => (
-        <li key={i} className="punto-urgente rounded-2xl bg-card p-4 shadow-sm">
+        <li key={i} className="punto-urgente rounded-2xl bg-card p-4 shadow-canto">
           <div className="h-5 w-1/3 rounded-full bg-muted" />
           <div className="mt-2 h-4 w-2/3 rounded-full bg-muted" />
           <div className="mt-3 h-4 w-full rounded-full bg-muted" />

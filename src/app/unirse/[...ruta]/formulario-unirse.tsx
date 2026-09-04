@@ -143,7 +143,7 @@ export function FormularioUnirse({
           maxLength={60}
           placeholder="Como te conocen en la organización"
         />
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           Lo ven los coordinadores de esta organización. No se publica en
           ninguna página del sitio, y no te pedimos teléfono.
         </p>

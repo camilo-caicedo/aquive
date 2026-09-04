@@ -1,24 +1,30 @@
 {
-  "name": "AquíVe · Ayuda directa en Colombia",
+  "name": "AquíVe · La economía del rebusque",
   "short_name": "AquíVe",
   "description": "Encuentra a quien puede hacerte un trabajo, o pide lo que necesitas. Gratis y sin dar tus datos.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f5ead8",
-  "theme_color": "#8c491a",
+  "background_color": "#f5eee2",
+  "theme_color": "#f5eee2",
   "lang": "es-CO",
   "icons": [
     {
       "src": "/icono-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "/icono-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icono-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

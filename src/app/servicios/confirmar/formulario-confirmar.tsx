@@ -86,7 +86,7 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
   if (listo) {
     return (
       <Alert className="mt-6">
-        <AlertTitle className="font-heading text-2xl">Gracias</AlertTitle>
+        <AlertTitle className="font-heading text-2xl font-extrabold tracking-tight">Gracias</AlertTitle>
         <AlertDescription>
           <p className="mt-2 text-base">
             Tu calificación ya aparece en la ficha de {listo.nombre}, y ese
@@ -95,7 +95,7 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
           <Button
             className="mt-3"
             nativeButton={false}
-            render={<Link href={`/servicios/${listo.id}`} />}
+            render={<Link href={`/prestador/${listo.id}`} />}
           >
             Ver su ficha
           </Button>
@@ -133,7 +133,7 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
           // Grande y monoespaciada porque se copia de un papel carácter por
           // carácter; alineada a la izquierda y no centrada, para que al
           // escribir el cursor no salte de sitio en cada letra.
-          className="mt-1 h-16 border-primary/40 px-5 font-mono text-2xl tracking-[0.2em] uppercase"
+          className="mt-1 h-16 border-enlace/40 px-5 font-mono text-2xl tracking-[0.2em] uppercase"
         />
         {/* Se dice al escribir cuántos faltan. Antes el botón se quedaba
             apagado sin explicar por qué, y desde un papel mal fotocopiado
@@ -164,8 +164,13 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
                 onClick={() => setNotas((p) => ({ ...p, [c.clave]: n.valor }))}
                 className={`inline-flex min-h-14 flex-1 items-center justify-center rounded-full px-3 text-base transition-colors ${
                   notas[c.clave] === n.valor
-                    ? 'bg-primary font-semibold text-primary-foreground'
-                    : 'bg-card shadow-sm hover:bg-muted'
+                    ? // Tinta, no lima. Son tres criterios de cinco niveles:
+                      // con lima habría hasta tres rellenos compitiendo con
+                      // el botón de enviar, que es la acción de verdad. El
+                      // negro sobre blanco da 16,88:1 y no deja duda de cuál
+                      // está elegido sin depender de percibir un color.
+                      'bg-foreground font-semibold text-background'
+                    : 'bg-card shadow-canto hover:bg-muted'
                 }`}
               >
                 {n.etiqueta}

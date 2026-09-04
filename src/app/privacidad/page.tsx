@@ -7,32 +7,40 @@ import {
   NIT_RESPONSABLE_SERVICIOS,
 } from '@/lib/config'
 
-// Dos regímenes de datos, y hay que verlos como dos desde la primera
-// pantalla. El de emergencia promete que no se guarda nada y se borra
-// solo; el de servicios guarda un directorio de personas de forma
-// permanente y tiene otro responsable. Mezclarlos en un texto corrido
-// produciría un aviso que no se puede cumplir.
+// ⚠ Aquí había DOS regímenes de datos y el aviso los describía por
+// separado: la ayuda de emergencia, que prometía no guardar nada de quien
+// pedía, y el directorio de servicios, que guarda personas de forma
+// permanente. El módulo de emergencia se retiró entero (ADR 0014), y con
+// él su mitad de este documento.
 //
-// La promesa del módulo de emergencia NO se diluye aquí. Sigue diciéndose
-// con las mismas palabras y con el mismo tamaño: si se suaviza para que
-// «encaje» con el directorio, se rompe lo único que sostiene jurídicamente
-// al flujo directo (sin titular identificable no hay titular).
+// Retirarlo es CUMPLIR lo que este mismo aviso ya prometía —«dejará de
+// operar cuando deje de ser útil… eliminaremos sus bases de datos»—, no
+// cambiar la promesa. Lo que queda es un solo régimen y un solo
+// responsable, que es más fácil de sostener y más fácil de leer.
 export default function PrivacidadPage() {
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
-      <h1 className="font-heading text-3xl">Cómo tratamos la información en AquíVe</h1>
-      <p className="mt-3 text-base">Última actualización: {FECHA_LEGALES}</p>
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
+      {/* La etiqueta de arriba dice qué documento es esto; el `h1` dice qué
+          promete. Sin ella, «Cómo tratamos la información» podía ser una
+          página de ayuda cualquiera y no el aviso que tiene efecto legal. */}
+      <p className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase">
+        Aviso de privacidad
+      </p>
+      <h1 className="font-heading mt-2 text-3xl">Cómo tratamos la información en AquíVe</h1>
+      <p className="mt-3 text-base text-muted-foreground">
+        Última actualización: {FECHA_LEGALES}
+      </p>
 
-      <div className="border-border mt-6 rounded-2xl border p-4">
+      <div className="shadow-canto mt-6 rounded-2xl bg-card p-4">
         <p className="text-base">
-          AquíVe tiene dos partes y funcionan al revés la una de la otra. En <strong>ayuda de
-          emergencia</strong> no guardamos datos de quien pide y todo se borra solo. En{' '}
-          <strong>servicios</strong> hay un directorio de personas que trabajan, con su nombre y su
-          teléfono, y ese directorio permanece. Abajo está cada una por separado.
+          De quien <strong>busca o pide</strong> no publicamos nada: su cuenta lleva un nombre y un
+          municipio, y no salen en ninguna lista. De quien <strong>ofrece</strong> sí hay un
+          directorio público, con su nombre y su teléfono, y permanece hasta que lo borre. Abajo
+          está cada caso por separado.
         </p>
       </div>
 
-      <h2 className="font-heading mt-6 text-2xl">Quién es responsable</h2>
+      <h2 className="font-heading mt-8 text-2xl">Quién es responsable</h2>
       {/* ⚠ Un solo responsable. Hasta el 20/08/2026 aquí había dos bloques
           —la persona natural para la emergencia, la fundación para el
           directorio— y con ellos el nombre completo de una persona en una
@@ -53,48 +61,28 @@ export default function PrivacidadPage() {
         plataforma no cobra nada a nadie ni recibe dinero de nadie.
       </p>
       <p className="mt-3 text-base">
-        Hay además fundaciones que trabajan <strong>con</strong> la plataforma en la ayuda de
-        emergencia —aparecen por su nombre y solo si tú las escoges— pero ninguna la opera. Ver «Si
-        pides que una fundación te acompañe», más abajo.
+        Hay además centros de acopio que trabajan <strong>con</strong> la plataforma —aparecen por
+        su nombre, con su dirección y su horario— pero ninguno la opera.
       </p>
 
-      <h2 className="font-heading mt-8 text-2xl">Ayuda de emergencia</h2>
-
-      <h2 className="font-heading mt-6 text-2xl">Si publicas una solicitud de ayuda: no guardamos ningún dato tuyo, salvo que tú decidas dejarlo.</h2>
+      <h2 className="font-heading mt-10 border-t border-border pt-6 text-3xl">Tu cuenta</h2>
       <p className="mt-3 text-base">
-        No pedimos ni almacenamos tu cédula, dirección exacta, edad ni la de tu familia. Una solicitud contiene
-        únicamente el municipio, el barrio, los artículos que necesitas y una nota opcional.
+        Al entrar te pedimos dos cosas: cómo quieres que te llamemos y en qué municipio estás. Nada
+        de eso se publica. El nombre lo ve quien reciba un mensaje tuyo; el municipio solo sirve
+        para enseñarte lo que hay cerca. No te pedimos teléfono, y no firmas ninguna autorización:
+        no hay nada que publicar todavía.
       </p>
       <p className="mt-3 text-base">
-        Al publicar puedes dejar, si quieres, un nombre, un teléfono o un correo — los tres son opcionales, y
-        puedes dejar solo uno o ninguno. Si dejas alguno, te pedimos que lo confirmes explícitamente antes de
-        publicar. Ese contacto queda aparte de tu solicitud, en una tabla separada, y solo lo ven dos personas:
-        quien responda esa solicitud puntual y el administrador de AquíVe. No aparece en el tablero público, ni
-        en ninguna otra pantalla, ni se lo damos a nadie más. Se borra con tu solicitud, a las 72 horas, como
-        todo lo demás.
-      </p>
-      <p className="mt-3 text-base">
-        Al publicar recibes un enlace secreto. Es la única forma de volver a tu solicitud. No podemos
-        recuperarlo porque no guardamos a quién pertenece.
-      </p>
-      <p className="mt-3 text-base">
-        Si activas las notificaciones, tu navegador nos entrega una dirección técnica anónima para avisarte.
-        No es tu número ni tu correo, no sirve para identificarte y la puedes desactivar cuando quieras.
-      </p>
-      <p className="mt-3 text-base">
-        Tu solicitud se borra sola. A las 72 horas se elimina de forma definitiva de nuestra base de datos,
-        junto con las respuestas y la notificación. Puedes renovarla o borrarla antes en cualquier momento.
-      </p>
-      <p className="mt-3 text-base">
-        Al borrarla conservamos un registro anónimo —municipio, categoría, si se resolvió y cuánto tardó— que
-        no permite identificar a nadie y sirve para entender qué se necesitó y dónde.
+        Publicar es siempre un paso aparte, con su propia casilla y su propia fecha: armar tu ficha
+        del directorio, declarar una matrícula profesional o publicar en el muro. Hasta que lo
+        hagas, tu cuenta no aparece en ninguna lista.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">Si ofreces ayuda o servicios profesionales: sí guardamos algunos datos, y son públicos.</h2>
+      <h2 className="font-heading mt-8 text-2xl">Si declaras una matrícula profesional: eso sí es público.</h2>
       <p className="mt-3 text-base">
-        Guardamos tu nombre visible, municipios donde puedes ayudar, tu forma de contacto, tu descripción y, si
-        eres profesional, tu profesión y número de matrícula. Estos datos se muestran públicamente, porque esa es
-        la finalidad: que alguien que necesita ayuda pueda contactarte.
+        Guardamos tu nombre visible, tus municipios, tu forma de contacto, tu descripción, tu
+        profesión y tu número de matrícula. Estos datos se muestran públicamente, porque esa es la
+        finalidad: que alguien que necesita ese servicio pueda contactarte.
       </p>
       <p className="mt-3 text-base">
         No guardamos tu correo electrónico. Al entrar con Google recibimos un identificador interno y descartamos
@@ -107,55 +95,40 @@ export default function PrivacidadPage() {
         Puedes borrar tu perfil completo desde tu cuenta, en cualquier momento.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">
-        Si pides que una fundación te acompañe: ahí sí guardamos datos tuyos, cifrados.
-      </h2>
-      <p className="mt-3 text-base">
-        Publicar una solicitud no exige esto y nunca lo va a exigir. Es una opción aparte, que se ofrece solo si
-        hay una organización aliada trabajando en tu municipio, y que solo existe si tú la aceptas.
-      </p>
-      <p className="mt-3 text-base">
-        Si la aceptas, guardamos <strong>tu nombre y, si nos lo das, un teléfono. Nada más.</strong> Van
-        cifrados, en una tabla aparte, y no aparecen en ninguna página pública ni se le entregan a quien ofrece
-        ayuda. La finalidad es una sola: que la fundación sepa a quién le está entregando.
-      </p>
-      <p className="mt-3 text-base">
-        <strong>No pedimos ni guardamos números de documento.</strong> Si la fundación necesita comprobar tu
-        identidad para entregarte algo, lo hace mirando tu cédula en persona, en su punto: no la teclea aquí y
-        no queda ninguna copia en la plataforma.
-      </p>
-      <p className="mt-3 text-base">
-        Cada vez que alguien de la fundación consulta esos datos queda registrado quién fue, cuándo y con qué
-        motivo. Puedes ver ese registro completo desde el enlace de tu solicitud, en «ver qué datos tuyos
-        guardamos», y desde ahí pedir que los borremos.
-      </p>
-      <p className="mt-3 text-base">
-        En este caso la fundación es responsable del tratamiento y nosotros actuamos como encargados: ellos
-        deciden para qué usan esos datos y los custodian en sus propios sistemas; nosotros solo los guardamos
-        mientras dure la coordinación. Se borran con tu solicitud, y la solicitud se borra sola.
-      </p>
-      <p className="mt-3 text-base">
-        La conversación con la fundación y con quien ofrece ocurre dentro de la plataforma, y también se borra
-        con la solicitud. No es un archivo: no la uses para guardar nada que necesites después.
-      </p>
+      {/* ⚠ Aquí iba «Si pides que una fundación te acompañe: ahí sí
+          guardamos datos tuyos, cifrados» — nombre, teléfono, la bitácora de
+          quién los consultaba y el reparto responsable/encargado con la
+          fundación.
 
-      <h2 className="font-heading mt-8 text-2xl">Servicios</h2>
+          El ADR 0007 retiró el flujo acompañado entero y borró `identidades`
+          y `accesos_identidad`. Desde entonces esta sección describía algo
+          que no ocurre: no se guarda ningún dato de quien pide más allá de su
+          cuenta, y no hay ninguna fundación consultándolos.
+
+          Lo que sí sobrevive y sí se cifra son las REFERENCIAS de un
+          prestador —el contacto de un cliente anterior, que es un tercero que
+          no está en la plataforma—, y eso se explica en su propia sección.
+          Ver `docs/PENDIENTES-LEGALES.md`. */}
+
+
+      <h2 className="font-heading mt-10 border-t border-border pt-6 text-3xl">Servicios</h2>
       <p className="mt-3 text-base">
         Esta parte de AquíVe existe para que quien vive de su trabajo pueda ser encontrado después
         del sismo. Funciona distinto a todo lo anterior y por eso está separada: aquí los datos
         permanecen y la responsable es {RESPONSABLE_SERVICIOS}.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">Si necesitas un servicio: seguimos sin guardar datos tuyos.</h2>
+      <h2 className="font-heading mt-8 text-2xl">Si necesitas un servicio: seguimos sin guardar datos tuyos.</h2>
       <p className="mt-3 text-base">
-        Buscar en el directorio no exige cuenta ni deja rastro tuyo. Si publicas lo que necesitas,
-        guardamos únicamente el oficio, el municipio, la zona, qué tan urgente es, si puedes pagar y
-        una nota opcional de 140 caracteres. Nada de nombre, teléfono, dirección exacta ni quiénes
-        viven contigo.
+        Buscar en el directorio no exige cuenta ni deja rastro tuyo. Publicar lo que necesitas sí
+        pide una cuenta —para que puedas volver a lo tuyo, renovarlo y borrarlo—, pero de la
+        solicitud guardamos únicamente el oficio, el municipio, la zona, qué tan urgente es, si
+        puedes pagar y una nota opcional de 140 caracteres. Nada de nombre, teléfono, dirección
+        exacta ni quiénes viven contigo. Si no tienes cuenta de Google, la fundación te crea una.
       </p>
       <p className="mt-3 text-base">
         Esa solicitud se borra a los 15 días. Puedes renovarla, cerrarla o borrarla antes desde tu
-        enlace secreto, igual que en la ayuda de emergencia. Al borrarla queda un registro anónimo
+        perfil. Al borrarla queda un registro anónimo
         —municipio, oficio y si alguien respondió— que no permite identificar a nadie.
       </p>
       <p className="mt-3 text-base">
@@ -164,7 +137,7 @@ export default function PrivacidadPage() {
         ella.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">Qué comprobamos antes de publicar una ficha</h2>
+      <h2 className="font-heading mt-8 text-2xl">Qué comprobamos antes de publicar una ficha</h2>
       <p className="mt-3 text-base">
         Una sola cosa: que el teléfono contesta. Alguien de {RESPONSABLE} marca el número que diste y confirma
         que contestas tú. Hasta que eso pase, tu ficha no se ve en el directorio, aunque esté completa.
@@ -177,7 +150,7 @@ export default function PrivacidadPage() {
         puede dar un conocido.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">Si ofreces un servicio: tu ficha es pública y permanece.</h2>
+      <h2 className="font-heading mt-8 text-2xl">Si ofreces un servicio: tu ficha es pública y permanece.</h2>
       <p className="mt-3 text-base">
         Guardamos tu nombre visible, tu teléfono, si eres persona o microempresa, tus oficios con su
         precio, tu municipio y zona, tus horarios, tus medios de pago y tu descripción. Todo eso{' '}
@@ -206,12 +179,14 @@ export default function PrivacidadPage() {
       <h2 className="font-heading mt-8 text-2xl">Lo que nunca hacemos, en las dos partes</h2>
       <p className="mt-3 text-base">
         No vendemos ni compartimos información con terceros. No hacemos publicidad. No procesamos
-        dinero, no cobramos comisión y no hay pasarela de pago en ninguna parte de este sitio. Salvo
-        el chat del acompañamiento, no alojamos conversaciones entre personas: cuando contactas a
-        alguien, lo haces por fuera de esta plataforma y nosotros no vemos nada de eso.
+        dinero, no cobramos comisión y no hay pasarela de pago en ninguna parte de este sitio. Sí alojamos el chat
+        de la plataforma, que es donde se acuerda un servicio o una entrega sin tener que dar el
+        teléfono: esa conversación se borra cuando se borra el pedido, el producto, la donación o la
+        ficha de la que salió, y no guardamos copia. Si en cambio decides
+        escribir por WhatsApp o llamar, eso ocurre por fuera y nosotros no vemos nada.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">Tus derechos</h2>
+      <h2 className="font-heading mt-8 text-2xl">Tus derechos</h2>
       <p className="mt-3 text-base">
         Conforme a la Ley 1581 de 2012 puedes conocer, actualizar, rectificar y suprimir tus datos, y revocar la
         autorización. Escríbenos a {CORREO_CONTACTO}, sea cual sea la parte del sitio. Una consulta
@@ -223,7 +198,7 @@ export default function PrivacidadPage() {
         borrarlo ahí mismo, sin pedirle permiso a nadie.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">Cómo borrar lo que guardamos de ti</h2>
+      <h2 className="font-heading mt-8 text-2xl">Cómo borrar lo que guardamos de ti</h2>
       <p className="mt-3 text-base">
         Depende de qué sea, y en los tres casos lo puedes hacer tú sin pedirle permiso a nadie:
       </p>
@@ -241,21 +216,20 @@ export default function PrivacidadPage() {
         </li>
       </ul>
       <p className="mt-3 text-base">
-        Si diste tu nombre para que una fundación acompañe una entrega, puedes pedir que lo borren desde el
-        enlace de tu solicitud, en «ver qué datos tuyos guardamos», sin esperar a las 72 horas. Y si nada de
-        esto te sirve, escríbenos a {CORREO_CONTACTO}.
+        Si nada de esto te sirve, escríbenos a {CORREO_CONTACTO} o pon una PQR en /pqr, que no
+        necesita cuenta.
       </p>
       <p className="mt-3 text-base">
         Lo único que no se borra es el registro de <em>quién miró</em> tus datos: quién fue, cuándo y con qué
         motivo. Nunca qué vio. Sobrevive a propósito, porque es tu prueba de que alguien los consultó.
       </p>
 
-      <h2 className="font-heading mt-6 text-2xl">La ayuda de emergencia es temporal.</h2>
+      <h2 className="font-heading mt-8 text-2xl">La ayuda de emergencia ya no opera.</h2>
       <p className="mt-3 text-base">
-        Fue creada para la emergencia del sismo del 10 de agosto de 2026 y dejará de operar cuando deje de ser
-        útil. El directorio de servicios está pensado para durar más, porque la recuperación económica
-        toma más tiempo. Cuando cualquiera de las dos partes deje de operar, eliminaremos sus bases de
-        datos.
+        Fue creada para el sismo del 10 de agosto de 2026 y se retiró en agosto de ese mismo año,
+        como este aviso decía que ocurriría. Con ella se eliminaron sus bases de datos: las
+        solicitudes, las respuestas, los inventarios declarados y sus registros anónimos. No queda
+        nada de esa parte.
       </p>
     </main>
   )

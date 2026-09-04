@@ -12,9 +12,14 @@ export type Categoria =
   | 'otros'
   | 'servicios'
   | 'mascotas'
-// 'aliado' no se elige en /registro: aparece al unirse a una organización.
-// Un aliado no tiene ficha pública ni contacto publicado.
-export type TipoPerfil = 'ofertador' | 'servidor' | 'aliado'
+// Gemelo del CHECK `perfiles_tipo_check`. Tres valores desde el ADR 0014:
+// 'ofertador' se fue con el módulo de insumos.
+//
+// 'vecino' es la cuenta de cualquiera y no publica nada por sí misma.
+// 'servidor' es profesional con matrícula, y por eso publica nombre y
+// contacto en `servidores_publicos`. 'aliado' lleva un centro de acopio
+// (ADR 0008) y aparece al unirse a una organización: no se elige.
+export type TipoPerfil = 'vecino' | 'servidor' | 'aliado'
 export type TipoOrganizacion =
   | 'fundacion'
   | 'corporacion'
@@ -22,10 +27,12 @@ export type TipoOrganizacion =
   | 'junta'
   | 'otra'
 export type RolMiembro = 'coordinador' | 'miembro'
-// Regla O: sin datos de menores. TI y RC no están, y no es un olvido —
-// un CHECK de la base los rechaza aunque alguien los escriba a mano.
-export type TipoDocumento = 'CC' | 'CE' | 'PEP' | 'PPT'
-export type TitularIdentidad = 'solicitante' | 'ofertador' | 'aliado'
+// ⚠ Aquí vivían `TipoDocumento` y `TitularIdentidad`. Se van con
+// `crear_identidad`, la última función que los usaba: no hay ninguna
+// columna de documento en la base desde el ADR 0007, así que ese dato ya
+// no se pide ni se guarda. La garantía del mínimo legal 1 es hoy más
+// fuerte que el CHECK que la sostenía — no es que se acepten CC, CE, PEP
+// y PPT: es que no se acepta ninguno.
 export type EstadoMiembro = 'pendiente' | 'activo' | 'inactivo'
 export type AccionMiembro =
   | 'aprobar'
@@ -49,7 +56,9 @@ export type EstadoSolicitud =
   | 'cumplida'
 export type FlujoSolicitud = 'directo' | 'acompanado'
 export type OrigenItem = 'semilla' | 'admin' | 'aliado' | 'sugerencia'
-export type OrigenSugerencia = 'solicitante' | 'ofertador' | 'aliado'
+// Gemelo del CHECK de `sugerencias_item.origen`. El cuarto valor lleva ahí
+// desde siempre y faltaba aquí; con el ADR 0013 se empezó a usar.
+export type OrigenSugerencia = 'solicitante' | 'ofertador' | 'aliado' | 'proveedor'
 export type EstadoSugerencia = 'pendiente' | 'aprobada' | 'rechazada' | 'fusionada'
 export type AccionSugerencia = 'aprobar' | 'rechazar' | 'fusionar'
 export type TipoObjetoReporte =
@@ -90,6 +99,12 @@ export type GrupoOficio =
   | 'cuidado'
   | 'reparacion'
   | 'otros'
+  // ADR 0012. Gemelo de `GrupoOficio` en `@/contrato/servicios` y de los
+  // dos `CHECK` de Postgres.
+  | 'construccion'
+  | 'ensenanza'
+  | 'eventos'
+  | 'digital'
 /** `alto` = si quien lo presta es un mal actor, el daño no es económico. */
 export type RiesgoOficio = 'bajo' | 'alto'
 export type ModoPrecio = 'gratis' | 'aporte' | 'solidario' | 'normal'
@@ -131,46 +146,6 @@ export type OficioProveedorInput = {
 }
 
 /** Lo que devuelve `ficha_proveedor`. Sale de la vista, no de la tabla. */
-export interface FichaProveedor {
-  id: string
-  nombre_visible: string
-  tipo: TipoProveedor
-  telefono: string
-  telefono_verificado: boolean
-  municipio: string
-  zona_nombre: string | null
-  zona_texto: string | null
-  modalidad: ModalidadServicio[]
-  dias: DiaSemana[]
-  franjas: FranjaHoraria[]
-  medios_pago: MedioPago[]
-  descripcion: string | null
-  creado_at: string
-  referencias_confirmadas: number
-  servicios_confirmados: number
-  total_resenas: number
-  cumplimiento: number | null
-  trato: number | null
-  puntualidad: number | null
-  oficios: {
-    oficio_id: string
-    nombre: string
-    grupo: GrupoOficio
-    modo: ModoPrecio
-    precio_desde: number | null
-    unidad: UnidadPrecio | null
-  }[]
-  resenas: {
-    id: string
-    cumplimiento: number
-    trato: number
-    puntualidad: number
-    comentario: string | null
-    replica: string | null
-    creada_at: string
-  }[]
-}
-
 /**
  * Lo que devuelve `mi_proveedor`. Ve lo que la vista pública esconde: si
  * está suspendida y qué oficios todavía no se publican por la regla S.
@@ -193,6 +168,31 @@ export interface MiProveedor {
   alta_asistida: boolean
   sin_cuenta: boolean
   creado_at: string
+  /** Lo que ESA persona aceptó y cuándo, no la versión de hoy (v4-e1). */
+  autorizacion_version: string | null
+  autorizacion_at: string | null
+  acepto_mapa: boolean
+  mapa_version: string | null
+  mapa_at: string | null
+  /** La foto lleva su propia casilla: publicar una cara es otra finalidad
+   *  que publicar un teléfono (v6-b7, mismo criterio que el ADR 0004). */
+  acepto_foto: boolean
+  foto_version: string | null
+  foto_at: string | null
+  /** La dirección lleva la suya, aparte de la del mapa y la de publicar
+   *  la ficha: publicar dónde vive o atiende alguien es otra finalidad
+   *  (ADR 0019, mismo criterio que el ADR 0004). Se guarda siempre que se
+   *  escriba, autorizada o no — es la vista pública la que filtra. */
+  direccion: string | null
+  acepto_direccion: boolean
+  direccion_version: string | null
+  direccion_at: string | null
+  /** La ruta del objeto, no la URL. Sale aunque esté en cola o sin permiso:
+   *  aquí se la enseñamos a su dueña, para que pueda quitarla. */
+  foto: string | null
+  foto_estado: 'en_cola' | 'aprobada' | 'rechazada' | null
+  /** Por qué se rechazó, si se rechazó. `null` en cualquier otro estado. */
+  foto_motivo: string | null
   oficios: {
     oficio_id: string
     nombre: string
@@ -258,50 +258,23 @@ export interface ItemOfrecidoCruce {
   calza: boolean
 }
 
-// Una fila de `ofertadores_que_calzan`: quién tiene algo de lo que pide
-// una solicitud. Es la ficha pública más el cruce.
-//
-// ⚠ Sin contacto a propósito. El teléfono lo devuelve `destapar_contacto`,
-// de a una persona y con tope — ver la migración v3-t1.
-export interface OfertadorQueCalza {
-  id: string
-  nombre_visible: string
-  municipios: string[]
-  descripcion: string | null
-  puede_trasladarse: boolean
-  items: ItemOfrecidoCruce[]
-  total_items: number
-  /** En cuántas de las cosas pedidas calza esta persona. */
-  coincidencias: number
-  /** Si esta solicitud ya destapó su contacto alguna vez. */
-  destapado: boolean
-  /** Cuántas personas calzan en total, antes de paginar. */
-  total: number
-}
-
-// Lo que devuelve `destapar_contacto`. Solo existe en memoria del cliente
-// que lo pidió: no se guarda en ninguna parte de este lado.
-export interface ContactoDestapado {
-  nombre: string
-  contacto: string
-  contacto_tipo: ContactoTipo
-}
-
 // Los contadores del índice de administración, tal como los devuelve
 // `panel_admin_indice`. Todos en una consulta: el índice dibuja diez
 // filas con su número, y encadenar diez consultas para eso sería peor que
 // las pestañas que reemplaza.
 export interface IndiceAdmin {
+  /** Imágenes esperando a que alguien las mire. Regla de producto 8. */
+  imagenes: number
+  /** PQR abiertas. Detrás de cada una hay un plazo legal corriendo. */
+  pqr: number
   matriculas: number
   telefonos: number
-  hilos_sin_fundacion: number
   reportes: number
+  solicitudes_servicio_sin_revisar: number
   sugerencias: number
   items_activos: number
   entidades: number
   entidades_retiradas: number
-  solicitudes_abiertas: number
-  solicitudes_sin_respuestas: number
   resenas_ocultas: number
   zonas_pendientes: number
   fichas_suspendidas: number
@@ -437,30 +410,6 @@ export interface AliadoResumen {
   invitaciones: InvitacionResumen[]
 }
 
-// Lo que devuelve `leer_identidad`. Cada vez que este objeto existe, hay
-// una fila nueva en `accesos_identidad` diciendo quién lo pidió y por qué
-// (regla N). No lo pases a un Client Component ni lo metas en un log.
-export interface IdentidadDescifrada {
-  id: string
-  titular_tipo: TitularIdentidad
-  nombre: string
-  documento_tipo: TipoDocumento
-  documento: string
-  telefono: string | null
-  autorizacion_version: string
-  autorizacion_at: string
-}
-
-// Lo que devuelve `buscar_identidad_presencial`. NO descifra nada: son los
-// cuatro últimos dígitos —que quien busca acaba de teclear— y el código de
-// la solicitud, que es lo que hace falta para seguir.
-export interface CoincidenciaIdentidad {
-  id: string
-  titular_tipo: TitularIdentidad
-  documento_ultimos4: string
-  solicitud_codigo: string | null
-}
-
 // Los seis estados de un hilo. `asignada` existe por la regla L: sin él,
 // un hilo con organización pero sin persona a cargo quedaría «abierto» y
 // sería bilateral de hecho, que es justo lo prohibido.
@@ -473,170 +422,17 @@ export type EstadoConversacion =
   | 'cerrada'
 export type RolEnConversacion = 'solicitante' | 'ofertador' | 'aliado' | 'admin'
 
-// Un mensaje del hilo. `cuerpo` llega en null cuando está oculto: moderar
-// oculta, no borra, y el hueco se ve.
-export interface MensajeChat {
-  id: string
-  rol: RolEnConversacion
-  nombre: string | null
-  cuerpo: string | null
-  oculto: boolean
-  creado_at: string
-}
-
-export interface AcopioResumen {
-  nombre: string
-  direccion: string | null
-  horario: string | null
-}
-
-// Un ítem que todavía no ha llegado. Lleva su identificador porque la
-// pantalla de la entrega es una lista de botones grandes y cada uno manda
-// ese id: se usa a media luz, en un acopio, y con las manos ocupadas.
-export interface ItemPendiente {
-  id: string
-  item_id: string | null
-  sugerencia_id: string | null
-  nombre: string
-  cantidad: number
-  unidad: string
-}
-
-// Lo que devuelve `leer_conversacion` (por sesión).
-export interface ConversacionDetalle {
-  id: string
-  estado: EstadoConversacion
-  mi_rol: RolEnConversacion
-  /** La fundación entrega de su bodega: no hay ofertador en este hilo. */
-  directa: boolean
-  codigo: string
-  acopio: AcopioResumen | null
-  pendientes: ItemPendiente[]
-  mensajes: MensajeChat[]
-}
-
-// Una fila de `coincidencias_para_aliado()`: una solicitud acompañada de
-// sus municipios cruzada con alguien que tiene justo eso.
-export interface Coincidencia {
-  solicitud_id: string
-  codigo: string
-  municipio: string
-  ofertador_id: string
-  ofertador: string
-  items_coincidentes: number
-  detalle: Array<{ nombre: string; cantidad: number; unidad: string }>
-  ya_hay_hilo: boolean
-  /**
-   * Solo cuando la fila viene de `respuestas_por_coordinar`: lo que esa
-   * persona escribió al ofrecerse. Con el cruce por inventario no hay
-   * mensaje, hay ítems.
-   */
-  mensaje?: string
-}
-
-// Lo que devuelve `exportar_planilla`. LLEVA DATOS PERSONALES y cada vez
-// que existe hay una fila nueva en `accesos_identidad`. Es para entregarla
-// a la fundación en el momento: no la guardes, no la registres en un log y
-// no la pases a un Client Component más de lo imprescindible.
-export interface Planilla {
-  codigo: string
-  nombre: string
-  documento_tipo: TipoDocumento
-  documento: string
-  telefono: string | null
-  autorizacion_version: string
-  autorizacion_at: string
-  entregas: Array<{
-    item: string
-    cantidad: number
-    unidad: string
-    recibido_at: string
-    confirmada: boolean
-  }>
-}
-
-// Lo que devuelve `mis_conversaciones_token` (por token del solicitante).
-export interface ConversacionDelSolicitante {
-  id: string
-  estado: EstadoConversacion
-  /** La fundación entrega de su bodega: no hay ofertador en este hilo. */
-  directa: boolean
-  ofertador: string | null
-  aliado: string | null
-  acopio: AcopioResumen | null
-  mensajes: MensajeChat[]
-}
-
-// Una fila de `mis_hilos()`: lo que ve una cuenta, sea porque ofrece en
-// ese hilo o porque es miembro de la organización que lo coordina.
-export interface HiloResumen {
-  id: string
-  estado: EstadoConversacion
-  creada_at: string
-  codigo: string
-  municipio: string
-  barrio: string
-  /** La fundación entrega de su bodega: no hay ofertador en este hilo. */
-  directa: boolean
-  soy_ofertador: boolean
-  ofertador: string | null
-  aliado: string | null
-  sin_asignar: boolean
-  mensajes_total: number
-}
-
-/**
- * El contacto opcional que deja quien pide ayuda. Excepción explícita a la
- * regla 1 de CLAUDE.md — ver supabase/migraciones/v2-k4-contacto-solicitante.sql.
- * Todos los campos son opcionales, así que puede venir null en cualquiera.
- */
-export interface ContactoSolicitante {
-  nombre: string | null
-  telefono: string | null
-  correo: string | null
-}
-
-// Una fila de `solicitudes_admin()`. Solo la ve un administrador, y lleva
-// el `estado` real —incluido `cumplida`, que no sale en el tablero— para
-// que cerrar una no signifique perderla de vista.
-export interface SolicitudAdmin {
-  codigo: string
-  municipio: string
-  barrio: string
-  categoria: Categoria
-  nota: string | null
-  /** La nota pública del administrador, si la escribió. */
-  nota_admin: string | null
-  estado: EstadoSolicitud
-  creada_at: string
-  expira_at: string
-  respuestas: number
-  items: Array<{ nombre: string; cantidad: number; unidad: string }>
-  contacto: ContactoSolicitante | null
-}
-
-// Una fila de `solicitudes_de_mi_organizacion()`: lo que la fundación
-// acompaña y todavía no ha atendido. No hay cruce de inventario porque no
-// hay inventario de organizaciones: mira los ítems y decide.
-export interface SolicitudPorAtender {
-  solicitud_id: string
-  codigo: string
-  municipio: string
-  barrio: string
-  categoria: Categoria
-  nota: string | null
-  creada_at: string
-  puede_recoger: boolean
-  /** Hilos vivos que ya tiene. Si alguien más lo está trayendo, cambia la decisión. */
-  hilos: number
-  pendientes: Array<{ nombre: string; cantidad: number; unidad: string }>
-}
-
-// Una fila de `mis_avisos()`. No hay tabla de notificaciones: los cinco
-// tipos se derivan de datos que ya existen, y lo «nuevo» es todo lo
-// posterior a `perfiles.avisos_vistos_at`.
+// Una fila de `mis_avisos()`. No hay tabla de notificaciones: los tipos se
+// derivan de datos que ya existen, y lo «nuevo» es todo lo posterior a
+// `perfiles.avisos_vistos_at`.
+//
+// ⚠ Eran cinco tipos y la función solo emite dos. Los otros tres —`mensaje`,
+// `invitacion`, `sin_atender`— eran del flujo acompañado, y `v5-b1` reescribió
+// `mis_avisos()` sin ellos. El desajuste no era cosmético: el mapa de iconos
+// de la campana se indexaba por este tipo, así que el único aviso que la base
+// sí emite daba `undefined` y `<Icono />` reventaba la campana entera.
 export interface Aviso {
-  tipo: 'mensaje' | 'invitacion' | 'sin_atender' | 'acompanamiento' | 'reporte'
+  tipo: 'respuesta' | 'reporte'
   texto: string
   fecha: string
   /** A dónde lleva. Cada aviso es un enlace, no un resumen que toca buscar. */
@@ -649,64 +445,6 @@ export interface EstadoEncabezado {
   avisos_sin_ver: number
 }
 
-// Lo que devuelve `mis_datos`: los artículos 14 y 15 de la Ley 1581
-// hechos pantalla. NO trae el documento descifrado, solo el tipo y los
-// cuatro últimos: ver su propia cédula completa no le dice a nadie nada
-// que no sepa, y multiplica los sitios por donde ese dato puede salir.
-export interface MisDatos {
-  codigo: string
-  flujo: FlujoSolicitud
-  municipio: string
-  barrio: string
-  nota: string | null
-  creada_at: string
-  expira_at: string
-  organizacion: string | null
-  identidad: {
-    tiene_telefono: boolean
-    autorizacion_version: string
-    autorizacion_at: string
-  } | null
-  /** Quién vio esos datos, cuándo y con qué motivo. El derecho a saber. */
-  accesos: Array<{ rol: 'admin' | 'aliado'; motivo: string; cuando: string }>
-  entregas: Array<{
-    item: string
-    cantidad: number
-    unidad: string
-    confirmada: boolean
-  }>
-}
-
-// Lo que devuelve `panel_admin_flujo2()`. Sin PII: la bitácora dice quién
-// leyó y por qué, nunca qué leyó.
-export interface PanelFlujo2 {
-  sin_aliado: Array<{ id: string; codigo: string; municipio: string; creada_at: string }>
-  accesos: Array<{
-    rol: 'admin' | 'aliado'
-    motivo: string
-    cuando: string
-    huerfano: boolean
-  }>
-  hilos_abiertos: number
-}
-
-// Una respuesta propia, tal como la ve quien ofreció ayuda. Solo salen las
-// de solicitudes que siguen vivas: `respuestas` cuelga de `solicitudes` por
-// CASCADE, así que a las 72 horas se va con ella.
-export interface MiRespuesta {
-  id: string
-  mensaje: string
-  creada_at: string
-  codigo: string
-  municipio: string
-  barrio: string
-  categoria: Categoria
-  flujo: FlujoSolicitud
-  expira_at: string
-  num_respuestas: number
-  /** Si ya hay conversacion abierta con esta persona en esa solicitud. */
-  tiene_hilo: boolean
-}
 
 // Lo que devuelve `unirse_a_organizacion`.
 export interface ResultadoUnirse {
@@ -737,74 +475,30 @@ export interface ItemCatalogoPublico {
 
 export const COLUMNAS_ITEM_PUBLICO = 'id, categoria, nombre, unidad'
 
-// Una fila del jsonb que devuelve `mis_ofrecimientos`. `nombre` y `unidad`
-// vienen resueltos: da igual si el ítem salió del catálogo o de una
-// sugerencia sin aprobar todavía.
-export interface OfrecimientoResumen {
-  item_id: string | null
-  sugerencia_id: string | null
-  nombre: string
-  categoria: Categoria | null
-  unidad: string
-  cantidad: number | null
-  disponible: boolean
-  por_confirmar: boolean
-}
-
-// Lo que recibe `guardar_ofrecimientos`. Exactamente una de las tres
-// llaves identifica el ítem; el CHECK de la tabla lo impone.
-export type OfrecimientoInput = { cantidad?: number | null; disponible?: boolean } & (
-  | { item_id: string }
-  | { sugerencia_id: string }
-  | { sugerencia: string }
-)
-
 // Una fila del jsonb que devuelve `sugerencias_pendientes`. `parecidos`
 // son los ítems del catálogo que comparten alguna palabra con el nombre
 // propuesto: están ahí para que fusionar cueste lo mismo que aprobar.
 export interface SugerenciaPendiente {
   id: string
+  /**
+   * De qué catálogo es. `item` es de insumos, `oficio` es una
+   * subcategoría de servicios (ADR 0013). La columna y su CHECK existían
+   * desde antes y no los usaba nadie.
+   */
+  tipo: 'item' | 'oficio'
   nombre_propuesto: string
+  /** Solo con `tipo: 'item'`. Las ocho categorías de insumos. */
   categoria_sugerida: Categoria | null
+  /** Solo con `tipo: 'oficio'`. Las doce del ADR 0012. */
+  grupo_sugerido: string | null
   origen: OrigenSugerencia
   creada_at: string
   usos: number
-  parecidos: Array<{ id: string; nombre: string; categoria: Categoria }>
-}
-
-// Forma del jsonb que devuelve leer_solicitud
-export interface SolicitudConRespuestas {
-  id: string
-  codigo: string
-  municipio: string
-  barrio: string
-  categoria: Categoria
-  nota: string | null
-  estado: EstadoSolicitud
-  expira_at: string
-  flujo: FlujoSolicitud
-  /** Nombre de la fundacion que acompaña, o null en Flujo 1. Nunca su id. */
-  organizacion: string | null
-  /** Si ESTA solicitud tiene avisos. No es lo mismo que si este navegador los tiene. */
-  tiene_avisos: boolean
-  items: Array<ItemResumen & { cubierto: boolean }>
-  respuestas: Array<{
-    id: string
-    mensaje: string
-    creada_at: string
-    nombre: string
-    // NULL cuando quien respondió no tiene contacto público: desde la
-    // Fase D un perfil de aliado no lo tiene.  ya no
-    // deja responder así, pero las respuestas viejas siguen existiendo y
-    // esta pantalla tiene que poder mostrarlas.
-    contacto: string | null
-    contacto_tipo: ContactoTipo
-    tipo: TipoPerfil
-    profesion: string | null
-    verificado: boolean
-    /** Se ofreció a llevarlo. Lo dijo al responder, no hay que preguntarlo. */
-    puede_llevar: boolean
-  }>
+  /**
+   * Lo parecido que ya existe, del catálogo que le toca. Es la decisión
+   * real —«¿esto ya está con otro nombre?»— y por eso va primero.
+   */
+  parecidos: Array<{ id: string; nombre: string; categoria: string }>
 }
 
 export interface Database {
@@ -954,8 +648,12 @@ export interface Database {
         Row: {
           perfil_id: string
           profesion: string
-          entidad_matricula: EntidadMatricula
-          numero_matricula: string
+          // v6-f5: opcionales desde que la matrícula salió del registro
+          // (ADR de la tarea del 3 de septiembre de 2026). NULL significa
+          // "todavía no la dio", no "no tiene" — se llena después desde
+          // /perfil/matricula.
+          entidad_matricula: EntidadMatricula | null
+          numero_matricula: string | null
           verificado: boolean
           verificado_at: string | null
           verificado_por: string | null
@@ -964,8 +662,8 @@ export interface Database {
         Insert: {
           perfil_id: string
           profesion: string
-          entidad_matricula: EntidadMatricula
-          numero_matricula: string
+          entidad_matricula?: EntidadMatricula | null
+          numero_matricula?: string | null
           verificado?: boolean
           verificado_at?: string | null
           verificado_por?: string | null
@@ -992,95 +690,6 @@ export interface Database {
           creado_at?: string
         }
         Update: Partial<Database['public']['Tables']['administradores']['Insert']>
-        Relationships: []
-      }
-      // El cliente nunca lee ni escribe esta tabla directamente (RLS la revoca).
-      // Toda escritura pasa por las RPC de más abajo. Se tipa para uso server-side.
-      solicitudes: {
-        Row: {
-          id: string
-          codigo: string
-          token_hash: string
-          municipio: string
-          barrio: string
-          categoria: Categoria
-          nota: string | null
-          estado: EstadoSolicitud
-          flujo: FlujoSolicitud
-          organizacion_id: string | null
-          /** Cuándo entró la fundación. Null en el flujo directo. */
-          acompanamiento_at: string | null
-          /** No va en `solicitudes_publicas`: ver el comentario del esquema. */
-          puede_recoger: boolean
-          creada_at: string
-          confirmada_at: string
-          expira_at: string
-          // Temporal, mientras dure el periodo de pruebas. La deriva
-          // `crear_solicitud` del prefijo del barrio.
-          es_prueba: boolean
-        }
-        Insert: {
-          id?: string
-          codigo: string
-          token_hash: string
-          municipio: string
-          barrio: string
-          categoria: Categoria
-          nota?: string | null
-          estado?: EstadoSolicitud
-          creada_at?: string
-          confirmada_at?: string
-          expira_at?: string
-          es_prueba?: boolean
-        }
-        Update: Partial<Database['public']['Tables']['solicitudes']['Insert']>
-        Relationships: []
-      }
-      // Exactamente uno de `item_id` y `sugerencia_id` está puesto: lo
-      // impone el CHECK `solicitud_items_uno_u_otro`.
-      solicitud_items: {
-        Row: {
-          id: string
-          solicitud_id: string
-          item_id: string | null
-          sugerencia_id: string | null
-          cantidad: number
-          cubierto: boolean
-        }
-        Insert: {
-          id?: string
-          solicitud_id: string
-          item_id?: string | null
-          sugerencia_id?: string | null
-          cantidad: number
-          cubierto?: boolean
-        }
-        Update: Partial<Database['public']['Tables']['solicitud_items']['Insert']>
-        Relationships: []
-      }
-      // El cliente nunca la lee ni la escribe directamente: el GRANT está
-      // revocado y la frontera son `guardar_ofrecimientos` y
-      // `mis_ofrecimientos`. Se tipa para uso del lado del servidor.
-      ofrecimientos: {
-        Row: {
-          id: string
-          perfil_id: string
-          item_id: string | null
-          sugerencia_id: string | null
-          cantidad: number | null
-          disponible: boolean
-          actualizado_at: string
-        }
-        Insert: {
-          id?: string
-          perfil_id: string
-          item_id?: string | null
-          sugerencia_id?: string | null
-          cantidad?: number | null
-          disponible?: boolean
-          actualizado_at?: string
-        }
-        Update: Partial<Database['public']['Tables']['ofrecimientos']['Insert']>
         Relationships: []
       }
       // El cliente nunca la lee directamente: el GRANT está revocado y lo
@@ -1254,44 +863,6 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['sugerencias_item']['Insert']>
         Relationships: []
       }
-      respuestas: {
-        Row: {
-          id: string
-          solicitud_id: string
-          autor_id: string
-          mensaje: string
-          creada_at: string
-        }
-        Insert: {
-          id?: string
-          solicitud_id: string
-          autor_id: string
-          mensaje: string
-          creada_at?: string
-        }
-        Update: Partial<Database['public']['Tables']['respuestas']['Insert']>
-        Relationships: []
-      }
-      push_suscripciones: {
-        Row: {
-          id: string
-          solicitud_id: string
-          endpoint: string
-          p256dh: string
-          auth_key: string
-          creada_at: string
-        }
-        Insert: {
-          id?: string
-          solicitud_id: string
-          endpoint: string
-          p256dh: string
-          auth_key: string
-          creada_at?: string
-        }
-        Update: Partial<Database['public']['Tables']['push_suscripciones']['Insert']>
-        Relationships: []
-      }
       push_ofertadores: {
         Row: {
           id: string
@@ -1334,80 +905,9 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['reportes']['Insert']>
         Relationships: []
       }
-      metricas: {
-        Row: {
-          id: number
-          municipio: string
-          categoria: Categoria
-          cumplida: boolean
-          horas_hasta_respuesta: number | null
-          horas_hasta_cierre: number | null
-          num_respuestas: number
-          registrada_at: string
-          // De qué flujo venía. Sin esto, la única pregunta interesante que
-          // se puede responder después —si acompañar sirvió de algo— queda
-          // sin respuesta, y metricas es lo que sobrevive al proyecto.
-          flujo: FlujoSolicitud
-          // Esta tabla no tiene FK: sin esta columna, las filas que dejan
-          // las solicitudes de prueba no se pueden identificar después.
-          es_prueba: boolean
-        }
-        Insert: {
-          id?: number
-          municipio: string
-          categoria: Categoria
-          cumplida: boolean
-          horas_hasta_respuesta?: number | null
-          horas_hasta_cierre?: number | null
-          num_respuestas?: number
-          registrada_at?: string
-          es_prueba?: boolean
-        }
-        Update: Partial<Database['public']['Tables']['metricas']['Insert']>
-        Relationships: []
-      }
     }
     Views: {
-      solicitudes_publicas: {
-        Row: {
-          id: string
-          codigo: string
-          municipio: string
-          municipio_nombre: string
-          barrio: string
-          categoria: Categoria
-          nota: string | null
-          creada_at: string
-          confirmada_at: string
-          expira_at: string
-          horas_sin_confirmar: number
-          num_respuestas: number
-          items: ItemResumen[]
-          // Los identificadores, aparte del jsonb legible: el jsonb sirve
-          // para mostrar, estos para cruzar. Sin ellos el modo "¿quién
-          // necesita lo que tengo?" no se puede filtrar.
-          item_ids: string[]
-          sugerencia_ids: string[]
-          // Solo si hay acompañamiento o no. De la organizacion y de la
-          // identidad no sale NADA por esta vista, que la lee anon.
-          flujo: FlujoSolicitud
-          /** Texto del proyecto, no de quien pidió. Escrito para leerse aquí. */
-          nota_admin: string | null
-        }
-        Relationships: []
-      }
-      // Solo los municipios que de verdad tienen contenido. Existen para
-      // no mandar los 1.122 del país en cada carga del tablero: con señal
-      // mala eso pesaba más que todo el resto de la página junta.
-      municipios_con_solicitudes: {
-        Row: { codigo_dane: string; nombre: string; departamento: string }
-        Relationships: []
-      }
       municipios_con_servidores: {
-        Row: { codigo_dane: string; nombre: string; departamento: string }
-        Relationships: []
-      }
-      municipios_con_ofertadores: {
         Row: { codigo_dane: string; nombre: string; departamento: string }
         Relationships: []
       }
@@ -1430,26 +930,6 @@ export interface Database {
           cobertura: CoberturaEntidad
           municipios: string[]
           orden: number
-        }
-        Relationships: []
-      }
-      // Sin `contacto_publico` a propósito: el contacto ocurre cuando el
-      // ofertador responde una solicitud, no al revés.
-      //
-      // `items` trae los NOMBRES de lo que tiene disponible, nunca las
-      // cantidades: una lista pública de quién tiene cuánto y dónde es un
-      // mapa de existencias. Vienen hasta 12; `total_items` dice cuántos
-      // hay en realidad.
-      ofertadores_publicos: {
-        Row: {
-          id: string
-          nombre_visible: string
-          municipios: string[]
-          descripcion: string | null
-          creado_at: string
-          items: ItemOfrecido[]
-          total_items: number
-          puede_trasladarse: boolean
         }
         Relationships: []
       }
@@ -1572,72 +1052,13 @@ export interface Database {
       }
     }
     Functions: {
-      crear_solicitud: {
-        Args: {
-          p_municipio: string
-          p_barrio: string
-          p_categoria: Categoria
-          p_nota: string | null
-          p_items: Json
-          p_token: string
-          p_puede_recoger?: boolean
-        }
-        Returns: { solicitud_id: string; codigo: string }[]
-      }
-      leer_solicitud: {
-        Args: { p_token: string }
-        Returns: Json
-      }
-      renovar_solicitud: {
-        Args: { p_token: string }
-        Returns: string
-      }
-      cerrar_solicitud: {
-        Args: { p_token: string; p_cumplida: boolean }
-        Returns: undefined
-      }
       guardar_push: {
-        Args: { p_token: string; p_endpoint: string; p_p256dh: string; p_auth: string }
-        Returns: undefined
-      }
-      guardar_push_ofertador: {
         Args: { p_endpoint: string; p_p256dh: string; p_auth: string }
         Returns: undefined
       }
-      quitar_push_ofertador: {
+      quitar_push: {
         Args: { p_endpoint?: string | null }
         Returns: undefined
-      }
-      guardar_ofrecimientos: {
-        Args: { p_items: Json }
-        Returns: undefined
-      }
-      // El cruce inverso. Filtra y ordena en SQL porque PostgREST puede
-      // hacer el `&&` pero no ordenar por cuántos ítems coinciden, que es
-      // la mitad del valor: quien pide cinco cosas que tengo vale más que
-      // quien pide una.
-      solicitudes_que_calzan: {
-        Args: {
-          p_item_ids: string[]
-          p_municipio?: string | null
-          p_limite?: number
-          p_desde?: number
-        }
-        Returns: SolicitudQueCalza[]
-      }
-      // El cruce al revés, y la única puerta al teléfono de quien ofrece:
-      // lo autoriza el token portador de una solicitud viva, no la sesión.
-      ofertadores_que_calzan: {
-        Args: {
-          p_token: string
-          p_limite?: number
-          p_desde?: number
-        }
-        Returns: OfertadorQueCalza[]
-      }
-      destapar_contacto: {
-        Args: { p_token: string; p_perfil_id: string }
-        Returns: Json
       }
       // Los contadores del índice de /admin, en una sola llamada.
       panel_admin_indice: {
@@ -1655,63 +1076,27 @@ export interface Database {
         Args: Record<string, never>
         Returns: Json
       }
-      municipios_que_calzan: {
-        Args: { p_item_ids: string[] }
-        Returns: Json
-      }
-      // Interna: solo la llama el route handler con la llave de servicio.
-      // Resuelve en la base a quién avisar, porque traer los inventarios
-      // para cruzarlos en TypeScript chocaba con el tope de 1000 filas de
-      // PostgREST y metía uuid de personas en la URL de un GET.
-      destinatarios_aviso: {
-        Args: { p_municipio: string; p_item_ids: string[] }
-        Returns: Array<{
-          suscripcion_id: string
-          endpoint: string
-          p256dh: string
-          auth_key: string
-          calza: boolean
-        }>
-      }
-      // Los otros dos de un hilo. `de_solicitante` dice en qué tabla vive
-      // la suscripción: la de quien pide cuelga de la solicitud, las de
-      // quien ofrece y quien coordina cuelgan del perfil.
-      destinatarios_conversacion: {
-        Args: {
-          p_conversacion_id: string
-          p_excluir_perfil?: string
-          p_excluir_solicitante?: boolean
-        }
-        Returns: Array<{
-          suscripcion_id: string
-          de_solicitante: boolean
-          endpoint: string
-          p256dh: string
-          auth_key: string
-          codigo: string
-        }>
-      }
-      destinatarios_respondieron: {
-        Args: { p_solicitud_id: string }
-        Returns: Array<{
-          suscripcion_id: string
-          endpoint: string
-          p256dh: string
-          auth_key: string
-        }>
-      }
       // Devuelve cada sugerencia pendiente con los ítems parecidos del
       // catálogo, para que fusionar cueste lo mismo que aprobar.
       sugerencias_pendientes: {
         Args: Record<string, never>
         Returns: Json
       }
+      // ⚠ `p_riesgo` no tiene valor por defecto en la base y aquí tampoco
+      // se le pone uno: es obligatorio al aprobar un oficio, porque la
+      // regla de producto 7 cuelga de esa columna (ADR 0013).
       resolver_sugerencia: {
         Args: {
           p_sugerencia_id: string
           p_accion: AccionSugerencia
           p_item_destino?: string | null
           p_nota?: string | null
+          /** El texto ya corregido por quien modera. */
+          p_nombre_final?: string | null
+          /** Solo para oficios: su categoría de las doce. */
+          p_grupo?: string | null
+          /** Solo para oficios, y solo al aprobar. */
+          p_riesgo?: 'bajo' | 'alto' | null
         }
         Returns: string | null
       }
@@ -1813,22 +1198,6 @@ export interface Database {
         }
         Returns: undefined
       }
-      // Solo para decidir si el encabezado muestra la pestaña «Mi
-      // organización». NO autoriza nada: quien decide qué puede hacer un
-      // miembro es es_miembro_activo(), y cada RPC lo vuelve a comprobar.
-      // Devuelve MiRespuesta[]. Va por RPC y no por un `select` sobre
-      // `respuestas` —que sí tiene política de fila propia— porque hace
-      // falta el código y el municipio, y `solicitudes` está revocada.
-      mis_respuestas: {
-        Args: Record<string, never>
-        Returns: Json
-      }
-      // Devuelve Coincidencia[], con `mensaje` en vez de ítems: quien ya
-      // ofreció ayuda en una solicitud acompañada y sigue sin hilo.
-      respuestas_por_coordinar: {
-        Args: Record<string, never>
-        Returns: Json
-      }
       // Devuelve EstadoEncabezado. Todo lo que el encabezado necesita
       // saber en una sola consulta: si se dibuja la pestaña de /aliado y
       // con qué nombre, y cuántos avisos hay sin ver. Como `soy_aliado`,
@@ -1851,181 +1220,9 @@ export interface Database {
         Args: Record<string, never>
         Returns: boolean
       }
-      // Habeas data y ciclo de vida (Fase I).
-      //
-      // `devolver_a_directo` y `expirar_solicitudes` NO están aquí, y es
-      // deliberado: no tienen grant para nadie. La primera la llaman otras
-      // RPC; la segunda, `pg_cron`.
-      //
-      // Devuelve MisDatos.
-      mis_datos: {
-        Args: { p_token: string }
-        Returns: Json
-      }
-      // Borra la identidad, devuelve la solicitud a `directo` y cierra los
-      // hilos. El hilo NO se borra: contiene palabras de otras dos
-      // personas; lo que se reemplaza es el cuerpo de lo que escribió el
-      // titular, dejando rol y fecha.
-      suprimir_mis_datos: {
-        Args: { p_token: string }
-        Returns: Json
-      }
-      bloquear_ofertador: {
-        Args: { p_conversacion_id: string; p_motivo: string }
-        Returns: undefined
-      }
-      // Devuelve PanelFlujo2.
-      panel_admin_flujo2: {
-        Args: Record<string, never>
-        Returns: Json
-      }
-      // Coincidencias y entregas (Fase H).
-      //
-      // `v_cruces` NO está tipada como vista, y es deliberado: no tiene
-      // grant para nadie y la única puerta legítima es esta RPC.
-      // Devuelve Coincidencia[].
-      coincidencias_para_aliado: {
-        Args: Record<string, never>
-        Returns: Json
-      }
-      // El aliado abre el hilo desde una coincidencia. Nace `abierta` y con
-      // él ya a cargo, y el primer mensaje lo firma él: quien ofrece recibe
-      // una invitación, no un mensaje suyo que no escribió.
-      invitar_a_conversacion: {
-        Args: { p_solicitud_id: string; p_ofertador_id: string; p_mensaje: string }
-        Returns: string
-      }
-      // Solo la fundación. Registra qué llegó, tacha esos ítems y deja la
-      // solicitud en `cumplida` o `entregada_parcial`.
-      registrar_entrega: {
-        Args: { p_conversacion_id: string; p_items: Json }
-        Returns: Json
-      }
-      // La segunda confirmación, la de quien pidió. Sin ella «entregado»
-      // sería la palabra de una sola parte.
-      confirmar_recepcion: {
-        Args: { p_token: string; p_conversacion_id: string }
-        Returns: number
-      }
-      marcar_item_cubierto: {
-        Args: { p_item_id: string; p_cubierto: boolean; p_token?: string | null }
-        Returns: undefined
-      }
-      // Devuelve Planilla. LLEVA PII y escribe bitácora: mismo permiso que
-      // leer_identidad, porque una planilla es una identidad con una lista
-      // de cosas al lado.
-      exportar_planilla: {
-        Args: { p_conversacion_id: string; p_motivo: string }
-        Returns: Json
-      }
-      // Chat tripartito (Fase G). Ninguna de estas devuelve un
-      // identificador de cuenta: los mensajes salen con el rol de quien
-      // escribe y su nombre visible, que es lo que hace falta para seguir
-      // la conversación.
-      iniciar_conversacion: {
-        Args: { p_codigo: string; p_mensaje: string }
-        Returns: string
-      }
-      asignar_aliado: {
-        Args: { p_conversacion_id: string }
-        Returns: undefined
-      }
-      enviar_mensaje: {
-        Args: { p_conversacion_id: string; p_cuerpo: string }
-        Returns: string
-      }
-      // Para quien pidió ayuda, que no tiene cuenta. El token no autoriza
-      // «cualquier conversación»: solo las de su propia solicitud.
-      enviar_mensaje_token: {
-        Args: { p_token: string; p_conversacion_id: string; p_cuerpo: string }
-        Returns: string
-      }
-      // Devuelve ConversacionDetalle.
-      leer_conversacion: {
-        Args: { p_conversacion_id: string }
-        Returns: Json
-      }
-      // Devuelve ConversacionDelSolicitante[].
-      mis_conversaciones_token: {
-        Args: { p_token: string }
-        Returns: Json
-      }
-      // Devuelve HiloResumen[].
-      mis_hilos: {
-        Args: Record<string, never>
-        Returns: Json
-      }
-      moderar_mensaje: {
-        Args: { p_mensaje_id: string; p_oculto: boolean }
-        Returns: undefined
-      }
-      // Elección de flujo (Fase F). Devuelve AliadoDelMunicipio[]: todas
-      // las organizaciones activas del municipio, con su acopio, para poder
-      // escoger la que quede más fácil.
-      aliados_del_municipio: {
-        Args: { p_municipio: string }
-        Returns: Json
-      }
-      // Crea la identidad cifrada y marca la solicitud, en una sola
-      // transacción. Si falla, la solicitud se queda en 'directo', que es
-      // el modo seguro de fallar. No hay camino de vuelta (§7).
-      activar_acompanamiento: {
-        Args: {
-          p_token: string
-          p_organizacion_id: string
-          p_nombre: string
-          p_autorizacion_version: string
-          p_telefono?: string | null
-        }
-        Returns: Json
-      }
-      // Identidad cifrada (Fase E). `identidades` y `accesos_identidad` NO
-      // están tipadas como tablas, y es deliberado: están revocadas enteras
-      // y no hay ninguna lectura legítima que no pase por estas RPC, ni
-      // siquiera del lado del servidor. Tiparlas sería una invitación a
-      // hacer el `select` que no debe existir.
-      //
-      // Interna: la llama el servidor con la llave de servicio, como
-      // `destinatarios_aviso`. No cifra en el cliente y no devuelve nada
-      // descifrado.
-      crear_identidad: {
-        Args: {
-          p_titular_tipo: TitularIdentidad
-          p_nombre: string
-          p_documento_tipo: TipoDocumento
-          p_documento: string
-          p_autorizacion_version: string
-          p_telefono?: string | null
-          p_solicitud_id?: string | null
-          p_perfil_id?: string | null
-        }
-        Returns: string
-      }
-      // Devuelve IdentidadDescifrada y escribe bitácora ANTES de devolver.
-      // Falla si el motivo viene vacío.
-      leer_identidad: {
-        Args: { p_id: string; p_motivo: string }
-        Returns: Json
-      }
-      // Devuelve CoincidenciaIdentidad[]. Deja rastro incluso cuando no
-      // encuentra nada: una búsqueda a ciegas también es un acceso.
-      buscar_identidad_presencial: {
-        Args: { p_documento: string; p_motivo: string }
-        Returns: Json
-      }
       crear_item_catalogo: {
         Args: { p_nombre: string; p_categoria: Categoria; p_unidad?: string }
         Returns: string
-      }
-      mis_ofrecimientos: {
-        Args: Record<string, never>
-        Returns: Json
-      }
-      // Módulo de Servicios. Devuelven jsonb; el llamante lo estrecha a
-      // `FichaProveedor` o `MiProveedor`, que es la forma real.
-      ficha_proveedor: {
-        Args: { p_id: string }
-        Returns: Json
       }
       mi_proveedor: {
         Args: { p_token?: string | null }
@@ -2047,12 +1244,20 @@ export interface Database {
           p_oficios: Json
           p_acepto_publicacion: boolean
           p_autorizacion_version: string
+          // v6-f5 (ADR 0019): la dirección, opcional, con su propia
+          // autorización aparte.
+          p_direccion?: string | null
+          p_acepto_direccion?: boolean
+          p_direccion_version?: string | null
           p_token?: string | null
         }
         Returns: string
       }
-      borrar_proveedor: {
-        Args: { p_token?: string | null }
+      guardar_matricula: {
+        Args: {
+          p_entidad_matricula: EntidadMatricula
+          p_numero_matricula: string
+        }
         Returns: undefined
       }
       mi_organizacion_activa: {
@@ -2062,22 +1267,6 @@ export interface Database {
       proveedores_de_mi_organizacion: {
         Args: Record<string, never>
         Returns: Json
-      }
-      crear_proveedor_asistido: {
-        Args: {
-          p_organizacion_id: string
-          p_token_hash: string
-          p_nombre_visible: string
-          p_tipo: TipoProveedor
-          p_telefono: string
-          p_municipio: string
-          p_zona_id: string | null
-          p_zona_texto: string | null
-          p_modalidad: ModalidadServicio[]
-          p_oficios: Json
-          p_autorizacion_version: string
-        }
-        Returns: string
       }
       verificar_telefono_proveedor: {
         Args: { p_proveedor_id: string; p_verificado: boolean }
@@ -2116,33 +1305,6 @@ export interface Database {
       }
       referencias_por_revisar: {
         Args: Record<string, never>
-        Returns: Json
-      }
-      accesos_a_referencias: {
-        Args: Record<string, never>
-        Returns: Json
-      }
-      // Sin grant a `anon`: solo la llama /api/servicios/solicitudes con la
-      // llave de servicio, para que nadie se salte el Turnstile.
-      crear_solicitud_servicio: {
-        Args: {
-          p_oficio_id: string
-          p_municipio: string
-          p_zona_id: string | null
-          p_zona_texto: string | null
-          p_urgencia: UrgenciaServicio
-          p_capacidad_pago: CapacidadPago
-          p_nota: string | null
-          p_token: string
-        }
-        Returns: { solicitud_id: string; codigo: string }[]
-      }
-      leer_solicitud_servicio: {
-        Args: { p_token: string }
-        Returns: Json
-      }
-      gestionar_solicitud_servicio: {
-        Args: { p_token: string; p_accion: 'renovar' | 'resolver' | 'borrar' }
         Returns: Json
       }
       responder_servicio: {
@@ -2228,90 +1390,6 @@ export interface Database {
         }
         Returns: undefined
       }
-      crear_perfil: {
-        Args: {
-          p_nombre_visible: string
-          p_tipo: TipoPerfil
-          p_municipios: string[]
-          p_contacto_publico: string
-          p_contacto_tipo: ContactoTipo
-          p_descripcion: string | null
-          p_profesion?: string | null
-          p_entidad_matricula?: EntidadMatricula | null
-          p_numero_matricula?: string | null
-          p_servicios?: string[]
-          p_puede_trasladarse?: boolean
-        }
-        Returns: undefined
-      }
-      responder_solicitud: {
-        Args: { p_codigo: string; p_mensaje: string; p_puede_llevar?: boolean }
-        Returns: string
-      }
-      // Si quien pidió puede ir a recoger. RPC aparte y no una columna en
-      // `solicitudes_publicas`: esa vista la lee `anon`, y ahí el dato
-      // sería público y filtrable. Aquí hace falta sesión.
-      movilidad_solicitud: {
-        Args: { p_codigo: string }
-        Returns: boolean
-      }
-      // Lo que ya declaró en su perfil, para precargar la casilla.
-      mi_movilidad: {
-        Args: Record<string, never>
-        Returns: boolean
-      }
-      // Excepción explícita a la regla 1 de CLAUDE.md — ver
-      // supabase/migraciones/v2-k4-contacto-solicitante.sql. Se escribe
-      // con el token, igual que `activar_acompanamiento`.
-      agregar_contacto_solicitante: {
-        Args: {
-          p_token: string
-          p_nombre?: string | null
-          p_telefono?: string | null
-          p_correo?: string | null
-          p_version?: string | null
-        }
-        Returns: undefined
-      }
-      // Devuelve ContactoSolicitante | null. Mismo patrón de guardia que
-      // `movilidad_solicitud`: RPC aparte, nunca en la vista pública, y
-      // solo con sesión de perfil activo.
-      contacto_solicitante: {
-        Args: { p_codigo: string }
-        Returns: Json
-      }
-      // La fundación abre un hilo con quien pidió, sin ofertador de por
-      // medio, para entregar de su propia bodega. Devuelve el id del hilo.
-      abrir_entrega_directa: {
-        Args: { p_solicitud_id: string; p_mensaje: string }
-        Returns: string
-      }
-      // Devuelve SolicitudPorAtender[]: lo que su organización acompaña y
-      // todavía no ha atendido. Sin cruce de inventario — no lo hay.
-      solicitudes_de_mi_organizacion: {
-        Args: Record<string, never>
-        Returns: Json
-      }
-      // Devuelve SolicitudAdmin[]. Vacío para quien no es administrador.
-      solicitudes_admin: {
-        Args: Record<string, never>
-        Returns: Json
-      }
-      // Comenta una solicitud y, si `p_cerrar`, la marca `cumplida`. NO la
-      // borra: es de otra persona, que conserva su enlace y su plazo.
-      admin_anotar_solicitud: {
-        Args: { p_codigo: string; p_nota: string | null; p_cerrar?: boolean }
-        Returns: Json
-      }
-      crear_reporte: {
-        Args: {
-          p_tipo_objeto: TipoObjetoReporte
-          p_objeto_id: string
-          p_motivo: MotivoReporte
-          p_nota?: string | null
-        }
-        Returns: undefined
-      }
       verificar_servidor: {
         Args: { p_perfil_id: string; p_verificado: boolean }
         Returns: undefined
@@ -2330,17 +1408,9 @@ export interface Database {
         Args: Record<string, never>
         Returns: Json
       }
-      generar_codigo: {
-        Args: Record<string, never>
-        Returns: string
-      }
       es_admin: {
         Args: { uid: string }
         Returns: boolean
-      }
-      expirar_solicitudes: {
-        Args: Record<string, never>
-        Returns: number
       }
     }
   }

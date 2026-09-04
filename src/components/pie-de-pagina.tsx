@@ -21,7 +21,7 @@ export function PieDePagina() {
             <li key={e.numero}>
               <a
                 href={`tel:${e.numero}`}
-                className="flex min-h-12 items-center gap-2 rounded-lg border border-border bg-background px-3 text-base font-medium"
+                className="pulsable shadow-canto flex min-h-12 items-center gap-2 rounded-full bg-card px-3 text-base font-medium"
               >
                 <Phone className="size-4" aria-hidden="true" />
                 {e.nombre} {e.numero}
@@ -56,28 +56,49 @@ export function PieDePagina() {
 
         <nav aria-label="Documentos legales" className="mt-4">
           <ul className="flex flex-wrap gap-x-4">
+            {/* Ayuda va primera: es la puerta a la PQR y al soporte, y quien
+                baja hasta el pie suele venir buscando a quién escribirle. */}
             <li>
-              <Link href="/como-funciona" className="inline-flex min-h-12 items-center text-base underline">
-                Cómo funciona
+              <Link href="/ayuda" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
+                Preguntas frecuentes
               </Link>
             </li>
             <li>
-              <Link href="/privacidad" className="inline-flex min-h-12 items-center text-base underline">
+              <Link href="/contacto" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
+                Contacto
+              </Link>
+            </li>
+            <li>
+              <Link href="/quienes-somos" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
+                Quiénes somos
+              </Link>
+            </li>
+            {/* La PQR va aquí y no solo dentro de Ayuda: es el canal de
+                habeas data (Ley 1581, arts. 14 y 15) y el sitio donde se
+                busca un derecho es el pie, al lado del aviso de privacidad
+                que lo menciona. */}
+            <li>
+              <Link href="/pqr" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
+                PQR y habeas data
+              </Link>
+            </li>
+            <li>
+              <Link href="/privacidad" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
                 Aviso de privacidad
               </Link>
             </li>
             <li>
-              <Link href="/terminos" className="inline-flex min-h-12 items-center text-base underline">
+              <Link href="/terminos" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
                 Términos de uso
               </Link>
             </li>
             <li>
-              <Link href="/seguridad" className="inline-flex min-h-12 items-center text-base underline">
+              <Link href="/seguridad" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
                 Cómo cuidarte
               </Link>
             </li>
             <li>
-              <Link href="/datos" className="inline-flex min-h-12 items-center text-base underline">
+              <Link href="/datos" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
                 Datos abiertos
               </Link>
             </li>

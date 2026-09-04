@@ -1,273 +1,361 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Send, Package } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-import { validarMensaje } from '@/lib/validacion'
-import { Textarea } from '@/components/ui/textarea'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import type {
-  AcopioResumen,
-  ConversacionDelSolicitante,
-  ConversacionDetalle,
-  EstadoConversacion,
-  MensajeChat,
-  RolEnConversacion,
-} from '@/lib/types'
+import { Send } from 'lucide-react'
 
-const ETIQUETA_ROL: Record<RolEnConversacion, string> = {
-  solicitante: 'Quien pidió',
-  ofertador: 'Quien ofrece',
-  aliado: 'La fundación',
-  admin: 'Moderación de AquíVe',
+import { rpc } from '@/orpc/cliente'
+import { useHidratado } from '@/components/hidratado'
+import { MarcoFlujo } from '@/components/marco-flujo'
+import { TarjetaOrdenChat } from '@/components/tarjeta-orden-chat'
+import type { Autor, Hilo, Mensaje, Origen } from '@/contrato/chat'
+
+/**
+ * Qué le pasa a esta conversación, dicho para cada origen.
+ *
+ * ⚠ Aquí decía, para los cuatro a la vez: «Esta conversación se borra con
+ * lo que la abrió. No queda archivada.» Es verdad y es exactamente cómo
+ * está escrita la regla de producto 3 — y por eso mismo no sirve en
+ * pantalla. «Lo que la abrió» es una llave foránea; quien lee esto está
+ * mirando un chat con una modista y no tiene por qué saber de qué cuelga.
+ * Y «no queda archivada» describe lo que el sistema NO hace, cuando lo que
+ * la persona necesita saber es qué hacer: apuntar la dirección por fuera si
+ * la va a necesitar el jueves.
+ *
+ * Regla de interfaz: sin jerga técnica en ningún texto visible; y el
+ * responsable pidió el 3 de septiembre de 2026 que nada diga algo distinto
+ * de lo que va a pasar de verdad.
+ */
+const AVISO_BORRADO: Record<Origen['tipo'], string> = {
+  solicitud:
+    'Esta conversación se borra junto con el pedido. Apunta por fuera lo que necesites guardar.',
+  producto:
+    'Esta conversación se borra si quien lo vende quita el producto. Apunta por fuera lo que necesites guardar.',
+  muro: 'Esta conversación se borra si quien la publicó quita la donación. Apunta por fuera lo que necesites guardar.',
+  ficha:
+    'Esta conversación se borra si esta persona borra su ficha. Apunta por fuera lo que necesites guardar.',
 }
 
-// Cinco segundos, y solo con la pestaña a la vista. Además se refresca al
-// volver a la pestaña, que es el momento en que de verdad se nota el
-// retraso: uno vuelve del WhatsApp y quiere ver si contestaron.
-//
-// El plan pedía Supabase Realtime «no polling», y su razón era de cuota:
-// sondear desde Vercel se come el millón de invocaciones del plan Hobby.
-// Aquí el sondeo va del NAVEGADOR a Supabase, sin pasar por Vercel, así
-// que no gasta ni una invocación.
-//
-// Y `postgres_changes` no sirve tal cual: respeta RLS, estas tablas están
-// revocadas enteras, y uno de los tres participantes es anónimo con token,
-// así que no hay `auth.uid()` con el que autorizarlo. La vía que sí
-// funcionaría es un broadcast SIN contenido —«pasó algo en este hilo»— que
-// dispare esta misma consulta; queda pendiente si cinco segundos se
-// quedan cortos.
-const CADA_MS = 5_000
-
+/**
+ * El hilo. Pantalla 12, y el mismo para los cuatro orígenes.
+ *
+ * Sirve a los dos lados con el mismo componente. Quién es cada quien lo
+ * resuelve el servidor —de quién es la solicitud, el producto, la ficha o
+ * la publicación— y lo dice en `hilo.soy`, así que aquí solo cambia de qué
+ * lado va cada burbuja.
+ *
+ * ⚠ Monta él mismo su `MarcoFlujo` y mete el campo de escribir en `accion`,
+ * que es la barra fija de abajo. Antes el campo iba en el cuerpo, y como el
+ * cuerpo solo mide lo que miden los mensajes, en un hilo corto quedaba
+ * flotando a media pantalla con medio dedo de crema debajo. Un chat se
+ * escribe desde abajo siempre, tenga cuatro mensajes o cuarenta.
+ *
+ * Sin sondeo automático a propósito. Un `setInterval` contra el servidor
+ * cada pocos segundos, en un teléfono viejo con datos contados, gasta
+ * batería y plan para casi siempre no traer nada. Se refresca al enviar; el
+ * aviso de mensaje nuevo llega por push, que es para lo que está.
+ */
 export function Chat({
-  conversacionId,
-  token,
-  estado,
-  miRol,
-  acopio,
-  mensajesIniciales,
+  origen,
+  hiloInicial,
+  volver,
 }: {
-  conversacionId: string
-  /** Presente solo para quien pidió ayuda, que no tiene cuenta. */
-  token?: string
-  estado: EstadoConversacion
-  miRol: RolEnConversacion
-  acopio: AcopioResumen | null
-  mensajesIniciales: MensajeChat[]
+  origen: Origen
+  hiloInicial: Hilo
+  volver: string
 }) {
-  const [mensajes, setMensajes] = useState(mensajesIniciales)
+  const [mensajes, setMensajes] = useState<Mensaje[]>(hiloInicial.mensajes)
   const [cuerpo, setCuerpo] = useState('')
   const [enviando, setEnviando] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [rechazo, setRechazo] = useState<string | null>(null)
   const finRef = useRef<HTMLDivElement>(null)
 
-  const cerrado = estado === 'cerrada' || estado === 'entregada'
-  const esperando = estado === 'esperando_aliado' || estado === 'asignada'
+  // Las horas y los días solo después de hidratar. El servidor va en UTC y
+  // el teléfono en la hora de aquí: pintarlas en la primera pasada es
+  // pintar una hora equivocada y que React no la corrija (ADR 0005).
+  const hidratado = useHidratado()
 
+  // El hilo abre por el final, que es donde está la conversación.
   useEffect(() => {
-    async function refrescar() {
-      if (document.visibilityState !== 'visible') return
-      const supabase = createClient()
+    finRef.current?.scrollIntoView({ block: 'end' })
+  }, [mensajes.length])
 
-      if (token) {
-        const { data } = await supabase.rpc('mis_conversaciones_token', { p_token: token })
-        const hilos = (data as unknown as ConversacionDelSolicitante[]) ?? []
-        const mio = hilos.find((h) => h.id === conversacionId)
-        if (mio) setMensajes(mio.mensajes)
-        return
-      }
+  // Cuántos había al abrir. Lo que pase de ahí lo escribió esta persona en
+  // esta sesión, y es lo único que entra moviéndose.
+  //
+  // Estado inicial y no un ref: el valor se captura una vez al montar y no
+  // cambia nunca, y leer un ref durante el render es justo lo que el
+  // compilador de React no admite.
+  const [alAbrir] = useState(mensajes.length)
 
-      const { data } = await supabase.rpc('leer_conversacion', {
-        p_conversacion_id: conversacionId,
-      })
-      const detalle = data as unknown as ConversacionDetalle | null
-      if (detalle) setMensajes(detalle.mensajes)
-    }
-
-    const id = setInterval(refrescar, CADA_MS)
-    // Al volver a la pestaña no se espera al siguiente turno del reloj:
-    // ese es justo el instante en que el retraso se siente.
-    document.addEventListener('visibilitychange', refrescar)
-    window.addEventListener('focus', refrescar)
-
-    return () => {
-      clearInterval(id)
-      document.removeEventListener('visibilitychange', refrescar)
-      window.removeEventListener('focus', refrescar)
-    }
-  }, [conversacionId, token])
-
-  async function enviar() {
-    const problema = validarMensaje(cuerpo)
-    if (problema) {
-      setError(problema)
-      return
-    }
+  async function enviar(evento: React.FormEvent) {
+    evento.preventDefault()
+    const texto = cuerpo.trim()
+    if (!texto || enviando) return
 
     setEnviando(true)
-    setError(null)
-
-    // Por la ruta y no por la RPC directa: al otro lado hay que avisar a
-    // los otros dos por push, y las suscripciones no son legibles para el
-    // navegador. La autorización no se mueve — la sigue resolviendo la
-    // misma RPC, solo que llamada desde el servidor.
-    const respuesta = await fetch('/api/mensajes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ conversacionId, cuerpo: cuerpo.trim(), token }),
-    })
-
-    if (!respuesta.ok) {
-      const { error: mensajeError } = await respuesta.json().catch(() => ({ error: null }))
-      setError(mensajeError ?? 'No pudimos enviar el mensaje.')
+    setRechazo(null)
+    try {
+      const { mensaje } = await rpc.chat.escribir({ origen, cuerpo: texto })
+      setMensajes((previos) => [...previos, mensaje])
+      setCuerpo('')
+    } catch (error) {
+      // El motivo viene tipado del contrato: se dice EXACTAMENTE por qué no
+      // se envió. Un filtro que rechaza sin explicar enseña a pelear con la
+      // pantalla, no a coordinar por aquí.
+      const motivo =
+        error && typeof error === 'object' && 'data' in error
+          ? ((error.data as { motivo?: string } | undefined)?.motivo ?? null)
+          : null
+      setRechazo(motivo ?? 'No se pudo enviar. Revisa la conexión.')
+    } finally {
       setEnviando(false)
-      return
     }
-
-    // Se agrega en local en vez de volver a leer: el mensaje propio tiene
-    // que aparecer al instante, y el sondeo ya trae lo demás.
-    setMensajes((prev) => [
-      ...prev,
-      {
-        id: `local-${Date.now()}`,
-        rol: miRol,
-        nombre: null,
-        cuerpo: cuerpo.trim(),
-        oculto: false,
-        creado_at: new Date().toISOString(),
-      },
-    ])
-    setCuerpo('')
-    setEnviando(false)
-    finRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
+  const cerrado = hiloInicial.cerrado
+  const filas = agrupar(mensajes, hiloInicial.soy, alAbrir)
+
   return (
-    // Sin caja ni desplazamiento propio. Antes había tres desplazamientos
-    // anidados —el hilo dentro de la tarjeta dentro de la página— y en un
-    // teléfono el dedo no sabía cuál iba a mover. Ahora el hilo se desplaza
-    // con la página y el redactor va fijo abajo.
-    <div>
-      {acopio && (
-        <div className="sticky top-14 z-30 -mx-4 flex items-center gap-2 border-b border-border bg-secondary px-4 py-2 text-secondary-foreground sm:top-16">
-          <Package className="size-4 shrink-0" aria-hidden="true" />
-          <p className="min-w-0 truncate text-base">
-            {acopio.nombre}
-            {acopio.direccion ? ` · ${acopio.direccion}` : ''}
-            {acopio.horario ? ` · ${acopio.horario}` : ''}
-          </p>
-        </div>
-      )}
-
-      {/* Al principio del hilo y no bajo el redactor, donde competía con
-          el botón de enviar. Se lee una vez, al entrar, que es cuando
-          sirve. */}
-      <p className="mt-4 text-center text-sm text-muted-foreground">
-        Esta conversación se borra junto con la solicitud, a las 72 horas. No la
-        uses para guardar nada que necesites después.
-      </p>
-
-      <ul className="mt-3 space-y-1">
-        {mensajes.length === 0 && (
-          <li className="py-6 text-center text-base text-muted-foreground">
-            Todavía no hay mensajes.
-          </li>
-        )}
-        {mensajes.map((m, i) => {
-          // La etiqueta del papel sale cuando cambia de emisor, no en cada
-          // burbuja: repetida en quince mensajes seguidos es ruido y hace
-          // que el hilo se lea como un formulario.
-          const anterior = mensajes[i - 1]
-          const mismoEmisor = anterior && anterior.rol === m.rol && anterior.nombre === m.nombre
-          const mio = m.rol === miRol
-          return (
-          <li key={m.id} className={mio ? 'text-right' : undefined}>
-            {!mismoEmisor && (
-              <p className={`mt-3 text-sm text-muted-foreground`}>
-                {ETIQUETA_ROL[m.rol]}
-                {m.nombre ? ` · ${m.nombre}` : ''}
-              </p>
-            )}
-            <p
-              className={`mt-1 inline-block max-w-[85%] px-3 py-2 text-left text-base ${
-                m.oculto
-                  ? 'rounded-xl border border-dashed border-border text-muted-foreground'
-                  : mio
-                    ? 'rounded-xl rounded-br-sm bg-primary text-primary-foreground'
-                    : // Papel elevado y no `bg-muted`: el apagado es apenas
-                      // más oscuro que el papel del fondo, así que sobre el
-                      // hilo las burbujas recibidas casi no se recortaban.
-                      // La sombra hace el resto — el borde sobraría con
-                      // quince mensajes seguidos.
-                      'rounded-xl rounded-bl-sm bg-card text-foreground shadow-sm'
-              }`}
-            >
-              {/* Moderar oculta, no borra, y el hueco se ve: si un mensaje
-                  desapareciera sin dejar rastro, la conversación mentiría. */}
-              {m.oculto ? (
-                <span className="italic opacity-80">Mensaje retirado por moderación</span>
-              ) : (
-                m.cuerpo
-              )}
-            </p>
-          </li>
-          )
-        })}
-        <div ref={finRef} />
-      </ul>
-
-      <div className="sticky bottom-0 -mx-4 mt-4 border-t border-border bg-background/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
-        {esperando ? (
+    <MarcoFlujo
+      titulo={hiloInicial.con}
+      subtitulo={hiloInicial.asunto ?? undefined}
+      volver={volver}
+      accion={
+        cerrado ? (
           <p className="text-base text-muted-foreground">
-            Nadie de la fundación se ha hecho cargo todavía. En cuanto
-            alguien lo haga, se puede escribir aquí.
-          </p>
-        ) : cerrado ? (
-          <p className="text-base text-muted-foreground">
-            Esta conversación está cerrada.
+            Este hilo ya se cerró. No se pueden enviar más mensajes.
           </p>
         ) : (
-          <>
-            {/* `items-end` y los dos del mismo alto: en reposo quedan a ras,
-                y cuando el campo crece con el texto el botón se queda
-                pegado a la última línea, que es donde lo busca el pulgar.
-                Con alturas distintas —el campo en 64 y el botón en 52— el
-                círculo flotaba a media altura del recuadro. */}
+          <form onSubmit={enviar}>
+            {rechazo && (
+              <p
+                role="alert"
+                className="bg-accent text-accent-foreground mb-2 rounded-xl px-4 py-3 text-base"
+              >
+                {rechazo}
+              </p>
+            )}
             <div className="flex items-end gap-2">
-              <Textarea
+              <label htmlFor="cuerpo" className="sr-only">
+                Escribe un mensaje
+              </label>
+              <textarea
+                id="cuerpo"
                 value={cuerpo}
                 onChange={(e) => setCuerpo(e.target.value)}
-                maxLength={1000}
+                maxLength={500}
                 rows={1}
-                placeholder="Escribe aquí"
-                aria-label="Mensaje"
-                // `resize-none` porque `field-sizing-content` ya lo hace
-                // crecer solo: el agarre de la esquina era un adorno que
-                // además dejaba una marca diagonal sobre el borde.
-                className="min-h-14 flex-1 resize-none py-4"
+                placeholder="Escribe un mensaje"
+                // `field-sizing-content` crece con lo escrito sin una línea
+                // de JavaScript. Donde no exista, se queda en `min-h-14` y
+                // el campo desplaza por dentro: igual de usable.
+                className="bg-card border-input focus-visible:ring-ring shadow-canto max-h-32 min-h-14 flex-1 resize-none rounded-2xl border px-4 py-4 text-base field-sizing-content focus-visible:ring-2 focus-visible:outline-none"
               />
-              {/* Icono al lado y no un botón de ancho completo debajo: el
-                  redactor va fijo, y una fila de más le come dos líneas de
-                  hilo en cada pantalla. */}
               <button
-                type="button"
+                type="submit"
                 disabled={enviando || cuerpo.trim().length === 0}
-                onClick={enviar}
-                aria-label={enviando ? 'Enviando' : 'Enviar mensaje'}
-                className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity disabled:opacity-40"
+                className="bg-primary text-primary-foreground shadow-boton active:shadow-boton-hundido flex size-14 shrink-0 items-center justify-center rounded-full transition-all active:translate-x-[2px] active:translate-y-[2px] disabled:opacity-40"
+                aria-label={enviando ? 'Enviando el mensaje' : 'Enviar mensaje'}
               >
-                <Send className="size-5" aria-hidden="true" />
+                <Send
+                  className={`size-6 ${enviando ? 'punto-urgente' : ''}`}
+                  aria-hidden="true"
+                />
               </button>
             </div>
-            {error && (
-              <Alert variant="destructive" className="mt-2">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-          </>
-        )}
+            {/* La línea corta va aquí, pegada al campo, porque es donde se
+                está a punto de escribir un número. Lo demás —que el hilo se
+                borra con lo que lo abrió— se dice una vez arriba. */}
+            <p className="mt-2 text-sm text-muted-foreground">
+              No se pueden compartir teléfonos ni correos por aquí.
+            </p>
+          </form>
+        )
+      }
+    >
+      {origen.tipo === 'solicitud' && hiloInicial.orden && (
+        <TarjetaOrdenChat
+          solicitudId={origen.id}
+          soy={hiloInicial.soy}
+          orden={hiloInicial.orden}
+        />
+      )}
 
-      </div>
-    </div>
+      <p className="text-center text-sm text-muted-foreground">
+        {AVISO_BORRADO[origen.tipo]}
+      </p>
+
+      {mensajes.length === 0 ? (
+        <p className="mt-8 text-center text-base text-muted-foreground">
+          Todavía no hay mensajes.
+          <br />
+          Escribe para ponerse de acuerdo.
+        </p>
+      ) : (
+        <ol className="mt-4 space-y-1" aria-live="polite">
+          {filas.map((fila) =>
+            fila.clase === 'dia' ? (
+              <li key={fila.clave} className="flex justify-center py-3">
+                {/* Antes de hidratar no se pinta: el día de un mensaje de
+                    medianoche cambia según la zona horaria. */}
+                <span className="bg-secondary text-muted-foreground rounded-full px-3 py-1 text-sm">
+                  {hidratado ? diaLegible(fila.iso) : '·'}
+                </span>
+              </li>
+            ) : (
+              <li
+                key={fila.clave}
+                className={`flex ${fila.mio ? 'justify-end' : 'justify-start'} ${
+                  fila.empiezaTanda ? 'pt-2' : ''
+                } ${fila.recienEnviado ? 'animar-entrada' : ''}`}
+              >
+                {/* Lo mío en blanco y lo suyo en amarillo, por decisión del
+                    responsable. Antes lo propio iba en arena, que sobre el
+                    crema son dos tonos que se distinguen en una muestra de
+                    color y no en un teléfono al sol.
+
+                    El amarillo es uno de los cuatro gajos de la sombrilla, y
+                    aquí va como RELLENO con tinta encima, que es la única
+                    forma en que la paleta admite un color. No es lima: el
+                    lima es la acción de enviar, una por pantalla, y veinte
+                    burbujas lima serían lima dominante.
+
+                    Que no lleve la palabra al lado no rompe la regla de las
+                    familias. Aquí el color no dice «confección»: dice «esto
+                    lo escribió el otro», y eso lo dicen además el lado y la
+                    esquina de la cola. */}
+                <div
+                  className={`shadow-canto max-w-[85%] rounded-2xl px-4 py-2.5 ${
+                    fila.mio
+                      ? `bg-card ${fila.cierraTanda ? 'rounded-br-sm' : ''}`
+                      : `bg-familia-amarillo text-foreground ${fila.cierraTanda ? 'rounded-bl-sm' : ''}`
+                  }`}
+                >
+                  <p className="text-base whitespace-pre-line">{fila.cuerpo}</p>
+                  {/* Solo en el último de una tanda: cinco mensajes seguidos
+                      del mismo minuto con cinco horas iguales debajo es ruido
+                      que hay que saltarse para leer la conversación.
+
+                      Sobre el amarillo no sirve `muted-foreground`: ese pardo
+                      sobre ese amarillo no llega a AA. Va tinta rebajada, que
+                      da la misma jerarquía sin perder el contraste. */}
+                  {fila.cierraTanda && (
+                    <p
+                      className={`mt-0.5 text-sm ${
+                        fila.mio ? 'text-right text-muted-foreground' : 'text-foreground/75'
+                      }`}
+                    >
+                      {hidratado ? horaLegible(fila.iso) : ' '}
+                    </p>
+                  )}
+                </div>
+              </li>
+            ),
+          )}
+        </ol>
+      )}
+      {/* Fuera del `ol`: un `div` suelto entre `li` es marcado inválido, y
+          además se comía un renglón del `space-y`. */}
+      <div ref={finRef} />
+    </MarcoFlujo>
   )
+}
+
+type Fila =
+  | { clase: 'dia'; clave: string; iso: string }
+  | {
+      clase: 'mensaje'
+      clave: string
+      iso: string
+      cuerpo: string
+      mio: boolean
+      /** Primero de una tanda del mismo autor: se separa del bloque anterior. */
+      empiezaTanda: boolean
+      /** Último de la tanda: lleva la hora y la esquina de la cola. */
+      cierraTanda: boolean
+      /**
+       * Se envió en esta sesión, después de abrir el hilo. Es lo único
+       * que entra moviéndose.
+       *
+       * ⚠ No se anima la lista entera: al abrir un hilo de treinta
+       * mensajes, treinta burbujas entrando a la vez es una cortina, no
+       * una conversación. Y aquí no hay sondeo —es deliberado, está
+       * escrito arriba—, así que el único que «llega» es el propio.
+       */
+      recienEnviado: boolean
+    }
+
+/**
+ * Mensajes a filas, con sus separadores de día y sus tandas.
+ *
+ * Una «tanda» son mensajes seguidos de la misma persona. Se dibujan pegados
+ * y solo el último lleva hora y esquina, que es como se lee una
+ * conversación: por quién habla, no por cuántas veces pulsó enviar.
+ *
+ * Se agrupa por la fecha en UTC a propósito, que es la que el servidor y el
+ * navegador ven igual. El texto del separador sí sale en hora local, pero
+ * solo después de hidratar.
+ */
+function agrupar(mensajes: Mensaje[], soy: Autor, habiaAlAbrir: number): Fila[] {
+  const filas: Fila[] = []
+  let diaAnterior: string | null = null
+
+  for (let i = 0; i < mensajes.length; i++) {
+    const m = mensajes[i]
+    const dia = m.creado_at.slice(0, 10)
+    if (dia !== diaAnterior) {
+      filas.push({ clase: 'dia', clave: `dia-${dia}-${m.id}`, iso: m.creado_at })
+      diaAnterior = dia
+    }
+
+    const anterior = mensajes[i - 1]
+    const siguiente = mensajes[i + 1]
+
+    filas.push({
+      clase: 'mensaje',
+      clave: m.id,
+      iso: m.creado_at,
+      cuerpo: m.cuerpo,
+      mio: m.autor === soy,
+      empiezaTanda: !anterior || anterior.autor !== m.autor,
+      cierraTanda:
+        !siguiente ||
+        siguiente.autor !== m.autor ||
+        siguiente.creado_at.slice(0, 10) !== dia,
+      recienEnviado: i >= habiaAlAbrir,
+    })
+  }
+
+  return filas
+}
+
+/** «Hoy», «Ayer», o el día escrito. Solo se llama ya hidratado. */
+function diaLegible(iso: string) {
+  const d = new Date(iso)
+  const hoy = new Date()
+  const mismoDia = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+
+  if (mismoDia(d, hoy)) return 'Hoy'
+  const ayer = new Date(hoy)
+  ayer.setDate(hoy.getDate() - 1)
+  if (mismoDia(d, ayer)) return 'Ayer'
+  return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })
+}
+
+/**
+ * «9:27 p.m.», no «09:27 p. m.».
+ *
+ * `es-CO` escribe el sufijo con espacios dentro —«p. m.»— y con cero
+ * delante. En una burbuja de chat eso son cuatro caracteres de ruido
+ * repetidos veinte veces; el punto de la hora es poder saltársela.
+ */
+function horaLegible(iso: string) {
+  return new Date(iso)
+    .toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })
+    .replace(/ /g, ' ')
+    .replace('a. m.', 'a.m.')
+    .replace('p. m.', 'p.m.')
 }

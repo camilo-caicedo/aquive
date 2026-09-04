@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
-import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { BotonVolver } from '@/components/volver'
 
 /**
  * El caparazón de las pantallas de flujo: publicar, responder, calificar,
@@ -33,9 +32,11 @@ export function MarcoFlujo({
   subtitulo?: ReactNode
   /** Estado en palabras, a la derecha del título: «Acordada». */
   sello?: ReactNode
-  /** A dónde vuelve. Sin esto no se dibuja el botón. */
+  /** A dónde vuelve cuando no hay historia detrás. Sin esto no se dibuja
+   *  la flecha. Ver `BotonVolver`. */
   volver?: string
-  /** Los pasos, con nombre. «Paso 3 de 5» no dice de qué. */
+  /** Los pasos, con nombre. Se pinta «Paso 3 de 5 · Ubicación»: el número
+   *  dice cuánto falta y el nombre dice de qué. Ninguno de los dos solo. */
   pasos?: string[]
   /** Índice del paso actual, empezando en 0. */
   pasoActual?: number
@@ -51,13 +52,7 @@ export function MarcoFlujo({
         <div className="mx-auto max-w-lg px-4 pt-2 pb-3">
           <div className="flex items-start gap-1">
             {volver && (
-              <Link
-                href={volver}
-                aria-label="Volver"
-                className="-ml-3 flex size-12 shrink-0 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
-              >
-                <ArrowLeft className="size-6" aria-hidden="true" />
-              </Link>
+              <BotonVolver href={volver} />
             )}
             <div className="min-w-0 flex-1 py-2.5">
               <h1 className="font-heading text-2xl leading-tight">{titulo}</h1>
@@ -69,43 +64,59 @@ export function MarcoFlujo({
           </div>
 
           {pasos && pasos.length > 0 && (
-            // Una barra por paso y su nombre debajo. El actual se marca con
-            // peso y con color, y los ya hechos con la barra llena: el
-            // estado no puede depender solo del color (regla 9), y por eso
-            // el nombre del paso actual va además en negrita.
-            <ol className="mt-3 flex gap-2" aria-label="Progreso">
-              {pasos.map((nombre, i) => (
-                <li key={nombre} className="min-w-0 flex-1">
-                  <span
-                    aria-hidden="true"
-                    className={`block h-1 rounded-full ${
+            // Una barra por paso, y debajo UNA línea: «Paso 2 de 6 ·
+            // Ubicación».
+            //
+            // ⚠ Antes iba el nombre de cada paso debajo de su propia barra.
+            // Con tres pasos se leía; con seis, cada nombre se queda en
+            // sesenta píxeles de un teléfono y `truncate` los deja en
+            // «Info…», «Prod…», que no dicen nada. Y faltaba lo que el
+            // cliente pidió con todas las letras el 3 de septiembre de
+            // 2026: «Mostrar siempre: Paso 2 de 6. Esto ayuda a que la
+            // persona sepa cuánto falta.»
+            //
+            // Así van las dos cosas —cuánto falta y de qué— en una línea
+            // que cabe. El estado sigue sin depender del color: las barras
+            // llenas y el número dicen lo mismo por dos vías (regla 9).
+            <div className="mt-3">
+              <ol className="flex gap-2" aria-hidden="true">
+                {pasos.map((nombre, i) => (
+                  <li
+                    key={nombre}
+                    className={`h-1 min-w-0 flex-1 rounded-full ${
                       i <= pasoActual ? 'bg-primary' : 'bg-secondary'
                     }`}
                   />
-                  <span
-                    aria-current={i === pasoActual ? 'step' : undefined}
-                    className={`mt-1.5 block truncate text-sm ${
-                      i === pasoActual
-                        ? 'font-semibold text-primary'
-                        : 'text-muted-foreground'
-                    }`}
-                  >
-                    {nombre}
-                  </span>
-                </li>
-              ))}
-            </ol>
+                ))}
+              </ol>
+              <p className="mt-1.5 text-sm text-muted-foreground">
+                <span className="font-semibold text-enlace">
+                  Paso {pasoActual + 1} de {pasos.length}
+                </span>
+                {pasos[pasoActual] && ` · ${pasos[pasoActual]}`}
+              </p>
+            </div>
           )}
         </div>
       </div>
 
-      <div className="mx-auto max-w-lg px-4 py-4">{children}</div>
+      {/* Los tres `data-flujo` son los ganchos con los que `globals.css`
+          rearma esta pantalla dentro de una hoja modal: cuerpo que scrollea,
+          hueco que sobra y barra que deja de ser `fixed`. En una pantalla
+          normal no hacen nada. */}
+      <div data-flujo="cuerpo" className="mx-auto max-w-lg px-4 py-4">{children}</div>
 
       {accion && (
         <>
-          {/* En flujo, para que la barra no tape el final del formulario. */}
-          <div aria-hidden="true" className="h-24" />
-          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-sm pb-[env(safe-area-inset-bottom)]">
+          {/* En flujo, para que la barra no tape el final del formulario.
+              A la medida de la más alta, que es la de contacto de la ficha:
+              aviso y dos botones. */}
+          <div aria-hidden="true" data-flujo="hueco" className="h-36" />
+          {/* `fixed` contra la ventana en una pantalla normal. Dentro de una
+              hoja modal deja de serlo: la hoja es una columna flex y esta
+              barra es su último renglón, que es lo único que la mantiene
+              abajo cuando el contenedor que scrollea es otro. */}
+          <div data-flujo="barra" className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 backdrop-blur-sm pb-[env(safe-area-inset-bottom)]">
             <div className="mx-auto max-w-lg px-4 py-3">{accion}</div>
           </div>
         </>

@@ -14,7 +14,7 @@ export function AvisoPruebas() {
   if (process.env.VERCEL_ENV === 'production') return null
 
   return (
-    <div className="bg-primary text-primary-foreground">
+    <div className="bg-accent text-accent-foreground">
       <p className="mx-auto max-w-3xl px-4 py-2 text-center text-sm">
         Solo para pruebas. La aplicación de verdad es{' '}
         <a

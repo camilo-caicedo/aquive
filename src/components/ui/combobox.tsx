@@ -4,6 +4,7 @@ import * as React from "react"
 import { Combobox as ComboboxPrimitive } from "@base-ui/react"
 
 import { cn } from "@/lib/utils"
+import { useContenedorHoja } from "@/components/contenedor-hoja"
 import { Button } from "@/components/ui/button"
 import {
   InputGroup,
@@ -42,7 +43,7 @@ function ComboboxTrigger({
     <ComboboxPrimitive.Trigger
       data-slot="combobox-trigger"
       className={cn(
-        "flex h-12 w-full items-center justify-between gap-1.5 rounded-full border border-input bg-transparent px-3 text-base whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50",
+        "flex h-12 w-full items-center justify-between gap-1.5 rounded-full border border-input bg-card px-3 text-base whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50",
         "[&_svg:not([class*='size-'])]:size-4",
         className
       )}
@@ -119,8 +120,20 @@ function ComboboxContent({
   // Dónde se monta la lista. Ver `contenedor-hoja.ts`: dentro de una hoja
   // inferior tiene que ser la hoja, o queda debajo de la capa superior.
   Pick<ComboboxPrimitive.Portal.Props, "container">) {
+  // Dentro de una hoja inferior la lista se monta EN LA HOJA. La hoja es un
+  // `popover` nativo y vive en la capa superior del navegador, que se pinta
+  // encima de todo el documento sin importar el z-index: portalizada al
+  // `body`, la lista se abre de verdad —`aria-expanded="true"`— y no se ve
+  // nada. Ver `contenedor-hoja.ts`.
+  //
+  // ⚠ Va aquí dentro y no en cada llamada. Antes era un prop que había que
+  // acordarse de pasar, y de trece desplegables solo dos lo pasaban: los
+  // otros once estaban rotos dentro de una hoja. El prop sigue existiendo y
+  // sigue mandando, para el caso raro de querer otro contenedor.
+  const deLaHoja = useContenedorHoja()
+
   return (
-    <ComboboxPrimitive.Portal container={container}>
+    <ComboboxPrimitive.Portal container={container ?? deLaHoja ?? undefined}>
       <ComboboxPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}
@@ -132,7 +145,7 @@ function ComboboxContent({
         <ComboboxPrimitive.Popup
           data-slot="combobox-content"
           data-chips={!!anchor}
-          className={cn("group/combobox-content relative max-h-(--available-height) max-w-(--available-width) w-(--anchor-width) min-w-[min(16rem,var(--available-width))] origin-(--transform-origin) overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[chips=true]:w-(--anchor-width) data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 *:data-[slot=input-group]:m-1 *:data-[slot=input-group]:mb-0 *:data-[slot=input-group]:h-8 *:data-[slot=input-group]:border-input/30 *:data-[slot=input-group]:bg-input/30 *:data-[slot=input-group]:shadow-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+          className={cn("group/combobox-content relative max-h-(--available-height) max-w-(--available-width) w-(--anchor-width) min-w-[min(16rem,var(--available-width))] origin-(--transform-origin) overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-[var(--dur-corta)] data-[chips=true]:w-(--anchor-width) data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 *:data-[slot=input-group]:m-1 *:data-[slot=input-group]:mb-0 *:data-[slot=input-group]:h-8 *:data-[slot=input-group]:border-input/30 *:data-[slot=input-group]:bg-input/30 *:data-[slot=input-group]:shadow-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
           {...props}
         />
       </ComboboxPrimitive.Positioner>
@@ -244,7 +257,7 @@ function ComboboxChips({
     <ComboboxPrimitive.Chips
       data-slot="combobox-chips"
       className={cn(
-        "flex min-h-8 flex-wrap items-center gap-1 rounded-lg border border-input bg-transparent bg-clip-padding px-2.5 py-1 text-sm transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 has-aria-invalid:border-destructive has-aria-invalid:ring-3 has-aria-invalid:ring-destructive/20 has-data-[slot=combobox-chip]:px-1 dark:bg-input/30 dark:has-aria-invalid:border-destructive/50 dark:has-aria-invalid:ring-destructive/40",
+        "flex min-h-8 flex-wrap items-center gap-1 rounded-lg border border-input bg-card bg-clip-padding px-2.5 py-1 text-sm transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 has-aria-invalid:border-destructive has-aria-invalid:ring-3 has-aria-invalid:ring-destructive/20 has-data-[slot=combobox-chip]:px-1 dark:bg-input/30 dark:has-aria-invalid:border-destructive/50 dark:has-aria-invalid:ring-destructive/40",
         className
       )}
       {...props}

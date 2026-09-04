@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { Flag } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-import type { TipoObjetoReporte, MotivoReporte } from '@/lib/types'
+import { rpc } from '@/orpc/cliente'
+import type { Motivo as MotivoReporte, TipoObjeto as TipoObjetoReporte } from '@/contrato/moderacion'
 import { Button } from '@/components/ui/button'
 import { HojaAccion } from '@/components/hoja-accion'
 
@@ -38,18 +38,36 @@ export function BotonReportar({
   const [motivo, setMotivo] = useState<MotivoReporte>('datos_personales')
   const [enviando, setEnviando] = useState(false)
   const [enviado, setEnviado] = useState(false)
+  const [fallo, setFallo] = useState(false)
 
   async function reportar(cerrar: () => void) {
     setEnviando(true)
-    const supabase = createClient()
-    await supabase.rpc('crear_reporte', {
-      p_tipo_objeto: tipoObjeto,
-      p_objeto_id: objetoId,
-      p_motivo: motivo,
-    })
-    setEnviado(true)
-    setEnviando(false)
-    cerrar()
+    try {
+      // Por el contrato y no contra Postgres: el navegador deja de tener
+      // credenciales de base de datos, y los enums los valida el servidor.
+      await rpc.moderacion.reportar({
+        tipo_objeto: tipoObjeto,
+        objeto_id: objetoId,
+        motivo,
+      })
+      setEnviado(true)
+    } catch {
+      // Un reporte que no llega no puede quedarse en silencio: quien vio
+      // datos de un menor tiene que saber que no se envió.
+      setFallo(true)
+    } finally {
+      setEnviando(false)
+      cerrar()
+    }
+  }
+
+  if (fallo) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        No se pudo enviar el reporte. Revisa la conexión y vuelve a
+        intentarlo.
+      </p>
+    )
   }
 
   // El acuse se queda igual: una línea, sin celebración.
@@ -82,7 +100,7 @@ export function BotonReportar({
           <button
             type="button"
             onClick={cerrar}
-            className="inline-flex min-h-12 shrink-0 items-center rounded-full px-3 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="pulsable inline-flex min-h-12 shrink-0 items-center rounded-full px-3 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             Cancelar
           </button>
@@ -114,7 +132,7 @@ export function BotonReportar({
                 onChange={() => setMotivo(m.valor)}
                 className="peer sr-only"
               />
-              <span className="flex min-h-12 items-center rounded-xl border border-border bg-card px-4 text-base transition-colors peer-checked:border-primary peer-checked:bg-secondary peer-checked:font-semibold peer-checked:text-secondary-foreground peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50">
+              <span className="flex min-h-12 items-center rounded-xl border border-border bg-card px-4 text-base transition-colors peer-checked:border-enlace peer-checked:bg-secondary peer-checked:font-semibold peer-checked:text-secondary-foreground peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50">
                 {m.etiqueta}
               </span>
             </label>

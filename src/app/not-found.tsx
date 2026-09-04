@@ -8,20 +8,15 @@ import { Estado } from '@/components/estado'
 // dirección eso convierte la pantalla en un oráculo.
 export default function NoEncontrado() {
   return (
-    <main className="mx-auto max-w-lg px-4 py-12">
+    <main className="animar-pantalla mx-auto max-w-lg px-4 py-12">
       <Estado
         Icono={Compass}
         titulo="Esta página no existe"
-        detalle="Puede que el enlace esté mal escrito, o que la solicitud ya se haya borrado. Las solicitudes se borran solas a las 72 horas."
+        detalle="Puede que el enlace esté mal escrito, o que lo que buscabas ya se haya borrado."
         accion={
-          <>
-            <Button nativeButton={false} render={<Link href="/" />}>
-              Ver solicitudes abiertas
-            </Button>
-            <Button variant="outline" nativeButton={false} render={<Link href="/publicar" />}>
-              Publicar una solicitud
-            </Button>
-          </>
+          <Button nativeButton={false} render={<Link href="/inicio" />}>
+            Ir al inicio
+          </Button>
         }
       />
     </main>

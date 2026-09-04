@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { BadgeCheck, Copy, Phone, Info } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import { rpc } from '@/orpc/cliente'
+import { AUTORIZACION_PROVEEDOR_VERSION } from '@/lib/config'
 import { contienePII, MENSAJE_PII } from '@/lib/validacion'
 import { nombreConDepartamento, type MunicipioBasico } from '@/lib/municipios'
 import { GRUPOS, MODALIDADES, TIPOS_PROVEEDOR } from '@/lib/servicios'
@@ -17,6 +19,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useAviso } from '@/components/avisos'
 import {
   Select,
   SelectContent,
@@ -66,10 +69,14 @@ function Chip({
       type="button"
       aria-pressed={activo}
       onClick={onClick}
-      className={`inline-flex min-h-12 items-center rounded-full border px-4 text-base transition-colors ${
+      // ⚠ El chip elegido va en arena, no en lima: el relleno lima está
+      // reservado a la acción principal de la pantalla, y un filtro no es
+      // una acción (regla 2). Que esté puesto lo dicen `aria-pressed`, la
+      // negrita y el fondo, así que no depende del color (regla 9).
+      className={`inline-flex min-h-12 items-center rounded-full px-4 text-base transition-colors ${
         activo
-          ? 'border-primary bg-primary text-primary-foreground'
-          : 'border-border bg-card hover:bg-muted'
+          ? 'bg-secondary font-bold text-secondary-foreground'
+          : 'bg-card shadow-canto hover:bg-muted'
       }`}
     >
       {children}
@@ -100,6 +107,7 @@ export function PanelProveedores({
   origen: string
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [abierto, setAbierto] = useState(false)
   const [llamado, setLlamado] = useState(false)
   const [nombre, setNombre] = useState('')
@@ -153,28 +161,33 @@ export function PanelProveedores({
     setGuardando(true)
     setError(null)
 
-    const respuesta = await fetch('/api/servicios/proveedores', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    // Por el contrato, no por una ruta de API con una función de PL/pgSQL
+    // detrás (ADR 0001). Y crea una CUENTA de verdad (ADR 0006): antes esto
+    // hacía una ficha con token y entregaba un enlace a
+    // `/servicios/mi-perfil/<token>`, una ruta que ya no existe.
+    let datos
+    try {
+      datos = await rpc.servicios.altaAsistida({
         organizacion_id: organizacionId,
-        nombre: nombre.trim(),
+        nombre_visible: nombre.trim(),
         tipo,
         telefono: telefono.trim(),
         municipio,
-        zona_id: zonaId || null,
-        zona_texto: zonaTexto.trim() || null,
+        zona_id: zonaId || undefined,
+        zona_texto: zonaTexto.trim() || undefined,
         modalidad,
         // Todos entran en «precio normal» y sin monto: el aliado no puede
-        // inventarle la tarifa a nadie. La persona la pone después desde
-        // su enlace.
-        oficios: elegidos.map((id) => ({ oficio_id: id, modo: 'normal' })),
-      }),
-    })
-
-    const datos = await respuesta.json()
-    if (!respuesta.ok) {
-      setError(datos.error ?? 'No se pudo registrar')
+        // inventarle la tarifa a nadie. La persona la pone después, cuando
+        // entre con su código.
+        oficios: elegidos.map((id) => ({ oficio_id: id, modo: 'normal' as const })),
+        autorizacion_version: AUTORIZACION_PROVEEDOR_VERSION,
+      })
+    } catch (e) {
+      const motivo =
+        e && typeof e === 'object' && 'data' in e
+          ? ((e.data as { motivo?: string } | undefined)?.motivo ?? null)
+          : null
+      setError(motivo ?? 'No se pudo registrar')
       setGuardando(false)
       return
     }
@@ -182,14 +195,15 @@ export function PanelProveedores({
     // Si de verdad se llamo, el sello se pone aqui mismo con la misma
     // RPC que usa el boton de la lista: es una llamada mas, no un argumento
     // nuevo en la de crear.
-    if (llamado && datos.id) await verificar(datos.id, true)
+    if (llamado) await verificar(datos.proveedor_id, true)
 
     setEnlace({
       nombre: nombre.trim(),
-      url: `${origen}/servicios/mi-perfil/${datos.token}`,
+      url: `${origen}/entrar/${encodeURIComponent(datos.codigo)}`,
     })
     setGuardando(false)
     limpiar()
+    avisar('Ficha registrada')
     router.refresh()
   }
 
@@ -203,6 +217,7 @@ export function PanelProveedores({
       setError(rpcError.message)
       return
     }
+    avisar(valor ? 'Teléfono verificado' : 'Verificación retirada')
     router.refresh()
   }
 
@@ -214,8 +229,8 @@ export function PanelProveedores({
             <p className="text-base font-medium">
               Listo. Este es el enlace de {enlace.nombre}:
             </p>
-            <p className="mt-2 break-all font-mono text-sm">{enlace.url}</p>
-            <p className="mt-2 text-sm">
+            <p className="mt-2 break-all font-mono text-base">{enlace.url}</p>
+            <p className="mt-2 text-base">
               <strong>Se muestra una sola vez.</strong> Cópialo y dáselo ahora:
               es la única forma que tiene esa persona de cambiar o borrar su
               ficha, y no lo podemos recuperar. Si se pierde, hay que
@@ -248,7 +263,7 @@ export function PanelProveedores({
           Registrar a alguien
         </Button>
       ) : (
-        <div className="space-y-4 rounded-2xl bg-card p-4 shadow-sm">
+        <div className="space-y-4 rounded-2xl bg-card p-4 shadow-canto">
           {/* Para leer en voz alta, con la persona enfrente: lo que se va a
               publicar son sus datos, no los de quien llena el formulario. */}
           <p className="flex items-start gap-2 rounded-xl bg-secondary p-3 text-base text-secondary-foreground">
@@ -294,7 +309,7 @@ export function PanelProveedores({
               maxLength={20}
               className="mt-1"
             />
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="mt-1 text-base text-muted-foreground">
               Queda público.
             </p>
 
@@ -336,7 +351,7 @@ export function PanelProveedores({
                 a.codigo_dane === b.codigo_dane
               }
             >
-              <ComboboxTrigger aria-label="Municipio" className="mt-1 bg-background">
+              <ComboboxTrigger aria-label="Municipio" className="mt-1">
                 <ComboboxValue placeholder="Elige el municipio" />
               </ComboboxTrigger>
               <ComboboxContent>
@@ -364,7 +379,7 @@ export function PanelProveedores({
                 <div className="mt-2">
                   <Label>Comuna o corregimiento</Label>
                   <Select value={zonaId} onValueChange={(v) => setZonaId(v ?? '')}>
-                    <SelectTrigger aria-label="Comuna" className="mt-1 bg-background">
+                    <SelectTrigger aria-label="Comuna" className="mt-1">
                       <SelectValue placeholder="Sin especificar">
                         {(v: string) =>
                           zonasDelMunicipio.find((z) => z.id === v)?.nombre ?? 'Sin especificar'
@@ -395,17 +410,17 @@ export function PanelProveedores({
                   className="mt-1"
                 />
                 {zonasDelMunicipio.length === 0 && (
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="mt-1 text-base text-muted-foreground">
                     Ese municipio todavía no tiene comunas cargadas. Lo que
                     escribas entra a la cola de zonas por revisar y, cuando se
                     apruebe, queda en la lista para los demás.
                   </p>
                 )}
-                {errorZona && <p className="mt-1 text-sm text-destructive">{errorZona}</p>}
+                {errorZona && <p className="mt-1 text-base text-destructive">{errorZona}</p>}
               </div>
 
               {!hayUbicacion && (
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-2 text-base text-muted-foreground">
                   Hace falta al menos una de las dos.
                 </p>
               )}
@@ -439,7 +454,7 @@ export function PanelProveedores({
                 if (delGrupo.length === 0) return null
                 return (
                   <div key={grupo}>
-                    <p className="text-sm font-medium text-muted-foreground">{etiqueta}</p>
+                    <p className="font-heading text-xs tracking-[0.085em] uppercase text-muted-foreground">{etiqueta}</p>
                     <div className="mt-1.5 flex flex-wrap gap-2">
                       {delGrupo.map((o) => (
                         <Chip
@@ -464,7 +479,7 @@ export function PanelProveedores({
           {/* La declaración del aliado. Es lo único que queda si algún día
               esta persona dice que nunca autorizó nada, así que se pide
               explícita y no se da por hecha. */}
-          <label className="flex items-start gap-3 rounded-lg border border-border p-3 text-base">
+          <label className="flex items-start gap-3 rounded-xl bg-background p-3 text-base">
             <input
               type="checkbox"
               checked={leiTexto}
@@ -490,7 +505,7 @@ export function PanelProveedores({
         </div>
       )}
 
-      <h3 className="font-heading mt-8 text-2xl">Fichas de la organización</h3>
+      <h3 className="font-heading mt-8 text-xl">Fichas de la organización</h3>
 
       {proveedores.length === 0 ? (
         <p className="mt-3 text-base text-muted-foreground">
@@ -499,34 +514,34 @@ export function PanelProveedores({
       ) : (
         <ul className="mt-3 space-y-3">
           {proveedores.map((p) => (
-            <li key={p.id} className="rounded-2xl bg-card p-4 shadow-sm">
+            <li key={p.id} className="rounded-2xl bg-card p-4 shadow-canto">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <Link
-                  href={`/servicios/${p.id}`}
-                  className="text-base font-bold underline-offset-4 hover:underline"
+                  href={`/prestador/${p.id}`}
+                  className="font-heading text-lg leading-tight underline-offset-4 hover:underline"
                 >
                   {p.nombre_visible}
                 </Link>
                 {p.telefono_verificado ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-ok">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-foreground">
                     <BadgeCheck className="size-4" aria-hidden="true" />
                     Verificado
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-enlace/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
                     Sin verificar
                   </span>
                 )}
               </div>
 
               {p.oficios && p.oficios.length > 0 && (
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-base text-muted-foreground">
                   {p.oficios.join(' · ')}
                 </p>
               )}
 
               {p.oficios_esperando > 0 && (
-                <p className="mt-2 text-sm text-accent-foreground">
+                <p className="mt-2 text-base text-accent-foreground">
                   {p.oficios_esperando === 1
                     ? 'Un oficio suyo no se publica'
                     : `${p.oficios_esperando} oficios suyos no se publican`}{' '}
@@ -537,7 +552,7 @@ export function PanelProveedores({
               )}
 
               {p.suspendido && (
-                <p className="mt-2 text-sm text-accent-foreground">
+                <p className="mt-2 text-base text-accent-foreground">
                   Suspendida por moderación. No aparece en el directorio.
                 </p>
               )}

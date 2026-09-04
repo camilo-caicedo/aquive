@@ -1,12 +1,9 @@
-import Link from 'next/link'
-import { ChevronRight } from 'lucide-react'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { createClient } from '@/lib/supabase/server'
 import { origenDelSitio } from '@/lib/origen'
 import { listarMunicipios } from '@/lib/municipios'
-import type { OrganizacionAdmin, PanelFlujo2 } from '@/lib/types'
+import type { OrganizacionAdmin } from '@/lib/types'
 import { PanelOrganizaciones } from '../panel-organizaciones'
-import { PanelFlujoDos } from '../panel-flujo2'
 
 export const metadata = { title: 'Aliados' }
 
@@ -20,30 +17,23 @@ export const metadata = { title: 'Aliados' }
 export default async function AliadosPage() {
   const supabase = await createClient()
 
-  const [{ data: organizacionesData }, { data: flujo2Data }, municipios, origen] =
-    await Promise.all([
-      // Por RPC y no por `select`: la tabla está revocada entera, y así
-      // `creada_por` —el uuid de una persona real— no sale al navegador.
-      supabase.rpc('organizaciones_admin'),
-      supabase.rpc('panel_admin_flujo2'),
-      listarMunicipios(supabase),
-      origenDelSitio(),
-    ])
+  const [{ data: organizacionesData }, municipios, origen] = await Promise.all([
+    // Por RPC y no por `select`: la tabla está revocada entera, y así
+    // `creada_por` —el uuid de una persona real— no sale al navegador.
+    supabase.rpc('organizaciones_admin'),
+    listarMunicipios(supabase),
+    origenDelSitio(),
+  ])
 
   const organizaciones = (organizacionesData as unknown as OrganizacionAdmin[]) ?? []
-  const flujo2 = flujo2Data as unknown as PanelFlujo2 | null
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Aliados" volver="/admin" />
-
-      {/* Primero y en terracota tenue: si hay un hilo sin fundación hay dos
-          personas esperando a que alguien decida. */}
-      {flujo2 && <PanelFlujoDos datos={flujo2} />}
 
       <section className="mt-6">
         <h2 className="font-heading text-2xl">Organizaciones</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           Una organización aliada coordina entregas dentro de AquíVe. No hay
           cola de verificación porque la verificación ocurre afuera, y eres tú.
         </p>
@@ -54,13 +44,6 @@ export default async function AliadosPage() {
         />
       </section>
 
-      <Link
-        href="/admin/bitacora?tipo=identidades"
-        className="mt-6 inline-flex min-h-11 items-center gap-1.5 text-sm underline underline-offset-4"
-      >
-        Quién ha visto identidades
-        <ChevronRight className="size-4" aria-hidden="true" />
-      </Link>
     </main>
   )
 }

@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useAviso } from '@/components/avisos'
 import {
   Select,
   SelectContent,
@@ -41,6 +42,15 @@ const ESTADOS: Record<EstadoReferencia, string> = {
   rechazada: 'Dijo que no',
 }
 
+/** El sello corto que va al lado. Relleno + palabra: el color nunca informa
+ *  solo (regla 9), y salvia y amarillo pálido son fondo, no letra. */
+const SELLO: Record<EstadoReferencia, { texto: string; clase: string }> = {
+  pendiente: { texto: 'Pendiente', clase: 'bg-accent text-accent-foreground' },
+  confirmada: { texto: 'Confirmada', clase: 'bg-ok-suave text-foreground' },
+  no_contesta: { texto: 'Sin respuesta', clase: 'bg-muted text-foreground' },
+  rechazada: { texto: 'Rechazada', clase: 'bg-muted text-foreground' },
+}
+
 /**
  * Las referencias, del lado de quien las da.
  *
@@ -63,6 +73,7 @@ export function CamposReferencia({
   token?: string
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [abierto, setAbierto] = useState(false)
   const [nombre, setNombre] = useState('')
   const [telefono, setTelefono] = useState('')
@@ -109,6 +120,7 @@ export function CamposReferencia({
     setDeclaro(false)
     setAbierto(false)
     setGuardando(false)
+    avisar('Referencia agregada. La llamamos para confirmarla.')
     router.refresh()
   }
 
@@ -147,12 +159,19 @@ export function CamposReferencia({
           {referencias.map((r) => (
             <li
               key={r.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border p-3"
+              className="shadow-canto flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-card p-3"
             >
-              <div>
-                <p className="text-base">{ESTADOS[r.estado]}</p>
+              <div className="min-w-0">
+                <p className="flex flex-wrap items-center gap-2 text-base">
+                  <span
+                    className={`rounded-full px-2.5 py-0.5 text-sm font-medium ${SELLO[r.estado].clase}`}
+                  >
+                    {SELLO[r.estado].texto}
+                  </span>
+                  <span>{ESTADOS[r.estado]}</span>
+                </p>
                 {r.oficio_nombre && (
-                  <p className="text-sm text-muted-foreground">{r.oficio_nombre}</p>
+                  <p className="mt-1 text-base text-muted-foreground">{r.oficio_nombre}</p>
                 )}
               </div>
               <Button variant="ghost" onClick={() => borrar(r.id)}>
@@ -165,7 +184,7 @@ export function CamposReferencia({
       )}
 
       {referencias.length >= 3 ? (
-        <p className="mt-3 text-sm text-muted-foreground">
+        <p className="mt-3 text-base text-muted-foreground">
           Ya tienes tres. Quita una si quieres cambiarla.
         </p>
       ) : !abierto ? (
@@ -173,7 +192,7 @@ export function CamposReferencia({
           Agregar una referencia
         </Button>
       ) : (
-        <div className="mt-3 space-y-4 rounded-2xl bg-card p-4 shadow-sm">
+        <div className="mt-3 space-y-4 rounded-2xl bg-card p-4 shadow-canto">
           <div>
             <Label htmlFor="ref-nombre">Nombre de tu cliente</Label>
             <Input
@@ -203,7 +222,7 @@ export function CamposReferencia({
             <div>
               <Label>¿Qué le hiciste?</Label>
               <Select value={oficioId} onValueChange={(v) => setOficioId(v ?? '')}>
-                <SelectTrigger aria-label="Oficio de la referencia" className="mt-1 bg-background">
+                <SelectTrigger aria-label="Oficio de la referencia" className="mt-1">
                   <SelectValue placeholder="Sin especificar">
                     {(v: string) =>
                       oficios.find((o) => o.id === v)?.nombre ?? 'Sin especificar'
@@ -226,9 +245,13 @@ export function CamposReferencia({
               y copiable, porque el titular no puede leer nada de esta
               pantalla: es la única forma de que se entere de qué se guardó
               de él y de cómo pedir que lo borren. */}
-          <div className="rounded-lg bg-muted p-3">
-            <p className="text-sm font-medium">Mándale esto a tu cliente, tal cual:</p>
-            <p className="mt-2 text-sm">
+          {/* Crema dentro de la tarjeta blanca, que es como se rellenan
+              aquí los bloques de texto (ADR 0002). */}
+          <div className="rounded-2xl bg-background p-3">
+            <p className="font-heading text-xs tracking-[0.085em] uppercase text-muted-foreground">
+              Mándale esto a tu cliente, tal cual
+            </p>
+            <p className="mt-2 text-base">
               «Te puse como referencia de mi trabajo en AquíVe, el directorio de
               servicios de {RESPONSABLE_SERVICIOS}. Eso significa que alguien de
               la fundación te puede llamar una vez para preguntarte si te presté

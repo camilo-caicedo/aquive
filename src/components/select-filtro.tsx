@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useSyncExternalStore } from 'react'
+import { useState } from 'react'
 import { useContenedorHoja } from '@/components/contenedor-hoja'
 import {
   Combobox,
@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useHidratado } from '@/components/hidratado'
 
 export interface OpcionFiltro {
   valor: string
@@ -27,9 +28,6 @@ export interface OpcionFiltro {
   detalle?: string
 }
 
-const sinSuscripcion = () => () => {}
-const enCliente = () => true
-const enServidor = () => false
 
 /**
  * Select de filtro que se degrada de verdad.
@@ -55,7 +53,7 @@ export function SelectFiltro({
   valorInicial: string
   conBusqueda?: boolean
 }) {
-  const hidratado = useSyncExternalStore(sinSuscripcion, enCliente, enServidor)
+  const hidratado = useHidratado()
   // Dentro de una hoja de filtros la lista se monta en la hoja y no en el
   // `body`, o queda debajo de la capa superior del navegador.
   const contenedor = useContenedorHoja()
@@ -78,7 +76,7 @@ export function SelectFiltro({
         name={name}
         defaultValue={valorInicial}
         aria-label={label}
-        className={`h-12 w-full rounded-lg border border-input bg-background px-3 text-base ${envoltura}`}
+        className={`h-12 w-full rounded-full border border-input bg-card px-3 text-base ${envoltura}`}
       >
         <option value="">{placeholder}</option>
         {opciones.map((o) => (
@@ -110,7 +108,7 @@ export function SelectFiltro({
               botón queda sin valor visible ni chevron. */}
           <ComboboxTrigger
             aria-label={label}
-            className={`bg-background ${envoltura}`}
+            className={`bg-card ${envoltura}`}
           >
             <ComboboxValue />
           </ComboboxTrigger>
@@ -141,7 +139,7 @@ export function SelectFiltro({
     <>
       <input type="hidden" name={name} value={valor} />
       <Select value={valor} onValueChange={(v) => setValor(v ?? '')}>
-        <SelectTrigger aria-label={label} className={`bg-background ${envoltura}`}>
+        <SelectTrigger aria-label={label} className={`bg-card ${envoltura}`}>
           <SelectValue placeholder={placeholder}>
             {(v: string) => opciones.find((o) => o.valor === v)?.etiqueta ?? placeholder}
           </SelectValue>

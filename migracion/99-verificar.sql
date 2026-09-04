@@ -17,7 +17,7 @@ order by 1;
 
 
 -- 2. JOB DE EXPIRACIÓN ------------------------------------------------
--- Esperado: 1 fila | 0 * * * * | select public.expirar_solicitudes(); | t
+-- Esperado: 1 fila | 15 * * * * | select public.expirar_servicios(); | t
 -- Si sale vacío: pg_cron no quedó habilitado. Sin esto NO hay borrado
 -- a 72 horas y el aviso de privacidad miente.
 select jobid, schedule, command, active from cron.job;
@@ -71,13 +71,13 @@ select c.relname as tabla,
        has_table_privilege('authenticated', c.oid, 'SELECT') as auth
 from pg_class c join pg_namespace n on n.oid = c.relnamespace
 where n.nspname = 'public'
-  and c.relname in ('solicitudes','push_suscripciones','push_ofertadores')
+  and c.relname in ('solicitudes_servicio','push_avisos','publicaciones_muro')
 order by 1;
 
 
 -- 8. FUNCIONES INTERNAS CERRADAS --------------------------------------
 -- Esperado: las 3 en false/false.
--- `expirar_solicitudes` expuesta = borrado masivo disparable desde
+-- `expirar_servicios` expuesta = borrado masivo disparable desde
 -- internet. Postgres concede EXECUTE a PUBLIC por defecto, así que esto
 -- se rompe solo si algo se corrió sin su REVOKE.
 select p.proname,
@@ -85,7 +85,7 @@ select p.proname,
        has_function_privilege('authenticated', p.oid, 'EXECUTE') as auth
 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
 where n.nspname = 'public'
-  and p.proname in ('expirar_solicitudes','generar_codigo','es_admin')
+  and p.proname in ('expirar_servicios','generar_codigo','es_admin')
 order by 1;
 
 

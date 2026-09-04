@@ -1,14 +1,16 @@
 import {
   BadgeCheck,
   PhoneCall,
-  HeartHandshake,
   Flag,
   Lightbulb,
   Building2,
   ClipboardList,
   Wrench,
+  UserPlus,
   Users,
   ScrollText,
+  Image as ImageIcon,
+  Scale,
 } from 'lucide-react'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { createClient } from '@/lib/supabase/server'
@@ -42,11 +44,11 @@ export default async function AdminPage() {
   // El número del encabezado es la suma del primer grupo y nada más: es
   // cuánta gente está esperando, no cuánto trabajo hay.
   const esperando =
-    v(n?.matriculas) + v(n?.telefonos) + v(n?.hilos_sin_fundacion) + v(n?.reportes)
+    v(n?.matriculas) + v(n?.telefonos) + v(n?.reportes) + v(n?.imagenes) + v(n?.pqr)
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
-      <CabeceraPantalla titulo="Administración" volver="/">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
+      <CabeceraPantalla titulo="Administración" volver="/inicio">
         <p className="mt-1 text-base text-muted-foreground">
           {esperando === 0
             ? 'Nada esperando a nadie'
@@ -65,6 +67,7 @@ export default async function AdminPage() {
                 etiqueta: 'Matrículas por verificar',
                 detalle: 'Comprobar el número en el registro de la entidad',
                 cuantas: v(n?.matriculas),
+                gajo: 'azul',
                 espera: true,
               },
               {
@@ -73,14 +76,7 @@ export default async function AdminPage() {
                 etiqueta: 'Teléfonos por verificar',
                 detalle: 'Llamar y confirmar que contesta esa persona',
                 cuantas: v(n?.telefonos),
-                espera: true,
-              },
-              {
-                href: '/admin/aliados',
-                Icono: HeartHandshake,
-                etiqueta: 'Hilos sin fundación',
-                detalle: 'Dos personas esperando a que alguien decida',
-                cuantas: v(n?.hilos_sin_fundacion),
+                gajo: 'amarillo',
                 espera: true,
               },
               {
@@ -89,6 +85,33 @@ export default async function AdminPage() {
                 etiqueta: 'Reportes',
                 detalle: 'Contenido que alguien marcó como problemático',
                 cuantas: v(n?.reportes),
+                gajo: 'verde',
+                espera: true,
+              },
+              {
+                // Regla de producto 8: ninguna imagen se publica sin pasar
+                // por aquí. Faltaba la fila, así que la cola existía y no
+                // la atendía nadie — toda foto subida se quedaba esperando.
+                href: '/admin/imagenes',
+                Icono: ImageIcon,
+                etiqueta: 'Imágenes por revisar',
+                detalle: 'No se publican hasta que alguien las mire',
+                cuantas: v(n?.imagenes),
+                gajo: 'rojo',
+                espera: true,
+              },
+              {
+                // Habeas data: consulta en 10 días hábiles, reclamo y
+                // supresión en 15 (mínimo legal 3). El plazo corre desde
+                // que se escribe, la mire alguien o no.
+                href: '/admin/pqr',
+                Icono: Scale,
+                etiqueta: 'PQR sin responder',
+                detalle: 'Habeas data. Consulta en 10 días, supresión en 15',
+                cuantas: v(n?.pqr),
+                // Los cuatro gajos en su orden, y la quinta fila vuelve al
+                // primero: el color agrupa, no ordena por importancia.
+                gajo: 'azul',
                 espera: true,
               },
             ],
@@ -118,13 +141,14 @@ export default async function AdminPage() {
                 ),
               },
               {
-                href: '/admin/solicitudes',
+                // Texto que escribió alguien y que nadie ha mirado (ADR
+                // 0011). Se publica ya, así que esta cola no bloquea a
+                // nadie: es para leer lo que salió.
+                href: '/admin/servicios?cola=solicitudes',
                 Icono: ClipboardList,
-                etiqueta: 'Solicitudes vivas',
-                detalle: detalle(
-                  `${v(n?.solicitudes_abiertas)} abiertas`,
-                  `${v(n?.solicitudes_sin_respuestas)} sin respuestas`
-                ),
+                etiqueta: 'Solicitudes por revisar',
+                detalle: 'Lo que la gente escribió al pedir un servicio',
+                cuantas: v(n?.solicitudes_servicio_sin_revisar),
               },
               {
                 href: '/admin/servicios',
@@ -139,8 +163,17 @@ export default async function AdminPage() {
             ],
           },
           {
-            titulo: 'Organizaciones',
+            titulo: 'Personas y organizaciones',
             colas: [
+              {
+                // La puerta de quien no tiene cuenta de Google (ADR 0006).
+                // Sin esta cola, exigir cuenta para todo deja fuera a buena
+                // parte del rebusque.
+                href: '/admin/cuentas',
+                Icono: UserPlus,
+                etiqueta: 'Cuentas',
+                detalle: 'Dar de alta a quien no tiene Google',
+              },
               {
                 href: '/admin/aliados',
                 Icono: Users,
@@ -156,12 +189,21 @@ export default async function AdminPage() {
                 href: '/admin/bitacora',
                 Icono: ScrollText,
                 etiqueta: 'Bitácora',
-                detalle: 'Quién vio identidades y referencias',
+                detalle: 'Quién vio referencias, y con qué motivo',
               },
             ],
           },
         ]}
       />
+
+      {/* Un aviso corto al pie y no encima de las colas (regla 1): lo
+          primero de la pantalla tiene que ser un dato real, no un párrafo.
+          Dice la diferencia que más se confunde aquí: esconder no es
+          borrar. */}
+      <p className="mt-6 rounded-2xl bg-accent p-4 text-base leading-relaxed text-accent-foreground">
+        Ocultar una calificación es moderación reversible. Un reporte por
+        extorsión termina en borrado de verdad, y de eso no hay vuelta.
+      </p>
     </main>
   )
 }

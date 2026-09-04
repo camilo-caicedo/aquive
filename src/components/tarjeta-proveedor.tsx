@@ -1,10 +1,10 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { InsigniasProveedor } from '@/components/insignias-proveedor'
-import { Button } from '@/components/ui/button'
-import { precioLegible, zonaLegible, etiquetaModalidad } from '@/lib/servicios'
-import type { Database, ModoPrecio, UnidadPrecio } from '@/lib/types'
-
-type ProveedorPublico = Database['public']['Views']['proveedores_publicos']['Row']
+import { precioLegible, zonaLegible, etiquetaModalidad, GRUPOS } from '@/lib/servicios'
+import { CINTA, SOMBRA_CARTEL, TINTA_CINTA, familiaDe } from '@/lib/familias'
+import type { GrupoOficio } from '@/lib/types'
+import type { EnListado } from '@/contrato/servicios'
 
 /**
  * La tarjeta del directorio. No lleva el teléfono ni un botón de WhatsApp:
@@ -12,54 +12,46 @@ type ProveedorPublico = Database['public']['Views']['proveedores_publicos']['Row
  * insignias y el aviso de seguridad. Un botón de WhatsApp en una lista
  * invita a escribirle a cinco personas sin mirar a ninguna.
  *
- * Lo que sí lleva es un botón para entrar, de ancho completo: antes era un
- * enlace subrayado del tamaño del texto, al final de la tarjeta, y no se
- * leía como la salida de la tarjeta sino como una nota más.
+ * La identidad la carga la sombra desplazada en el color de la familia del
+ * oficio, no un contorno (ADR 0002). Y el color va SIEMPRE con la palabra
+ * encima: la cinta dice «CONFECCIÓN» además de ser azul.
+ *
+ * Un solo argumento, y sale del contrato. Antes eran tres —la fila cruda de
+ * la vista, el nombre del municipio y los oficios— y la pantalla tenía que
+ * acordarse de cruzar los tres.
  */
-export function TarjetaProveedor({
-  proveedor,
-  nombreMunicipio,
-  oficios,
-}: {
-  proveedor: ProveedorPublico
-  nombreMunicipio?: string
-  /** Los oficios de ESTE proveedor, con su precio. Vienen de la página. */
-  oficios: {
-    oficio_id: string
-    oficio_nombre: string
-    modo: ModoPrecio
-    precio_desde: number | null
-    unidad: UnidadPrecio | null
-  }[]
-}) {
+export function TarjetaProveedor({ proveedor }: { proveedor: EnListado }) {
+  const oficios = proveedor.oficios
   const zona = zonaLegible(proveedor.zona_nombre, proveedor.zona_texto)
-  const donde = [zona, nombreMunicipio]
+  const donde = [zona, proveedor.municipio_nombre]
     .filter(Boolean)
     .concat(
       proveedor.modalidad.length > 0
         ? [proveedor.modalidad.map(etiquetaModalidad).join(', ').toLowerCase()]
-        : []
+        : [],
     )
     .join(' · ')
 
+  // El grupo del primer oficio manda el color. Quien tiene varios oficios de
+  // familias distintas se pinta con el primero por orden alfabético, que es
+  // el mismo que se ve en la lista de abajo: el color y la primera línea
+  // coinciden, y eso es lo que hace que el código de color se aprenda solo.
+  const grupo = oficios[0]?.grupo ?? null
+  const familia = familiaDe(grupo)
+  const etiquetaGrupo = grupo ? (GRUPOS[grupo as GrupoOficio] ?? 'Oficios') : 'Oficios'
+
   return (
-    <li className="animar-entrada rounded-2xl bg-card p-4 shadow-sm transition-shadow hover:shadow-md">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <Link
-            href={`/servicios/${proveedor.id}`}
-            className="text-lg leading-tight font-bold underline-offset-4 hover:underline"
-          >
-            {proveedor.nombre_visible}
-          </Link>
-          {/* Dos líneas y corta: con zona, municipio, departamento y las
-              tres modalidades, esto llegaba a cinco renglones y empujaba los
-              precios —que es a lo que se viene— fuera de la tarjeta. */}
-          <p className="mt-0.5 line-clamp-2 text-base text-muted-foreground">{donde}</p>
-        </div>
-        {/* El sello de teléfono verificado va arriba a la derecha, en la
-            línea del nombre: es lo primero que se mira al comparar dos
-            fichas. Las demás insignias van abajo, con el resto. */}
+    <li
+      className={`animar-entrada overflow-hidden rounded-2xl bg-card ${SOMBRA_CARTEL[familia]}`}
+    >
+      <div
+        className={`flex items-center justify-between gap-2 px-4 py-2 ${CINTA[familia]} ${TINTA_CINTA[familia]}`}
+      >
+        <span className="font-heading text-xs font-bold tracking-[0.085em] uppercase">
+          {etiquetaGrupo}
+        </span>
+        {/* El sello de teléfono verificado va en la cinta: es lo primero que
+            se mira al comparar dos fichas. Las demás insignias van abajo. */}
         <span className="shrink-0">
           <InsigniasProveedor
             mostrar="telefono"
@@ -70,53 +62,91 @@ export function TarjetaProveedor({
         </span>
       </div>
 
-      {/* El precio alineado a la derecha, no pegado al nombre del oficio:
-          así se pueden comparar dos precios de un vistazo, que es lo que
-          hace quien está eligiendo.
+      <div className="flex gap-3 p-4">
+        {/* La foto solo si la hay Y si esa persona autorizó publicarla — eso
+            lo resuelve la vista, aquí llega en nulo o no llega.
 
-          ⚠ Pero solo desde `sm`. El precio era `shrink-0` en una fila que
-          no envuelve, así que cuando lleva el prefijo largo —«Precio
-          solidario: Desde $ 45.000 por prenda», que a 16 px no cabe ni
-          solo en 360— se desbordaba hacia la izquierda y se imprimía
-          ENCIMA del nombre del oficio. En el teléfono van apilados, que es
-          lo único que cabe; comparar de un vistazo sigue funcionando en
-          pantalla ancha, que es donde esa comparación se hacía. */}
-      <ul className="mt-3 space-y-1.5">
-        {oficios.map((o) => (
-          <li
-            key={o.oficio_id}
-            className="flex flex-col gap-0.5 text-base sm:flex-row sm:items-baseline sm:justify-between sm:gap-3"
+            Sin foto NO se dibuja un hueco ni unas iniciales: la tarjeta sin
+            foto ya es un diseño completo, y la mitad del rebusque no va a
+            subir una nunca. Un marcador de posición convierte «no puso foto»
+            en «le falta algo». */}
+        {proveedor.foto && (
+          <Image
+            src={proveedor.foto}
+            alt=""
+            width={64}
+            height={64}
+            className="size-16 shrink-0 rounded-full object-cover"
+          />
+        )}
+        <div className="min-w-0 flex-1">
+        <Link
+          href={`/prestador/${proveedor.id}`}
+          className="font-heading text-lg leading-tight font-extrabold underline-offset-4 hover:underline"
+        >
+          {proveedor.nombre_visible}
+        </Link>
+        {/* Dos líneas y corta: con zona, municipio y las tres modalidades
+            esto llegaba a cinco renglones y empujaba los precios —que es a
+            lo que se viene— fuera de la tarjeta. */}
+        <p className="mt-0.5 line-clamp-2 text-base text-muted-foreground">{donde}</p>
+
+        {/* El precio alineado a la derecha, no pegado al nombre del oficio:
+            así se comparan dos precios de un vistazo, que es lo que hace
+            quien está eligiendo.
+
+            ⚠ Pero solo desde `sm`. El precio era `shrink-0` en una fila que
+            no envuelve, así que con el prefijo largo —«Precio solidario:
+            Desde $ 45.000 por prenda», que a 16 px no cabe ni solo en 360—
+            se desbordaba y se imprimía ENCIMA del nombre del oficio. */}
+        <ul className="mt-3 space-y-1.5">
+          {oficios.map((o) => (
+            <li
+              key={o.oficio_id}
+              className="flex flex-col gap-0.5 text-base sm:flex-row sm:items-baseline sm:justify-between sm:gap-3"
+            >
+              <span className="min-w-0">{o.nombre}</span>
+              <span className="text-muted-foreground sm:shrink-0 sm:text-right">
+                {precioLegible(o.modo, o.precio_desde, o.unidad)}
+              </span>
+            </li>
+          ))}
+        </ul>
+
+        {proveedor.descripcion && (
+          <p className="mt-3 line-clamp-2 text-base">{proveedor.descripcion}</p>
+        )}
+
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-3">
+          <InsigniasProveedor
+            mostrar="resto"
+            telefonoVerificado={proveedor.telefono_verificado}
+            referenciasConfirmadas={proveedor.referencias_confirmadas}
+            esMicroempresa={proveedor.tipo === 'microempresa'}
+            serviciosConfirmados={proveedor.servicios_confirmados}
+          />
+          {/* No lleva relleno lima, y eso no cambia: el lima es la acción
+              principal de la pantalla, y en una lista de veinte tarjetas
+              ninguna de las veinte lo es (regla de interfaz 2).
+
+              ⚠ Lo que sí cambia es que era papel BLANCO sobre la tarjeta,
+              que también es papel blanco, y lo único que lo separaba era el
+              canto de 1 px. Reportado como que «no se identifica»: y es
+              cierto, ahí no había un botón, había un rectángulo.
+
+              Ahora lleva borde y tinta azul, que es exactamente lo que ya
+              hacía «Puedo ayudar» en la tarjeta de solicitud —la misma
+              acción, en la otra tarjeta de lista—. Dos listas que se leen
+              igual, y ninguna compite con la acción de la pantalla. */}
+          <Link
+            href={`/prestador/${proveedor.id}`}
+            className="pulsable border-enlace text-enlace hover:bg-accent ml-auto inline-flex min-h-12 shrink-0 items-center rounded-full border px-5 text-base font-semibold transition-colors"
           >
-            <span className="min-w-0">{o.oficio_nombre}</span>
-            <span className="text-muted-foreground sm:shrink-0 sm:text-right">
-              {precioLegible(o.modo, o.precio_desde, o.unidad)}
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      <div className="mt-3">
-        <InsigniasProveedor
-          mostrar="resto"
-          telefonoVerificado={proveedor.telefono_verificado}
-          referenciasConfirmadas={proveedor.referencias_confirmadas}
-          esMicroempresa={proveedor.tipo === 'microempresa'}
-          serviciosConfirmados={proveedor.servicios_confirmados}
-        />
+            Ver ficha
+          </Link>
+        </div>
+        </div>
       </div>
-
-      {proveedor.descripcion && (
-        <p className="mt-3 line-clamp-2 text-base">{proveedor.descripcion}</p>
-      )}
-
-      <Button
-        variant="outline"
-        className="mt-4 w-full border-primary text-primary"
-        nativeButton={false}
-        render={<Link href={`/servicios/${proveedor.id}`} />}
-      >
-        Ver y contactar
-      </Button>
     </li>
   )
 }

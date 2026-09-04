@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button'
 /**
  * Una pantalla que pide cuenta, en vez de un `redirect` mudo.
  *
- * Tres rutas rebotaban a `/login` o a `/registro` sin decir nada:
- * `/responder/[codigo]` sin perfil, `/servicios/soy-proveedor` sin sesión y
- * `/unirse` sin sesión. Quien venía de tocar «Puedo ayudar» en una
- * solicitud concreta aterrizaba en una pantalla de login que no mencionaba
- * la solicitud, y al entrar caía en la portada.
+ * La usan `/chat/[tipo]/[id]` sin sesión y `/servicios/soy-proveedor` sin
+ * sesión. Quien venía de tocar «escribir» o «publicar mi ficha» aterrizaba
+ * antes en una pantalla de login que no mencionaba nada de eso, y al entrar
+ * caía en la portada.
  *
- * Las tres dicen ahora lo mismo, en este orden: por qué hace falta cuenta,
- * qué se conserva de donde estabas, y cuál es la salida si no la quieres.
+ * Dicen las dos lo mismo, en este orden: por qué hace falta cuenta y qué se
+ * conserva de donde estabas. La salida ya la da el `volver` del `MarcoFlujo`
+ * que envuelve a cada una.
  */
 export function PuertaCerrada({
   titulo,
@@ -37,7 +37,7 @@ export function PuertaCerrada({
   const url = destino ? `${href}?volver=${encodeURIComponent(destino)}` : href
 
   return (
-    <div className="rounded-2xl bg-card p-4 shadow-sm">
+    <div className="rounded-2xl bg-card p-4 shadow-canto">
       <h2 className="text-lg font-semibold">{titulo}</h2>
       <p className="mt-2 text-base text-muted-foreground">{porque}</p>
 
@@ -58,14 +58,6 @@ export function PuertaCerrada({
       {alternativa && (
         <p className="mt-3 text-sm text-muted-foreground">{alternativa}</p>
       )}
-
-      {/* La salida. Quien viene a pedir ayuda no necesita nada de esto. */}
-      <p className="mt-3 text-base text-muted-foreground">
-        ¿Solo querías mirar?{' '}
-        <Link href="/" className="underline">
-          Volver al tablero
-        </Link>
-      </p>
     </div>
   )
 }

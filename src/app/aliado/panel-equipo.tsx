@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { HojaGestion, FilaPermiso } from '@/components/hoja-gestion'
 import type { AccionMiembro, InvitacionResumen, MiembroEquipo } from '@/lib/types'
+import { useAviso } from '@/components/avisos'
 
 function fecha(iso: string) {
   return new Date(iso).toLocaleString('es-CO', {
@@ -66,7 +67,7 @@ function Invitacion({
     // pintaba un QR de 160 px más la URL entera más tres botones: con tres
     // invitaciones abiertas había que bajar tres pantallas para llegar al
     // equipo, que es a lo que se entra.
-    <li className="rounded-2xl bg-card p-4 shadow-sm">
+    <li className="rounded-2xl bg-card p-4 shadow-canto">
       <p className="text-base font-medium">
         {invitacion.rol_otorgado === 'coordinador' ? 'Coordinador' : 'Miembro'} ·{' '}
         {invitacion.usos}/{invitacion.usos_max} usos · vence el{' '}
@@ -77,14 +78,14 @@ function Invitacion({
           necesita: un QR de 25 usos pegado en un muro lo escanea cualquiera
           que pase. */}
       {invitacion.usos_max > 1 && (
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           Este es de pared: piensa quién más pasa por ahí antes de pegarlo.
         </p>
       )}
 
       {verQr && (
         <>
-          <div className="mt-2 rounded-lg bg-muted p-3 text-sm break-all">{enlace}</div>
+          <div className="mt-2 rounded-lg bg-muted p-3 font-mono text-base break-all">{enlace}</div>
           {/* eslint-disable-next-line @next/next/no-img-element -- data URI generada en cliente, no aplica optimización de next/image */}
           <img
             src={qrDataUrl}
@@ -154,7 +155,7 @@ function Miembro({
     onCambio()
   }
 
-  async function permiso(p_permiso: 'puede_ver_identidad' | 'puede_moderar', p_valor: boolean) {
+  async function permiso(p_permiso: 'puede_moderar', p_valor: boolean) {
     setEnviando(true)
     setError(null)
     const supabase = createClient()
@@ -187,23 +188,22 @@ function Miembro({
     <li
       className={
         miembro.estado === 'activo'
-          ? 'flex items-center gap-3 rounded-2xl bg-card p-4 shadow-sm'
+          ? 'flex items-center gap-3 rounded-2xl bg-card p-4 shadow-canto'
           : miembro.estado === 'pendiente'
-            ? 'flex items-center gap-3 rounded-2xl border border-primary/40 bg-accent p-4'
+            ? 'flex items-center gap-3 rounded-2xl border border-enlace/40 bg-accent p-4'
             : 'flex items-center gap-3 rounded-2xl border border-dashed border-border p-4'
       }
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-bold">
+        <p className="truncate font-heading text-lg leading-tight">
           {miembro.nombre_visible}
           {esYo && <span className="font-normal text-muted-foreground"> · eres tú</span>}
         </p>
-        <p className="truncate text-sm text-muted-foreground">
+        <p className="truncate text-base text-muted-foreground">
           {etiquetaEstado}
           {miembro.estado === 'activo' && miembro.rol === 'coordinador'
             ? ' · coordinador'
             : ''}
-          {miembro.puede_ver_identidad ? ' · ve identidades' : ''}
         </p>
       </div>
 
@@ -222,17 +222,15 @@ function Miembro({
                       permiso» y otro que dice «Quitar» son la misma cosa
                       dicha de dos formas, y quien mira rápido no sabe cuál
                       es el estado actual. */}
-                  <FilaPermiso
-                    etiqueta="Ver identidades"
-                    explicacion="Puede abrir los datos de quien pide ayuda para coordinar una entrega."
-                    advertencia="Abre nombres, documentos y teléfonos de personas reales. Cada lectura queda en la bitácora con su nombre, la hora y el motivo."
-                    activo={miembro.puede_ver_identidad}
-                    disabled={enviando}
-                    onChange={(v) => permiso('puede_ver_identidad', v)}
-                  />
+                  {/* ⚠ Aquí había un «Ver identidades». El permiso seguía
+                      en la tabla y **no otorgaba ya nada**: `identidades`,
+                      `accesos_identidad` y las tres funciones que las leían
+                      se fueron con el ADR 0007. Un interruptor que promete
+                      acceso a datos de personas reales y no hace nada es
+                      peor que no tener interruptor. */}
                   <FilaPermiso
                     etiqueta="Moderar"
-                    explicacion="Puede retirar mensajes de las conversaciones de la organización."
+                    explicacion="Puede retirar mensajes de los chats de la organización."
                     activo={miembro.puede_moderar}
                     disabled={enviando}
                     onChange={(v) => permiso('puede_moderar', v)}
@@ -334,6 +332,7 @@ export function PanelEquipo({
   invitaciones: InvitacionResumen[]
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -356,13 +355,14 @@ export function PanelEquipo({
       return
     }
     setEnviando(false)
+    avisar('Invitación creada')
     router.refresh()
   }
 
   return (
     <div className="mt-6 space-y-6">
       <div>
-        <h3 className="text-lg font-bold">Invitar a alguien</h3>
+        <h3 className="font-heading text-xl leading-tight">Invitar a alguien</h3>
         <p className="mt-1 text-base text-muted-foreground">
           Quien abra el enlace o escanee el código entra al equipo de una vez,
           sin que nadie lo apruebe. Un QR para pegar en la pared sirve para
@@ -401,7 +401,7 @@ export function PanelEquipo({
 
       {pendientes.length > 0 && (
         <div>
-          <h3 className="text-lg font-bold">Por aprobar</h3>
+          <h3 className="font-heading text-xl leading-tight">Por aprobar</h3>
           <ul className="mt-3 space-y-3">
             {pendientes.map((m) => (
               <Miembro
@@ -417,7 +417,7 @@ export function PanelEquipo({
       )}
 
       <div>
-        <h3 className="text-lg font-bold">Equipo</h3>
+        <h3 className="font-heading text-xl leading-tight">Equipo</h3>
         <ul className="mt-3 space-y-3">
           {resto.map((m) => (
             <Miembro

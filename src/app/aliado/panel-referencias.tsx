@@ -8,6 +8,7 @@ import type { EstadoReferencia } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { HojaDatoSensible } from '@/components/hoja-dato-sensible'
+import { useAviso } from '@/components/avisos'
 
 export interface ReferenciaPorRevisar {
   id: string
@@ -45,6 +46,7 @@ export function PanelReferencias({
   referencias: ReferenciaPorRevisar[]
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [confirmandoRef, setConfirmandoRef] = useState<string | null>(null)
   const [datos, setDatos] = useState<Record<string, { nombre: string; telefono: string }>>({})
   const [ocupado, setOcupado] = useState(false)
@@ -83,6 +85,7 @@ export function PanelReferencias({
       setError(rpcError.message)
       return
     }
+    avisar('Referencia resuelta')
     router.refresh()
   }
 
@@ -110,19 +113,19 @@ export function PanelReferencias({
               key={r.id}
               className={
                 r.puedo_leerla
-                  ? 'rounded-2xl bg-card p-4 shadow-sm'
+                  ? 'rounded-2xl bg-card p-4 shadow-canto'
                   : 'rounded-2xl border border-dashed border-border p-4'
               }
             >
               <div className="flex items-start justify-between gap-2">
-                <span className="min-w-0 text-lg font-bold">{r.proveedor_nombre}</span>
+                <span className="min-w-0 font-heading text-xl leading-tight">{r.proveedor_nombre}</span>
                 {/* El estado en palabras y con su color, nunca solo color
                     (regla 9). «Por llamar» es lo único que pide algo. */}
                 <span
                   className={
                     'shrink-0 rounded-full px-3 py-1 text-sm font-medium ' +
                     (r.estado === 'confirmada'
-                      ? 'bg-ok-suave text-ok'
+                      ? 'bg-ok-suave text-foreground'
                       : r.estado === 'pendiente'
                         ? 'bg-accent text-accent-foreground'
                         : 'bg-muted text-muted-foreground')
@@ -133,13 +136,13 @@ export function PanelReferencias({
               </div>
 
               {r.oficio_nombre && (
-                <p className="mt-1 text-sm text-muted-foreground">
+                <p className="mt-1 text-base text-muted-foreground">
                   Referencia de: {r.oficio_nombre}
                 </p>
               )}
 
               {!r.proveedor_telefono_verificado && (
-                <p className="mt-1 text-sm text-accent-foreground">
+                <p className="mt-1 text-base text-accent-foreground">
                   Su propio teléfono todavía está sin verificar.
                 </p>
               )}
@@ -170,7 +173,7 @@ export function PanelReferencias({
                   </HojaDatoSensible>
                 </div>
               ) : (
-                <p className="mt-3 text-sm text-muted-foreground">
+                <p className="mt-3 text-base text-muted-foreground">
                   No tienes permiso para ver estos datos. Un coordinador lo
                   otorga persona por persona.
                 </p>

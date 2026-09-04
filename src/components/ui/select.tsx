@@ -4,6 +4,7 @@ import * as React from "react"
 import { Select as SelectPrimitive } from "@base-ui/react/select"
 
 import { cn } from "@/lib/utils"
+import { useContenedorHoja } from "@/components/contenedor-hoja"
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react"
 
 const Select = SelectPrimitive.Root
@@ -42,7 +43,7 @@ function SelectTrigger({
       data-size={size}
       className={cn(
         // AquíVe: h-12/text-base fijo — mínimo táctil 48px y texto 16px de CLAUDE.md.
-        "flex w-full items-center justify-between gap-1.5 rounded-full border border-input bg-transparent py-2 pr-3 pl-3 text-base whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-12 data-[size=sm]:h-12 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "flex w-full items-center justify-between gap-1.5 rounded-full border border-input bg-card py-2 pr-3 pl-3 text-base whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 data-placeholder:text-muted-foreground data-[size=default]:h-12 data-[size=sm]:h-12 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-1.5 dark:bg-input/30 dark:hover:bg-input/50 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
@@ -74,8 +75,20 @@ function SelectContent({
   > &
   // Ver `contenedor-hoja.ts`.
   Pick<SelectPrimitive.Portal.Props, "container">) {
+  // Dentro de una hoja inferior la lista se monta EN LA HOJA. La hoja es un
+  // `popover` nativo y vive en la capa superior del navegador, que se pinta
+  // encima de todo el documento sin importar el z-index: portalizada al
+  // `body`, la lista se abre de verdad —`aria-expanded="true"`— y no se ve
+  // nada. Ver `contenedor-hoja.ts`.
+  //
+  // ⚠ Va aquí dentro y no en cada llamada. Antes era un prop que había que
+  // acordarse de pasar, y de trece desplegables solo dos lo pasaban: los
+  // otros once estaban rotos dentro de una hoja. El prop sigue existiendo y
+  // sigue mandando, para el caso raro de querer otro contenedor.
+  const deLaHoja = useContenedorHoja()
+
   return (
-    <SelectPrimitive.Portal container={container}>
+    <SelectPrimitive.Portal container={container ?? deLaHoja ?? undefined}>
       <SelectPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}
@@ -87,7 +100,7 @@ function SelectContent({
         <SelectPrimitive.Popup
           data-slot="select-content"
           data-align-trigger={alignItemWithTrigger}
-          className={cn("relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
+          className={cn("relative isolate z-50 max-h-(--available-height) w-(--anchor-width) min-w-36 origin-(--transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-[var(--dur-corta)] data-[align-trigger=true]:animate-none data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95", className )}
           {...props}
         >
           <SelectScrollUpButton />
@@ -127,7 +140,12 @@ function SelectItem({
       )}
       {...props}
     >
-      <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">
+      {/* Envuelve, no recorta. El popup mide lo que mide el disparador y
+          esconde el desbordamiento horizontal: con `whitespace-nowrap` una
+          opción larga —«Casa Expandida · Calle 4b # 35-32, San Fernando»—
+          se cortaba a media palabra y no había forma de leerla. En el
+          DISPARADOR sí se recorta a una línea, que es lo correcto ahí. */}
+      <SelectPrimitive.ItemText className="flex min-w-0 flex-1 gap-2">
         {children}
       </SelectPrimitive.ItemText>
       <SelectPrimitive.ItemIndicator

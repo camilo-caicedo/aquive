@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/combobox'
 import type { InvitacionResumen, OrganizacionAdmin, TipoOrganizacion } from '@/lib/types'
 import { LIMITE_MUNICIPIOS, mapaDeNombres, nombreConDepartamento, type MunicipioBasico as Municipio } from '@/lib/municipios'
+import { useAviso } from '@/components/avisos'
 
 const TIPOS: { valor: TipoOrganizacion; etiqueta: string }[] = [
   { valor: 'fundacion', etiqueta: 'Fundación' },
@@ -41,6 +42,7 @@ function FormularioOrganizacion({
   onGuardado: () => void
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [nombre, setNombre] = useState(organizacion?.nombre ?? '')
   const [tipo, setTipo] = useState<TipoOrganizacion>(organizacion?.tipo ?? 'fundacion')
   const [nit, setNit] = useState(organizacion?.nit ?? '')
@@ -92,11 +94,12 @@ function FormularioOrganizacion({
     }
 
     onGuardado()
+    avisar('Centro guardado')
     router.refresh()
   }
 
   return (
-    <div className="space-y-4 rounded-2xl bg-card p-4 shadow-sm">
+    <div className="space-y-4 rounded-2xl bg-card p-4 shadow-canto">
       {/* ⚠ La lista de comprobación va DENTRO del flujo de crear y no
           arriba de la pantalla. Sirve en el momento de crear una, y ahí lo
           que hace falta es poder ir tachando; como párrafo de la pestaña
@@ -104,13 +107,13 @@ function FormularioOrganizacion({
           ocurre afuera —en el RUES, por teléfono— así que no hay cola. */}
       {organizacion === null && (
         <ul className="space-y-2 rounded-lg border border-dashed border-border p-3">
-          <li className="text-sm font-medium">Antes de crearla, revisa</li>
+          <li className="text-base font-medium">Antes de crearla, revisa</li>
           {[
             'El certificado del RUES y el NIT',
             'Que la persona de contacto exista y responda',
             'Que su sitio no sea una página de donaciones de un tercero',
           ].map((linea) => (
-            <li key={linea} className="flex items-start gap-2 text-sm text-muted-foreground">
+            <li key={linea} className="flex items-start gap-2 text-base text-muted-foreground">
               <span
                 aria-hidden="true"
                 className="mt-0.5 size-4 shrink-0 rounded border border-border"
@@ -118,7 +121,7 @@ function FormularioOrganizacion({
               {linea}
             </li>
           ))}
-          <li className="text-sm text-muted-foreground">
+          <li className="text-base text-muted-foreground">
             Crearla no le da acceso a nadie: eso lo hace la invitación de
             coordinador, que se genera después.
           </li>
@@ -166,7 +169,7 @@ function FormularioOrganizacion({
           maxLength={20}
           placeholder="900123456-7"
         />
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           Cópialo del certificado del RUES. Míralo antes de crear la
           organización: aquí no hay cola de verificación porque la
           verificación eres tú.
@@ -187,13 +190,13 @@ function FormularioOrganizacion({
           maxLength={40}
           placeholder="fundacion-manos-cali"
         />
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           Va en el enlace para unirse: /unirse/{slug || 'nombre-corto'}.
           Identifica a la organización, no autoriza a nadie: quien llega sin
           código queda en la cola de aprobación.
         </p>
         {!slugValido && slug.length > 0 && (
-          <p className="mt-1 text-sm text-destructive">
+          <p className="mt-1 text-base text-destructive">
             Minúsculas, números y guiones, de 3 a 40 caracteres.
           </p>
         )}
@@ -311,12 +314,12 @@ function Invitacion({
   }
 
   return (
-    <li className="rounded-2xl bg-card p-3 shadow-sm">
+    <li className="rounded-2xl bg-card p-3 shadow-canto">
       <p className="text-base font-medium">
         {invitacion.rol_otorgado === 'coordinador' ? 'Coordinador' : 'Miembro'} ·{' '}
         {invitacion.usos}/{invitacion.usos_max} usos
       </p>
-      <p className="mt-1 text-sm text-muted-foreground">
+      <p className="mt-1 text-base text-muted-foreground">
         Vence el{' '}
         {new Date(invitacion.expira_at).toLocaleString('es-CO', {
           day: '2-digit',
@@ -325,7 +328,7 @@ function Invitacion({
           minute: '2-digit',
         })}
       </p>
-      <p className="mt-2 font-mono text-sm break-all text-muted-foreground">{enlace}</p>
+      <p className="mt-2 font-mono text-base break-all text-muted-foreground">{enlace}</p>
       <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
         <Button variant="outline" onClick={copiar}>
           {copiado ? 'Copiado' : 'Copiar enlace'}
@@ -350,6 +353,7 @@ function FichaOrganizacion({
   onEditar: () => void
 }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -363,18 +367,19 @@ function FichaOrganizacion({
       return
     }
     setEnviando(false)
+    avisar('Guardado')
     router.refresh()
   }
 
   return (
-    <li className="rounded-2xl bg-card p-4 shadow-sm">
+    <li className="rounded-2xl bg-card p-4 shadow-canto">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="text-lg font-bold">{organizacion.nombre}</span>
+        <span className="font-heading text-xl leading-tight">{organizacion.nombre}</span>
         <span
           className={
             organizacion.activa
-              ? 'inline-flex shrink-0 items-center rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-base font-medium text-ok'
-              : 'inline-flex shrink-0 items-center rounded-full border border-primary/25 bg-accent px-2.5 py-0.5 text-base font-medium text-accent-foreground'
+              ? 'inline-flex shrink-0 items-center rounded-full bg-ok-suave px-2.5 py-0.5 text-base font-medium text-foreground'
+              : 'inline-flex shrink-0 items-center rounded-full border border-enlace/25 bg-accent px-2.5 py-0.5 text-base font-medium text-accent-foreground'
           }
         >
           {organizacion.activa ? 'Activa' : 'Suspendida'}

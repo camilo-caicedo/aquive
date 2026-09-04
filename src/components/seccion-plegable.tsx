@@ -52,7 +52,7 @@ export function SeccionPlegable({
   children: ReactNode
 }) {
   return (
-    <details open={abierta} className="group rounded-2xl bg-card shadow-sm">
+    <details open={abierta} className="group rounded-2xl bg-card shadow-canto">
       <summary className="flex min-h-16 cursor-pointer list-none items-center gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0 flex-1">
           <span className="block text-lg font-semibold">{titulo}</span>

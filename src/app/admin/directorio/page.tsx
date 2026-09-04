@@ -19,9 +19,9 @@ export default async function DirectorioPage() {
   const entidades: EntidadAdmin[] = entidadesData ?? []
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6">
+    <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Directorio" volver="/admin">
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-base text-muted-foreground">
           Aparecer aquí no es una recomendación: solo dice que la organización
           existe.
         </p>

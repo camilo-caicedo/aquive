@@ -39,13 +39,14 @@ export const FECHA_LEGALES = '21 de agosto de 2026'
 // tener un directorio de personas con nombre y teléfono permanentes.
 //
 // Nada de /servicios se despliega hasta que exista el contrato de encargo
-// firmado y el registro en el RNBD a nombre de la fundación (PLAN-V3 §7).
+// firmado y el registro en el RNBD a nombre de la fundación.
+// Ver docs/PENDIENTES-LEGALES.md.
 // Mismo responsable que el resto del sitio desde el 20/08/2026. La
 // constante sobrevive porque hay pantallas donde nombrar a la organización
 // se lee mejor que decir «el responsable» —«pregunta en el punto de Nodo
 // Social más cercano»—, no porque quede algún reparto.
 export const RESPONSABLE_SERVICIOS = RESPONSABLE
-// TODO PLAN-V3 §7: pedir el NIT del certificado del RUES y el correo de
+// TODO (ver docs/PENDIENTES-LEGALES.md): pedir el NIT del certificado del RUES y el correo de
 // habeas data que la fundación vaya a atender. Hasta entonces el aviso de
 // privacidad de Servicios está incompleto y no se puede publicar.
 // Los datos con los que el aviso de privacidad identifica al responsable,
@@ -72,6 +73,21 @@ export const CORREO_HABEAS_DATA_SERVICIOS = CORREO_CONTACTO
 // cuando el texto de `docs/legal/PLANTILLAS.md` cambia, y no antes.
 export const AUTORIZACION_PROVEEDOR_VERSION = 'servicios-proveedor-2026-08-19'
 export const CONSENTIMIENTO_REFERENCIA_VERSION = 'servicios-referencia-2026-08-19'
+// La foto lleva la suya, aparte de la de publicar la ficha: publicar la
+// cara de alguien es otra finalidad que publicar su teléfono, igual que
+// el punto en el mapa (ADR 0004). Quien firmó la de agosto no firmó esta.
+export const AUTORIZACION_FOTO_VERSION = 'servicios-foto-2026-08-27'
+// La dirección lleva la suya, aparte de la de publicar la ficha y aparte
+// de la del mapa: publicar dónde vive o atiende alguien es otra finalidad,
+// igual que el punto del ADR 0004 (ADR 0019, artículo 9 de la Ley 1581).
+// Quien firmó la ficha o el mapa no firmó esta.
+export const AUTORIZACION_DIRECCION_VERSION = 'servicios-direccion-2026-09-03'
+// El perfil también publica nombre y teléfono —en /profesionales— y
+// también necesita su versión guardada (mínimo legal 2). La
+// fecha es la del texto que hoy se lee en el formulario de registro, no la
+// de cuando se añadió la columna: decir que alguien aceptó un texto que no
+// existía sería peor que no guardar nada.
+export const AUTORIZACION_PERFIL_VERSION = 'perfil-2026-08-19'
 
 export const ENTIDADES_MATRICULA = [
   { valor: 'COPNIA', etiqueta: 'COPNIA — Ingeniería' },

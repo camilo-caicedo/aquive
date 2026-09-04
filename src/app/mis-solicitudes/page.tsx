@@ -1,96 +1,50 @@
-import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { Search } from 'lucide-react'
+
+import { servidor } from '@/orpc/local'
 import { AccionPrincipal } from '@/components/accion-principal'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
-import { ChevronRight, Smartphone } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
-import { PestanasLoMio } from '@/components/pestanas-lo-mio'
-import { SeccionPlegable } from '@/components/seccion-plegable'
-import { ListaLocal } from './lista-local'
-import { ListaServicios } from './lista-servicios'
+import { ListaMias } from './lista-mias'
 
-export const metadata = { title: 'Lo mío' }
+export const metadata = { title: 'Mis solicitudes' }
 
-function Fila({ href, etiqueta, detalle }: { href: string; etiqueta: string; detalle: string }) {
-  return (
-    <Link
-      href={href}
-      className="flex min-h-16 items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:bg-muted"
-    >
-      <span>
-        <span className="block text-base font-medium">{etiqueta}</span>
-        <span className="block text-sm text-muted-foreground">{detalle}</span>
-      </span>
-      <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-    </Link>
-  )
-}
-
+/**
+ * Lo que he pedido. Pantalla 20.
+ *
+ * ⚠ Antes esto leía de `localStorage` la lista de tokens de este teléfono,
+ * con un aviso en tarjeta que decía que si cambiabas de aparato lo perdías
+ * todo. Desde el ADR 0006 lo suyo cuelga de la cuenta y se le pregunta al
+ * servidor: el aviso sobra y el fallo que el README tenía abierto —la lista
+ * que no siempre aparecía— desaparece con él.
+ *
+ * ⚠ Llevaba también una sección de Insumos, retirada por el ADR 0016 con el
+ * módulo entero: ya no hay solicitud de insumos que pedir ni mostrar aquí.
+ *
+ * ⚠ ADR 0017: la solicitud es ahora una orden dirigida a un prestador. Ya
+ * no se puede «pedir un servicio» sin más —hay que elegir a quién—, así que
+ * la acción principal deja de llevar a un formulario y lleva a buscar: es
+ * el mismo recorrido que ya usa esta aplicación (buscar → ficha → pedir).
+ *
+ * Sin sesión no rebota a `/login`: explica y ofrece entrar. Es la misma
+ * regla que sigue `/perfil`.
+ */
 export default async function MisSolicitudesPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
+  const servicios = await servidor.servicios.misSolicitudes()
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-6">
-      {/* El h1 repite la etiqueta de la barra (regla 8): quien tocó «Lo
-          mío» tiene que aterrizar en algo que se llame igual. */}
-      <CabeceraPantalla titulo="Lo mío">
-        <PestanasLoMio activa="solicitudes" conSesion={!!user} />
-      </CabeceraPantalla>
+    <main className="animar-pantalla mx-auto max-w-lg px-4 py-6">
+      {/* El h1 repite la etiqueta de la fila del perfil (regla 8). */}
+      <CabeceraPantalla titulo="Mis solicitudes" volver="/perfil" />
 
-      {/* En tarjeta y con icono, no como párrafo suelto: es lo único que
-          hay que entender de esta pantalla, y de ello depende que la persona
-          guarde el enlace antes de perderlo. */}
-      <div className="flex items-start gap-3 rounded-2xl bg-secondary p-4 text-secondary-foreground">
-        <Smartphone className="size-5 shrink-0 translate-y-0.5" aria-hidden="true" />
-        <p className="text-base">
-          Estas solicitudes viven solo en este teléfono. Si lo cambias o borras
-          los datos del navegador, se pierden: guarda el enlace de cada una.
+      <section>
+        <h2 className="font-heading text-2xl">Servicios</h2>
+        <p className="mt-1 text-base text-muted-foreground">
+          Las que le pediste a un prestador. Solo caducan mientras nadie ha
+          respondido: se borran solas a los 15 días y se renuevan desde aquí.
         </p>
-      </div>
-      {/* Dos módulos, dos listas, y por eso dos plegables: las de insumos
-          viven 72 horas y las de servicios 15 días renovables, así que no
-          son la misma cosa aunque las dos sean «lo que pedí». Las de
-          servicios no tenían ninguna pantalla donde verse — el token se
-          guardaba en este teléfono al publicar y ahí se quedaba.
+        <ListaMias solicitudes={servicios} />
+      </section>
 
-          Servicios va primero: es el modulo que hoy recibe a la gente, y
-          sus solicitudes duran mas, asi que es la lista a la que se vuelve. */}
-      <div className="mt-4 space-y-3">
-        <SeccionPlegable
-          titulo="Solicitudes de servicios"
-          resumen="Oficios que pediste en el directorio. Duran 15 días, renovables."
-          resumenSiempre
-          abierta
-        >
-          <ListaServicios />
-        </SeccionPlegable>
-
-        <SeccionPlegable
-          titulo="Solicitudes de ayuda"
-          resumen="Insumos que pediste. Se borran solas a las 72 horas."
-          resumenSiempre
-        >
-          <ListaLocal />
-        </SeccionPlegable>
-      </div>
-
-      {/* La fila hacia /aliado se fue: desde que hay celda propia en la
-          barra, tenerla también aquí eran dos puertas al mismo cuarto —lo
-          mismo que le pasaba a «Mi perfil» en el encabezado—. */}
-      <nav aria-label="Lo mío" className="mt-8 flex flex-col gap-2">
-        {!user && (
-          <Fila
-            href="/login"
-            etiqueta="Entrar para ofrecer ayuda"
-            detalle="Solo hace falta cuenta para ofrecer, no para pedir"
-          />
-        )}
-      </nav>
-      <AccionPrincipal etiqueta="Necesito ayuda" Icono={Plus} href="/publicar" />
+      <AccionPrincipal etiqueta="Buscar prestador" Icono={Search} href="/categorias" />
     </main>
   )
 }

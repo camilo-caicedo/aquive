@@ -1,39 +1,89 @@
+/* Los tres son dependencias de package.json y NINGUNO se importa desde
+   TypeScript: se importan desde aquí. Un barrido de 'quién importa qué'
+   sobre .ts y .tsx no los ve, y ya pasó una vez — se retiró `shadcn` de
+   package.json por 'sin importadores', el build local siguió pasando
+   porque node_modules lo tenía de antes, y reventó en Vercel al instalar
+   limpio: «Can't resolve shadcn/tailwind.css». Antes de quitar uno de
+   estos, buscar también en .css. */
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
-/* Identidad AquíVe v1 (14 de agosto de 2026): terracota y salvia sobre
-   papel. Es la paleta que ya había, corrida hacia la arcilla — el ámbar se
-   volvió terracota y el blanco se volvió papel de verdad.
+/* Identidad AquíVe v2 (ADR 0002, 26 de agosto de 2026): la carreta.
+   Crema, negro y los cuatro gajos de la sombrilla, con el lima como acción.
+
+   LA REGLA QUE GOBIERNA ESTA PALETA, y no está en el manual de marca:
+   solo el negro y el azul son color de TEXTO. Los otros cuatro son RELLENO,
+   con texto negro encima. Así medidos pasan AA entre 5,67 y 12,46; como
+   letra sobre claro se quedan entre 1,35 y 2,98, que no es percibible.
+   Si alguna vez ves `text-familia-amarillo` o `color: var(--ok)` sobre
+   crema, es un error, no una variante.
+
    Un solo tema claro a propósito — el modo oscuro automático rompía el
    contraste de los controles nativos en gama baja. */
 :root {
+  /* El vocabulario de movimiento. Antes cada animación repetía su curva y
+     su duración a mano, en seis sitios, y no coincidían entre sí.
+
+     Nada pasa de 300 ms: el público lee de pie y con prisa, y una espera
+     que se nota es una espera de más.
+
+     ⚠ Van aquí y NO en `@theme inline`: Tailwind poda de `@theme` lo que
+     no se usa como clase de utilidad, y estos se leen con `var()` desde
+     los `@keyframes` y desde valores arbitrarios. Ahí dentro,
+     `--dur-corta` llegaba al navegador vacío. */
+  --curva-entrada: cubic-bezier(0.16, 1, 0.3, 1); /* arranca rápido y frena */
+  --curva-suave: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-toque: 120ms; /* responder a un dedo */
+  --dur-corta: 180ms; /* color, foco, chips */
+  --dur-media: 240ms; /* entradas de tarjeta y de pantalla */
+  --dur-hoja: 300ms; /* hojas y modales */
+
   color-scheme: light;
-  --background: #f5ead8; /* papel */
-  --foreground: #201e1d; /* tinta */
-  --card: #fefcfa;
-  --card-foreground: #201e1d;
-  --popover: #fefcfa;
-  --popover-foreground: #201e1d;
-  --primary: #8c491a; /* terracota 700, botón sólido */
-  --primary-foreground: #f9f4ed;
-  --secondary: #ebddc5; /* arena, franjas y pie de página */
-  --secondary-foreground: #643312;
-  --muted: #eee7db;
-  --muted-foreground: #6f5a4a;
-  --accent: #ffe1d0; /* relleno tenue de iconos y avisos */
-  --accent-foreground: #643312;
-  /* Salvia: la segunda voz. Verificado y cumplido — nunca decorativa, y
-     nunca sola: siempre acompañada de texto o de un icono, porque el
-     estado no puede depender de percibir un color. */
-  --ok: #56633f;
-  --ok-suave: #e1eecc;
+  --background: #f5eee2; /* crema */
+  --foreground: #1d1d1b; /* tinta */
+  --card: #ffffff;
+  --card-foreground: #1d1d1b;
+  --popover: #ffffff;
+  --popover-foreground: #1d1d1b;
+  /* Lima: la acción principal, UNA por pantalla. Nunca dominante y nunca
+     como color de texto — aquí es fondo, y encima va negro (12,46:1). */
+  --primary: #b8f000;
+  --primary-foreground: #1d1d1b;
+  --secondary: #f0e8da; /* arena: chips inactivos, contadores, franjas */
+  --secondary-foreground: #1d1d1b;
+  --muted: #f0e8da;
+  --muted-foreground: #6f5a4a; /* no cambia: 5,63:1 sobre el crema */
+  --accent: #fef6de; /* pendiente, por vencer, en cola */
+  --accent-foreground: #1d1d1b;
+  /* Verde: verificado y cumplido. Nunca decorativo, y nunca solo — el
+     estado no puede depender de percibir un color (regla de interfaz 9). */
+  --ok: #38b58c;
+  --ok-suave: #dff3ec;
   --destructive: oklch(0.505 0.19 27);
-  --border: #dcd3c4;
-  --input: #c0b6a5;
-  --ring: #c67139;
+  /* Sin contornos negros: el canto de lo blanco sobre crema lo da una
+     sombra de 1 px, no un borde. Esto es la línea de pelo que queda para
+     separadores y tablas. */
+  --border: #e2d9c8;
+  /* Ya no es el subrayado que ERA el campo: los campos pasan a relleno
+     (crema dentro de tarjeta blanca). Como subrayado único daba 2:1. */
+  --input: #e2d9c8;
+  --ring: #2860a8; /* foco en azul */
+  /* Azul de énfasis: enlaces, iconos que acompañan texto, bordes que tienen
+     que verse. Es el MISMO azul de la familia, con otro nombre porque aquí
+     no está diciendo «confección»: está diciendo «esto se puede tocar».
+     Existe porque --primary dejó de servir para eso — el lima es relleno, y
+     como color de letra sobre claro da 1,35:1. */
+  --enlace: #2860a8;
+
+  /* Los cuatro gajos de la sombrilla. Codifican familias de oficio y
+     SIEMPRE van con la palabra al lado: el color no informa solo. */
+  --familia-azul: #2860a8;
+  --familia-amarillo: #f4c542;
+  --familia-verde: #38b58c;
+  --familia-rojo: #e86f87;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -53,11 +103,16 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-figtree);
-  --font-heading: var(--font-caprasimo);
+  --font-sans: var(--font-poppins);
+  --font-heading: var(--font-montserrat);
   --font-mono: var(--font-geist-mono);
   --color-ok: var(--ok);
   --color-ok-suave: var(--ok-suave);
+  --color-enlace: var(--enlace);
+  --color-familia-azul: var(--familia-azul);
+  --color-familia-amarillo: var(--familia-amarillo);
+  --color-familia-verde: var(--familia-verde);
+  --color-familia-rojo: var(--familia-rojo);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -87,6 +142,28 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* El canto de lo blanco sobre el crema, ahora que no hay contornos
+     negros. Un borde de 1 px se lee como línea; esto se lee como que la
+     tarjeta está encima. Va en los elementos blancos, no en los de color:
+     esos ya se separan del fondo por sí solos. */
+  --shadow-canto: 0 1px 2px rgb(29 29 27 / 0.13);
+
+  /* La sombra desplazada del cartel pintado: dura, sin difuminar, en el
+     color de la familia del oficio. Es lo que carga la identidad ahora que
+     no hay contornos negros, y lo que deja reconocer una tarjeta de Salud a
+     media pantalla. Nunca va sola: la palabra del grupo va siempre encima
+     (regla de interfaz 9). */
+  --shadow-cartel-azul: 4px 4px 0 var(--familia-azul);
+  --shadow-cartel-amarillo: 4px 4px 0 var(--familia-amarillo);
+  --shadow-cartel-verde: 4px 4px 0 var(--familia-verde);
+  --shadow-cartel-rojo: 4px 4px 0 var(--familia-rojo);
+
+  /* El botón de acción, que se hunde al pulsarlo. La sombra es tinta y no
+     color: el relleno ya es lima, y dos colores en un botón de 48 px
+     compiten. */
+  --shadow-boton: 3px 3px 0 var(--foreground);
+  --shadow-boton-hundido: 1px 1px 0 var(--foreground);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -144,6 +221,15 @@
   html {
     @apply font-sans;
   }
+  /* La presencia de cartel que pide el manual, en una regla y no en 93
+     sitios de llamada. Montserrat se carga en 600–900 y sin esto caía en el
+     600, que se lee como un titular cualquiera en vez de como un aviso.
+     Va en `base`, así que un `font-bold` o un `font-black` explícito en el
+     elemento sigue ganando: esto es el valor por defecto, no una cárcel. */
+  .font-heading {
+    font-weight: 800;
+    letter-spacing: -0.015em;
+  }
   /* Los iconos de lucide vienen con trazo 2; la identidad usa un trazo
      grueso y redondo, y con el trazo fino se veían de otra familia que la
      marca. Vale también para gama baja: engorda el icono sin pesar más. */
@@ -180,8 +266,205 @@
   }
 }
 
+/* ⚠ `backwards` y NO `both`, y no es un detalle.
+
+   Una animación que RELLENA gana sobre cualquier otra declaración de la
+   misma propiedad, para siempre. Con `both`, estas animaciones dejaban
+   `transform: none` pegado al elemento al terminar, y entonces un
+   `:active { transform: scale(0.97) }` encima NO HACÍA NADA: la tarjeta
+   se quedaba sin señal al pulsarla y no había forma de verlo leyendo el
+   marcado, porque las dos clases están bien puestas.
+
+   `backwards` aplica el fotograma inicial ANTES de empezar —que es lo
+   único que hacía falta para que no haya parpadeo— y suelta la propiedad
+   al acabar. Se ve exactamente igual y deja pulsar. */
 .animar-entrada {
-  animation: aparecer 0.28s ease-out both;
+  animation: aparecer var(--dur-media) var(--curva-entrada) backwards;
+}
+
+/* La pantalla entera al montarse.
+ *
+ * ⚠ Es el sustituto de la transición entre rutas. Lo que se pidió fue
+ * encender `experimental.viewTransition`, y esa bandera NO existe: Next
+ * 16.3 no la tiene en su esquema —solo `transitionIndicator` y
+ * `gestureTransition`, que son otra cosa— y React 19.2.8 no exporta
+ * `unstable_ViewTransition`. Comprobado contra node_modules.
+ *
+ * Con la barra de carga arriba y esto abajo, cambiar de pantalla tiene
+ * principio y final sin tocar ninguna API experimental — que en esta
+ * aplicación ya costó caro una vez (ADR 0005).
+ *
+ * ⚠⚠ SOLO OPACIDAD. NO se le puede poner `transform`, y no es una
+ * preferencia: **un ancestro con `transform` se convierte en el bloque
+ * contenedor de sus descendientes `position: fixed`**, y dentro del
+ * `<main>` viven dos cosas fijas —la píldora de `AccionPrincipal` y la
+ * barra de acción de `MarcoFlujo`—.
+ *
+ * Con un `translateY` de 8 px aquí, «Necesito un servicio» dejaba de
+ * flotar y se iba con el desplazamiento: `offsetParent` pasaba a ser
+ * `MAIN` y la píldora terminaba dos mil píxeles por debajo de la ventana.
+ * Es la MISMA trampa que `accion-principal.tsx` ya tenía documentada para
+ * el `backdrop-filter` del encabezado.
+ *
+ * La subida de 8 px no se pierde: la ponen las tarjetas de dentro con
+ * `.animar-entrada` y `.lista-escalonada`, que no contienen nada fijo. */
+.animar-pantalla {
+  animation: entrar-pantalla var(--dur-media) var(--curva-entrada) backwards;
+}
+
+@keyframes entrar-pantalla {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* La hoja que sube. Solo transform y opacidad, como todo lo demás: el
+   `<dialog>` está en la capa superior y animar su alto o su posición lo
+   haría repintar la pantalla entera en un teléfono viejo. */
+@keyframes subir-hoja {
+  from {
+    opacity: 0;
+    transform: translateY(2rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animar-hoja {
+  animation: subir-hoja var(--dur-hoja) var(--curva-entrada) backwards;
+}
+
+/* La barra de carga al cambiar de pantalla. Solo `transform`, como todo lo
+   demás.
+
+   No llega nunca al 100 %: se frena cerca del final y se queda ahí hasta que
+   la pantalla nueva la desmonta. Una barra que llega al tope y sigue esperando
+   miente; una que se frena dice «voy, pero no sé cuánto falta», que es la
+   verdad — el servidor tarda lo que tarda (ADR 0005). */
+@keyframes avance {
+  0% {
+    transform: scaleX(0.02);
+  }
+  40% {
+    transform: scaleX(0.55);
+  }
+  100% {
+    transform: scaleX(0.92);
+  }
+}
+
+.barra-avance {
+  animation: avance 8s cubic-bezier(0.1, 0.6, 0.2, 1) forwards;
+  /* La curva de aquí es propia y no un token: no es una entrada, es una
+     espera de duración desconocida que tiene que frenar antes del final. */
+}
+
+/* La barra de acción de un flujo, dentro de una hoja modal.
+
+   `position: fixed` se mide contra la VENTANA, así que en una hoja que no
+   llega al borde de la pantalla la barra quedaba flotando a media altura y
+   el formulario le pasaba por debajo.
+
+   No se arregla con `sticky`: pegado abajo, un elemento no puede salirse
+   del fondo de su contenedor, y la barra es el último hijo del contenido,
+   así que desaparecía en cuanto se scrolleaba.
+
+   Tampoco basta con hacer del diálogo el marco de lo fijo: dentro de un
+   contenedor que scrollea, un `fixed` se comporta como un `absolute` y se
+   va con el contenido igual.
+
+   Lo que sí funciona es lo de siempre: la hoja es una columna, el cuerpo
+   es lo único que scrollea y la barra es el último renglón. Va aquí y no
+   en `MarcoFlujo` porque en una pantalla normal el contenedor que scrollea
+   es el documento, y ahí `fixed` es exactamente lo que hace falta. */
+dialog:has([data-marco-flujo]) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Un suelo, por si algo de dentro vuelve a medir cero. Una hoja de 90 px
+     asomando por el borde inferior no se lee como una hoja: se lee como
+     que la aplicación se rompió, que es exactamente lo que pasaba en
+     iPhone. Con esto, el peor caso sigue siendo una hoja. */
+  min-height: min(24rem, 92dvh);
+}
+
+/* ⚠ `flex-basis` en `auto`, y el `min-height: 0` se queda.
+
+   Las dos cosas son necesarias y arreglan fallos distintos:
+
+   `flex-basis: auto` —o sea `flex: 1 1 auto` y no `flex: 1`— porque el
+   diálogo tiene el `height: fit-content` que le pone el navegador y su alto
+   sale del contenido. Con la base en cero, Safari de iOS resuelve la
+   aportación de este hijo como cero: el cuerpo desaparecía y la hoja se
+   quedaba en el asa más la cabecera, unos 90 px pegados al borde de abajo.
+   Chrome y el WebKit de escritorio sí miran el contenido, y por eso esto no
+   salía en pruebas de escritorio.
+
+   `min-height: 0` porque sin él este hijo no puede encoger por debajo de su
+   contenido: al tocar el techo de `max-height` la hoja no recortaba, se
+   desbordaba, y con el `overflow: hidden` de arriba el final del formulario
+   quedaba cortado y sin manera de llegar a él. */
+dialog > [data-marco-flujo] {
+  display: flex;
+  min-height: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+dialog [data-flujo='cuerpo'] {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* El hueco existe para que la barra fija no tape el final del formulario.
+   Aquí la barra ya no tapa nada. */
+dialog [data-flujo='hueco'] {
+  display: none;
+}
+
+dialog [data-flujo='barra'] {
+  position: static;
+}
+
+/* La píldora de la acción principal es de la pantalla de ATRÁS, y con una
+   hoja abierta queda flotando encima de ella sin poder tocarse. El
+   encabezado, la barra y el pie sí se quedan: siguen siendo el marco de la
+   pantalla que está esperando debajo. */
+body:has(dialog[open]) [data-accion-principal] {
+  display: none;
+}
+
+/* Sin esto la lista de atrás sigue moviéndose bajo el dedo mientras la hoja
+   está abierta, y al cerrar aparece en otro sitio.
+
+   ⚠ En CSS y no en un efecto que ponga `overflow: hidden` al `body`. Ese
+   efecto solo lo deshace su limpieza, y desde una hoja se puede salir del
+   sitio —«Entrar con Google»—: al volver con la flecha atrás la página se
+   restaura de la caché sin re-montar nada, la limpieza nunca corre y el
+   `body` se queda bloqueado para siempre. Esta regla deja de aplicar en
+   cuanto el diálogo se cierra, lo cierre quien lo cierre. */
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
+.animar-hoja::backdrop {
+  animation: aparecer-fondo var(--dur-hoja) var(--curva-suave) backwards;
+}
+
+@keyframes aparecer-fondo {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* Escalona las tarjetas de una lista sin JS: cada hijo entra un pelo
@@ -196,8 +479,147 @@
 .lista-escalonada > *:nth-child(7) { animation-delay: 240ms; }
 .lista-escalonada > *:nth-child(n + 8) { animation-delay: 280ms; }
 
+/* ⚠ La tarjeta se puede tocar desde el primer fotograma, aunque todavía
+   esté entrando. Sin esto, una lista escalonada se siente MÁS lenta que
+   una que aparece de golpe: los primeros toques no hacen nada y quien
+   tiene prisa vuelve a tocar. */
+.lista-escalonada > * {
+  pointer-events: auto;
+}
+
+/* --------------------------------------------------------------------
+   Que se note el dedo.
+
+   ⚠ El botón compartido ya responde al pulsarse, pero media aplicación
+   son enlaces escritos a mano —el nombre de una ficha, «Ver ficha», la
+   fila de un acopio, una tarjeta del muro— y esos no daban NINGUNA señal
+   de haber recibido el toque. En un teléfono con señal mala eso se
+   resuelve tocando otra vez, que es exactamente lo que no queremos.
+
+   Solo transform, y hacia adentro: encoger dice «te oí» sin mover a los
+   vecinos ni provocar reflow. El 0.97 es lo que se nota en una pantalla
+   al sol sin llegar a parecer un rebote.
+
+   ⚠ No se le pone a nada que contenga un elemento `position: fixed`: un
+   ancestro con transform se vuelve su bloque contenedor, y eso ya
+   desancló una vez la píldora de «Necesito un servicio».
+   -------------------------------------------------------------------- */
+.pulsable {
+  transition: transform var(--dur-toque) var(--curva-entrada);
+}
+
+.pulsable:active {
+  transform: scale(0.97);
+}
+
+/* Una tarjeta no encoge: se HUNDE dentro de su sombra, que es el mismo
+   gesto del botón de cartel y el lenguaje de la identidad (ADR 0002).
+
+   ⚠ Antes era un `scale(0.99)` a secas y el responsable lo reportó como
+   que las tarjetas «no se ven presionadas»: sobre 300 px de ancho, un uno
+   por ciento no lo ve nadie. Moverse dos píxeles hacia su propia sombra sí
+   se ve, y encima dice lo mismo que dicen los botones.
+
+   ⚠ Se usa `transform` y no la propiedad `translate`, que está ocupada:
+   la anima el revelado al desplazar, y esa animación se queda con su
+   propiedad para siempre. Siendo dos distintas, conviven. */
+.pulsable-tarjeta {
+  transition: transform var(--dur-toque) var(--curva-entrada);
+}
+
+.pulsable-tarjeta:active {
+  transform: translate(2px, 2px) scale(0.995);
+}
+
+/* --------------------------------------------------------------------
+   Lo que entra en pantalla al desplazar, aparece.
+
+   Guiado por el propio desplazamiento, con `animation-timeline: view()`.
+   **Cero JavaScript.**
+
+   ⚠ La primera versión de esto era un `IntersectionObserver`. Se retiró
+   después de medir: en una pestaña de navegador en segundo plano el
+   observador **no entregó una sola llamada**, ni siquiera la inicial que
+   el estándar promete al empezar a observar. Un efecto que esconde
+   contenido y depende de que algo así responda es un riesgo que este
+   público no puede pagar — entra con señal mala desde Android de gama
+   baja, y una pantalla en blanco no se distingue de una aplicación rota.
+
+   Guiado por el desplazamiento no hay nada que responda ni que fallar:
+   es el compositor pintando en función de dónde está la página.
+
+   ⚠ Y todo va dentro de `@supports`. Donde el navegador no lo entienda
+   —Firefox y Safari a día de hoy— no existe ninguna regla que esconda
+   nada: se ve todo, quieto. La animación es un extra, nunca el precio
+   de leer.
+
+   ⚠ Se anima `translate`, la propiedad independiente, y NO `transform`.
+   Una animación guiada por el desplazamiento está siempre viva, así que
+   se queda con la propiedad que anima para siempre; con `transform`,
+   el `scale` de `.pulsable:active` encima no haría nada y la tarjeta
+   dejaría de responder al dedo. Siendo dos propiedades distintas,
+   conviven.
+
+   ⚠ Va en los elementos de la lista, nunca en un contenedor de página:
+   un ancestro con `translate` se vuelve el bloque contenedor de sus
+   descendientes `position: fixed`, y eso ya desancló una vez la píldora
+   de «Necesito un servicio».
+   -------------------------------------------------------------------- */
+@keyframes entrar-al-ver {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+  }
+  to {
+    opacity: 1;
+    translate: none;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .revelar > * {
+      animation: entrar-al-ver linear both;
+      animation-timeline: view();
+      /* Empieza en cuanto asoma y termina cuando lleva un quinto de
+         pantalla subido: lo justo para que se vea llegar sin que haya que
+         esperar a que termine para leerlo. */
+      animation-range: entry 0% cover 20%;
+    }
+
+    /* ⚠ Las tarjetas ya traen su propia entrada con `.animar-entrada`.
+       Dentro de una lista que se revela eso son dos sistemas haciendo el
+       mismo trabajo, y la de la tarjeta corre al cargar aunque esté a
+       tres pantallas de distancia. Manda el revelado. */
+    .revelar > .animar-entrada {
+      animation: entrar-al-ver linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 20%;
+    }
+  }
+}
+
 .punto-urgente {
   animation: latido-suave 2s ease-in-out infinite;
+}
+
+/* --------------------------------------------------------------------
+   El hover, solo donde hay un puntero de verdad.
+
+   ⚠ En un teléfono táctil el estado `:hover` se queda PEGADO después de
+   tocar, hasta que se toca otra cosa. Una tarjeta con `hover:-translate-y`
+   se quedaba levantada sin motivo y se leía como seleccionada.
+
+   Esto lo apaga en cualquier aparato sin puntero fino, sin tener que tocar
+   los cincuenta y siete sitios que usan `hover:`. Tailwind emite el hover
+   como `&:hover`, así que basta con neutralizar el transform ahí.
+   -------------------------------------------------------------------- */
+@media not all and (hover: hover) and (pointer: fine) {
+  .hover\:-translate-y-0\.5:hover,
+  .hover\:-translate-y-1:hover,
+  .hover\:translate-y-0\.5:hover {
+    transform: none;
+  }
 }
 
 /* Quien pidió menos movimiento no recibe ninguno. */
@@ -214,7 +636,14 @@
 /* --------------------------------------------------------------------
    Regla 10 del sistema de diseño: destino o flujo, nunca las dos cosas.
 
-   Mientras hay un `MarcoFlujo` montado, la barra inferior no se dibuja.
+   Mientras hay un `MarcoFlujo` montado, ni el encabezado ni la barra
+   inferior se dibujan.
+
+   El encabezado se fue con ellos porque `MarcoFlujo` YA pinta su propio
+   volver y su propio `h1`: encima quedaban dos barras de título apiladas,
+   y la de arriba solo repetía el nombre de la aplicación y ofrecía «Entrar»
+   a alguien que está justo entrando. Regla 10: una pantalla de flujo lleva
+   volver y título arriba, y nada más.
    Va en CSS y no en JavaScript para que ya sea correcto en la primera
    pintada del servidor: con estado de cliente, la barra aparecía un
    cuadro y se iba.
@@ -226,12 +655,18 @@
    un hueco muerto debajo de la barra de acción del flujo.
    -------------------------------------------------------------------- */
 
-body:has([data-marco-flujo]) [data-barra-inferior],
-body:has([data-marco-flujo]) [data-pie-de-pagina] {
+/* ⚠ `:not(dialog *)` no es un detalle: un flujo abierto DENTRO de una hoja
+   modal no puede llevarse por delante el encabezado, la barra y el pie de
+   la pantalla que se quedó detrás. Esa pantalla sigue siendo un destino
+   —está ahí, esperando a que se cierre la hoja— y sin esto la aplicación
+   entera se quedaba sin cromo mientras la hoja estuviera abierta. */
+body:has([data-marco-flujo]:not(dialog *)) [data-encabezado],
+body:has([data-marco-flujo]:not(dialog *)) [data-barra-inferior],
+body:has([data-marco-flujo]:not(dialog *)) [data-pie-de-pagina] {
   display: none;
 }
 
-body:has([data-marco-flujo]) {
+body:has([data-marco-flujo]:not(dialog *)) {
   padding-bottom: 0;
 }
 
@@ -274,8 +709,8 @@ body:has([data-accion-principal]) [data-pie-de-pagina] {
 
 [popover].hoja-inferior {
   transition:
-    transform 0.22s ease-out,
-    opacity 0.22s ease-out,
+    transform var(--dur-hoja) var(--curva-entrada),
+    opacity var(--dur-hoja) var(--curva-entrada),
     overlay 0.22s allow-discrete,
     display 0.22s allow-discrete;
   transform: translateY(0);
@@ -306,3 +741,102 @@ body:has([data-accion-principal]) [data-pie-de-pagina] {
 .riel::-webkit-scrollbar {
   display: none;
 }
+
+/* --------------------------------------------------------------------
+   La bienvenida no lleva NADA de cromo: ni encabezado, ni barra, ni pie.
+
+   No es estética. Esa pantalla ES la presentación de la aplicación —dice
+   cómo se llama y qué hace— así que un encabezado repitiendo el nombre
+   encima sobra, y una barra inferior ofrece cuatro destinos a quien
+   todavía no ha decidido si entra. La pantalla tiene dos caminos, y son
+   las dos tarjetas.
+
+   Mismo mecanismo que "MarcoFlujo": un atributo y una regla de CSS, para
+   que ya sea correcto en la primera pintada del servidor. Con estado de
+   cliente el encabezado aparecía un cuadro y se iba.
+
+   Fuera de "@layer" a propósito, como los bloques de arriba: lo que no
+   está en ninguna capa gana sobre las utilidades de Tailwind, que es lo
+   que deja neutralizar el relleno inferior que "layout.tsx" le pone al
+   "body" para reservarle sitio a la barra.
+   -------------------------------------------------------------------- */
+
+body:has([data-sin-cromo]) [data-encabezado],
+body:has([data-sin-cromo]) [data-barra-inferior],
+body:has([data-sin-cromo]) [data-pie-de-pagina] {
+  display: none;
+}
+
+body:has([data-sin-cromo]) {
+  padding-bottom: 0;
+}
+
+/* --------------------------------------------------------------------
+   Llegar a UNA fila de una lista, no al principio de la lista.
+
+   Las tiras de la portada —profesionales y entidades— enseñan tarjetas de
+   personas y organizaciones concretas, y las tres llevaban al mismo sitio
+   que el «Ver todos» de al lado: al principio del directorio. Quien tocaba
+   una tarjeta tenía que volver a buscar en la lista lo que acababa de
+   señalar con el dedo.
+
+   Ahora cada tarjeta enlaza a su fila por ancla. Ninguna de las dos listas
+   tiene pantalla propia por fila —la fila YA trae todo: teléfono, enlaces,
+   servicios— así que abrirla aparte sería repetirla.
+
+   `scroll-padding-top` porque el encabezado es `sticky`: sin esto la fila
+   queda debajo de él y parece que el enlace no hizo nada. Los dos valores
+   son la altura real del encabezado más un poco de aire, y cambian en el
+   mismo punto en el que la fila de navegación aparece (`sm`, 40rem): 64 px
+   de marca más 8 de franja abajo, y 44 más cuando la navegación se ve.
+   -------------------------------------------------------------------- */
+
+html {
+  scroll-padding-top: 5.5rem;
+}
+
+@media (min-width: 40rem) {
+  html {
+    scroll-padding-top: 8.5rem;
+  }
+}
+
+/* ⚠ Aquí hubo un `[…]:target { outline }` para marcar la fila a la que se
+   llegó. Se quitó: `:target` NO coincide después de una navegación de
+   cliente de Next —solo al abrir el enlace desde cero o al recargar—, así
+   que el contorno aparecía siguiendo un enlace compartido y no aparecía al
+   tocar la tarjeta desde la portada, que es el camino normal. Una marca que
+   sale la mitad de las veces confunde más que ninguna.
+
+   Y no hace falta: con el desplazamiento de arriba la fila queda pegada al
+   encabezado, arriba del todo, que ya dice cuál es. Si algún día se quiere
+   la marca, tiene que ser un componente de cliente que lea el hash, no CSS.
+   */
+
+/* --------------------------------------------------------------------
+   Leaflet, por debajo del cromo fijo
+   -------------------------------------------------------------------- */
+/* `leaflet.css` sube sus paneles a z-index 200-700 y sus controles y los
+   contenedores de esquina (`.leaflet-top`/`.leaflet-bottom`) a 800-1000. El
+   encabezado (`sticky z-40`) y la barra inferior (`fixed z-40`) se quedan
+   muy por debajo, así que al hacer scroll el mapa se les monta encima.
+
+   Se baja Leaflet, no se sube el cromo: si el encabezado o la barra
+   pasaran de z-40, quedarían por encima de las hojas modales y los diálogos
+   (z-50), y el fallo solo cambiaría de sitio. Los valores de abajo
+   mantienen el mismo orden relativo que trae Leaflet —teselas debajo de
+   overlays, debajo de sombras, debajo de marcadores, debajo de popups,
+   controles arriba de todo el mapa— pero todos por debajo de 40. El
+   prefijo `.leaflet-container` no acota nada nuevo —ya son clases propias
+   de Leaflet—: solo da más especificidad que el `leaflet.css` importado,
+   así el orden de import no decide quién gana. */
+.leaflet-container .leaflet-pane { z-index: 2; }
+.leaflet-container .leaflet-tile-pane { z-index: 1; }
+.leaflet-container .leaflet-overlay-pane { z-index: 3; }
+.leaflet-container .leaflet-shadow-pane { z-index: 4; }
+.leaflet-container .leaflet-marker-pane { z-index: 5; }
+.leaflet-container .leaflet-tooltip-pane { z-index: 6; }
+.leaflet-container .leaflet-popup-pane { z-index: 7; }
+.leaflet-container .leaflet-control { z-index: 8; }
+.leaflet-container .leaflet-top,
+.leaflet-container .leaflet-bottom { z-index: 9; }

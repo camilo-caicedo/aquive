@@ -38,7 +38,7 @@ export default async function UnirsePage({
   if (!nombre) notFound()
 
   return (
-    <MarcoFlujo titulo={`Unirse a ${nombre}`} volver="/">
+    <MarcoFlujo titulo={`Unirse a ${nombre}`} volver="/inicio">
       <p className=" text-base text-muted-foreground">
         Te estás uniendo al equipo de esta organización en AquíVe. Es para
         quienes trabajan ahí: si solo quieres ofrecer insumos, no necesitas

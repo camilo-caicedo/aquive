@@ -327,24 +327,40 @@ explicación previa, especialmente si hay riesgo para alguien.
 
 ## 3. Texto de autorización (checkbox al registrarse)
 
+⚠ **No se firma al crear la cuenta.** Desde el ADR 0015 una cuenta nace sin
+publicar nada, y sin publicación no hay finalidad que autorizar (artículo 9).
+Esta casilla aparece donde aparece la publicación: al declarar una matrícula
+profesional en `/perfil/matricula`. La ficha del directorio tiene la suya, en
+la sección 3c.
+
 > Autorizo a Nodo Social, responsable de esta plataforma, a
-> tratar los datos que estoy entregando —nombre visible, municipios, forma de contacto, descripción,
-> los insumos que diga tener y, si aplica, profesión y matrícula— con la finalidad de publicarlos de
-> forma **pública** en esta plataforma para que personas afectadas puedan
+> tratar los datos que estoy entregando —nombre visible, municipios, forma de contacto,
+> descripción, profesión y matrícula— con la finalidad de publicarlos de
+> forma **pública** en esta plataforma para que cualquiera pueda
 > contactarme. Entiendo que esta información será visible para cualquiera
 > en internet, que puedo borrarla en cualquier momento, y he leído el
 > aviso de privacidad.
 
 Esta lista enumera lo que se publica, y por eso hay que ampliarla **antes**
-de publicar un dato nuevo: el directorio de quien ofrece muestra desde la
-Fase A los nombres de los insumos declarados. Las **cantidades no se
-publican** y por eso no están en la lista — una lista pública de quién
-tiene cuánto y en qué municipio es un mapa de existencias.
+de publicar un dato nuevo.
+
+⚠ Decía además «los insumos que diga tener». Se retiró con el módulo de
+insumos (ADR 0014): ya no hay inventario que declarar ni directorio donde
+salga.
 
 Guarda `acepto_publicacion = true` y `acepto_politica_at = now()`. Esa
 marca de tiempo es la prueba de la autorización.
 
-### 3b. Texto de autorización del acompañamiento (Flujo 2)
+### 3b. Texto de autorización del acompañamiento (RETIRADO)
+
+⚠ El flujo acompañado se retiró con el ADR 0007 y el módulo de insumos con el
+ADR 0014. Este texto no lo firma nadie y no hay dónde guardarlo: `identidades`
+y `accesos_identidad` ya no existen. Se conserva aquí porque un texto de
+consentimiento retirado también es parte del historial de qué se pidió y
+cuándo — **no se vuelve a usar sin que el responsable lo revise.**
+
+<details>
+<summary>El texto que estuvo vigente</summary>
 
 Este es **otro** consentimiento y va aparte del de arriba: lo firma quien
 pide ayuda, no quien la ofrece, y lo que autoriza no es publicar sino
@@ -372,6 +388,8 @@ carpeta, con su lista de qué mirar antes de firmarlo.
 **Sin documentos, y por tanto sin datos de menores.** Desde el 20 de agosto
 de 2026 no se pide ni se guarda ningún número de documento. Lo anterior
 por un CHECK en la base, no por una validación de pantalla.
+
+</details>
 
 ### 3c. Texto de autorización del proveedor de servicios
 
@@ -579,7 +597,7 @@ acumulación, y arrastra responsabilidad hacia el responsable del proyecto.
 ### Antes de dar de alta la PRIMERA organización real
 
 Nada del flujo acompañado puede llegar a producción sin esto. La lista es
-la de `PLAN-V2.md` §12; aquí está el estado real de cada punto.
+la de `docs/PENDIENTES-LEGALES.md`; aquí está el estado real de cada punto.
 
 - [ ] **Contrato de transmisión firmado** por las dos partes. Borrador en
       `CONTRATO-TRANSMISION.md`. Va **antes** de crear la fila en
@@ -600,12 +618,12 @@ la de `PLAN-V2.md` §12; aquí está el estado real de cada punto.
       texto de autorización nombra a la fundación, no a la persona natural.
 - [ ] **Consulta a soporte de Vercel** sobre si una fundación coordinando
       entregas rompe la prohibición de uso comercial del plan Hobby. Ver
-      `PLAN-V2.md` §13.8.
+      `docs/PENDIENTES-LEGALES.md`, «Zona gris sin resolver».
 - [ ] **Revisión de abogado** de este documento y del contrato, juntos.
 
 ### Antes de publicar el PRIMER proveedor real de /servicios
 
-La lista es la de `PLAN-V3.md` §7. Ninguno de estos puntos es código, y el
+La lista es la de `docs/PENDIENTES-LEGALES.md`. Ninguno de estos puntos es código, y el
 módulo se decidió sin interruptor de despliegue: el orden de trabajo es lo
 único que los protege.
 
@@ -626,7 +644,7 @@ módulo se decidió sin interruptor de despliegue: el orden de trabajo es lo
 - [x] **Aviso de privacidad en dos regímenes**, sin diluir la promesa de la
       ayuda de emergencia.
 - [ ] **Consulta a soporte de Vercel** rehecha, ahora con una fundación con
-      posible personal asalariado de por medio. `PLAN-V2.md` §13.8.
+      posible personal asalariado de por medio. `docs/PENDIENTES-LEGALES.md`, «Zona gris sin resolver».
 
 ### Al mover cualquier texto legal
 

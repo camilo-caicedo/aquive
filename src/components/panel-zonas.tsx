@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useAviso } from '@/components/avisos'
 import {
   Select,
   SelectContent,
@@ -48,6 +49,7 @@ const TIPOS: { valor: TipoZona; etiqueta: string }[] = [
  */
 export function PanelZonas({ zonas }: { zonas: ZonaPropuesta[] }) {
   const router = useRouter()
+  const avisar = useAviso()
   const [editando, setEditando] = useState<Record<string, { nombre: string; tipo: TipoZona }>>({})
   const [ocupado, setOcupado] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -72,6 +74,7 @@ export function PanelZonas({ zonas }: { zonas: ZonaPropuesta[] }) {
       setError(rpcError.message)
       return
     }
+    avisar('Zona propuesta. La revisamos.')
     router.refresh()
   }
 
@@ -96,7 +99,7 @@ export function PanelZonas({ zonas }: { zonas: ZonaPropuesta[] }) {
         {zonas.map((z) => {
           const c = campo(z)
           return (
-            <li key={z.id} className="rounded-2xl bg-card p-4 shadow-sm">
+            <li key={z.id} className="rounded-2xl bg-card p-4 shadow-canto">
               <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
                 <MapPin className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
                 <span>

@@ -1,12 +1,21 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { Mail, Plus } from 'lucide-react'
+import { ChevronRight, LifeBuoy, Mail } from 'lucide-react'
+
 import { createClient } from '@/lib/supabase/server'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
 import { MarcoFlujo } from '@/components/marco-flujo'
 import { BotonGoogle } from './boton-google'
 
+/**
+ * Pantalla 03. La puerta de la cuenta.
+ *
+ * ⚠ Es una puerta, no un peaje. Las dos salidas de abajo —«Seguir sin cuenta»
+ * y «Alta con la fundación»— no son letra pequeña: buena parte del público
+ * usa el sitio sin cuenta a propósito, y buena parte del rebusque no maneja
+ * Google. Si alguna vez esta pantalla deja de ofrecerlas de forma visible,
+ * deja de ser cierto que aquí se puede buscar y pedir sin registrarse.
+ */
 export default async function LoginPage({
   searchParams,
 }: {
@@ -18,16 +27,21 @@ export default async function LoginPage({
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (user) redirect('/registro')
+  if (user) redirect('/empezar')
 
   return (
-    <MarcoFlujo titulo="Entrar" volver="/">
-      <h2 className="font-heading text-3xl leading-tight">
-        Entra para poder responder
+    <MarcoFlujo titulo="Entrar" volver="/inicio">
+      <h2 className="font-heading text-4xl leading-[1.05]">
+        Entra con
+        <br />
+        tu cuenta
+        <br />
+        de Google
       </h2>
       <p className="mt-2 text-base text-muted-foreground">
-        La cuenta es para quien ofrece: sirve para que tu nombre y tu contacto
-        sean tuyos, y para que solo tú puedas cambiarlos o borrarlos.
+        Es el único acceso por ahora. Si es tu primera vez, la cuenta se crea
+        sola; si ya entraste antes, vuelves a lo tuyo. Sin contraseña que
+        recordar ni que perder.
       </p>
 
       {error && (
@@ -39,23 +53,22 @@ export default async function LoginPage({
       )}
 
       {/* Lo del correo va DENTRO de la tarjeta del botón, que es donde se
-          decide, y no como un bloque de aviso suelto arriba (regla 5). La
-          tarjeta lleva borde terracota porque es la acción de la pantalla. */}
-      <div className="mt-6 rounded-2xl border border-primary/40 bg-card p-4">
-        <p className="flex items-start gap-2 text-base">
-          <Mail className="size-5 shrink-0 translate-y-0.5 text-primary" aria-hidden="true" />
+          decide, y no como un bloque de aviso suelto arriba (regla 5). */}
+      <div className="mt-7">
+        <BotonGoogle destino={volver} />
+
+        <p className="mt-4 flex items-start gap-2 text-base text-muted-foreground">
+          <Mail className="size-5 shrink-0 translate-y-0.5" aria-hidden="true" />
           <span>
-            <strong className="font-semibold">No guardamos tu correo.</strong> De
-            tu cuenta de Google conservamos un identificador interno y nada más.
-            No lo leemos, no lo guardamos y no queda en ningún registro.
+            <strong className="text-foreground font-semibold">
+              No guardamos tu correo.
+            </strong>{' '}
+            De tu cuenta de Google conservamos un identificador interno y nada
+            más. No lo leemos, no lo guardamos y no queda en ningún registro.
           </span>
         </p>
 
-        <div className="mt-4">
-          <BotonGoogle destino={volver} />
-        </div>
-
-        <p className="mt-2 text-sm text-muted-foreground">
+        <p className="mt-2 text-base text-muted-foreground">
           Al continuar aceptas los{' '}
           <Link href="/terminos" className="underline">
             términos
@@ -69,40 +82,49 @@ export default async function LoginPage({
         </p>
       </div>
 
-      {/* Una salida de verdad, con su título y su botón. Antes era un enlace
-          subrayado al final de la pantalla, debajo de todo lo que no le
-          hacía falta leer a quien viene a pedir. */}
-      <div className="mt-8 border-t border-border pt-6">
-        <h2 className="text-lg font-semibold">¿Vienes a pedir ayuda?</h2>
-        <p className="mt-1 text-base text-muted-foreground">
-          No necesitas cuenta ni dar tus datos. Publica qué te hace falta y
-          quien pueda ayudarte responde con su contacto.
+      {/* Las dos salidas, juntas y con el mismo peso que la de arriba. El
+          prototipo las agrupa bajo una pregunta, y con razón: quien llega
+          aquí sin cuenta de Google necesita saber de una que no se ha
+          equivocado de sitio. */}
+      <section className="bg-accent text-accent-foreground mt-8 rounded-2xl p-5">
+        <h2 className="font-heading text-xl">¿No tienes cuenta de Google?</h2>
+        <p className="mt-2 text-base">
+          No hace falta cuenta para buscar un servicio ni para pedir algo en el
+          muro: eso funciona sin registro. Y si vas a ofrecer tu trabajo pero no
+          manejas Google, la fundación te da de alta en persona.
         </p>
-        <Button
-          variant="outline"
-          className="mt-3"
-          nativeButton={false}
-          render={<Link href="/publicar" />}
+        {/* La primera en píldora blanca —es la salida que más gente usa— y
+            la segunda como enlace: es para pocos, y con dos botones iguales
+            quien solo venía a mirar dudaba cuál era el suyo. */}
+        <Link
+          href="/inicio"
+          className="pulsable shadow-canto mt-4 inline-flex min-h-12 items-center rounded-full bg-card px-5 text-base font-semibold"
         >
-          <Plus className="size-5" aria-hidden="true" />
-          Publicar una solicitud
-        </Button>
-      </div>
-
-      {/* La tercera puerta. Se mencionaba solo dentro de
-          /servicios/soy-proveedor, así que quien no tiene cuenta de Google
-          —que es buena parte del rebusque, y a quien el módulo quiere
-          incluir— llegaba aquí y se quedaba sin camino. Va como línea y no
-          como tarjeta: es para pocos, y compitiendo con la salida de arriba
-          confundía a quien solo venía a pedir. */}
-      <p className="mt-6 text-base text-muted-foreground">
-        ¿Vives de un oficio y no tienes cuenta de Google? Una organización
-        aliada puede registrarte y darte un enlace propio para manejar tu
-        ficha.{' '}
-        <Link href="/servidores" className="underline">
-          Cómo encontrarlas
+          Seguir sin cuenta
         </Link>
-      </p>
+
+        <p className="mt-4">
+          <Link
+            href="/entidades"
+            className="text-foreground min-h-12 text-base font-medium underline underline-offset-4"
+          >
+            Alta con la fundación
+          </Link>
+        </p>
+      </section>
+
+      {/* Fila con canto, no un enlace suelto: es un destino, y a esta altura
+          de la pantalla un subrayado se pierde. */}
+      <Link
+        href="/ayuda"
+        className="pulsable-tarjeta shadow-canto mt-4 flex min-h-14 items-center justify-between gap-3 rounded-2xl bg-card px-5"
+      >
+        <span className="flex items-center gap-3 text-base font-medium">
+          <LifeBuoy className="size-5 shrink-0" aria-hidden="true" />
+          Preguntas frecuentes
+        </span>
+        <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+      </Link>
     </MarcoFlujo>
   )
 }

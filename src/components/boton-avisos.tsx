@@ -8,9 +8,6 @@ import {
   BellOff,
   BellRing,
   MessageSquare,
-  UserPlus,
-  Clock,
-  HeartHandshake,
   ShieldAlert,
   type LucideIcon,
 } from 'lucide-react'
@@ -49,11 +46,20 @@ function haceCuanto(iso: string) {
  * estado es por navegador, así que apagarlo aquí no lo apaga en el otro
  * teléfono.
  */
+/**
+ * ⚠ Las claves son las que `mis_avisos()` emite de verdad, no las que un
+ * día emitió. Tenía cinco —`mensaje`, `invitacion`, `sin_atender`,
+ * `acompanamiento`, `reporte`— y la función solo devuelve `respuesta`:
+ * `ICONO_AVISO[aviso.tipo]` era `undefined` y `<Icono />` con `undefined`
+ * es «Element type is invalid», o sea la campana caída en cuanto alguien
+ * tuviera un aviso.
+ *
+ * El `?? ` de abajo es el cinturón: si mañana la base emite un tipo nuevo
+ * antes de que esto lo conozca, se pinta un icono genérico en vez de tirar
+ * la pantalla.
+ */
 const ICONO_AVISO: Record<Aviso['tipo'], LucideIcon> = {
-  mensaje: MessageSquare,
-  invitacion: UserPlus,
-  sin_atender: Clock,
-  acompanamiento: HeartHandshake,
+  respuesta: MessageSquare,
   reporte: ShieldAlert,
 }
 
@@ -215,9 +221,13 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
           // es verdad, pero un «9+» sobre un icono de 20 px no se lee en un
           // teléfono al sol, que es donde se usa esto. El número exacto
           // sigue estando dentro, en la hoja, junto a cada aviso.
+          // ⚠ El anillo es TINTA, no papel. El lima sobre el crema del
+          // encabezado da 1,35:1: un punto de 10 px con anillo del mismo
+          // fondo no se veía. Con el canto negro del cartel se lee, y sigue
+          // sin depender solo del color — la campana ya dice «N sin ver».
           <span
             aria-hidden="true"
-            className="absolute top-2 right-2 size-2.5 rounded-full bg-primary ring-2 ring-background"
+            className="absolute top-2 right-2 size-2.5 rounded-full bg-primary ring-2 ring-foreground"
           />
         )}
       </button>
@@ -234,7 +244,7 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
         ref={panel}
         id="panel-avisos"
         popover="auto"
-        className="hoja-inferior fixed inset-x-0 top-auto bottom-0 m-0 max-h-[88vh] w-full max-w-none overflow-y-auto rounded-t-2xl border-t border-border bg-background p-0 text-foreground shadow-lg backdrop:bg-foreground/40 sm:inset-auto sm:max-h-[70vh] sm:w-96 sm:rounded-xl sm:border"
+        className="hoja-inferior fixed inset-x-0 top-auto bottom-0 m-0 max-h-[88dvh] w-full max-w-none overflow-y-auto rounded-t-2xl border-t border-border bg-background p-0 text-foreground shadow-lg backdrop:bg-foreground/40 sm:inset-auto sm:max-h-[70dvh] sm:w-96 sm:rounded-xl sm:border"
       >
         <div className="sticky top-0 z-10 border-b border-border bg-background px-4 pt-2">
           <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-border sm:hidden" />
@@ -245,7 +255,7 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
               popoverTarget="panel-avisos"
               popoverTargetAction="hide"
               aria-label="Cerrar"
-              className="-mr-2 flex size-12 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              className="pulsable -mr-2 flex size-12 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <span aria-hidden="true" className="text-2xl leading-none">
                 ×
@@ -272,7 +282,7 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
               type="button"
               onClick={alternarPush}
               disabled={push === 'cargando' || push === 'trabajando'}
-              className="mt-2 inline-flex min-h-12 items-center gap-2 rounded-full bg-primary px-4 text-base font-medium text-primary-foreground disabled:opacity-50"
+              className="pulsable mt-2 inline-flex min-h-12 items-center gap-2 rounded-full bg-primary px-4 text-base font-medium text-primary-foreground disabled:opacity-50"
             >
               <IconoPush className="size-5 shrink-0" aria-hidden="true" />
               Activar avisos
@@ -295,7 +305,7 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
         ) : (
           <ul>
             {avisos.map((aviso, i) => {
-              const Icono = ICONO_AVISO[aviso.tipo]
+              const Icono = ICONO_AVISO[aviso.tipo] ?? Bell
               const dia = diaDe(aviso.fecha)
               const nuevoDia = i === 0 || diaDe(avisos[i - 1].fecha) !== dia
               return (
@@ -314,7 +324,7 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
                   >
                     <span
                       className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${
-                        i < nuevos ? 'bg-background text-primary' : 'bg-muted text-muted-foreground'
+                        i < nuevos ? 'bg-background text-enlace' : 'bg-muted text-muted-foreground'
                       }`}
                     >
                       <Icono className="size-4" aria-hidden="true" />

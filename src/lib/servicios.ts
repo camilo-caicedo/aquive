@@ -20,6 +20,8 @@ import type {
   UrgenciaServicio,
   CapacidadPago,
 } from '@/lib/types'
+import { NOMBRE_GRUPO } from '@/contrato/servicios'
+import { NOMBRE_UNIDAD, type UnidadProducto } from '@/contrato/comunidad'
 
 export const MODALIDADES: { valor: ModalidadServicio; etiqueta: string }[] = [
   { valor: 'domicilio', etiqueta: 'Voy a domicilio' },
@@ -78,16 +80,9 @@ export const UNIDADES: { valor: UnidadPrecio; etiqueta: string }[] = [
   { valor: 'unidad', etiqueta: 'por unidad' },
 ]
 
-export const GRUPOS: Record<GrupoOficio, string> = {
-  comida: 'Comida',
-  belleza: 'Belleza',
-  confeccion: 'Confección y arreglos',
-  transporte: 'Transporte y trasteos',
-  aseo: 'Aseo',
-  cuidado: 'Cuidado',
-  reparacion: 'Reparaciones',
-  otros: 'Otros',
-}
+// La tabla vive en el contrato, que es la capa compartida con Expo. Aquí solo
+// se estrecha el tipo para el código de la web, que sí conoce `GrupoOficio`.
+export const GRUPOS = NOMBRE_GRUPO as Record<GrupoOficio, string>
 
 export const TIPOS_PROVEEDOR: { valor: TipoProveedor; etiqueta: string }[] = [
   { valor: 'persona', etiqueta: 'Trabajo por mi cuenta' },
@@ -125,10 +120,10 @@ export const etiquetaMedioPago = (v: MedioPago) => etiquetaDe(MEDIOS_PAGO, v)
  * tarifa cerrada, y dar a entender lo contrario provoca justo la discusión
  * que la plataforma no puede mediar.
  */
-export function precioLegible(
+function conMonto(
   modo: ModoPrecio,
   precioDesde: number | null,
-  unidad: UnidadPrecio | null
+  cola: string,
 ): string {
   if (modo === 'gratis') return 'Gratis'
   if (modo === 'aporte') return 'Aporte voluntario'
@@ -139,8 +134,33 @@ export function precioLegible(
     currency: 'COP',
     maximumFractionDigits: 0,
   }).format(precioDesde)
-  const cola = unidad ? ` ${etiquetaDe(UNIDADES, unidad)}` : ''
   return `${prefijo ? prefijo + ': ' : ''}Desde ${monto}${cola}`
+}
+
+export function precioLegible(
+  modo: ModoPrecio,
+  precioDesde: number | null,
+  unidad: UnidadPrecio | null
+): string {
+  return conMonto(modo, precioDesde, unidad ? ` ${etiquetaDe(UNIDADES, unidad)}` : '')
+}
+
+/**
+ * Lo mismo, para un producto.
+ *
+ * ⚠ Existe porque las unidades NO son las mismas. Un oficio se cobra por
+ * hora, por día, por prenda o por viaje; un producto se vende por libra,
+ * por kilo o por docena. Pasar una por la otra imprimía «Desde $3.500
+ * libra» —sin artículo, porque `UNIDADES` no conoce esa palabra—, y era un
+ * fallo silencioso: el tipo se colaba con un `as` y solo se notaba mirando
+ * la pantalla.
+ */
+export function precioDeProducto(
+  modo: ModoPrecio,
+  precioDesde: number | null,
+  unidad: UnidadProducto | null
+): string {
+  return conMonto(modo, precioDesde, unidad ? ` ${NOMBRE_UNIDAD[unidad]}` : '')
 }
 
 /** «Lunes a viernes» cuando se puede, la lista suelta cuando no. */
@@ -165,3 +185,8 @@ export function diasLegibles(dias: DiaSemana[]): string | null {
  */
 export const zonaLegible = (nombre: string | null, texto: string | null) =>
   [nombre, texto].filter(Boolean).join(' · ') || null
+
+// `ubicacionCompleta` vive en su propio archivo, sin imports, y no aquí:
+// este módulo importa de `@/contrato`, que un `node` suelto no resuelve, y
+// la comprobación de `servicios.ubicacion.test.mjs` corre sin bundler.
+export { ubicacionCompleta } from './ubicacion-proveedor'

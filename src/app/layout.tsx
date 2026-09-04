@@ -1,26 +1,37 @@
 import type { Metadata, Viewport } from "next";
-import { Figtree, Caprasimo, Geist_Mono } from "next/font/google";
+import { Poppins, Montserrat, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { CORREO_CONTACTO } from "@/lib/config";
 import { Encabezado } from "@/components/encabezado";
 import { AvisoPruebas } from "@/components/aviso-pruebas";
 import { PieDePagina } from "@/components/pie-de-pagina";
+import { RastroDeNavegacion } from "@/components/volver";
+import { ProveedorDeAvisos } from "@/components/avisos";
+import { BarraDeCarga } from "@/components/barra-de-carga";
 
-// Cuerpo. Reemplaza a Geist: misma legibilidad en Android viejo, curvas
-// más humanas.
-const figtree = Figtree({
-  variable: "--font-figtree",
+// Cuerpo (ADR 0002). Reemplaza a Figtree.
+//
+// PENDIENTE DE PRUEBA: Poppins es geométrica y confunde `I`, `l` y `1` en
+// tamaños chicos. El piso del proyecto es 16 px en un teléfono viejo, y eso
+// hay que verlo en un aparato real, no en un emulador. Si falla, el
+// reemplazo es Archivo —la tercera opción del manual— y es este bloque, no
+// más.
+const poppins = Poppins({
+  variable: "--font-poppins",
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
 });
 
-// Solo títulos (h1 y h2). Un solo peso, y nunca en párrafos ni en botones.
-const caprasimo = Caprasimo({
-  variable: "--font-caprasimo",
-  weight: "400",
+// Titulares y etiquetas (ADR 0002). Reemplaza a Caprasimo. Los pesos altos
+// son los que le dan la presencia de cartel que pide el manual; en etiquetas
+// va en mayúsculas con letter-spacing, no aquí.
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
+  weight: ["600", "700", "800", "900"],
   subsets: ["latin"],
 });
 
-// Se queda: es la que muestra los códigos de solicitud.
+// Se queda: códigos de servicio, ID de carné y valores enmascarados.
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -45,7 +56,7 @@ export const metadata: Metadata = {
     siteName: "AquíVe",
     title: "AquíVe",
     description:
-      "AquíVe es una plataforma gratuita que conecta, en Colombia, a quien necesita algo con quien puede darlo: insumos que alguien entrega sin cobrar, servicios de profesionales con matrícula, y el trabajo de gente que vive de su oficio.",
+      "Una red de vecinos donde quien necesita un servicio encuentra a quien lo ofrece, sin intermediarios. Sin comisiones, sin intermediar el pago.",
     url: "https://aquive.co/",
     locale: "es_CO",
   },
@@ -60,7 +71,7 @@ export const metadata: Metadata = {
   // temporal, y el módulo de Servicios —el trabajo de quien vive de su
   // oficio— no aparecía en ninguna descripción.
   description:
-    "AquíVe es una plataforma gratuita que conecta, en Colombia, a quien necesita algo con quien puede darlo: insumos que alguien entrega sin cobrar, servicios de profesionales con matrícula, y el trabajo de gente que vive de su oficio. Pedir ayuda no exige dar datos personales.",
+    "Una red de vecinos donde quien necesita un servicio encuentra a quien lo ofrece, sin intermediarios. Sin comisiones, sin intermediar el pago.",
   manifest: "/manifest.json",
   // Verificación de propiedad del dominio ante Google. Hace falta para que
   // Google apruebe la marca de la pantalla de consentimiento OAuth: sin
@@ -83,17 +94,23 @@ export const metadata: Metadata = {
     ? { robots: { index: false, follow: false } }
     : {}),
   appleWebApp: { capable: true, title: "AquíVe", statusBarStyle: "default" },
+  // Todos salen del arte del diseñador con `node scripts/iconos.mjs`. Los de
+  // 16 y 32 px no son el cuadrado reducido: son dibujos aparte, porque a ese
+  // tamaño el completo es una mancha.
   icons: {
     icon: [
+      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
       { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
       { url: "/icono-192.png", sizes: "192x192", type: "image/png" },
     ],
-    apple: "/icono-192.png",
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#8c491a",
+  // El crema del fondo, no el lima: esto pinta la barra del sistema, y el
+  // lima es la acción de una pantalla, no el color de la aplicación.
+  themeColor: "#f5eee2",
 };
 
 // Datos estructurados: el nombre y el propósito en el formato que lee una
@@ -107,7 +124,7 @@ const DATOS_ESTRUCTURADOS = {
   url: "https://aquive.co/",
   inLanguage: "es-CO",
   description:
-    "AquíVe es una plataforma gratuita que conecta, en Colombia, a quien necesita algo con quien puede darlo: insumos que alguien entrega sin cobrar, servicios de profesionales con matrícula, y el trabajo de gente que vive de su oficio.",
+    "Una red de vecinos donde quien necesita un servicio encuentra a quien lo ofrece, sin intermediarios. Sin comisiones, sin intermediar el pago.",
   publisher: {
     "@type": "Organization",
     name: "AquíVe",
@@ -117,11 +134,11 @@ const DATOS_ESTRUCTURADOS = {
   },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children, modal }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${figtree.variable} ${caprasimo.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${poppins.variable} ${montserrat.variable} ${geistMono.variable} h-full antialiased`}
     >
       {/* El hueco de abajo es para `BarraInferior`, que va fija en el
           teléfono: sin él tapa el final de cada página y el pie entero. */}
@@ -139,12 +156,23 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Saltar al contenido
         </a>
-        <AvisoPruebas />
-        <Encabezado />
-        <div id="contenido" className="flex-1">
-          {children}
-        </div>
-        <PieDePagina />
+        {/* El proveedor envuelve TODO lo que puede guardar algo, incluido
+            `{modal}`: los formularios de flujo se abren interceptados y
+            desde ahí también se guarda. */}
+        <ProveedorDeAvisos>
+          <BarraDeCarga />
+          <RastroDeNavegacion />
+          <AvisoPruebas />
+          <Encabezado />
+          <div id="contenido" className="flex-1">
+            {children}
+          </div>
+          {/* Las pantallas interceptadas: la ficha y los formularios de flujo
+              se abren encima de lo que ya estaba, sin desmontarlo. Fuera de
+              una intercepción esto es `null`. Ver `hoja-modal.tsx`. */}
+          {modal}
+          <PieDePagina />
+        </ProveedorDeAvisos>
       </body>
     </html>
   );

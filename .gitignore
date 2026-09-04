@@ -52,3 +52,26 @@ next-env.d.ts
 # El runbook y el seed de servicios sí pueden ir: no tienen datos personales.
 /migracion/05-datos-cuentas.sql
 /migracion/*-datos-*.sql
+
+# Drizzle: solo se versionan los tipos generados (src/db/generado/*.ts).
+# El SQL de base y los snapshots no — el esquema lo manda supabase/migraciones/,
+# y un 0000_*.sql que recrea 37 tablas es una escopeta cargada apuntando a la
+# base de producción.
+/src/db/generado/*.sql
+/src/db/generado/meta/
+
+# Ayudante local para aplicar migraciones contra la base de pruebas.
+.aplicar.mjs
+
+# Original del diseñador (docs/marca/Logo). Los PNG de 4267 px y el .ai pesan
+# 59 MB y se regeneran desde el SVG, que es la fuente y sí se versiona —igual
+# que los PNG mini, que son de 67 a 134 px—. Los iconos de la aplicación salen
+# de ahí con `node scripts/iconos.mjs`.
+/docs/marca/Logo/*.png
+/docs/marca/Logo/*.ai
+/docs/marca/Logo/PNG/*1024X1024*.png
+/docs/marca/Logo/PNG/*ENMASCARABLE*.png
+
+# Estado local de la CLI de Supabase: a qué proyecto está enlazada ESTA
+# máquina. Es de quien programa, no del repositorio.
+/supabase/.temp/

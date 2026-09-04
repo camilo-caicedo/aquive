@@ -3,11 +3,10 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  HandHeart,
-  Stethoscope,
-  PackageOpen,
+  Home,
   PackageCheck,
   MessageSquare,
+  Search,
   UserRound,
 } from 'lucide-react'
 
@@ -22,63 +21,58 @@ import {
 // eso sigue siendo cierto: es el precio que se paga a cambio de que quien
 // coordina no tenga que entrar a «Lo mío» para llegar a su panel.
 //
-// ⚠ Lo que NO se relaja es la regla 8: se llama «Entregas», por lo que hay
-// dentro, y no «Mi organización», que es un rol. Y no es capricho de
-// estilo — `estado_encabezado.coordinacion` tiene dos valores y esa celda
-// la ven los dos públicos: quien trabaja en una fundación y quien solo
-// ofreció ayuda y tiene conversaciones abiertas. Al segundo, «Mi
-// organización» le mentiría. Lo que los dos vienen a hacer aquí es
-// coordinar una entrega.
+// ⚠ Lo que NO se relaja es la regla 8: se llama «Acopio», por lo que hay
+// dentro, y no «Mi organización», que es un rol.
 //
 // ⚠ Y tampoco cabía: a 360 px cinco celdas dan 68 px útiles, y «Mi
 // organización» a 11,5 px mide unos 86. Con `whitespace-nowrap` se
 // desbordaba, y sin él la etiqueta envuelve y los iconos vuelven a subir y
 // bajar celda a celda, que es justo lo que ese `nowrap` vino a arreglar.
-//
-// «Lo mío» apunta a /mis-solicitudes y no a /registro a propósito:
-// /registro rebota a /login sin sesión, y quien publicó una solicitud sin
-// cuenta —que es el rol central de este sitio— se quedaría fuera de lo
-// suyo. /registro cuelga de aquí a través de TAMBIEN.
 const ENLACES = [
   // ⚠ Servicios es la portada desde el 20 de agosto de 2026, por decisión
   // del responsable: pasó tiempo desde el sismo y lo que queda vivo es la
-  // reactivación económica. El módulo de emergencia no se retira —sigue
-  // entero en /solicitudes— pero deja de ser lo primero que se ve.
+  // reactivación económica. El ADR 0016 fue más allá y retiró el tablero de
+  // pedidos abiertos entero —insumos y el de servicios—: quien necesita algo
+  // busca y contacta, no publica y espera.
   //
-  // Un solo destino para las tres listas de «quién puede hacer algo por
-  // mí»: oficios del rebusque, profesionales con matrícula y entidades.
-  // Detrás son módulos distintos —y el primero tiene otro responsable del
-  // tratamiento— pero para quien busca es la misma pregunta. Las tres se
-  // reparten en `PestanasServicios`.
-  { href: '/', etiqueta: 'Servicios', Icono: Stethoscope },
-  // Los dos lados del directorio, uno en cada celda: quién presta un
-  // servicio y quién está pidiendo uno. Antes el segundo era una sección
-  // colgada del primero —/servicios/solicitudes— y no lo encontraba nadie.
-  { href: '/solicitudes', etiqueta: 'Solicitudes', Icono: HandHeart },
-  // ⚠ Toda la emergencia en una sola celda. Eran dos destinos de la barra
-  // —«Solicitudes» y «Quién ofrece»— más un segmentado propio dentro del
-  // primero: tres capas de navegación para tres listas de la misma
-  // pregunta, y encima compitiendo por sitio con el módulo de servicios,
-  // que es el que hoy recibe a la gente. Las tres se reparten ahora en
-  // `PestanasAyudas`.
-  { href: '/ayudas', etiqueta: 'Ayudas', Icono: PackageOpen },
-  { href: '/mis-solicitudes', etiqueta: 'Lo mío', Icono: UserRound },
+  // ⚠ Apunta a /inicio y NO a `/`. La portada decide a quién le sirve qué:
+  // sin sesión y sin filtros da la bienvenida, y eso está bien para quien
+  // llega escribiendo la dirección. Como celda de la barra estaba mal —
+  // tocar «Inicio» dentro de la aplicación devolvía a la bienvenida, que es
+  // la única pantalla del sitio que quien está adentro ya leyó. /inicio da
+  // el inicio siempre, haya sesión o no.
+  { href: '/inicio', etiqueta: 'Inicio', Icono: Home },
+  // «Buscar» lleva a las categorías, no a un buscador: es la puerta ancha
+  // para quien no sabe qué escribir. Debajo cuelgan el listado, el mapa por
+  // zonas y la ficha.
+  { href: '/categorias', etiqueta: 'Buscar', Icono: Search },
+  // ⚠ La emergencia sale de la barra (ADR 0003, decisión del 26 de agosto de
+  // 2026): se entra a ella desde el inicio. Deja de gastar una de las
+  // cuatro celdas, que ahora las pide el chat.
+  { href: '/mensajes', etiqueta: 'Mensajes', Icono: MessageSquare },
+  // ⚠ Apunta a /perfil y NO a la pantalla de abrir cuenta: aquella rebota a
+  // /login sin sesión, y /perfil sirve las dos caras — con sesión el menú de
+  // lo propio, sin ella la explicación de cómo conseguir una cuenta.
+  { href: '/perfil', etiqueta: 'Perfil', Icono: UserRound },
 ]
 
 // La quinta, antes de «Lo mío», y distinta según el público — que son dos
 // y no se cruzan nunca:
 //
-//   · `organizacion` — el equipo de una fundación. Su sitio es /aliado, que
-//     además de los hilos tiene el equipo, las solicitudes por atender y
-//     los proveedores. Se llama «Entregas» por lo que se hace ahí.
-//   · `coordinacion` — quien ofreció ayuda en una solicitud acompañada. No
-//     pertenece a ninguna organización: lo suyo son sus conversaciones, y
-//     viven en /coordinacion.
+//   · `organizacion` — el equipo de un centro de acopio. Su sitio es
+//     /aliado, que tiene su equipo y las verificaciones que hace.
+//
+// ⚠ Antes había un segundo valor, `coordinacion`, para quien ofreció ayuda
+// en una solicitud acompañada. Se fue con el ADR 0007.
 //
 // Nadie ve las dos, así que la barra no cambia bajo los pies de nadie.
+// ⚠ Aquí había DOS celdas llamadas «Mensajes» —esta y la de la barra fija—
+// para quien coordinaba una entrega. Dos puertas al mismo cuarto, y ninguna
+// con todos sus mensajes dentro. Las conversaciones acompañadas se fueron a
+// /mensajes con el resto; queda solo la celda de quien trabaja en una
+// fundación, que no es una bandeja sino su panel de trabajo.
 const QUINTA = {
-  organizacion: { href: '/aliado', etiqueta: 'Entregas', Icono: PackageCheck },
-  coordinacion: { href: '/coordinacion', etiqueta: 'Mensajes', Icono: MessageSquare },
+  organizacion: { href: '/aliado', etiqueta: 'Acopio', Icono: PackageCheck },
 } as const
 
 export type Coordinacion = keyof typeof QUINTA | null
@@ -90,8 +84,8 @@ function celdas(coordinacion: Coordinacion) {
 
 // Rutas que marcan una celda sin colgar de ella.
 //
-// Las tres listas de servicios están repartidas en dos rutas —/servicios
-// para los oficios, /servidores para profesionales y entidades— y las dos
+// Las tres listas de servicios tienen ruta propia —/directorio para los
+// oficios, /profesionales y /entidades para las otras dos— y las tres
 // tienen que dejar la misma celda encendida. Sin esto, tocar
 // «Profesionales» apaga la navegación entera y parece que uno se salió del
 // sitio.
@@ -103,36 +97,59 @@ const TAMBIEN: Record<string, string[]> = {
   // La portada es el directorio, así que las otras dos listas de la misma
   // pregunta cuelgan de ella, y también la puerta vieja /servicios y todo
   // lo que hay debajo: publicar una ficha, una ficha concreta, la demanda.
-  '/': ['/servicios', '/servidores'],
-  // Las otras dos listas de la emergencia, y los dos extremos de una
-  // solicitud. /solicitud/[token] no está aquí: esa es la propia, y vive
-  // en «Lo mío».
-  '/ayudas': ['/ofertadores', '/publicar', '/responder'],
-  // /solicitud/[token] es la pantalla de una solicitud propia: se llega
+  // Lo que se entra a MIRAR desde el inicio: la comunidad. No gasta celda
+  // propia, y sus pantallas encienden «Inicio» en vez de apagar las cuatro.
+  '/inicio': [
+    '/',
+    '/directorio',
+    '/servicios',
+    '/prestador',
+    '/profesionales',
+    '/entidades',
+    '/producto',
+    '/profesional',
+    '/entidad',
+    '/muro',
+    '/donaciones',
+    '/barrio',
+  ],
+  // Buscar: categorías es la puerta, y debajo el mapa, las zonas y la ficha.
+  '/categorias': ['/zonas', '/mapa'],
+  // La ruta vieja de la bandeja acompañada redirige aquí, pero alguien puede
+  // llegar por un enlace guardado.
+  '/mensajes': ['/coordinacion'],
+  // /mis-solicitudes es la pantalla de lo propio: se llega
   // desde «Lo mío» y se vuelve ahí. Sin esta línea, abrir la solicitud
   // apagaba las cuatro celdas y la barra parecía de otra aplicación.
   // `/servicios/soy-proveedor` es la pestaña «Mi ficha», aunque su ruta
   // cuelgue del módulo de servicios: quien la abre viene a mirar lo suyo.
-  '/mis-solicitudes': [
-    '/registro',
+  '/perfil': [
+    '/mis-solicitudes',
+    '/empezar',
     '/mis-datos',
     '/solicitud',
     '/servicios/soy-proveedor',
+    '/servicios/mi-perfil',
   ],
+  // ⚠ Ayuda, contacto y quiénes somos NO cuelgan de ninguna celda, a
+  // propósito. El prototipo los pone bajo «Perfil», pero no son «lo mío»:
+  // son información del sitio, y encender «Perfil» al abrirlos dice que
+  // estás en tu cuenta cuando no lo estás. Sin celda activa la barra no
+  // miente; solo dice que esto no es ninguno de los cuatro destinos.
 }
 
 // Coincidencia exacta para la portada; por prefijo para el resto, para que
-// /responder/ABCD siga marcando «Solicitudes».
+// una ficha concreta o una subruta de un módulo sigan marcando su celda.
 //
 // ⚠ La portada mira TAMBIEN igual que las demás. Antes cortocircuitaba con
 // `return ruta === '/'`, y desde que el directorio vive ahí eso apagaba la
-// celda entera al entrar a una ficha de servicios o a /servidores: la
+// celda entera al entrar a una ficha de servicios o a /profesionales: la
 // barra parecía de otra aplicación justo al dar el primer paso dentro del
 // módulo que ahora recibe a todo el mundo.
 // ⚠ Por segmentos y no por `startsWith` a secas. Con la comparación de
-// texto pelada, /solicitudes encendía TAMBIÉN «Lo mío», porque de esa celda
-// cuelga /solicitud —la solicitud propia— y una es prefijo de la otra. Lo
-// mismo pasaría el día que alguien añada /servicio junto a /servicios.
+// texto pelada, /mis-solicitudes encendía TAMBIÉN «Lo mío» dos veces por
+// dos caminos distintos, y /servicio encendería «Servicios» el día que
+// exista junto a /servicios. Un segmento entero o nada.
 function bajo(ruta: string, base: string) {
   return ruta === base || ruta.startsWith(base + '/')
 }
@@ -141,6 +158,9 @@ function bajo(ruta: string, base: string) {
  * Cuánto de específica es la coincidencia de esta celda con la ruta, o -1
  * si no coincide.
  *
+ * La portada entra por TAMBIEN como una base más: `bajo(ruta, '/')` solo
+ * es cierto para `/` exacto, así que no se traga el sitio entero.
+ *
  * ⚠ Gana la MÁS LARGA, y eso no es refinamiento: hay rutas que caen bajo
  * dos celdas a la vez. `/servicios/soy-proveedor` está debajo de
  * `/servicios`, que cuelga de la portada, y a la vez es la pestaña «Mi
@@ -148,12 +168,39 @@ function bajo(ruta: string, base: string) {
  * sí, se encendían las dos celdas.
  */
 function cuanCalza(ruta: string, href: string) {
-  const bases = [...(TAMBIEN[href] ?? []), ...(href === '/' ? [] : [href])]
-  let mejor = href === '/' && ruta === '/' ? 1 : -1
+  const bases = [...(TAMBIEN[href] ?? []), href]
+  let mejor = -1
   for (const base of bases) {
     if (bajo(ruta, base) && base.length > mejor) mejor = base.length
   }
   return mejor
+}
+
+/**
+ * El punto de «tienes algo sin leer».
+ *
+ * Sin número dentro, a propósito. La pregunta que se hace quien mira la
+ * barra de reojo es «¿hay algo?», y un número obliga a enfocar para leerlo
+ * —a 11 px, de pie y con prisa— para responder algo que el punto ya
+ * responde. El escudo de administración sí lo lleva, y ahí sirve: son colas
+ * de trabajo y saber si son tres o treinta cambia lo que uno hace.
+ *
+ * ⚠ No depende solo del color: el número va en el `aria-label` de la celda,
+ * que es lo que oye quien no ve el punto.
+ */
+function Punto() {
+  return (
+    <span
+      aria-hidden="true"
+      className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-primary ring-2 ring-background"
+    />
+  )
+}
+
+/** «Mensajes» a secas, o «Mensajes · 2 sin leer» para quien lo oye. */
+function etiquetaConPendientes(etiqueta: string, pendientes: number) {
+  if (pendientes === 0) return undefined
+  return `${etiqueta} · ${pendientes} sin leer`
 }
 
 function celdaActiva(ruta: string, lista: readonly { href: string }[]) {
@@ -179,7 +226,13 @@ function celdaActiva(ruta: string, lista: readonly { href: string }[]) {
  * Solo para pantallas medianas y grandes. En un teléfono la navegación es
  * `BarraInferior`, aquí abajo.
  */
-export function Navegacion({ coordinacion = null }: { coordinacion?: Coordinacion }) {
+export function Navegacion({
+  coordinacion = null,
+  sinLeer = 0,
+}: {
+  coordinacion?: Coordinacion
+  sinLeer?: number
+}) {
   const ruta = usePathname()
   const cual = celdaActiva(ruta, celdas(coordinacion))
 
@@ -188,20 +241,25 @@ export function Navegacion({ coordinacion = null }: { coordinacion?: Coordinacio
       <ul className="flex gap-1">
         {celdas(coordinacion).map(({ href, etiqueta, Icono }) => {
           const activa = href === cual
+          const pendientes = href === '/mensajes' ? sinLeer : 0
           return (
             <li key={href}>
               <Link
                 href={href}
                 aria-current={activa ? 'page' : undefined}
+                aria-label={etiquetaConPendientes(etiqueta, pendientes)}
                 // Color Y barra inferior: el subrayado se ve aunque no se
                 // distinga el color, y sobrevive al alto contraste.
                 className={`flex min-h-12 shrink-0 items-center gap-1.5 rounded-t-lg border-b-2 px-3 text-base transition-colors ${
                   activa
-                    ? 'border-primary font-semibold text-foreground'
+                    ? 'border-enlace font-semibold text-foreground'
                     : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
               >
-                <Icono className="size-4" aria-hidden="true" />
+                <span className="relative flex shrink-0">
+                  <Icono className="size-4" aria-hidden="true" />
+                  {pendientes > 0 && <Punto />}
+                </span>
                 {etiqueta}
               </Link>
             </li>
@@ -240,7 +298,13 @@ export function Navegacion({ coordinacion = null }: { coordinacion?: Coordinacio
  * 10 del sistema de diseño). Sin el atributo, un formulario de pantalla
  * completa vuelve a ofrecer cuatro salidas a medio llenar.
  */
-export function BarraInferior({ coordinacion = null }: { coordinacion?: Coordinacion }) {
+export function BarraInferior({
+  coordinacion = null,
+  sinLeer = 0,
+}: {
+  coordinacion?: Coordinacion
+  sinLeer?: number
+}) {
   const ruta = usePathname()
   const lista = celdas(coordinacion)
   const cual = celdaActiva(ruta, lista)
@@ -257,20 +321,29 @@ export function BarraInferior({ coordinacion = null }: { coordinacion?: Coordina
       <ul className={lista.length === 5 ? 'grid grid-cols-5' : 'grid grid-cols-4'}>
         {lista.map(({ href, etiqueta, Icono }) => {
           const activa = href === cual
+          const pendientes = href === '/mensajes' ? sinLeer : 0
           return (
             <li key={href}>
               <Link
                 href={href}
                 aria-current={activa ? 'page' : undefined}
+                aria-label={etiquetaConPendientes(etiqueta, pendientes)}
                 // La línea va ARRIBA de la celda, apuntando al contenido,
                 // igual que la de la fila de escritorio apunta hacia abajo.
                 className={`flex min-h-16 flex-col items-center justify-center gap-1 border-t-2 px-1 pt-0.5 transition-colors ${
                   activa
-                    ? 'border-primary text-primary'
+                    ? 'border-enlace text-enlace'
                     : 'border-transparent text-muted-foreground'
                 }`}
               >
-                <Icono className="size-[1.375rem] shrink-0" aria-hidden="true" />
+                <span
+                  className={`relative flex shrink-0 transition-transform duration-[var(--dur-toque)] ease-[var(--curva-suave)] ${
+                    activa ? 'scale-110' : 'scale-100'
+                  }`}
+                >
+                  <Icono className="size-[1.375rem] shrink-0" aria-hidden="true" />
+                  {pendientes > 0 && <Punto />}
+                </span>
                 {/* Antes esto era una caja de dos líneas fija, para que los
                     iconos no subieran y bajaran celda a celda cuando una
                     etiqueta envolvía. Con cuatro destinos ninguna etiqueta

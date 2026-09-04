@@ -1,16 +1,14 @@
 'use client'
 
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import { SlidersHorizontal, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FormularioFiltros } from '@/components/formulario-filtros'
 import { ContenedorHoja } from '@/components/contenedor-hoja'
 import type { OpcionFiltro } from '@/components/select-filtro'
+import { useHidratado } from '@/components/hidratado'
 
-const sinSuscripcion = () => () => {}
-const enCliente = () => true
-const enServidor = () => false
 
 export interface ChipAplicado {
   /** El parámetro que quita, solo para la `key`. */
@@ -70,7 +68,7 @@ export function GrupoChips({
                 acción principal y de nada más (regla 2). Lo marcado se
                 distingue por borde, fondo Y peso de letra, para que no
                 dependa solo del color (regla 9). */}
-            <span className="inline-flex min-h-12 items-center rounded-full border border-border bg-card px-4 text-base transition-colors peer-checked:border-primary peer-checked:bg-secondary peer-checked:font-semibold peer-checked:text-secondary-foreground peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50">
+            <span className="inline-flex min-h-12 items-center rounded-full border border-border bg-card px-4 text-base transition-colors peer-checked:border-enlace peer-checked:bg-secondary peer-checked:font-semibold peer-checked:text-secondary-foreground peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50">
               {o.etiqueta}
             </span>
           </label>
@@ -94,10 +92,8 @@ export function GrupoChips({
  *
  * Sin JavaScript la hoja no se abre, así que ni se dibuja el chip que la
  * abriría: en su lugar queda el formulario de siempre, visible, con su
- * botón «Filtrar». La detección es `useSyncExternalStore`, el mismo patrón
- * que ya usa `SelectFiltro` para degradarse a `<select>` nativo, que es la
- * forma sancionada de decir «esto solo en cliente» sin desajustar la
- * hidratación.
+ * botón «Filtrar». La detección es `useHidratado`, el mismo gancho que usa
+ * `SelectFiltro` para degradarse a `<select>` nativo.
  *
  * La hoja es el `popover` nativo, igual que el panel de `BotonAvisos`:
  * cerrar al tocar fuera, `Escape` y el manejo de foco los da el navegador.
@@ -109,6 +105,7 @@ export function HojaFiltros({
   titulo,
   aplicados,
   chipsExtra,
+  chipsAntes,
   conteo,
   children,
 }: {
@@ -126,17 +123,24 @@ export function HojaFiltros({
    * sería una tercera capa de navegación (regla 3).
    */
   chipsExtra?: ReactNode
+  /**
+   * Lo que va ANTES del chip «Filtros», que es el sitio de la acción
+   * principal de la fila: cambiar de lista a mapa, por ejemplo. Separado
+   * de `chipsExtra` porque el orden es la mitad del mensaje — lo primero
+   * de una fila que se desplaza es lo único que todo el mundo ve.
+   */
+  chipsAntes?: ReactNode
   /** El conteo de resultados, ya redactado por la página. */
   conteo?: ReactNode
   children: ReactNode
 }) {
-  const hidratado = useSyncExternalStore(sinSuscripcion, enCliente, enServidor)
+  const hidratado = useHidratado()
   // El elemento en estado y no en `useRef`: hay dos cosas que solo pueden
   // hacerse cuando existe de verdad —oír su `toggle` y dárselo a los
   // desplegables como contenedor del portal— y con una `ref` el componente
   // no se entera de que ha aparecido. En la primera pintada del cliente
-  // `useSyncExternalStore` devuelve todavía la instantánea del servidor,
-  // así que la hoja ni siquiera está en el árbol.
+  // `useHidratado` devuelve todavía `false`, así que la hoja ni siquiera
+  // está en el árbol.
   const [panel, setPanel] = useState<HTMLDivElement | null>(null)
   // Al cerrar sin aplicar, los controles vuelven a lo que dice la URL. Sin
   // esto, quien marca «Agua», se arrepiente y toca fuera, reabre la hoja y
@@ -161,11 +165,12 @@ export function HojaFiltros({
   const cabecera = (
     <div className="mt-3">
       <div className="riel -mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
+        {chipsAntes}
         {hidratado && (
           <button
             type="button"
             popoverTarget={id}
-            className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-primary bg-accent px-4 text-base font-medium text-accent-foreground"
+            className="pulsable inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-enlace bg-accent px-4 text-base font-medium text-accent-foreground"
           >
             <SlidersHorizontal className="size-4" aria-hidden="true" />
             Filtros
@@ -184,7 +189,7 @@ export function HojaFiltros({
             href={a.href}
             scroll={false}
             aria-label={`Quitar el filtro ${a.etiqueta}`}
-            className="inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-secondary px-4 text-base text-secondary-foreground transition-colors hover:bg-muted"
+            className="pulsable inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-secondary px-4 text-base text-secondary-foreground transition-colors hover:bg-muted"
           >
             {a.etiqueta}
             <X className="size-4 shrink-0" aria-hidden="true" />
@@ -207,7 +212,7 @@ export function HojaFiltros({
         <FormularioFiltros
           action={action}
           variante="outline"
-          className="mt-3 flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-sm"
+          className="mt-3 flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-canto"
         >
           {children}
         </FormularioFiltros>
@@ -235,9 +240,9 @@ export function HojaFiltros({
         id={id}
         popover="auto"
         aria-label={titulo}
-        className="hoja-inferior fixed inset-x-0 top-auto bottom-0 m-0 max-h-[88vh] w-full max-w-none rounded-t-2xl border-t border-border bg-background p-0 text-foreground shadow-lg backdrop:bg-foreground/40"
+        className="hoja-inferior fixed inset-x-0 top-auto bottom-0 m-0 max-h-[88dvh] w-full max-w-none rounded-t-2xl border-t border-border bg-background p-0 text-foreground shadow-lg backdrop:bg-foreground/40"
       >
-        <div className="mx-auto flex max-h-[88vh] max-w-lg flex-col">
+        <div className="mx-auto flex max-h-[88dvh] max-w-lg flex-col">
           <div className="shrink-0 px-4 pt-2">
             <div
               aria-hidden="true"
@@ -250,7 +255,7 @@ export function HojaFiltros({
                 popoverTarget={id}
                 popoverTargetAction="hide"
                 aria-label="Cerrar"
-                className="-mr-2 flex size-12 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="pulsable -mr-2 flex size-12 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <X className="size-5" aria-hidden="true" />
               </button>
@@ -268,7 +273,7 @@ export function HojaFiltros({
                   href={action}
                   scroll={false}
                   onClick={cerrar}
-                  className="inline-flex min-h-12 shrink-0 items-center rounded-full px-3 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  className="pulsable inline-flex min-h-12 shrink-0 items-center rounded-full px-3 text-base text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   Quitar todo
                 </Link>

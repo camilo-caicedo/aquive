@@ -9,7 +9,7 @@ import { BadgeCheck, Store, Users } from 'lucide-react'
  *
  * `Sin verificar` se pinta y no se omite, con el mismo peso visual que el
  * resto: un perfil sin insignias tiene que leerse como «nadie lo revisó»,
- * no como «no aplica». Mismo criterio que la matrícula en /servidores.
+ * no como «no aplica». Mismo criterio que la matrícula en /profesionales.
  */
 export function InsigniasProveedor({
   telefonoVerificado,
@@ -33,18 +33,18 @@ export function InsigniasProveedor({
     <ul className="flex flex-wrap gap-1.5">
       {mostrar !== 'resto' &&
         (telefonoVerificado ? (
-        <li className="inline-flex items-center gap-1.5 rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-ok">
+        <li className="inline-flex items-center gap-1.5 rounded-full bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-foreground">
           <BadgeCheck className="size-4 shrink-0" aria-hidden="true" />
           Teléfono verificado
         </li>
       ) : (
-        <li className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
+        <li className="inline-flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-0.5 text-sm font-medium text-accent-foreground">
           <span aria-hidden="true">!</span> Sin verificar
         </li>
       ))}
 
       {mostrar !== 'telefono' && referenciasConfirmadas > 0 && (
-        <li className="inline-flex items-center gap-1.5 rounded-full border border-ok/30 bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-ok">
+        <li className="inline-flex items-center gap-1.5 rounded-full bg-ok-suave px-2.5 py-0.5 text-sm font-medium text-foreground">
           <Users className="size-4 shrink-0" aria-hidden="true" />
           {referenciasConfirmadas === 1
             ? '1 referencia'
@@ -52,8 +52,12 @@ export function InsigniasProveedor({
         </li>
       )}
 
+      {/* `text-foreground` explícito, como sus tres hermanas: era la única
+          de las cuatro que no ponía su tinta, y dentro de una cinta azul
+          heredaría el blanco. Hoy esta no se pinta ahí, pero es el mismo
+          fallo esperando a que alguien la mueva. */}
       {mostrar !== 'telefono' && esMicroempresa && (
-        <li className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-sm">
+        <li className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-0.5 text-sm text-foreground">
           <Store className="size-4 shrink-0" aria-hidden="true" />
           Negocio registrado
         </li>
