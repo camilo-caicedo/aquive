@@ -12,16 +12,23 @@ comisión y sin mover dinero por la plataforma. Cuatro cosas:
 
 1. **Servicios.** Un prestador publica sus oficios, precios, zonas y horarios.
    Quien necesita busca, pide, acuerda por chat y califica con un código.
-2. **Comunidad.** Un muro con dos caras —lo que sobra y lo que falta— y
-   «Hecho en el barrio», donde quien tiene ficha pone lo que vende. Un
-   producto cuelga de la ficha de quien lo vende: así aparece con el nombre
-   y la autorización que esa persona ya firmó, se contacta por su mismo
-   teléfono y se borra con ella.
+2. **Comunidad.** El muro —lo que alguien tiene y ya no usa— y «Hecho en el
+   barrio», donde quien tiene ficha pone lo que vende. Un producto cuelga
+   de la ficha de quien lo vende: así aparece con el nombre y la
+   autorización que esa persona ya firmó, se contacta por su mismo teléfono
+   y se borra con ella.
 3. **Centros de acopio.** Lugares físicos con dirección y horario donde se
    dejan donaciones y productos, y que registran lo que entra y lo que sale.
    Los lleva el rol de aliado (ADR 0008).
 4. **Moderación.** Colas de trabajo, verificación de matrículas y revisión de
    imágenes.
+
+⚠ Hubo un quinto módulo, **Insumos**: quien necesitaba algo publicaba una
+solicitud y quien podía, respondía. El ADR 0014 lo retiró entero, junto con
+el tablero público de solicitudes de servicio y la cara «necesita» del
+muro — las tres eran la misma forma de conectar, «publica y espera», y el
+cliente la rechazó tras probar la aplicación. Lo que queda para todo lo que
+antes cubría ese módulo es: buscar y contactar.
 
 ## Estado: reescritura completa
 
@@ -47,6 +54,10 @@ archivo, y detrás de él:
 | `docs/decisiones/0013-*.md` | Categoría y subcategoría, en los dos lados |
 | `docs/decisiones/0014-*.md` | **Se retira el módulo de insumos** |
 | `docs/decisiones/0015-*.md` | La cuenta es de cualquiera, y no dice a qué vino |
+| `docs/decisiones/0016-*.md` | Fuera el muro de necesidades y las solicitudes abiertas |
+| `docs/decisiones/0017-*.md` | La solicitud es una orden dirigida a un prestador |
+| `docs/decisiones/0018-*.md` | La sombrilla abre el menú |
+| `docs/decisiones/0019-*.md` | Municipio, barrio y dirección, cada uno con lo suyo |
 | `docs/marca/AquiVe-Flujo.dc.html` | Prototipo de las 40 pantallas |
 | `docs/marca/Manual-de-Marca-AquiVe.pdf` | Manual de marca |
 | `docs/PENDIENTES-LEGALES.md` | Bloqueantes que no son código |
@@ -122,20 +133,23 @@ de productos no la infringe.
 ### 2 · El chat vive dentro y muere con lo que lo abrió
 
 Hay mensajería interna, **una sola para toda la aplicación** (ADR 0009). Un
-hilo cuelga de una de cuatro cosas —una respuesta a un pedido de servicio, un
-producto, una publicación del muro o una ficha de prestador— y se borra cuando
-se borra ella. ⚠ Eran cinco hasta el ADR 0014: la quinta era la respuesta a un
-pedido de insumos, y se fue con su módulo.
+hilo cuelga de una de tres cosas —un producto, una publicación del muro o
+una ficha de prestador— y se borra cuando se borra ella.
 
-- Son cuatro columnas con `on delete cascade`, no un par «tipo + id»: una
+⚠ Eran cinco. El ADR 0014 retiró las otras dos —una respuesta a un pedido de
+servicio y una respuesta a una solicitud de insumos— con el tablero de
+solicitudes de servicio y el módulo de insumos enteros. El chat de la ficha
+pasa a ser el único canal de todo lo de servicios.
+
+- Son tres columnas con `on delete cascade`, no un par «tipo + id»: una
   llave polimórfica no puede cascadear, y entonces el borrado dependería de
-  que algo se acuerde de cumplirlo. Lo sostiene el `CHECK chats_un_origen`.
-- Los dos papeles se llaman igual en los cuatro orígenes: **`ofrece`** tiene la
+  que algo se acuerde de cumplirlo.
+- Los dos papeles se llaman igual en los tres orígenes: **`ofrece`** tiene la
   cosa o el trabajo, **`pide`** la necesita.
-- Una respuesta ya identifica a los dos lados. Un producto y una publicación
-  solo a uno: el otro lo ocupa quien abra el hilo, y hay uno por persona.
+- Un producto y una publicación identifican solo a uno de los dos lados: el
+  otro lo ocupa quien abra el hilo, y hay uno por persona.
 - No se archivan conversaciones. No hay bandeja histórica. `/mensajes` es una
-  sola lista, de los cuatro orígenes y de los dos lados. Lo sin leer sale como
+  sola lista, de los tres orígenes y de los dos lados. Lo sin leer sale como
   punto en la celda «Mensajes» y como palabra en la fila.
 - El chat **filtra datos de contacto**: `wa.me`, `t.me`, correos, arrobas
   sueltas, números colombianos y dígitos escritos con letras. Sin ese filtro el
@@ -158,7 +172,7 @@ Nunca `estado = 'eliminada'`.
 | Producto de «Hecho en el barrio» | mientras su dueño lo deje |
 | Ficha de prestador | permanente, hasta que la borre o la suspenda un admin |
 | Cuenta creada por un admin | hasta que su dueño la borre |
-| Chat | con lo que lo abrió: respuesta, producto, publicación o ficha |
+| Chat | con lo que lo abrió: producto, publicación o ficha |
 | Código de servicio sin usar | 30 días |
 
 Borrar una fila borra **también sus imágenes en el almacenamiento**.
@@ -191,8 +205,8 @@ mensaje explicativo.
 | Descripción del muro y de producto | 300 |
 | Mensaje de chat | 500 |
 
-Quien **pide** un servicio publica con cuenta, desde el ADR 0006. **Tener cuenta no es dar datos**: su nombre no se publica y su solicitud
-no lo lleva.
+Quien **pide** un servicio publica con cuenta, desde el ADR 0006. **Tener
+cuenta no es dar datos**: su nombre no se publica y su solicitud no lo lleva.
 
 Pedir un servicio es **categoría, subcategoría y detalle opcional** (ADR
 0013). La categoría es una de las doce —eran ocho hasta el ADR 0012—; la
@@ -387,11 +401,11 @@ diferencia entre «el código no debería» y «la base no lo acepta».
 
 | Paso | Estado |
 | --- | --- |
-| 1 · Tipos de Drizzle desde el esquema | **hecho** — `npm run db:pull`, 47 objetos verificados contra el catálogo |
+| 1 · Tipos de Drizzle desde el esquema | **hecho** — regenerado con `npm run db:pull` el 3 de septiembre de 2026 contra la base de pruebas ya migrada; `verificar-esquema` da 45 objetos y 460 columnas |
 | 2 · Eliminar el acceso a datos desde el navegador | en curso — quedan ~15 archivos: 10 en admin y aliado, el resto repartidos. `crear_perfil` y `guardar_ofrecimientos` se fueron con los ADR 0014 y 0015 |
 | 3 · Contrato oRPC con las primeras lecturas | **hecho** — Servicios, chat, comunidad, moderación |
 | 4 · Migrar lecturas, luego escrituras | en curso — las escrituras de solicitudes de servicio y las de la cuenta ya están en el contrato |
-| 5 · Cron y cifrado fuera del motor | **no** — el cron de imágenes huérfanas sí está fuera, pero `pg_cron` sigue programando el vencimiento de servicios —ya solo uno, el de 72 h se fue con insumos— y el cifrado de referencias sigue en Postgres con `pgp_sym_encrypt` y el Vault |
+| 5 · Cron y cifrado fuera del motor | **no** — el cron de imágenes huérfanas sí está fuera, pero `pg_cron` sigue programando el vencimiento de servicios —ya solo uno, el de 72 h se fue con insumos, y desde el ADR 0017 solo vence lo que sigue en `pendiente`— y el cifrado de referencias sigue en Postgres con `pgp_sym_encrypt` y el Vault |
 | 6 · better-auth; espacios de trabajo de npm | pendiente |
 | 7 · App Expo sobre el contrato | pendiente |
 
@@ -452,22 +466,30 @@ portar**.
 | Buscar | 05 Inicio, 06 Categorías, 07 Listado, 08 Zonas + Mapa, 09 Ficha | `app/inicio`, `app/categorias`, `app/zonas`, `app/directorio` (lista y mapa), `app/prestador/[id]` |
 | Contratar | 10 Pedir, 11 Enviada, 12 Chat, 13 Calificar | `app/servicios/publicar`, `app/mensajes`, `app/chat/[tipo]/[id]`, `app/servicios/confirmar` |
 | Ofrecer | 14 Formulario, 15 Mi ficha | `app/servicios/soy-proveedor` |
-| Perfil | 16–25 | `app/perfil/**` (con `matricula`), `app/mis-solicitudes` (20) |
-| Comunidad | 30 Muro, 31 Hecho en el barrio | `app/muro`, `app/barrio` (con `publicar` y `mios`) |
+| Perfil | 16–25 | `app/perfil/**` (con `verificaciones`), `app/mis-solicitudes` (20) |
+| Comunidad | 30 Donaciones (antes «Muro»), 31 Hecho en el barrio | `app/donaciones` (con `publicar` y `mios`; `app/muro` redirige), `app/barrio` |
 | Acopio | Lista pública y mapa, panel del centro con sus entregas | `app/acopios`, `app/aliado` |
 | Moderación | 35 Colas, 36 Matrículas, imágenes, PQR | `app/admin`, `app/admin/matriculas`, `app/admin/imagenes`, `app/admin/pqr`, `app/admin/cuentas` |
-| Información | 37 Ayuda, 38 PQR, 39 Contactos, 40 Quiénes somos | `app/ayuda`, `app/pqr` (y `app/pqr/[codigo]`), `app/contacto`, `app/quienes-somos` |
-| Fuera del prototipo | Directorios y puertas que el flujo de 40 pantallas no dibujó | `app/profesionales` (y `app/profesional/[id]`), `app/entidades` (y `app/entidad/[id]`), `app/producto/[id]`, `app/solicitudes`, `app/mapa`, `app/entrar/[codigo]`, `app/unirse/[...ruta]`, `app/muro/mios` |
+| Información | 37 Preguntas frecuentes (antes «Ayuda»), 38 PQR, 39 Contactos, 40 Quiénes somos, Aliados, Datos abiertos | `app/ayuda`, `app/pqr` (y `app/pqr/[codigo]`), `app/contacto`, `app/quienes-somos`, `app/aliados`, `app/datos` |
+| Fuera del prototipo | Directorios y puertas que el flujo de 40 pantallas no dibujó | `app/profesionales` (y `app/profesional/[id]`), `app/entidades` (y `app/entidad/[id]`), `app/producto/[id]`, `app/registro`, `app/mapa`, `app/entrar/[codigo]`, `app/unirse/[...ruta]` |
 
 **Barra inferior: `Inicio · Buscar · Mensajes · Perfil`.** Cuatro celdas, las del
 prototipo, más una quinta condicional —«Acopio»— para quien pertenece al
 equipo de un centro.
 
-**La portada es la bienvenida**, con sesión y sin ella (ADR 0010). El logo
-del encabezado lleva ahí, que es lo que se espera al tocar una marca. Con
-sesión la misma pantalla conserva encabezado y barra —sin ellos no tendría
-salida—, «Ofrezco mi trabajo» lleva a publicar la ficha en vez de a entrar, y
+**La portada es la bienvenida**, con sesión y sin ella (ADR 0010). Con sesión
+la misma pantalla conserva encabezado y barra —sin ellos no tendría salida—,
+«Ofrezco mi trabajo» lleva a publicar la ficha en vez de a entrar, y
 desaparece «Entrar con Google». El inicio de siempre vive en `/inicio`.
+
+⚠ El isotipo del encabezado **ya no lleva directo a la bienvenida** (ADR
+0016, que reemplaza esa parte del ADR 0010): abre un menú con cinco
+entradas —Quiénes somos, Preguntas frecuentes, Aliados, Datos abiertos y
+Contacto—, con la bienvenida primera. Es un `<button>` de verdad, con
+`aria-expanded`, `aria-haspopup` y `aria-label`, en `HojaAccion`
+(`components/hoja-accion.tsx`). Lo que se pierde es el toque único a la
+marca para volver al principio; se compensa con la bienvenida como primera
+fila del menú y con que «Inicio», en la barra, nunca dependió del logo.
 
 Y si la URL trae filtros —`/?oficio=…`— se sirve el directorio, con sesión o
 sin ella: ese enlace viene de alguien que compartió una búsqueda, y enseñarle
@@ -482,10 +504,9 @@ cayó dos veces por menos.
 no sabe qué buscar. Comunidad —el muro y los productos— no tiene celda propia:
 cuelga de Inicio, como en el prototipo.
 
-La emergencia no tiene celda propia: se entra desde el inicio y sus pantallas
-encienden «Inicio». Y **hay una sola bandeja de mensajes**: los pedidos de
-servicio y las entregas acompañadas viven juntos en `/mensajes`, porque tener
-dos celdas llamadas «Mensajes» era ofrecer dos puertas al mismo cuarto.
+**Hay una sola bandeja de mensajes**: todos los orígenes del chat viven
+juntos en `/mensajes`, porque tener dos celdas llamadas «Mensajes» era
+ofrecer dos puertas al mismo cuarto.
 
 ## Identidad visual
 

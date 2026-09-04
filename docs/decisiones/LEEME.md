@@ -37,6 +37,10 @@ El ADR se escribe **antes** del código. Si una tarea te obliga a contradecir
 | [0013](0013-categoria-y-subcategoria.md) | Categoría y subcategoría, en los dos lados | aceptada |
 | [0014](0014-fuera-el-modulo-de-insumos.md) | Se retira el módulo de insumos | aceptada |
 | [0015](0015-la-cuenta-es-de-cualquiera.md) | La cuenta es de cualquiera, y no dice a qué vino | aceptada |
+| [0016](0016-la-version-minima.md) | Fuera el muro de necesidades y las solicitudes abiertas | aceptada |
+| [0017](0017-la-solicitud-es-una-orden.md) | La solicitud es una orden dirigida a un prestador | aceptada |
+| [0018](0018-la-sombrilla-abre-el-menu.md) | La sombrilla abre el menú | aceptada |
+| [0019](0019-municipio-barrio-y-direccion.md) | Municipio, barrio y dirección, cada uno con lo suyo | aceptada |
 
 ## Plantilla
 
