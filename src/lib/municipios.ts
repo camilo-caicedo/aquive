@@ -2,7 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/types'
 
 /**
- * Cuántos municipios pinta un combobox a la vez.
+ * Cuántas opciones pinta un combobox a la vez.
  *
  * No es una preferencia de diseño: sin tope, abrir el selector monta los
  * 1.122 de golpe —4.500 nodos y unos 700 KB de HTML dentro de un popup—, y
@@ -10,6 +10,12 @@ import type { Database } from '@/lib/types'
  * igual en Safari y en Chrome porque en iOS los dos son WebKit. El filtro
  * sigue recorriendo la lista completa: esto recorta lo que se pinta, no
  * dónde se busca.
+ *
+ * ⚠ **No hay que pasarlo a mano.** Lo aplica por defecto la raíz de
+ * `components/ui/combobox.tsx`, y ahí está el porqué. Se puso ahí después
+ * de que este tope viviera en cada pantalla y ocho de los diez comboboxes
+ * se quedaran sin él —incluidos el del alta y el del carné—, que es como
+ * volvió el fallo el 4 de septiembre de 2026.
  */
 export const LIMITE_MUNICIPIOS = 50
 

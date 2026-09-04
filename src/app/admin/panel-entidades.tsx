@@ -26,7 +26,6 @@ import {
 import type { CoberturaEntidad, Database, EnlaceEntidad, Json } from '@/lib/types'
 import { useAviso } from '@/components/avisos'
 import {
-  LIMITE_MUNICIPIOS,
   nombreConDepartamento,
   type MunicipioBasico as Municipio,
 } from '@/lib/municipios'
@@ -227,7 +226,6 @@ function FormularioEntidad({
           <Combobox
             multiple
             items={municipios}
-            limit={LIMITE_MUNICIPIOS}
             value={municipiosElegidos}
             onValueChange={(ms: Municipio[]) => setMunicipiosSel(ms.map((m) => m.codigo_dane))}
             itemToStringLabel={nombreConDepartamento}

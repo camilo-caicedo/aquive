@@ -4,6 +4,7 @@ import * as React from "react"
 import { Combobox as ComboboxPrimitive } from "@base-ui/react"
 
 import { cn } from "@/lib/utils"
+import { LIMITE_MUNICIPIOS } from "@/lib/municipios"
 import { useContenedorHoja } from "@/components/contenedor-hoja"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,7 +15,30 @@ import {
 } from "@/components/ui/input-group"
 import { ChevronDownIcon, XIcon, CheckIcon } from "lucide-react"
 
-const Combobox = ComboboxPrimitive.Root
+/**
+ * La raíz del combobox, con un tope de cuántas opciones PINTA.
+ *
+ * ⚠ El tope va aquí y no en cada pantalla, y eso es lo importante. Base UI
+ * trae `limit: -1` —sin tope—, y con los 1.122 municipios del país abrir el
+ * desplegable monta unos 4.500 nodos de golpe dentro de un popup. En un
+ * iPhone eso **mata el proceso de la pestaña**: Safari responde «Ocurrió un
+ * problema varias veces» y recarga. Reportado el 4 de septiembre de 2026
+ * desde un iPhone 12 con iOS 26.3.1, en «Arma tu carné».
+ *
+ * Estaba resuelto, pero una pantalla a la vez: ocho de los diez comboboxes
+ * de la aplicación se habían quedado sin pasar `limit`, incluido el del
+ * alta. Poniéndolo aquí lo heredan todos, también los que aún no existen —
+ * que es de donde venía el fallo—. Quien necesite otro tope pasa el suyo.
+ *
+ * No recorta la búsqueda: `limit` se aplica DESPUÉS de filtrar, así que
+ * quien escribe «Zarzal» lo encuentra igual. Recorta lo que se dibuja.
+ */
+function Combobox<Value, Multiple extends boolean | undefined = false>({
+  limit = LIMITE_MUNICIPIOS,
+  ...props
+}: ComboboxPrimitive.Root.Props<Value, Multiple>) {
+  return <ComboboxPrimitive.Root limit={limit} {...props} />
+}
 
 function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {
   return <ComboboxPrimitive.Value data-slot="combobox-value" {...props} />
