@@ -4,6 +4,67 @@ import { useState } from 'react'
 import { ImagePlus, X } from 'lucide-react'
 
 import { rpc } from '@/orpc/cliente'
+import { calcularDimensionesDestino } from './subir-imagen-dimensiones'
+
+// = `LADO_MAXIMO` de `src/server/imagenes/recorrido.ts`. El servidor va a
+// redimensionar a esto de todas formas, así que subir más grande solo gasta
+// datos y memoria del teléfono de quien sube.
+const LADO_MAXIMO = 1600
+
+// = `quality: 82` del `.webp()` de sharp en `recorrido.ts`. Comprimir aquí a
+// otra calidad no ahorraría nada: el servidor recomprime a la suya de todos
+// modos, así que las dos constantes tienen que leerse juntas.
+const CALIDAD_WEBP = 0.82
+
+// = `TOPE_BYTES` de `src/server/imagenes/almacen.ts`. Repetido aquí para
+// avisar ANTES del viaje de ida y vuelta que el servidor iba a rechazar de
+// todas formas.
+const TOPE_BYTES = 2 * 1024 * 1024
+
+/**
+ * Comprimir en el navegador antes de subir: menos memoria en el pico de la
+ * subida (el `File` crudo de una foto de teléfono son 4-8 MB) y menos datos
+ * gastados. Es una optimización, no una garantía: si algo falla —formato que
+ * el navegador no decodifica, canvas contaminado— se sube el archivo
+ * original y el servidor hace su trabajo igual.
+ */
+async function comprimir(archivo: File): Promise<File> {
+  try {
+    const bitmap = await createImageBitmap(archivo)
+    try {
+      const { ancho, alto } = calcularDimensionesDestino(bitmap.width, bitmap.height, LADO_MAXIMO)
+
+      let blob: Blob | null
+      if (typeof OffscreenCanvas !== 'undefined') {
+        const lienzo = new OffscreenCanvas(ancho, alto)
+        const ctx = lienzo.getContext('2d')
+        if (!ctx) return archivo
+        ctx.drawImage(bitmap, 0, 0, ancho, alto)
+        blob = await lienzo.convertToBlob({ type: 'image/webp', quality: CALIDAD_WEBP })
+      } else {
+        const lienzo = document.createElement('canvas')
+        lienzo.width = ancho
+        lienzo.height = alto
+        const ctx = lienzo.getContext('2d')
+        if (!ctx) return archivo
+        ctx.drawImage(bitmap, 0, 0, ancho, alto)
+        blob = await new Promise<Blob | null>((resolve) =>
+          lienzo.toBlob(resolve, 'image/webp', CALIDAD_WEBP),
+        )
+      }
+
+      if (!blob) return archivo
+      return new File([blob], archivo.name.replace(/\.\w+$/, '.webp'), { type: 'image/webp' })
+    } finally {
+      // Libera el pico de memoria del bitmap decodificado apenas se puede:
+      // si se queda vivo hasta que el `File` comprimido salga del scope, el
+      // pico sigue ahí y la compresión no arregló nada.
+      bitmap.close()
+    }
+  } catch {
+    return archivo
+  }
+}
 
 /**
  * Subir una imagen. Regla de producto 8.
@@ -20,18 +81,36 @@ import { rpc } from '@/orpc/cliente'
 export function SubirImagen({
   objetoTipo,
   onSubida,
+  onEstadoSubida,
 }: {
   objetoTipo: 'muro' | 'producto' | 'proveedor'
   onSubida: (imagenId: string | null) => void
+  /** Para que el formulario que la contiene apague su botón de publicar
+   *  mientras la foto está en vuelo. Opcional: nada obliga a los tres
+   *  formularios que usan este componente a escucharlo. */
+  onEstadoSubida?: (subiendo: boolean) => void
 }) {
   const [estado, setEstado] = useState<'vacio' | 'subiendo' | 'lista'>('vacio')
   const [error, setError] = useState<string | null>(null)
   const [previa, setPrevia] = useState<string | null>(null)
 
-  async function elegir(archivo: File) {
+  async function elegir(archivoOriginal: File) {
     setError(null)
     setEstado('subiendo')
+    onEstadoSubida?.(true)
     try {
+      const archivo = await comprimir(archivoOriginal)
+
+      // Rechazar ANTES del viaje: quien pidió con datos móviles no debería
+      // esperar la ida y vuelta completa para enterarse de que la foto no
+      // cabía.
+      if (archivo.size > TOPE_BYTES) {
+        setError('Esta foto pesa demasiado incluso comprimida. Prueba con otra.')
+        setEstado('vacio')
+        onSubida(null)
+        return
+      }
+
       const { imagen_id, url } = await rpc.comunidad.firmarImagen({
         objeto_tipo: objetoTipo,
         tipo: archivo.type,
@@ -57,6 +136,8 @@ export function SubirImagen({
       setError(motivo ?? 'No se pudo subir la imagen. Inténtalo otra vez.')
       setEstado('vacio')
       onSubida(null)
+    } finally {
+      onEstadoSubida?.(false)
     }
   }
 

@@ -7,6 +7,7 @@ import {
   Clock,
   Hash,
   IdCard,
+  Inbox,
   KeyRound,
   ListOrdered,
   ShoppingBag,
@@ -151,6 +152,7 @@ export default async function PerfilPage() {
     misSolicitudes,
     misPublicaciones,
     matricula,
+    misOrdenes,
   ] = await Promise.all([
       supabase.rpc('mi_proveedor', {}),
       supabase.rpc('mis_servicios', {}),
@@ -166,6 +168,10 @@ export default async function PerfilPage() {
       // El otro papel público, y el que se quedó sin puerta al retirarse
       // `/registro` con el módulo de insumos (ADR 0014).
       servidor.servicios.miMatricula(),
+      // Lo que le han pedido A ÉL (ADR 0015). Vacía sin ficha propia: la
+      // consulta ya filtra por dueño, así que no hace falta esperar a saber
+      // si `proveedor` existe para pedirla.
+      servidor.servicios.misOrdenes(),
     ])
 
   const proveedor = (mio as MiProveedor | null) ?? null
@@ -176,6 +182,7 @@ export default async function PerfilPage() {
   const referencias = (refs as unknown as MiReferencia[]) ?? []
 
   const sinResponder = misServicios.resenas.filter((r) => !r.replica && !r.oculta).length
+  const ordenesPendientes = misOrdenes.filter((o) => o.estado === 'pendiente').length
   const sinUsar = codigosSinUsar(misServicios.codigos).length
   const refsPendientes = referencias.filter((r) => r.estado === 'pendiente').length
   const promedio = promedioResenas(misServicios.resenas)
@@ -201,9 +208,9 @@ export default async function PerfilPage() {
     // solo se INSERTABA. La regla de producto 3 dice que una publicación
     // vive «mientras su dueño la deje», y su dueño no tenía cómo dejarla.
     {
-      href: '/muro/mios',
+      href: '/donaciones/mios',
       Icono: Heart,
-      nombre: 'Mis publicaciones del muro',
+      nombre: 'Mis donaciones',
       pista: misPublicaciones.length > 0 ? String(misPublicaciones.length) : undefined,
     },
     {
@@ -212,6 +219,22 @@ export default async function PerfilPage() {
       nombre: 'Mis solicitudes',
       pista: misSolicitudes.length > 0 ? String(misSolicitudes.length) : undefined,
     },
+    // Lo que le pidieron A ÉL (ADR 0015). Solo con ficha: sin ella no hay
+    // dónde le llegaría una orden. La pista cuenta lo pendiente, que es lo
+    // único que necesita que alguien lo mire.
+    ...(proveedor
+      ? [
+          {
+            href: '/perfil/solicitudes-recibidas',
+            Icono: Inbox,
+            nombre: 'Solicitudes recibidas',
+            pista:
+              ordenesPendientes > 0
+                ? `${ordenesPendientes} pendiente${ordenesPendientes === 1 ? '' : 's'}`
+                : undefined,
+          },
+        ]
+      : []),
     { href: '/perfil/avisos', Icono: Bell, nombre: 'Avisos' },
     { href: '/perfil/privacidad', Icono: KeyRound, nombre: 'Privacidad y cuenta' },
   ]

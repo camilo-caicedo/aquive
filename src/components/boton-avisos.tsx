@@ -244,7 +244,7 @@ export function BotonAvisos({ sinVer }: { sinVer: number }) {
         ref={panel}
         id="panel-avisos"
         popover="auto"
-        className="hoja-inferior fixed inset-x-0 top-auto bottom-0 m-0 max-h-[88vh] w-full max-w-none overflow-y-auto rounded-t-2xl border-t border-border bg-background p-0 text-foreground shadow-lg backdrop:bg-foreground/40 sm:inset-auto sm:max-h-[70vh] sm:w-96 sm:rounded-xl sm:border"
+        className="hoja-inferior fixed inset-x-0 top-auto bottom-0 m-0 max-h-[88dvh] w-full max-w-none overflow-y-auto rounded-t-2xl border-t border-border bg-background p-0 text-foreground shadow-lg backdrop:bg-foreground/40 sm:inset-auto sm:max-h-[70dvh] sm:w-96 sm:rounded-xl sm:border"
       >
         <div className="sticky top-0 z-10 border-b border-border bg-background px-4 pt-2">
           <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-border sm:hidden" />

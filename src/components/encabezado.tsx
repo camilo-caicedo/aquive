@@ -1,7 +1,5 @@
-import Image from 'next/image'
 import Link from 'next/link'
 
-import isotipo from '@/../docs/marca/isotipo-carrito.png'
 import { ShieldCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { servidor } from '@/orpc/local'
@@ -9,6 +7,7 @@ import { BarraInferior, Navegacion, type Coordinacion } from '@/components/naveg
 import { BotonAvisos } from '@/components/boton-avisos'
 import { BotonInstalar } from '@/components/boton-instalar'
 import { FranjaSombrilla } from '@/components/franja-sombrilla'
+import { MenuSombrilla } from '@/components/menu-sombrilla'
 import type { EstadoEncabezado, IndiceAdmin } from '@/lib/types'
 
 export async function Encabezado() {
@@ -77,25 +76,17 @@ export async function Encabezado() {
       <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-2">
         {/* El isotipo suelto y el nombre en píldora lima, como en la
             bienvenida: es la misma marca en los dos sitios y conviene que se
-            reconozca igual. El nombre va en TEXTO y no dibujado — el revisor
-            de marca de Google lee el DOM.
+            reconozca igual.
 
-            El PNG no tiene canal alfa, así que el isotipo va en su círculo
-            blanco; suelto sobre el crema se vería un cuadrado. */}
-        <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <span className="size-10 shrink-0 overflow-hidden rounded-full bg-card p-1">
-            <Image
-              src={isotipo}
-              alt=""
-              width={40}
-              height={40}
-              className="h-full w-full object-contain"
-            />
-          </span>
-          <span className="bg-primary text-primary-foreground font-heading rounded-full px-3 py-1 text-base leading-none tracking-[0.08em] uppercase">
-            Aquí Ve
-          </span>
-        </Link>
+            Ya no es un `<Link>`: el ADR 0016 le da otro trabajo a la marca —
+            abrir el menú de las páginas informativas— y un botón dentro de
+            un enlace es HTML inválido, además de que en móvil los dos se
+            pelean por el toque.
+
+            Vive en su propio archivo cliente, y no aquí: `HojaAccion` recibe
+            el disparador como función, y este componente es de servidor.
+            Ver el comentario de `MenuSombrilla`. */}
+        <MenuSombrilla />
 
         {/* Arriba solo queda la identidad y lo de la cuenta. «Mi perfil»
             se fue: era un destino, y los destinos están abajo —estaba en

@@ -191,8 +191,20 @@ export async function directorio(
   if (filtros.modalidad) {
     condiciones.push(sql`${proveedoresPublicos.modalidad} @> array[${filtros.modalidad}]::text[]`)
   }
+  // Filtro aparte de `modalidad`, aunque pregunte sobre la misma columna:
+  // «va a domicilio» y «atiende en su local» no son la misma pregunta para
+  // quien busca.
+  if (filtros.domicilio) {
+    condiciones.push(sql`${proveedoresPublicos.modalidad} @> array['domicilio']::text[]`)
+  }
   if (filtros.modo) {
     condiciones.push(sql`${proveedoresPublicos.modos} @> array[${filtros.modo}]::text[]`)
+  }
+  if (filtros.medioPago) {
+    condiciones.push(sql`${proveedoresPublicos.mediosPago} @> array[${filtros.medioPago}]::text[]`)
+  }
+  if (filtros.franja) {
+    condiciones.push(sql`${proveedoresPublicos.franjas} @> array[${filtros.franja}]::text[]`)
   }
   const donde = condiciones.length > 0 ? and(...condiciones) : undefined
 

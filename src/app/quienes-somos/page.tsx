@@ -3,78 +3,102 @@ import Link from 'next/link'
 
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { Button } from '@/components/ui/button'
+import { DESLINDE_CALIDAD } from '@/lib/honestidad'
 import { RAZON_SOCIAL_RESPONSABLE, RESPONSABLE } from '@/lib/config'
 
 export const metadata: Metadata = {
   title: 'Quiénes somos',
   description:
-    'Un directorio hecho entre vecinos: sin comisiones, sin plan pago y con una confianza que se puede mirar.',
+    'De la emergencia del terremoto a la economía del rebusque: quién hace AquíVe y quién responde por los datos.',
 }
 
 /**
  * Pantalla 40 · Quiénes somos.
  *
- * Los tres puntos van sobre relleno de familia con texto encima, nunca con
- * el color como letra: sobre crema, el amarillo y el verde dan 1,35 y 2,98
- * (ADR 0002). Blanco sobre azul da 6,31 y negro sobre los otros dos, 10,38
- * y 6,56.
+ * Reescrita el 3 de septiembre de 2026 a pedido del cliente, en el orden que
+ * pidió: el origen tras el terremoto, la transición de la emergencia a la
+ * reactivación económica, Camilo como fundador, y el papel de Nodo Social,
+ * la Fundación y los aliados.
  *
- * ⚠ El punto 2 NO dice «sostenida por donaciones», que es lo que dibujaba
- * el prototipo. La plataforma no recibe dinero en ninguna forma —regla dura
- * 5, y el plan Hobby de Vercel cuenta las donaciones como uso comercial—,
- * así que anunciarlo sería anunciar algo que no puede pasar.
+ * ⚠ NO INVENTA HECHOS. El responsable no dio fecha exacta de fundación,
+ * apellido del fundador, ni qué aliados nombrar, así que esos huecos quedan
+ * marcados con `// TODO cliente:` en vez de rellenos con algo que suene bien.
+ * Una página institucional de una fundación real con datos inventados es
+ * peor que una incompleta. La lista completa de lo que falta preguntar va al
+ * final de esta tarea, no en el código.
  *
- * ⚠ El bloque de datos es jurídico y va literal: distingue responsable de
- * encargada, que es el reparto que explica `/privacidad`. No se reescribe
- * para que suene mejor.
+ * Lo único fechado que se afirma —el terremoto del 10 de agosto de 2026— no
+ * es un dato nuevo: ya es el que usan `components/pie-de-pagina.tsx` y
+ * `components/como-funciona.tsx` para la misma ayuda de emergencia, así que
+ * repetirlo aquí no es inventar, es no contradecirlos.
+ *
+ * ⚠ El bloque «Quién responde por los datos» es el mismo de antes de esta
+ * reescritura, palabra por palabra: la pieza jurídica que distingue
+ * responsable de encargada (mínimo legal, `/privacidad`) no se toca por
+ * gusto de prosa.
  */
-
-const PUNTOS: { n: string; titulo: string; texto: string; clase: string }[] = [
-  {
-    n: '01',
-    titulo: 'Gratis para quien ofrece',
-    texto:
-      'Publicar un oficio no cuesta nada, hoy ni después. No hay plan pago ni posiciones destacadas: quien aparece arriba está ahí por lo que hace y por dónde trabaja, no por lo que pagó.',
-    clase: 'bg-familia-azul text-card',
-  },
-  {
-    n: '02',
-    titulo: 'Sin dinero de por medio',
-    texto:
-      'AquíVe no cobra comisión, no recibe pagos y no tiene pasarela. Lo que acuerdes se lo pagas directamente a quien hace el trabajo, por fuera de la aplicación.',
-    clase: 'bg-familia-amarillo text-foreground',
-  },
-  {
-    n: '03',
-    titulo: 'Confianza que se puede mirar',
-    texto:
-      'Teléfono llamado por una persona, referencias comprobadas y códigos de servicio. Ninguna insignia dice «confiable»: cada una dice exactamente qué se comprobó y quién lo comprobó.',
-    clase: 'bg-familia-verde text-foreground',
-  },
-]
-
 export default function QuienesSomosPage() {
   return (
     <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
-      <CabeceraPantalla titulo="Un directorio hecho entre vecinos" volver="/inicio" />
+      <CabeceraPantalla titulo="Quiénes somos" volver="/inicio" />
 
-      <p className="max-w-prose text-base">
-        Nacimos de una idea simple: en cada barrio ya existe quien sabe hacer
-        lo que otro necesita. La aplicación solo pone a esas dos personas en
-        contacto, sin comisiones por servicio.
-      </p>
+      <section>
+        <h2 className="font-heading text-2xl">Cómo empezó</h2>
+        <p className="mt-3 max-w-prose text-base">
+          AquíVe nació después del terremoto del 10 de agosto de 2026, para
+          conectar rápido a quien necesitaba algo con quien tenía cómo
+          dárselo: agua, comida, un techo por unos días. De ahí salió lo que
+          hoy es la aplicación.
+        </p>
+        {/* TODO cliente: contar el origen de verdad —dónde se armó la
+            primera versión, quién ayudó los primeros días, qué tan rápido
+            se hizo—. Aquí solo va lo que ya está confirmado en el resto de
+            la aplicación: la fecha del terremoto y que la respuesta fue
+            insumos. */}
+      </section>
 
-      <ol className="mt-6 space-y-4">
-        {PUNTOS.map((p) => (
-          <li key={p.n} className={`rounded-2xl p-4 ${p.clase}`}>
-            <p className="font-mono text-sm" aria-hidden="true">
-              {p.n}
-            </p>
-            <h2 className="font-heading mt-1 text-xl">{p.titulo}</h2>
-            <p className="mt-2 text-base">{p.texto}</p>
-          </li>
-        ))}
-      </ol>
+      <section className="mt-8">
+        <h2 className="font-heading text-2xl">De la emergencia al rebusque</h2>
+        <p className="mt-3 max-w-prose text-base">
+          Pasado lo más urgente, quedó una pregunta distinta: mucha de la
+          gente que ayudó, y mucha que necesitó ayuda, vive del rebusque de
+          todos los días —el oficio, el arreglo, la changa— y no tenía cómo
+          hacerse encontrar. AquíVe se fue moviendo de atender la emergencia a
+          sostener esa economía local: hoy el directorio de servicios recibe
+          a quien entra, y la emergencia sigue viva un paso más atrás, no
+          desapareció.
+        </p>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="font-heading text-2xl">Quién la empezó</h2>
+        <p className="mt-3 max-w-prose text-base">
+          La idea es de Camilo.
+        </p>
+        {/* TODO cliente: nombre completo del fundador, y qué contar de él
+            —por qué la empezó, qué hacía antes—. No se publica un apellido
+            ni una historia que el responsable no haya confirmado. */}
+      </section>
+
+      <section className="mt-8">
+        <h2 className="font-heading text-2xl">Nodo Social, la Fundación y los aliados</h2>
+        <p className="mt-3 max-w-prose text-base">
+          {RESPONSABLE} opera AquíVe sin ánimo de lucro. {DESLINDE_CALIDAD}
+        </p>
+        <p className="mt-3 max-w-prose text-base">
+          Los centros de acopio los llevan organizaciones aliadas: gente de la
+          zona que presta un lugar físico para recibir y entregar donaciones,
+          y que un administrador da de alta después de revisar su certificado
+          y su NIT. Puedes ver los que ya están publicados en{' '}
+          <Link href="/aliados" className="text-enlace underline underline-offset-4">
+            «Aliados»
+          </Link>
+          .
+        </p>
+        {/* TODO cliente: si hay aliados concretos que el responsable quiera
+            nombrar o destacar aquí (no solo enlazar a /aliados), decir
+            cuáles. Sin eso, esta sección no nombra ninguno por su cuenta. */}
+      </section>
 
       <h2 className="font-heading mt-8 text-2xl">Quién responde por los datos</h2>
       <p className="mt-3 max-w-prose text-base">

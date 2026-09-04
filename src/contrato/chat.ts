@@ -1,6 +1,8 @@
 import { oc } from '@orpc/contract'
 import { z } from 'zod'
 
+import { EstadoSolicitud, Modo, Unidad } from '@/contrato/servicios'
+
 // El chat, uno solo para toda la aplicación.
 //
 // Nació atado a los pedidos de servicio y era el único que había: productos
@@ -8,8 +10,13 @@ import { z } from 'zod'
 // cuelga de cualquiera de las cuatro cosas que dos personas pueden tener que
 // acordar, y de ahí salen los dos papeles.
 //
-// ⚠ Eran cinco hasta el ADR 0014. La quinta era la respuesta a un pedido de
-// insumos, y se fue con su módulo.
+// ⚠ El tablero de solicitudes de servicio y el módulo de insumos entero
+// tenían cada uno su propia puerta al chat —`respuesta_servicio_id` y
+// `respuesta_insumo_id`—. El ADR 0014 retiró los dos: el chat de la ficha
+// (`ficha`) pasa a ser el único canal de todo lo de servicios que no nace de
+// una orden dirigida. El ADR 0015 añade el cuarto origen, `solicitud`: la
+// orden identifica a los dos lados desde que nace, así que su hilo se crea
+// en la misma operación de publicarla, no al abrirlo.
 //
 // Los botones de WhatsApp y de llamar se quedan donde están. Quien publica
 // una ficha o un producto puso su teléfono a propósito; el chat es la puerta
@@ -17,7 +24,7 @@ import { z } from 'zod'
 
 /** De qué cuelga un hilo. Muere con ello — regla de producto 3. */
 export const Origen = z.object({
-  tipo: z.enum(['servicio', 'producto', 'muro', 'ficha']),
+  tipo: z.enum(['producto', 'muro', 'ficha', 'solicitud']),
   id: z.uuid(),
 })
 
@@ -41,6 +48,27 @@ export const Mensaje = z.object({
 
 export type Mensaje = z.infer<typeof Mensaje>
 
+/**
+ * La orden que abrió el hilo (ADR 0015), para la tarjeta fija arriba de la
+ * conversación. Solo va cuando `origen.tipo === 'solicitud'`; en los otros
+ * tres orígenes va en `null`.
+ *
+ * `modo` va `null` cuando el prestador ya cambió o quitó ese oficio de su
+ * ficha después de que le pidieran esto: la orden sigue contando qué se
+ * pidió, aunque el precio de entonces ya no esté en ninguna parte.
+ */
+export const OrdenDelChat = z.object({
+  oficio: z.string(),
+  modo: Modo.nullable(),
+  precio_desde: z.number().nullable(),
+  unidad: Unidad.nullable(),
+  detalle: z.string().nullable(),
+  nota: z.string().nullable(),
+  estado: EstadoSolicitud,
+})
+
+export type OrdenDelChat = z.infer<typeof OrdenDelChat>
+
 export const Hilo = z.object({
   id: z.uuid(),
   origen: Origen,
@@ -57,6 +85,8 @@ export const Hilo = z.object({
   soy: Autor,
   /** De qué va: el oficio, el producto, el título del muro, la categoría. */
   asunto: z.string().nullable(),
+  /** La orden, cuando el hilo nació de una (ADR 0015). */
+  orden: OrdenDelChat.nullable(),
   mensajes: z.array(Mensaje),
 })
 
@@ -96,7 +126,7 @@ export type HiloEnBandeja = z.infer<typeof HiloEnBandeja>
 export const contratoChat = {
   /**
    * Los hilos de quien está en sesión, de los dos lados y de los cuatro
-   * módulos. Una sola bandeja porque es una sola clase de cosa: con quién
+   * orígenes. Una sola bandeja porque es una sola clase de cosa: con quién
    * estás hablando y de qué.
    */
   bandeja: oc.output(z.array(HiloEnBandeja)),
@@ -105,7 +135,7 @@ export const contratoChat = {
    * Cuántos hilos tienen algo sin leer. Lo pide la barra de navegación en
    * cada carga con sesión, así que devuelve un número y nada más: la lista
    * la sirve `bandeja`, y traerla entera para pintar un punto sería pagar
-   * cinco `join` en cada pantalla del sitio.
+   * varios `join` en cada pantalla del sitio.
    */
   sinLeer: oc.output(z.number()),
 

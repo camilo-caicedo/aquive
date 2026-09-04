@@ -4,21 +4,23 @@ import type { SQL } from 'drizzle-orm'
 import type { BaseDeDatos } from '@/db/cliente'
 import { avisar } from '@/server/avisos/push'
 import {
+  catalogoOficios,
   chats,
   mensajes as mensajesTabla,
   productos,
+  proveedorOficios,
   proveedores,
   publicacionesMuro,
-  respuestasServicio,
   solicitudesServicio,
+  sugerenciasItem,
 } from '@/db/esquema'
 import { MENSAJE_CONTACTO, contieneContacto } from '@/lib/validacion'
-import type { Autor, Hilo, HiloEnBandeja, Mensaje, Origen } from '@/contrato/chat'
+import type { Autor, Hilo, HiloEnBandeja, Mensaje, Origen, OrdenDelChat } from '@/contrato/chat'
 
 // El chat, uno solo. Capa de dominio: sin `next/*`, sin cookies.
 //
 // Un hilo tiene siempre dos lados —quien ofrece y quien pide— y lo único que
-// cambia entre los cinco orígenes es de dónde salen esos dos lados. Eso vive
+// cambia entre los cuatro orígenes es de dónde salen esos dos lados. Eso vive
 // en `partes()`, que es la única función que sabe que existen módulos. Todo
 // lo demás —el filtro, los mensajes, la bandeja— es común.
 
@@ -28,8 +30,9 @@ import type { Autor, Hilo, HiloEnBandeja, Mensaje, Origen } from '@/contrato/cha
  * Un lado en `null` significa «lo ocupa quien abra el hilo». Pasa cuando el
  * origen solo identifica a uno: una ficha dice quién trabaja pero no quién lo
  * necesita, un producto dice quién vende pero no quién pregunta, y una
- * publicación del muro dice quién dona pero no quién recibe. Una respuesta
- * —de servicio— ya identifica a los dos.
+ * publicación del muro dice quién dona pero no quién recibe. Una orden (ADR
+ * 0015) es la excepción: identifica a los dos desde que nace, así que
+ * ninguno de sus dos lados es nunca `null`.
  */
 type Partes = {
   ofrece: string | null
@@ -41,38 +44,17 @@ type Partes = {
 
 /** Cómo se llama el otro cuando no publicó su nombre. */
 const ANONIMO: Record<Origen['tipo'], { ofrece: string; pide: string }> = {
-  servicio: { ofrece: 'El prestador', pide: 'Quien pidió el servicio' },
   producto: { ofrece: 'Quien vende', pide: 'Quien preguntó' },
   muro: { ofrece: 'Quien lo ofrece', pide: 'Quien lo necesita' },
   ficha: { ofrece: 'El prestador', pide: 'Quien preguntó' },
+  // El mínimo legal no cambia con el ADR 0015: quien pide sigue sin publicar
+  // su nombre, así que del lado del prestador este texto es el único que
+  // sale de verdad, nunca un nombre real.
+  solicitud: { ofrece: 'El prestador', pide: 'Quien pidió' },
 }
 
 /** De dónde salen los dos lados. La única función que distingue módulos. */
 async function partes(db: BaseDeDatos, origen: Origen): Promise<Partes | null> {
-  if (origen.tipo === 'servicio') {
-    const [f] = await db
-      .select({
-        ofrece: proveedores.perfilId,
-        pide: solicitudesServicio.perfilId,
-        // Lo que pidió con sus palabras, no el nombre de un oficio del
-        // catálogo (ADR 0011). El asunto del hilo es de qué se está
-        // hablando, y «Que me arreglen la puerta del clóset» lo dice mejor
-        // que «Reparaciones del hogar».
-        asunto: solicitudesServicio.detalle,
-        nombreOfrece: proveedores.nombreVisible,
-      })
-      .from(respuestasServicio)
-      .innerJoin(
-        solicitudesServicio,
-        eq(solicitudesServicio.id, respuestasServicio.solicitudId),
-      )
-      .innerJoin(proveedores, eq(proveedores.id, respuestasServicio.proveedorId))
-      .where(eq(respuestasServicio.id, origen.id))
-      .limit(1)
-    // Quien pide un servicio no publica su nombre, y no se le inventa uno.
-    return f ? { ...f, nombrePide: null } : null
-  }
-
   if (origen.tipo === 'ficha') {
     const [f] = await db
       .select({ ofrece: proveedores.perfilId, nombreOfrece: proveedores.nombreVisible })
@@ -81,6 +63,35 @@ async function partes(db: BaseDeDatos, origen: Origen): Promise<Partes | null> {
       .limit(1)
     // Sin asunto: el hilo es con la persona, y su nombre ya va en `con`.
     return f ? { ...f, pide: null, asunto: null, nombrePide: null } : null
+  }
+
+  if (origen.tipo === 'solicitud') {
+    // La orden ya identifica a los dos lados desde que nace (ADR 0015): a
+    // diferencia de la ficha, el producto y el muro, aquí nunca hay un lado
+    // que «lo ocupe quien abra el hilo».
+    const [f] = await db
+      .select({
+        ofrece: proveedores.perfilId,
+        pide: solicitudesServicio.perfilId,
+        nombreOfrece: proveedores.nombreVisible,
+        oficioNombre: catalogoOficios.nombre,
+        propuesta: sugerenciasItem.nombrePropuesto,
+      })
+      .from(solicitudesServicio)
+      .innerJoin(proveedores, eq(proveedores.id, solicitudesServicio.proveedorId))
+      .leftJoin(catalogoOficios, eq(catalogoOficios.id, solicitudesServicio.oficioId))
+      .leftJoin(sugerenciasItem, eq(sugerenciasItem.id, solicitudesServicio.sugerenciaId))
+      .where(eq(solicitudesServicio.id, origen.id))
+      .limit(1)
+    return f
+      ? {
+          ofrece: f.ofrece,
+          pide: f.pide,
+          asunto: f.oficioNombre ?? f.propuesta,
+          nombreOfrece: f.nombreOfrece,
+          nombrePide: null,
+        }
+      : null
   }
 
   if (origen.tipo === 'producto') {
@@ -97,9 +108,10 @@ async function partes(db: BaseDeDatos, origen: Origen): Promise<Partes | null> {
     return f ? { ...f, pide: null, nombrePide: null } : null
   }
 
+  // El muro solo tiene la cara «ofrece» desde el ADR 0014: el dueño de la
+  // publicación siempre la tiene, nunca la necesita.
   const [f] = await db
     .select({
-      cara: publicacionesMuro.cara,
       perfil: publicacionesMuro.perfilId,
       asunto: publicacionesMuro.titulo,
       nombre: publicacionesMuro.autorNombre,
@@ -110,24 +122,13 @@ async function partes(db: BaseDeDatos, origen: Origen): Promise<Partes | null> {
 
   if (!f) return null
 
-  // Las dos caras del muro son el mismo hilo al revés: en «ofrece» el dueño
-  // tiene la cosa, en «necesita» la necesita. Solo la primera lleva nombre
-  // publicado, que es lo que exige el `check` de la tabla.
-  return f.cara === 'ofrece'
-    ? {
-        ofrece: f.perfil,
-        pide: null,
-        asunto: f.asunto,
-        nombreOfrece: f.nombre,
-        nombrePide: null,
-      }
-    : {
-        ofrece: null,
-        pide: f.perfil,
-        asunto: f.asunto,
-        nombreOfrece: null,
-        nombrePide: f.nombre,
-      }
+  return {
+    ofrece: f.perfil,
+    pide: null,
+    asunto: f.asunto,
+    nombreOfrece: f.nombre,
+    nombrePide: null,
+  }
 }
 
 /**
@@ -147,27 +148,78 @@ function papel(p: Partes, usuarioId: string | null): Autor | null {
 /** Dónde vive la fila del hilo, según de qué cuelgue. */
 function donde(origen: Origen, iniciadoPor: string | null): SQL {
   switch (origen.tipo) {
-    case 'servicio':
-      return eq(chats.respuestaServicioId, origen.id)
     case 'producto':
       return and(eq(chats.productoId, origen.id), eq(chats.iniciadoPor, iniciadoPor!)) as SQL
     case 'muro':
       return and(eq(chats.publicacionId, origen.id), eq(chats.iniciadoPor, iniciadoPor!)) as SQL
     case 'ficha':
       return and(eq(chats.proveedorId, origen.id), eq(chats.iniciadoPor, iniciadoPor!)) as SQL
+    // La orden ya identifica a los dos lados: no hay `iniciado_por` que
+    // comprobar, solo cuál orden es.
+    case 'solicitud':
+      return eq(chats.solicitudServicioId, origen.id) as SQL
   }
 }
 
 function valores(origen: Origen, iniciadoPor: string | null) {
   switch (origen.tipo) {
-    case 'servicio':
-      return { respuestaServicioId: origen.id }
     case 'producto':
       return { productoId: origen.id, iniciadoPor }
     case 'muro':
       return { publicacionId: origen.id, iniciadoPor }
     case 'ficha':
       return { proveedorId: origen.id, iniciadoPor }
+    case 'solicitud':
+      return { solicitudServicioId: origen.id }
+  }
+}
+
+/**
+ * La orden que abrió el hilo, para la tarjeta fija arriba de la
+ * conversación (ADR 0015). `null` fuera del origen `solicitud`.
+ *
+ * El precio sale de `proveedor_oficios`, no de un valor guardado en la
+ * solicitud: si el prestador cambió su tarifa después de que le pidieran
+ * esto, la orden muestra el precio de HOY, que es con el que se va a
+ * acordar. Si el prestador quitó ese oficio de su ficha, el `left join` no
+ * encuentra nada y `modo` sale `null` — la tarjeta sigue diciendo qué se
+ * pidió, solo que sin precio.
+ */
+async function datosOrden(db: BaseDeDatos, solicitudId: string): Promise<OrdenDelChat | null> {
+  const [f] = await db
+    .select({
+      oficioNombre: catalogoOficios.nombre,
+      propuesta: sugerenciasItem.nombrePropuesto,
+      modo: proveedorOficios.modo,
+      precioDesde: proveedorOficios.precioDesde,
+      unidad: proveedorOficios.unidad,
+      detalle: solicitudesServicio.detalle,
+      nota: solicitudesServicio.nota,
+      estado: solicitudesServicio.estado,
+    })
+    .from(solicitudesServicio)
+    .leftJoin(catalogoOficios, eq(catalogoOficios.id, solicitudesServicio.oficioId))
+    .leftJoin(sugerenciasItem, eq(sugerenciasItem.id, solicitudesServicio.sugerenciaId))
+    .leftJoin(
+      proveedorOficios,
+      and(
+        eq(proveedorOficios.proveedorId, solicitudesServicio.proveedorId),
+        eq(proveedorOficios.oficioId, solicitudesServicio.oficioId),
+      ),
+    )
+    .where(eq(solicitudesServicio.id, solicitudId))
+    .limit(1)
+
+  if (!f) return null
+
+  return {
+    oficio: f.oficioNombre ?? f.propuesta ?? 'Lo que pidió',
+    modo: f.modo as OrdenDelChat['modo'],
+    precio_desde: f.precioDesde !== null ? Number(f.precioDesde) : null,
+    unidad: f.unidad as OrdenDelChat['unidad'],
+    detalle: f.detalle,
+    nota: f.nota,
+    estado: f.estado as OrdenDelChat['estado'],
   }
 }
 
@@ -243,6 +295,7 @@ export async function leer(
     .where(eq(chats.id, chat.id))
 
   const anonimo = ANONIMO[origen.tipo]
+  const orden = origen.tipo === 'solicitud' ? await datosOrden(db, origen.id) : null
 
   return {
     id: chat.id,
@@ -254,6 +307,7 @@ export async function leer(
         : (p.nombrePide ?? anonimo.pide),
     soy: autor,
     asunto: p.asunto,
+    orden,
     mensajes: filas.map((m) => ({
       id: m.id,
       autor: m.autor as Autor,
@@ -349,55 +403,44 @@ type FilaBandeja = {
 }
 
 /**
- * El SQL que aplana los cinco orígenes a una sola forma de fila.
+ * El SQL que aplana los cuatro orígenes a una sola forma de fila.
  *
  * Lo usan la bandeja y el contador del menú, y por eso está aquí fuera: dos
  * copias de estos `join` se separarían el día que aparezca un quinto origen,
  * y entonces el menú contaría hilos que la bandeja no enseña.
+ *
+ * ⚠ El muro solo tiene la cara «ofrece» desde el ADR 0014, así que
+ * `pm.perfil_id` siempre es quien ofrece y el otro lado lo ocupa siempre
+ * quien inició el hilo. La orden (ADR 0015) es la excepción: ya trae los dos
+ * lados, así que `pide_id` sale de ella y no de `iniciado_por`, que aquí
+ * siempre es nulo.
  */
 const HILOS = sql`
   select
     c.id,
     case
-      when c.respuesta_servicio_id is not null then 'servicio'
       when c.producto_id is not null then 'producto'
       when c.proveedor_id is not null then 'ficha'
+      when c.solicitud_servicio_id is not null then 'solicitud'
       else 'muro'
     end as tipo,
-    coalesce(
-      c.respuesta_servicio_id, c.producto_id,
-      c.proveedor_id, c.publicacion_id
-    ) as origen_id,
-    coalesce(
-      pv.perfil_id,
-      pp.perfil_id,
-      pf.perfil_id,
-      case when pm.cara = 'ofrece' then pm.perfil_id else c.iniciado_por end
-    ) as ofrece_id,
-    coalesce(
-      ss.perfil_id,
-      case when c.producto_id is not null or c.proveedor_id is not null
-           then c.iniciado_por end,
-      case when pm.cara = 'necesita' then pm.perfil_id else c.iniciado_por end
-    ) as pide_id,
+    coalesce(c.producto_id, c.proveedor_id, c.solicitud_servicio_id, c.publicacion_id) as origen_id,
+    coalesce(pp.perfil_id, pf.perfil_id, ssp.perfil_id, pm.perfil_id) as ofrece_id,
+    coalesce(c.iniciado_por, ss.perfil_id) as pide_id,
     c.visto_ofrece_at,
     c.visto_pide_at,
-    coalesce(ss.detalle, pr.nombre, pm.titulo) as asunto,
-    coalesce(
-      pv.nombre_visible,
-      pp.nombre_visible,
-      pf.nombre_visible,
-      case when pm.cara = 'ofrece' then pm.autor_nombre end
-    ) as nombre_ofrece,
-    case when pm.cara = 'necesita' then pm.autor_nombre end as nombre_pide
+    coalesce(pr.nombre, pm.titulo, sso.nombre, sgi.nombre_propuesto) as asunto,
+    coalesce(pp.nombre_visible, pf.nombre_visible, ssp.nombre_visible, pm.autor_nombre) as nombre_ofrece,
+    null::text as nombre_pide
   from chats c
-  left join respuestas_servicio rs on rs.id = c.respuesta_servicio_id
-  left join solicitudes_servicio ss on ss.id = rs.solicitud_id
-  left join proveedores pv on pv.id = rs.proveedor_id
   left join productos pr on pr.id = c.producto_id
   left join proveedores pp on pp.id = pr.proveedor_id
   left join proveedores pf on pf.id = c.proveedor_id
   left join publicaciones_muro pm on pm.id = c.publicacion_id
+  left join solicitudes_servicio ss on ss.id = c.solicitud_servicio_id
+  left join proveedores ssp on ssp.id = ss.proveedor_id
+  left join catalogo_oficios sso on sso.id = ss.oficio_id
+  left join sugerencias_item sgi on sgi.id = ss.sugerencia_id
 `
 
 /**
@@ -421,11 +464,11 @@ const sinLeerDe = (yo: string) => sql`
 
 /**
  * La bandeja: todos los hilos de quien está en sesión, de los dos lados y de
- * los cuatro módulos.
+ * los cuatro orígenes.
  *
- * En SQL crudo y no con el constructor de consultas a propósito. Son cinco
- * orígenes con cinco cadenas de `join` distintas que hay que aplanar a una
- * sola forma de fila; la alternativa —cinco consultas y mezclar en
+ * En SQL crudo y no con el constructor de consultas a propósito. Son cuatro
+ * orígenes con cuatro cadenas de `join` distintas que hay que aplanar a una
+ * sola forma de fila; la alternativa —cuatro consultas y mezclar en
  * TypeScript— sería exactamente la lógica repetida que este cambio vino a
  * quitar.
  */

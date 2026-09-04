@@ -1,13 +1,11 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { CalendarDays, MapPin, Wallet, ChevronDown, Info } from 'lucide-react'
+import { CalendarDays, MapPin, Wallet } from 'lucide-react'
 import { servidor } from '@/orpc/local'
 import {
-  DESLINDE_CALIDAD,
   NO_PAGUES_POR_ADELANTADO,
   SEGURIDAD_DOMICILIO,
-  SOBRE_LAS_INSIGNIAS,
   SOBRE_LAS_RESENAS,
 } from '@/lib/honestidad'
 import {
@@ -107,20 +105,12 @@ export default async function FichaPage({
         />
       </div>
 
-      <details className="group mt-4 rounded-2xl bg-card shadow-canto">
-        <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 px-4 text-base font-medium [&::-webkit-details-marker]:hidden">
-          <Info className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <span className="flex-1">Qué comprobamos y qué no</span>
-          <ChevronDown
-            className="size-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
-            aria-hidden="true"
-          />
-        </summary>
-        <div className="space-y-2 px-4 pb-4">
-          <p className="text-base text-muted-foreground">{SOBRE_LAS_INSIGNIAS}</p>
-          <p className="text-base text-muted-foreground">{DESLINDE_CALIDAD}</p>
-        </div>
-      </details>
+      {/* «Qué comprobamos y qué no» vivía aquí en un `<details>`. La ficha
+          tenía demasiada prosa antes de llegar a lo que se viene a mirar
+          (regla de interfaz 1); el texto de `SOBRE_LAS_INSIGNIAS` y
+          `DESLINDE_CALIDAD` sigue en `src/lib/honestidad.ts` y ahora se lee
+          completo en `/ayuda`, que es donde el cliente quiere las
+          explicaciones largas. */}
 
       {ficha.descripcion && (
         <p className="mt-4 text-base text-muted-foreground">{ficha.descripcion}</p>

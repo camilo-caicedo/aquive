@@ -99,7 +99,7 @@ export default function ContactoPage() {
           nativeButton={false}
           render={<Link href="/ayuda" />}
         >
-          Ayuda con la plataforma
+          Preguntas frecuentes
         </Button>
       </div>
     </main>

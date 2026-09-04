@@ -75,6 +75,23 @@ export const enrutador = os.router({
     misSolicitudes: os.servicios.misSolicitudes.handler(({ context }) =>
       pedidos.mias(db, { usuarioId: context.usuarioId }),
     ),
+    misOrdenes: os.servicios.misOrdenes.handler(({ context }) =>
+      pedidos.misOrdenes(db, { usuarioId: context.usuarioId }),
+    ),
+    cambiarEstadoSolicitud: os.servicios.cambiarEstadoSolicitud.handler(
+      async ({ input, context, errors }) => {
+        try {
+          return await pedidos.cambiarEstado(db, input.id, input.estado, {
+            usuarioId: context.usuarioId,
+          })
+        } catch (e) {
+          if (e instanceof pedidos.SolicitudRechazada) {
+            throw errors.RECHAZADO({ data: { motivo: e.message } })
+          }
+          throw e
+        }
+      },
+    ),
 
     // Subcategorías (ADR 0013). El catálogo es público: es lo que hay
     // dentro de cada categoría, y se ve antes de tener cuenta.

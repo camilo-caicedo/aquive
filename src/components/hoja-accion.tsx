@@ -33,8 +33,16 @@ export function HojaAccion({
   /** Id del `popover`. Único por pantalla. */
   id: string
   titulo: string
-  /** Cómo se abre. Recibe las props que tiene que llevar el botón. */
-  disparador: (props: { popoverTarget: string; type: 'button' }) => ReactNode
+  /**
+   * Cómo se abre. Recibe las props que tiene que llevar el botón, incluido
+   * `aria-expanded`: sin él, un disparador que abre y cierra un panel es
+   * invisible para quien usa lector de pantalla.
+   */
+  disparador: (props: {
+    popoverTarget: string
+    type: 'button'
+    'aria-expanded': boolean
+  }) => ReactNode
   children: ReactNode
   /** El pie fijo de la hoja: normalmente el botón que envía. */
   pie?: (cerrar: () => void) => ReactNode
@@ -42,14 +50,17 @@ export function HojaAccion({
   const hidratado = useHidratado()
   const [panel, setPanel] = useState<HTMLDivElement | null>(null)
   const [generacion, setGeneracion] = useState(0)
+  const [abierto, setAbierto] = useState(false)
 
   useEffect(() => {
     if (!panel) return
-    const alCerrar = (e: Event) => {
-      if ((e as ToggleEvent).newState === 'closed') setGeneracion((g) => g + 1)
+    const alCambiar = (e: Event) => {
+      const nuevo = (e as ToggleEvent).newState === 'open'
+      setAbierto(nuevo)
+      if (!nuevo) setGeneracion((g) => g + 1)
     }
-    panel.addEventListener('toggle', alCerrar)
-    return () => panel.removeEventListener('toggle', alCerrar)
+    panel.addEventListener('toggle', alCambiar)
+    return () => panel.removeEventListener('toggle', alCambiar)
   }, [panel])
 
   function cerrar() {
@@ -60,7 +71,7 @@ export function HojaAccion({
 
   return (
     <>
-      {disparador({ popoverTarget: id, type: 'button' })}
+      {disparador({ popoverTarget: id, type: 'button', 'aria-expanded': abierto })}
 
       {/* Sin clase de `display`: la hoja del navegador esconde el popover
           cerrado, y una utilidad de autor le ganaría y lo dejaría visible.
@@ -70,9 +81,9 @@ export function HojaAccion({
         id={id}
         popover="auto"
         aria-label={titulo}
-        className="hoja-inferior fixed inset-x-0 top-auto bottom-0 m-0 max-h-[88vh] w-full max-w-none rounded-t-2xl border-t border-border bg-background p-0 text-foreground shadow-lg backdrop:bg-foreground/40"
+        className="hoja-inferior fixed inset-x-0 top-auto bottom-0 m-0 max-h-[88dvh] w-full max-w-none rounded-t-2xl border-t border-border bg-background p-0 text-foreground shadow-lg backdrop:bg-foreground/40"
       >
-        <div className="mx-auto flex max-h-[88vh] max-w-lg flex-col">
+        <div className="mx-auto flex max-h-[88dvh] max-w-lg flex-col">
           <div className="shrink-0 px-4 pt-2">
             <div aria-hidden="true" className="mx-auto h-1 w-10 rounded-full bg-border" />
             <div className="mt-2 flex items-center justify-between gap-3">

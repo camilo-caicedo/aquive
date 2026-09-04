@@ -1,6 +1,5 @@
 import Link from 'next/link'
-import { Plus, Info, Inbox, Briefcase } from 'lucide-react'
-import { AccionPrincipal } from '@/components/accion-principal'
+import { Info, Inbox, Briefcase } from 'lucide-react'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { createClient } from '@/lib/supabase/server'
 import type { AreaServicio } from '@/lib/types'
@@ -245,11 +244,6 @@ export default async function ProfesionalesPage({
           Ver oficios
         </Button>
       </section>
-      <AccionPrincipal
-        etiqueta="Necesito un servicio"
-        Icono={Plus}
-        href="/servicios/publicar"
-      />
     </main>
   )
 }

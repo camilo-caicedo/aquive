@@ -9,10 +9,14 @@ import { HojaModal } from '@/components/hoja-modal'
  * ido a otro sitio, y lo que se quiere es lo contrario — que se vea que
  * la lista sigue ahí detrás, esperando.
  */
-export default async function PublicarServicioInterceptado() {
+export default async function PublicarServicioInterceptado({
+  searchParams,
+}: {
+  searchParams: Promise<{ proveedor?: string }>
+}) {
   return (
     <HojaModal etiqueta="Pedir un servicio" ruta="/servicios/publicar">
-      <PublicarServicioPage />
+      <PublicarServicioPage searchParams={searchParams} />
     </HojaModal>
   )
 }

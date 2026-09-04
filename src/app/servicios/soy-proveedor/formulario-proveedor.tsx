@@ -1,6 +1,6 @@
 'use client'
 
-import { Check, Eye, EyeOff, Lock, PhoneCall } from 'lucide-react'
+import { Check, Eye, EyeOff, PhoneCall } from 'lucide-react'
 
 import type { ReactNode } from 'react'
 import { useState } from 'react'
@@ -14,8 +14,10 @@ import {
   NIT_RESPONSABLE_SERVICIOS,
   AUTORIZACION_PROVEEDOR_VERSION,
   AUTORIZACION_FOTO_VERSION,
+  AUTORIZACION_DIRECCION_VERSION,
 } from '@/lib/config'
 import { contienePII, MENSAJE_PII, validarSugerencia } from '@/lib/validacion'
+import { useBorrador } from '@/lib/borrador'
 // Del contrato y no de `lib/types`: es el mismo dato que va a pintar la
 // aplicación de Expo, y una segunda copia se desincroniza (ADR 0001).
 import type { GrupoOficio, OficioPropuesto } from '@/contrato/servicios'
@@ -30,6 +32,7 @@ import {
   TIPOS_PROVEEDOR,
   TOPE_OFICIOS,
   UNIDADES,
+  ubicacionCompleta,
 } from '@/lib/servicios'
 import type {
   Database,
@@ -105,87 +108,6 @@ const TODAS: ClaveSeccion[] = [
   'presentacion',
   'foto',
   'permiso',
-]
-
-/**
- * El índice numerado de la pantalla 14, con las tres filas que todavía no
- * se pueden llenar.
- *
- * `claves` vacío significa fila cerrada: no hay nada que escribir ahí
- * hasta que la ficha exista —una referencia cuelga de la ficha, y el
- * teléfono lo verifica una persona después—. Se dibujan igual, con su
- * número y su motivo, porque una lista de diez donde solo aparecen siete
- * hace que quien la mira piense que se le perdió algo.
- */
-const FILAS: {
-  num: string
-  nombre: string
-  ayuda: string
-  claves: ClaveSeccion[]
-  cerrada?: string
-}[] = [
-  {
-    num: '01',
-    nombre: 'Quién eres',
-    ayuda: 'Cómo quieres que te llamen y el teléfono donde te contactan.',
-    claves: ['quien', 'contacto'],
-  },
-  {
-    num: '02',
-    nombre: 'Bajo qué figura',
-    ayuda: 'Por tu cuenta o con un negocio registrado.',
-    claves: ['figura'],
-  },
-  {
-    num: '03',
-    nombre: 'Tus oficios',
-    ayuda: `Del catálogo, con tu precio desde. Hasta ${TOPE_OFICIOS}.`,
-    claves: ['oficios'],
-  },
-  {
-    num: '04',
-    nombre: 'Tu foto',
-    ayuda: 'Una sola, y con su permiso aparte. Pasa por revisión antes de verse.',
-    claves: ['foto'],
-  },
-  {
-    num: '05',
-    nombre: 'Días y horas',
-    ayuda: 'Los días que trabajas y en qué franja.',
-    claves: ['disponibilidad'],
-  },
-  {
-    num: '06',
-    nombre: 'Zonas y modalidad',
-    ayuda: 'Municipio, comuna o barrio, y si vas a domicilio.',
-    claves: ['ciudad', 'zonas'],
-  },
-  {
-    num: '07',
-    nombre: 'Referencias',
-    ayuda: 'Un cliente anterior al que podamos llamar. Se agrega después de publicar.',
-    claves: [],
-    cerrada: 'Después',
-  },
-  {
-    num: '08',
-    nombre: 'Tu presentación',
-    ayuda: 'Lo primero que leen. Máximo 300 caracteres.',
-    claves: ['presentacion'],
-  },
-  {
-    num: '09',
-    nombre: 'Verificar tu teléfono',
-    ayuda: `Alguien de ${RESPONSABLE_SERVICIOS} te llama. No hay SMS automático.`,
-    claves: [],
-    cerrada: 'Después',
-  },
-  {
-    num: '10',
-    nombre: 'Últimos pasos',
-    ayuda: 'El permiso de publicación y a publicar.',
-    claves: ['permiso'],
-  },
 ]
 
 /** Píldora que se enciende y se apaga. 48 px de alto, como todo lo demás. */
@@ -295,6 +217,12 @@ export function FormularioProveedor({
   const [municipio, setMunicipio] = useState(proveedor?.municipio ?? '')
   const [zonaId, setZonaId] = useState(proveedor?.zona_id ?? '')
   const [zonaTexto, setZonaTexto] = useState(proveedor?.zona_texto ?? '')
+  // La dirección, opcional, con su propia autorización (ADR 0017): otra
+  // finalidad que publicar el nombre o el punto del mapa, artículo 9.
+  const [direccion, setDireccion] = useState(proveedor?.direccion ?? '')
+  const [autorizoDireccion, setAutorizoDireccion] = useState(
+    proveedor?.acepto_direccion ?? false
+  )
   const [modalidad, setModalidad] = useState<ModalidadServicio[]>(
     proveedor?.modalidad ?? []
   )
@@ -313,6 +241,12 @@ export function FormularioProveedor({
   // El stepper de la fila 03 (ADR 0013). Con ficha ya publicada nace en
   // el paso 3: nadie debería recorrer tres pasos para corregir un precio.
   const [pasoOficios, setPasoOficios] = useState<1 | 2 | 3>(proveedor ? 3 : 1)
+
+  // El alta en seis pasos cortos, no un formulario de diez secciones de
+  // una sentada: pedido literal del cliente, con «cuánto falta» siempre
+  // a la vista. Solo se usa sin ficha y sin secciones sueltas (más abajo);
+  // editando, cada pantalla de /perfil sigue pidiendo su sección.
+  const [paso, setPaso] = useState<1 | 2 | 3 | 4 | 5 | 6>(1)
 
   // Las categorías del paso 1. Con ficha, se deducen de lo que ya tiene:
   // guardarlas en la base sería una segunda fuente de verdad sobre algo
@@ -359,6 +293,10 @@ export function FormularioProveedor({
   // Es otra finalidad y otra casilla (v6-b7), y nace en lo que esa persona
   // marcó para la foto, ni más ni menos.
   const [fotoNueva, setFotoNueva] = useState<string | null>(null)
+  // ⚠ Se escribía y nadie lo leía: el botón de publicar no se apagaba
+  // mientras la foto subía, así que se podía publicar la ficha —o pasar
+  // de paso— con la subida a medias.
+  const [subiendoFoto, setSubiendoFoto] = useState(false)
   const [autorizoFoto, setAutorizoFoto] = useState(proveedor?.acepto_foto ?? false)
   const [quitarFoto, setQuitarFoto] = useState(false)
   const teniaFoto = !!proveedor?.foto
@@ -371,6 +309,62 @@ export function FormularioProveedor({
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Mecanismo 1 (CLAUDE.md): solo en el alta —sin ficha, sin secciones
+  // sueltas de /perfil y sin token—, que es donde perder todo obliga a
+  // volver a diligenciar diez secciones desde cero. Editando una ficha ya
+  // publicada, lo que hay detrás es el servidor, no un formulario vacío.
+  const enAlta = !proveedor && !secciones && !token
+  const { limpiar: limpiarBorrador } = useBorrador(
+    'aquive:borrador:proveedor:v1',
+    {
+      nombre,
+      tipo,
+      telefono,
+      municipio,
+      zonaId,
+      zonaTexto,
+      direccion,
+      autorizoDireccion,
+      modalidad,
+      dias,
+      franjas,
+      mediosPago,
+      descripcion,
+      elegidos,
+      categorias,
+      propuestas,
+      autorizo,
+      fotoNueva,
+      autorizoFoto,
+      pasoOficios,
+      paso,
+    },
+    (d) => {
+      setNombre(d.nombre)
+      setTipo(d.tipo)
+      setTelefono(d.telefono)
+      setMunicipio(d.municipio)
+      setZonaId(d.zonaId)
+      setZonaTexto(d.zonaTexto)
+      setDireccion(d.direccion)
+      setAutorizoDireccion(d.autorizoDireccion)
+      setModalidad(d.modalidad)
+      setDias(d.dias)
+      setFranjas(d.franjas)
+      setMediosPago(d.mediosPago)
+      setDescripcion(d.descripcion)
+      setElegidos(d.elegidos)
+      setCategorias(d.categorias)
+      setPropuestas(d.propuestas)
+      setAutorizo(d.autorizo)
+      setFotoNueva(d.fotoNueva)
+      setAutorizoFoto(d.autorizoFoto)
+      setPasoOficios(d.pasoOficios)
+      setPaso(d.paso)
+    },
+    { habilitado: enAlta },
+  )
+
   const zonasDelMunicipio = zonas.filter((z) => z.municipio === municipio)
   const nombreOficio = new Map(oficios.map((o) => [o.id, o]))
 
@@ -379,13 +373,20 @@ export function FormularioProveedor({
   // lo demás, que es por donde se colaría un segundo número.
   const errorDescripcion = descripcion.trim() && contienePII(descripcion) ? MENSAJE_PII : null
   const errorZona = zonaTexto.trim() && contienePII(zonaTexto) ? MENSAJE_PII : null
+  const errorDireccion = direccion.trim() && contienePII(direccion) ? MENSAJE_PII : null
 
   const nombreValido = nombre.trim().length >= 3 && nombre.trim().length <= 60
   const telefonoValido = /^[0-9+()\- ]{7,20}$/.test(telefono.trim())
 
-  // Al menos una de las dos. Con las dos, mejor; con ninguna, la ficha no
-  // dice dónde atiende y para un servicio a domicilio eso no sirve.
-  const hayUbicacion = zonaId !== '' || zonaTexto.trim().length >= 2
+  // El barrio es el dato principal y obligatorio; la comuna es secundaria
+  // y nunca bloquea -«muchas personas no saben a cuál pertenecen»-; y la
+  // dirección solo hace falta si se autoriza publicarla (ADR 0017).
+  const hayUbicacion = ubicacionCompleta({
+    municipio,
+    barrio: zonaTexto,
+    direccion,
+    autorizaDireccion: autorizoDireccion,
+  })
 
   // Lo único que cambia entre Cali y el resto es cómo se llama el campo:
   // donde hay comunas, esto es el barrio; donde no, es la única división
@@ -395,14 +396,15 @@ export function FormularioProveedor({
   const puedeGuardar =
     nombreValido &&
     telefonoValido &&
-    municipio !== '' &&
     hayUbicacion &&
     modalidad.length > 0 &&
     elegidos.length + propuestas.length > 0 &&
     !errorDescripcion &&
     !errorZona &&
+    !errorDireccion &&
     descripcion.length <= 300 &&
     autorizo &&
+    !subiendoFoto &&
     !guardando
 
   /** Cuántas cosas dice que hace, del catálogo o propuestas. */
@@ -487,6 +489,11 @@ export function FormularioProveedor({
       p_oficios: elegidos,
       p_acepto_publicacion: true,
       p_autorizacion_version: AUTORIZACION_PROVEEDOR_VERSION,
+      // La dirección se guarda siempre que se escriba, autorizada o no
+      // (ADR 0017): es la vista pública la que decide qué enseña.
+      p_direccion: direccion.trim() || null,
+      p_acepto_direccion: autorizoDireccion,
+      p_direccion_version: autorizoDireccion ? AUTORIZACION_DIRECCION_VERSION : null,
       p_token: token ?? null,
     })
 
@@ -555,6 +562,7 @@ export function FormularioProveedor({
       // la ficha publicada.
       router.push(proveedor ? '/servicios/soy-proveedor' : '/servicios/soy-proveedor/listo')
     }
+    limpiarBorrador()
     avisar(proveedor ? 'Guardado' : 'Ficha publicada')
     router.refresh()
   }
@@ -730,10 +738,7 @@ export function FormularioProveedor({
 
     zonas: {
       titulo: 'Zonas y modalidad',
-      resumen:
-        [zonasDelMunicipio.find((z) => z.id === zonaId)?.nombre, zonaTexto.trim()]
-          .filter(Boolean)
-          .join(' · ') || 'Falta dónde atiendes',
+      resumen: zonaTexto.trim() || 'Falta tu barrio',
       falta: !hayUbicacion || modalidad.length === 0,
       cuerpo: (
         <>
@@ -745,32 +750,10 @@ export function FormularioProveedor({
             <fieldset>
               <legend className="text-base font-medium">¿En qué parte?</legend>
 
-              {/* Las dos, no una u otra: en Cali lo natural es decir la
-                  comuna Y el barrio. Con una basta, pero con ninguna no. */}
-              {zonasDelMunicipio.length > 0 && (
-                <div className="mt-2">
-                  <Label>Comuna o corregimiento</Label>
-                  <Select value={zonaId} onValueChange={(v) => setZonaId(v ?? '')}>
-                    <SelectTrigger aria-label="Comuna o corregimiento" className="mt-1">
-                      <SelectValue placeholder="Sin especificar">
-                        {(v: string) =>
-                          zonasDelMunicipio.find((z) => z.id === v)?.nombre ?? 'Sin especificar'
-                        }
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Sin especificar</SelectItem>
-                      {zonasDelMunicipio.map((z) => (
-                        <SelectItem key={z.id} value={z.id}>
-                          {z.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <div className="mt-3">
+              {/* El barrio es el dato principal y obligatorio; la comuna
+                  queda del todo aparte y nunca bloquea (ADR 0017): muchas
+                  personas no saben a cuál comuna pertenecen. */}
+              <div className="mt-2">
                 <Label htmlFor="zona">{etiquetaZona}</Label>
                 <Input
                   id="zona"
@@ -788,17 +771,97 @@ export function FormularioProveedor({
                     : 'El barrio o la vereda, no la dirección. Lo que escribas lo revisa la fundación y después queda en la lista para los demás de tu municipio.'}
                 </p>
                 {errorZona && <p className="mt-1 text-sm text-destructive">{errorZona}</p>}
+                {!hayUbicacion && (
+                  <p className="mt-1 text-sm text-muted-foreground">Falta tu barrio.</p>
+                )}
               </div>
 
-              {!hayUbicacion && (
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Hace falta al menos una de las dos.
-                </p>
+              {zonasDelMunicipio.length > 0 && (
+                <div className="mt-3">
+                  <Label>
+                    Comuna o corregimiento{' '}
+                    <span className="font-normal text-muted-foreground">(opcional)</span>
+                  </Label>
+                  <Select value={zonaId} onValueChange={(v) => setZonaId(v ?? '')}>
+                    <SelectTrigger aria-label="Comuna o corregimiento" className="mt-1">
+                      <SelectValue placeholder="Sin especificar">
+                        {(v: string) =>
+                          zonasDelMunicipio.find((z) => z.id === v)?.nombre ?? 'Sin especificar'
+                        }
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Sin especificar</SelectItem>
+                      {zonasDelMunicipio.map((z) => (
+                        <SelectItem key={z.id} value={z.id}>
+                          {z.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Sirve para filtrar búsquedas. Si no sabes cuál es la tuya, déjalo así.
+                  </p>
+                </div>
               )}
+
+              {/* La dirección: opcional, y publicarla es OTRA finalidad que
+                  publicar el nombre o el punto del mapa (ADR 0017, artículo 9
+                  de la Ley 1581). Se guarda siempre que se escriba; lo que la
+                  casilla decide es si se muestra. */}
+              <div className="mt-4">
+                <Label htmlFor="direccion">
+                  Dirección{' '}
+                  <span className="font-normal text-muted-foreground">(opcional)</span>
+                </Label>
+                <Input
+                  id="direccion"
+                  value={direccion}
+                  onChange={(e) => setDireccion(e.target.value)}
+                  maxLength={120}
+                  placeholder="Calle 5 #23-40, local 2"
+                  className="mt-1"
+                />
+                {errorDireccion && (
+                  <p className="mt-1 text-sm text-destructive">{errorDireccion}</p>
+                )}
+
+                <div className="mt-2 rounded-2xl bg-background p-4">
+                  <label className="flex items-start gap-3 text-base">
+                    <input
+                      type="checkbox"
+                      checked={autorizoDireccion}
+                      onChange={(e) => setAutorizoDireccion(e.target.checked)}
+                      className="mt-1 size-5 shrink-0"
+                    />
+                    <span className="font-semibold">
+                      {autorizoDireccion ? 'Mostrar mi dirección' : 'Mantener mi dirección privada'}
+                    </span>
+                  </label>
+                  <details className="mt-2 text-sm text-muted-foreground">
+                    <summary className="cursor-pointer select-none">
+                      Qué autorizo exactamente
+                    </summary>
+                    <p className="mt-2">
+                      Autorizo a {RESPONSABLE_SERVICIOS}, NIT {NIT_RESPONSABLE_SERVICIOS},
+                      responsable del directorio de servicios de AquíVe, a publicar mi
+                      dirección de forma <strong>pública</strong> en internet, para que
+                      quien busque mi trabajo sepa cómo llegar. Entiendo que puedo
+                      quitarla cuando quiera, y que si no marco esta casilla mi dirección
+                      no se muestra a nadie aunque la haya escrito aquí.
+                    </p>
+                  </details>
+                  {autorizoDireccion && !direccion.trim() && (
+                    <p className="mt-2 text-sm text-destructive">
+                      Escribe tu dirección arriba antes de autorizar publicarla.
+                    </p>
+                  )}
+                </div>
+              </div>
             </fieldset>
           )}
 
-          <fieldset>
+          <fieldset className="mt-4">
             <legend className="mb-2 text-base font-medium">¿Dónde atiendes?</legend>
             <div className="flex flex-wrap gap-2">
               {MODALIDADES.map((m) => (
@@ -1343,7 +1406,11 @@ export function FormularioProveedor({
             </p>
           )}
 
-          <SubirImagen objetoTipo="proveedor" onSubida={setFotoNueva} />
+          <SubirImagen
+            objetoTipo="proveedor"
+            onSubida={setFotoNueva}
+            onEstadoSubida={setSubiendoFoto}
+          />
 
           {/* Casilla APARTE de la de publicar la ficha. Publicar una cara es
               otra finalidad que publicar un teléfono, y el artículo 9 pide
@@ -1396,9 +1463,14 @@ export function FormularioProveedor({
       resumen: autorizo ? 'Aceptado' : 'Falta tu autorización',
       falta: !autorizo,
       cuerpo: (
-        /* El texto de autorización, entero y sin enlace que haya que abrir.
-           Es la prueba del consentimiento informado y se guarda su versión:
-           si cambia aquí, se mueve AUTORIZACION_PROVEEDOR_VERSION. */
+        /* ADR 0017: la casilla dice una frase corta -sin el nombre de la
+           Fundación en la línea que se ve de entrada-, y el texto legal
+           completo -con el nombre y el NIT, palabra por palabra, sin
+           recortar- va en un <details> debajo, plegado. El artículo 12 de
+           la Ley 1581 obliga a identificar al responsable, así que el
+           nombre se queda: lo que cambia es qué tan visible es de entrada.
+           La versión guardada sigue siendo AUTORIZACION_PROVEEDOR_VERSION,
+           y no se mueve porque el texto legal no cambió, solo dónde vive. */
         <div className="rounded-2xl bg-background p-4">
           <label className="flex items-start gap-3 text-base">
             <input
@@ -1407,7 +1479,11 @@ export function FormularioProveedor({
               onChange={(e) => setAutorizo(e.target.checked)}
               className="mt-1 size-5 shrink-0"
             />
-            <span>
+            <span className="font-semibold">Autorizo la publicación de mis datos</span>
+          </label>
+          <details className="mt-3 text-sm text-muted-foreground">
+            <summary className="cursor-pointer select-none">Leer el texto completo</summary>
+            <p className="mt-2">
               Autorizo a {RESPONSABLE_SERVICIOS}, NIT {NIT_RESPONSABLE_SERVICIOS},
               responsable del directorio de servicios de AquíVe, a tratar los
               datos que estoy entregando —mi nombre visible, mi teléfono, si soy
@@ -1424,8 +1500,8 @@ export function FormularioProveedor({
                 aviso de privacidad
               </Link>
               .
-            </span>
-          </label>
+            </p>
+          </details>
         </div>
       ),
     },
@@ -1572,107 +1648,110 @@ export function FormularioProveedor({
   }
 
   // ─────────────────────────────────────────────────────────────────
-  // 3 · El alta. Pantalla 14: índice de diez secciones numeradas, con
-  //     su sello de estado, la barra de progreso y el carné en vivo.
+  // 3 · El alta, en seis pasos cortos y no diez secciones de una sentada:
+  //     pedido literal del cliente, con «cuánto falta» siempre a la vista.
   //
-  //     Las filas se abren aquí y no saltan a /perfil a propósito:
+  //     Nombrados y no numerados —«Paso 2 de 6» no dice de qué es el
+  //     2—, mismo criterio que ya usa `formulario-publicar-servicio.tsx`
+  //     y el asistente de `formulario-registro.tsx`: `MarcoFlujo` ya trae
+  //     esa barra con `pasos`/`pasoActual`.
+  //
+  //     Los pasos se abren aquí y no saltan a /perfil a propósito:
   //     `guardar_proveedor` escribe la ficha entera de una vez —nombre,
   //     teléfono, municipio, zona y al menos un oficio son NOT NULL—, así
   //     que antes de publicar no hay ficha de la que colgar una pantalla
   //     suelta. Después de publicar sí, y la 15 lleva a cada una.
   // ─────────────────────────────────────────────────────────────────
 
-  const listas = FILAS.filter(
-    (f) => f.claves.length > 0 && f.claves.every((c) => !BLOQUES[c].falta)
-  ).length
-  const porcentaje = Math.round((listas / FILAS.length) * 100)
+  const PASOS: { nombre: string; claves: ClaveSeccion[] }[] = [
+    { nombre: 'Quién eres', claves: ['quien', 'figura'] },
+    { nombre: 'Contacto', claves: ['contacto'] },
+    { nombre: 'Ubicación', claves: ['ciudad', 'zonas'] },
+    { nombre: 'Qué ofreces', claves: ['oficios', 'disponibilidad', 'presentacion'] },
+    { nombre: 'Tu foto', claves: ['foto'] },
+    { nombre: 'Confirmar', claves: ['permiso'] },
+  ]
+
+  // Falta algo más que lo que ya marca `BLOQUES[c].falta` en los pasos de
+  // ubicación (el filtro de PII de la dirección) y de foto (que no se
+  // avance con la subida a medias).
+  const pasoValido: Record<number, boolean> = {
+    1: !BLOQUES.quien.falta,
+    2: !BLOQUES.contacto.falta,
+    3: !BLOQUES.ciudad.falta && !BLOQUES.zonas.falta && !errorDireccion,
+    4: !BLOQUES.oficios.falta,
+    5: !subiendoFoto,
+    6: !BLOQUES.permiso.falta,
+  }
 
   return (
     <MarcoFlujo
       titulo="Arma tu carné"
       volver="/inicio"
+      pasos={PASOS.map((p) => p.nombre)}
+      pasoActual={paso - 1}
       accion={
-        <Button className="w-full" onClick={guardar} disabled={!puedeGuardar}>
-          <Check className="size-5" aria-hidden="true" />
-          {guardando ? 'Guardando…' : 'Publicar mi carné'}
-        </Button>
+        <div className="flex gap-2">
+          {paso > 1 && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPaso((n) => (n - 1) as typeof paso)}
+            >
+              Atrás
+            </Button>
+          )}
+          {paso < 6 ? (
+            <Button
+              type="button"
+              className="flex-1"
+              disabled={!pasoValido[paso]}
+              onClick={() => setPaso((n) => (n + 1) as typeof paso)}
+            >
+              Continuar
+            </Button>
+          ) : (
+            <Button type="button" className="flex-1" disabled={!puedeGuardar} onClick={guardar}>
+              <Check className="size-5" aria-hidden="true" />
+              {guardando ? 'Guardando…' : 'Publicar mi carné'}
+            </Button>
+          )}
+        </div>
       }
     >
-      <p className="text-base text-muted-foreground">
-        Tu nombre, tu teléfono y lo que haces quedan públicos en internet. Tú
-        acuerdas el precio con cada persona: AquíVe no cobra nada.
-      </p>
-
-      <div className="mt-4">
-        <div
-          className="h-2 overflow-hidden rounded-full bg-secondary"
-          role="progressbar"
-          aria-valuenow={listas}
-          aria-valuemin={0}
-          aria-valuemax={FILAS.length}
-          aria-label="Secciones listas"
-        >
-          <div
-            className="h-full rounded-full bg-primary transition-[width]"
-            style={{ width: `${porcentaje}%` }}
-          />
-        </div>
-        <p className="font-heading mt-1.5 text-xs tracking-[0.085em] text-muted-foreground uppercase">
-          {listas} de {FILAS.length} secciones listas
+      {paso === 1 && (
+        <p className="mb-4 text-base text-muted-foreground">
+          Tu nombre, tu teléfono y lo que haces quedan públicos en internet. Tú
+          acuerdas el precio con cada persona: AquíVe no cobra nada.
         </p>
+      )}
+
+      {avisoError && <div className="mb-4">{avisoError}</div>}
+
+      <div className="space-y-4">
+        {PASOS[paso - 1].claves.map((c) => (
+          <section key={c} className="shadow-canto space-y-4 rounded-2xl bg-card p-4">
+            <h2 className="font-heading text-xl leading-tight">{BLOQUES[c].titulo}</h2>
+            {BLOQUES[c].cuerpo}
+          </section>
+        ))}
       </div>
 
-      {avisoError && <div className="mt-3">{avisoError}</div>}
-
-      <ol className="mt-4 space-y-3">
-        {FILAS.map((fila) => {
-          const lista =
-            fila.claves.length > 0 && fila.claves.every((c) => !BLOQUES[c].falta)
-          const sello = fila.cerrada ?? (lista ? 'Listo' : 'Falta')
-
-          if (fila.claves.length === 0) {
-            return (
-              <li
-                key={fila.num}
-                className="shadow-canto flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3"
-              >
-                <span className="font-mono text-sm text-muted-foreground">{fila.num}</span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-lg font-semibold text-muted-foreground">
-                    {fila.nombre}
-                  </span>
-                  <span className="block text-base text-muted-foreground">{fila.ayuda}</span>
-                </span>
-                <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-sm font-medium">
-                  <Lock className="size-3.5" aria-hidden="true" />
-                  {sello}
-                </span>
-              </li>
-            )
-          }
-
-          return (
-            <li key={fila.num}>
-              <SeccionPlegable
-                titulo={`${fila.num} · ${fila.nombre}`}
-                resumen={fila.ayuda}
-                resumenSiempre
-                sello={sello}
-              >
-                {fila.claves.map((c) => (
-                  <div key={c} className="space-y-4">
-                    {BLOQUES[c].cuerpo}
-                  </div>
-                ))}
-              </SeccionPlegable>
-            </li>
-          )
-        })}
-      </ol>
+      {/* Lo que la pantalla 14 anterior decía en sus dos filas cerradas:
+          esto no se pide todavía porque hace falta que la ficha exista
+          primero. Va en el último paso para que no quede como una
+          sorpresa después de publicar. */}
+      {paso === 6 && (
+        <p className="mt-4 text-base text-muted-foreground">
+          Después de publicar: alguien de {RESPONSABLE_SERVICIOS} te llama para
+          verificar tu teléfono, y desde tu perfil puedes dar la referencia de
+          un cliente anterior.
+        </p>
+      )}
 
       {/* La vista previa, en vivo. Es la misma pieza que se publica —el
           carné de la pantalla 15 y de la 04—, así que quien la mira aquí
-          ve exactamente lo que va a quedar, sellos incluidos. */}
+          ve exactamente lo que va a quedar. */}
       <div className="mt-6">
         <p className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase">
           Vista previa · lo que verán
@@ -1688,7 +1767,7 @@ export function FormularioProveedor({
           />
         </div>
         <p className="mt-2 text-base text-muted-foreground">
-          Se actualiza mientras completas las secciones. El identificador se
+          Se actualiza mientras completas los pasos. El identificador se
           asigna al publicar.
         </p>
       </div>

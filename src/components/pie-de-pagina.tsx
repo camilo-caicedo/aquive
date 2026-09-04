@@ -60,7 +60,7 @@ export function PieDePagina() {
                 baja hasta el pie suele venir buscando a quién escribirle. */}
             <li>
               <Link href="/ayuda" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
-                Ayuda
+                Preguntas frecuentes
               </Link>
             </li>
             <li>

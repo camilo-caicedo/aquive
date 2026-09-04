@@ -1,8 +1,31 @@
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { ContenedorHoja } from '@/components/contenedor-hoja'
+
+/**
+ * Si el contenido de la hoja tiene algo sin guardar, tocar el fondo no
+ * cierra.
+ *
+ * Sin esto, el selector de archivos nativo del teléfono puede devolver el
+ * foco con un clic sintético cuyo `target` es el propio `<dialog>` —lo
+ * mismo que un clic real en el fondo—, y eso desmonta en silencio un
+ * formulario a medias (CLAUDE.md, mecanismo 2). El caso que lo disparó era
+ * de subir una foto, así que solo lo declaran las hojas con un formulario
+ * largo y una subida de imagen; el resto no lo necesita y una hoja fuera de
+ * `HojaModal` no tiene fondo del que protegerse.
+ */
+const CambiosSinGuardar = createContext<{ current: boolean } | null>(null)
+
+/** `useCambiosSinGuardar(titulo.trim() !== '')`, con lo que haga que valga
+ *  la pena no perder el formulario. */
+export function useCambiosSinGuardar(hay: boolean) {
+  const ref = useContext(CambiosSinGuardar)
+  useEffect(() => {
+    if (ref) ref.current = hay
+  }, [ref, hay])
+}
 
 /**
  * El caparazón de una pantalla interceptada.
@@ -62,6 +85,11 @@ export function HojaModal({
   // provocar un render cuando el nodo existe, o el primero que se abra lo
   // recibe en nulo y vuelve a portalizarse al `body`.
   const [dialogo, setDialogo] = useState<HTMLDialogElement | null>(null)
+  // Lo que declaró el contenido con `useCambiosSinGuardar`. En un `ref` y
+  // no en estado: cambia con cada tecla del formulario de adentro, y aquí
+  // solo hace falta LEERLO en el momento del clic, no volver a pintar la
+  // hoja cada vez que cambia.
+  const cambiosSinGuardar = useRef(false)
 
   // Le toca cuando la URL es la suya. Deja de tocarle en cuanto lo de
   // debajo navega a otra parte, y vuelve a tocarle si se regresa con la
@@ -163,7 +191,7 @@ export function HojaModal({
         cerrar()
       }}
       onClick={(e) => {
-        if (e.target === dialogo) cerrar()
+        if (e.target === dialogo && !cambiosSinGuardar.current) cerrar()
       }}
       className="animar-hoja m-0 mt-auto mb-[var(--barra-navegador,0px)] max-h-[92dvh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-3xl bg-background p-0 text-foreground backdrop:bg-foreground/40 sm:mx-auto sm:my-auto sm:mb-auto sm:max-h-[88dvh] sm:rounded-3xl"
     >
@@ -173,7 +201,9 @@ export function HojaModal({
       <div className="flex shrink-0 justify-center pt-2 pb-1">
         <span aria-hidden="true" className="h-1 w-10 rounded-full bg-border" />
       </div>
-      <ContenedorHoja.Provider value={dialogo}>{children}</ContenedorHoja.Provider>
+      <CambiosSinGuardar.Provider value={cambiosSinGuardar}>
+        <ContenedorHoja.Provider value={dialogo}>{children}</ContenedorHoja.Provider>
+      </CambiosSinGuardar.Provider>
     </dialog>
   )
 }

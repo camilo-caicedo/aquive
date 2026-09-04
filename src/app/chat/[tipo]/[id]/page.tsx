@@ -10,7 +10,7 @@ import { Chat } from '@/components/chat'
 export const metadata = { title: 'Chat' }
 
 /**
- * El hilo. Pantalla 12, y ahora para los cinco orígenes.
+ * El hilo. Pantalla 12, y ahora para los cuatro orígenes.
  *
  * Una sola ruta y un solo componente para los dos lados: quién eres lo
  * decide el servidor por de qué eres dueño, no por la ruta por la que
@@ -46,7 +46,7 @@ export default async function ChatPage({
       <MarcoFlujo titulo="Escribir" volver="/inicio">
         <PuertaCerrada
           titulo="Para escribir hace falta una cuenta"
-          porque="El chat es de dos personas y se borra con lo que lo abrió. Sin cuenta no hay forma de saber que quien vuelve mañana es quien escribió hoy."
+          porque="La conversación es entre dos personas. Sin cuenta no hay forma de saber que quien vuelve mañana es quien escribió hoy."
           seConserva="Al entrar vuelves justo a esta conversación."
           destino={destino}
           alternativa="Si prefieres no crear cuenta, quien publicó dejó su WhatsApp y su teléfono en su ficha."

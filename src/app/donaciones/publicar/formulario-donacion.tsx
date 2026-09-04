@@ -5,6 +5,7 @@ import Link from 'next/link'
 
 import { rpc } from '@/orpc/cliente'
 import { MarcoFlujo } from '@/components/marco-flujo'
+import { useCambiosSinGuardar } from '@/components/hoja-modal'
 import { SubirImagen } from '@/components/subir-imagen'
 import { Button } from '@/components/ui/button'
 import {
@@ -24,14 +25,11 @@ import {
   ComboboxTrigger,
   ComboboxValue,
 } from '@/components/ui/combobox'
-import { CATEGORIAS_MURO, NOMBRE_CATEGORIA_MURO, type Cara } from '@/contrato/comunidad'
+import { CATEGORIAS_MURO, NOMBRE_CATEGORIA_MURO } from '@/contrato/comunidad'
 
 /**
- * Publicar en el muro. Las dos caras, un formulario.
- *
- * La diferencia no es cosmética y se dice en pantalla: quien OFRECE publica
- * con su nombre y tiene que aceptarlo; quien NECESITA no da un solo dato y se
- * lleva un token, igual que una solicitud de insumos.
+ * Publicar una donación: solo lo que se ofrece (ADR 0014 quitó la cara de
+ * pedidos). Publica con nombre, y tiene que aceptarlo.
  */
 type MunicipioMuro = {
   codigo_dane: string
@@ -39,12 +37,10 @@ type MunicipioMuro = {
   departamento: string | null
 }
 
-export function FormularioMuro({
-  cara,
+export function FormularioDonacion({
   municipios,
   acopios,
 }: {
-  cara: Cara
   municipios: MunicipioMuro[]
   /** Los centros donde se puede dejar (ADR 0008). Vacío = no hay ninguno. */
   acopios: { id: string; nombre: string; direccion: string | null }[]
@@ -58,12 +54,19 @@ export function FormularioMuro({
   const municipioElegido = municipios.find((m) => m.codigo_dane === municipio)
   const [acopioId, setAcopioId] = useState('')
   const [imagenId, setImagenId] = useState<string | null>(null)
+  const [subiendoFoto, setSubiendoFoto] = useState(false)
   const [acepto, setAcepto] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [listo, setListo] = useState(false)
 
-  const ofrece = cara === 'ofrece'
+  // Con algo escrito o una foto ya subida, tocar el fondo de la hoja no
+  // cierra (mecanismo 2): el selector de archivos puede devolver el foco
+  // con un clic que aterriza ahí mismo. Publicado, ya no hay nada que
+  // proteger.
+  useCambiosSinGuardar(
+    !listo && (titulo.trim() !== '' || detalle.trim() !== '' || imagenId !== null),
+  )
 
   /** «Casa Expandida · Calle 4b # 35-32». Nulo cuando no hay ninguno.
    *  Es lo que se lee en el disparador, en una sola línea; en la lista van
@@ -75,14 +78,17 @@ export function FormularioMuro({
   }
 
   const puede =
-    titulo.trim().length >= 3 && municipio !== '' && (!ofrece || acepto) && !enviando
+    titulo.trim().length >= 3 &&
+    municipio !== '' &&
+    acepto &&
+    !enviando &&
+    !subiendoFoto
 
   async function enviar() {
     setEnviando(true)
     setError(null)
     try {
       await rpc.comunidad.publicarEnMuro({
-        cara,
         categoria,
         titulo: titulo.trim(),
         detalle: detalle.trim() || undefined,
@@ -105,7 +111,7 @@ export function FormularioMuro({
 
   if (listo) {
     return (
-      <MarcoFlujo titulo="Listo" volver="/muro">
+      <MarcoFlujo titulo="Listo" volver="/donaciones">
         <div className="shadow-canto rounded-2xl bg-card p-4">
           <h2 className="font-heading text-2xl">Tu publicación salió.</h2>
 
@@ -114,9 +120,8 @@ export function FormularioMuro({
               como todo lo demás. Antes había que copiar un token en un papel
               y perderlo era perder la publicación. */}
           <p className="mt-2 text-base">
-            {ofrece
-              ? 'Aparece en el muro con tu nombre. Puedes borrarla cuando quieras.'
-              : 'La vas a encontrar en tu perfil. Se borra sola a los 15 días.'}
+            Aparece en donaciones con tu nombre. Puedes borrarla cuando
+            quieras.
           </p>
 
           {imagenId && (
@@ -126,18 +131,18 @@ export function FormularioMuro({
           )}
 
           {/* La vuelta a lo creado, que faltaba: la pantalla ofrecía un
-              solo botón al muro entero, donde había que buscar lo propio
-              entre lo de todos. */}
+              solo botón a donaciones entero, donde había que buscar lo
+              propio entre lo de todos. */}
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button nativeButton={false} render={<Link href="/muro/mios" />}>
+            <Button nativeButton={false} render={<Link href="/donaciones/mios" />}>
               Ver lo que he publicado
             </Button>
             <Button
               variant="outline"
               nativeButton={false}
-              render={<Link href={`/muro?cara=${cara}`} />}
+              render={<Link href="/donaciones" />}
             >
-              Ver el muro
+              Ver donaciones
             </Button>
           </div>
         </div>
@@ -146,14 +151,10 @@ export function FormularioMuro({
   }
 
   return (
-    <MarcoFlujo
-      titulo={ofrece ? 'Ofrecer algo' : 'Pedir lo que me falta'}
-      volver={`/muro?cara=${cara}`}
-    >
+    <MarcoFlujo titulo="Publicar una donación" volver="/donaciones">
       <p className="text-base text-muted-foreground">
-        {ofrece
-          ? 'Aparece con tu nombre, para que quien lo necesite sepa con quién habla.'
-          : 'No aparece tu nombre ni tu teléfono. Quien pueda ayudarte te escribe por el chat de aquí dentro.'}
+        Aparece con tu nombre, para que quien lo necesite sepa con quién
+        habla.
       </p>
 
       <fieldset className="mt-6">
@@ -184,14 +185,14 @@ export function FormularioMuro({
           htmlFor="titulo"
           className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase"
         >
-          {ofrece ? 'Qué tienes para dar' : 'Qué necesitas'}
+          Qué tienes para dar
         </label>
         <input
           id="titulo"
           value={titulo}
           onChange={(e) => setTitulo(e.target.value)}
           maxLength={140}
-          placeholder={ofrece ? 'Nevera pequeña en buen estado' : 'Una cama sencilla'}
+          placeholder="Nevera pequeña en buen estado"
           className="bg-card border border-input focus-visible:ring-ring mt-2 min-h-14 w-full rounded-2xl px-4 text-base focus-visible:ring-2 focus-visible:outline-none"
         />
       </div>
@@ -263,9 +264,7 @@ export function FormularioMuro({
         </p>
       </div>
 
-      {/* Solo para quien OFRECE, y solo donde hay centros. Quien pide no
-          entrega nada, así que la pregunta no le toca. */}
-      {ofrece && acopios.length > 0 && (
+      {acopios.length > 0 && (
         <div className="mt-4">
           <label
             htmlFor="acopio"
@@ -305,27 +304,22 @@ export function FormularioMuro({
       )}
 
       <div className="mt-6">
-        <SubirImagen objetoTipo="muro" onSubida={setImagenId} />
+        <SubirImagen objetoTipo="muro" onSubida={setImagenId} onEstadoSubida={setSubiendoFoto} />
       </div>
 
-      {/* Solo la cara que ofrece publica nombre, así que solo ella pide
-          autorización. Pedírsela a quien no publica ningún dato sería pedir
-          permiso para nada. */}
-      {ofrece && (
-        <label className="mt-6 flex min-h-12 cursor-pointer items-start gap-3">
-          <input
-            type="checkbox"
-            checked={acepto}
-            onChange={(e) => setAcepto(e.target.checked)}
-            className="mt-1 size-5 shrink-0"
-          />
-          <span className="text-base">
-            Autorizo que mi nombre aparezca junto a esta publicación, para que
-            quien la necesite sepa con quién está hablando. Puedo borrarla
-            cuando quiera.
-          </span>
-        </label>
-      )}
+      <label className="mt-6 flex min-h-12 cursor-pointer items-start gap-3">
+        <input
+          type="checkbox"
+          checked={acepto}
+          onChange={(e) => setAcepto(e.target.checked)}
+          className="mt-1 size-5 shrink-0"
+        />
+        <span className="text-base">
+          Autorizo que mi nombre aparezca junto a esta publicación, para que
+          quien la necesite sepa con quién está hablando. Puedo borrarla
+          cuando quiera.
+        </span>
+      </label>
 
       {error && (
         <p

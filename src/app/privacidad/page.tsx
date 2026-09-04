@@ -181,7 +181,8 @@ export default function PrivacidadPage() {
         No vendemos ni compartimos información con terceros. No hacemos publicidad. No procesamos
         dinero, no cobramos comisión y no hay pasarela de pago en ninguna parte de este sitio. Sí alojamos el chat
         de la plataforma, que es donde se acuerda un servicio o una entrega sin tener que dar el
-        teléfono: ese chat se borra con lo que lo abrió y no se archiva. Si en cambio decides
+        teléfono: esa conversación se borra cuando se borra el pedido, el producto, la donación o la
+        ficha de la que salió, y no guardamos copia. Si en cambio decides
         escribir por WhatsApp o llamar, eso ocurre por fuera y nosotros no vemos nada.
       </p>
 

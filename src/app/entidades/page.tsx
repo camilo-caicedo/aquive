@@ -1,6 +1,5 @@
 import Link from 'next/link'
-import { Plus, Info, Briefcase } from 'lucide-react'
-import { AccionPrincipal } from '@/components/accion-principal'
+import { Info, Briefcase } from 'lucide-react'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { createClient } from '@/lib/supabase/server'
 import { AVISO_ENTIDADES } from '@/lib/honestidad'
@@ -141,11 +140,6 @@ export default async function EntidadesPage({
           Ver oficios
         </Button>
       </section>
-      <AccionPrincipal
-        etiqueta="Necesito un servicio"
-        Icono={Plus}
-        href="/servicios/publicar"
-      />
     </main>
   )
 }

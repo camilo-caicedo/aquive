@@ -1,29 +1,41 @@
 import { and, desc, eq, sql } from 'drizzle-orm'
 
 import type { BaseDeDatos } from '@/db/cliente'
-import { catalogoOficios, solicitudesServicio, sugerenciasItem, zonas } from '@/db/esquema'
-import { contienePII, validarNota, validarSugerencia } from '@/lib/validacion'
-import type { GrupoOficio, MiSolicitudServicio } from '@/contrato/servicios'
+import {
+  catalogoOficios,
+  chats,
+  proveedorOficiosPublicos,
+  proveedores,
+  solicitudesServicio,
+  sugerenciasItem,
+} from '@/db/esquema'
+import { contienePII, validarNota } from '@/lib/validacion'
+import type { MiSolicitudServicio, OrdenProveedor } from '@/contrato/servicios'
+import { transicionValida, type EstadoSolicitud } from './transiciones'
 
 export class SolicitudRechazada extends Error {}
 
 /**
  * Pedir un servicio.
  *
- * ⚠ Esto era `crear_solicitud_servicio`, una función de PL/pgSQL a la que se
- * le pasaba un token en claro para que lo hasheara dentro. Se sube al
- * dominio por el ADR 0001 —la lógica de negocio sale del motor— y porque el
- * ADR 0006 dejó esa función apuntando a una columna que ya no existe.
+ * ⚠ ADR 0015: deja de ser un pedido al aire. Nace dirigida a un
+ * `proveedor_id` concreto — la ficha desde la que se abrió el formulario —
+ * y el municipio y la zona los copia de esa ficha: son un hecho real (dónde
+ * está el prestador), no una pregunta más que hacerle a quien pide.
+ *
+ * ⚠ El `oficio_id` tiene que ser uno de los que ESTA ficha ya ofrece —se
+ * comprueba contra `proveedor_oficios_publicos`, no contra el catálogo
+ * entero—, y de ahí sale también el `grupo`: quien pide no elige una
+ * categoría, porque el oficio ya dice de cuál es. Sin paso de «¿no
+ * encuentras lo tuyo?»: esa salida del ADR 0013 tenía sentido contra 81
+ * oficios, no contra los tres o cuatro que un prestador concreto declaró.
+ *
+ * ⚠ El hilo nace en la misma operación (ADR 0015): la orden ya identifica a
+ * los dos lados desde que se publica, así que no hay razón para esperar a
+ * que alguien abra el chat para crearlo.
  *
  * ⚠ Tener cuenta no es dar datos (ADR 0006): su nombre no se publica y la
- * solicitud no lo lleva. Lo que se le pide es categoría, lo que necesita
- * escrito, municipio, zona, urgencia, capacidad de pago y la nota — y nada
- * de eso lo identifica.
- *
- * ⚠ Desde el ADR 0011 el oficio del catálogo NO entra aquí. Entra una de
- * las doce categorías —ocho hasta el ADR 0012— y una línea que escribe
- * quien pide, porque el rebusque es justo el trabajo que no está en
- * ninguna lista.
+ * solicitud no lo lleva.
  */
 
 /** Cuatro letras y dos dígitos, para decirlo por teléfono sin deletrear. */
@@ -39,22 +51,53 @@ function nuevoCodigo() {
 export async function publicar(
   db: BaseDeDatos,
   entrada: {
-    grupo: GrupoOficio
-    /** Del catálogo, o propuesta. Exactamente una (ADR 0013). */
-    oficio_id?: string
-    subcategoria_nueva?: string
+    proveedor_id: string
+    /** Uno de los oficios que ESTA ficha ya ofrece (regla de producto 1 del encargo). */
+    oficio_id: string
     detalle?: string
-    municipio: string
-    zona_id?: string
-    zona_texto?: string
-    urgencia: 'hoy' | 'esta_semana' | 'sin_prisa'
-    capacidad_pago: 'puedo_pagar' | 'pago_poco' | 'no_puedo_pagar'
     nota?: string
   },
   llave: { usuarioId: string | null },
 ): Promise<{ id: string; codigo: string }> {
   if (!llave.usuarioId) {
     throw new SolicitudRechazada('Para pedir un servicio necesitas entrar con tu cuenta.')
+  }
+
+  // La ficha tiene que existir y seguir publicada: es de donde se copian
+  // municipio y zona, y pedirle algo a una ficha suspendida no tiene
+  // destinatario de verdad.
+  const [proveedor] = await db
+    .select({
+      id: proveedores.id,
+      municipio: proveedores.municipio,
+      zonaId: proveedores.zonaId,
+      zonaTexto: proveedores.zonaTexto,
+      suspendido: proveedores.suspendido,
+    })
+    .from(proveedores)
+    .where(eq(proveedores.id, entrada.proveedor_id))
+    .limit(1)
+  if (!proveedor || proveedor.suspendido) {
+    throw new SolicitudRechazada('Esa ficha ya no está disponible.')
+  }
+
+  // El oficio tiene que ser uno de los que ESTA ficha de verdad ofrece —no
+  // cualquiera del catálogo—. `proveedor_oficios_publicos` ya aplica la
+  // regla de producto 7 (riesgo alto escondido sin respaldo), así que un
+  // oficio escondido tampoco se puede pedir por aquí. De aquí sale también
+  // el `grupo`: quien pide no elige categoría, el oficio ya dice cuál es.
+  const [oficio] = await db
+    .select({ grupo: proveedorOficiosPublicos.grupo })
+    .from(proveedorOficiosPublicos)
+    .where(
+      and(
+        eq(proveedorOficiosPublicos.proveedorId, proveedor.id),
+        eq(proveedorOficiosPublicos.oficioId, entrada.oficio_id),
+      ),
+    )
+    .limit(1)
+  if (!oficio) {
+    throw new SolicitudRechazada('Ese prestador no ofrece ese oficio.')
   }
 
   // Los campos libres, con su filtro (regla de producto 4). Si por ahí se
@@ -69,62 +112,14 @@ export async function publicar(
     if (errorDetalle) throw new SolicitudRechazada(errorDetalle)
   }
 
-  // Exactamente una subcategoría. Se repite aquí y no se delega al borde
-  // porque el dominio tiene que servir igual desde React Native, donde no
-  // pasa por el mismo Zod.
-  if (Boolean(entrada.oficio_id) === Boolean(entrada.subcategoria_nueva)) {
-    throw new SolicitudRechazada('Elige qué necesitas de la lista, o escríbelo tú.')
-  }
-
-  // El oficio tiene que existir, estar activo y ser DE ESA CATEGORÍA. Sin
-  // lo último, una llamada a mano puede colgar «Peluquería» de «Arreglos
-  // de la casa» y el filtro del tablero deja de significar nada.
-  if (entrada.oficio_id) {
-    const [oficio] = await db
-      .select({ id: catalogoOficios.id })
-      .from(catalogoOficios)
-      .where(
-        and(
-          eq(catalogoOficios.id, entrada.oficio_id),
-          eq(catalogoOficios.activo, true),
-          eq(catalogoOficios.grupo, entrada.grupo),
-        ),
-      )
-      .limit(1)
-    if (!oficio) {
-      throw new SolicitudRechazada('Eso no está en la lista de esa categoría.')
-    }
-  }
-
-  // Lo que se escribe a mano lleva el mismo control que el ítem de insumos
-  // propuesto: tope de 60 y filtro de PII. Es la tercera puerta por la que
-  // entra texto libre a una pantalla pública.
-  if (entrada.subcategoria_nueva) {
-    const error = validarSugerencia(entrada.subcategoria_nueva)
-    if (error) throw new SolicitudRechazada(error)
-  }
-
-  // La zona escrita a mano es por donde más fácil se cuela un teléfono:
-  // «comuna 3, llámame al…».
-  if (entrada.zona_texto && contienePII(entrada.zona_texto)) {
-    throw new SolicitudRechazada(
-      'No escribas teléfonos, correos ni cédulas. Se acuerda por el chat de aquí.',
-    )
-  }
   if (entrada.nota) {
     const error = validarNota(entrada.nota)
     if (error) throw new SolicitudRechazada(error)
   }
-
-  // La zona tiene que ser de ese municipio. Sin esto, una comuna de Cali
-  // podía quedar colgada de una solicitud de Buga.
-  if (entrada.zona_id) {
-    const [zona] = await db
-      .select({ id: zonas.id })
-      .from(zonas)
-      .where(and(eq(zonas.id, entrada.zona_id), eq(zonas.municipio, entrada.municipio)))
-      .limit(1)
-    if (!zona) throw new SolicitudRechazada('Esa zona no es de ese municipio.')
+  if (entrada.nota && contienePII(entrada.nota)) {
+    throw new SolicitudRechazada(
+      'No escribas teléfonos, correos ni cédulas. Se acuerda por el chat de aquí.',
+    )
   }
 
   // El código se dice por teléfono, así que tiene que ser único. Se
@@ -139,40 +134,29 @@ export async function publicar(
       .limit(1)
     if (ya) continue
 
-    // La propuesta nace aquí, y la solicitud se publica igual (ADR 0011):
-    // quien pide necesita respuesta hoy, no cuando alguien mire la cola.
-    let sugerenciaId: string | null = null
-    if (entrada.subcategoria_nueva) {
-      const [sug] = await db
-        .insert(sugerenciasItem)
-        .values({
-          tipo: 'oficio',
-          nombrePropuesto: entrada.subcategoria_nueva.trim(),
-          grupoSugerido: entrada.grupo,
-          origen: 'solicitante',
-          propuestaPor: llave.usuarioId,
-        })
-        .returning({ id: sugerenciasItem.id })
-      sugerenciaId = sug.id
-    }
-
     const [fila] = await db
       .insert(solicitudesServicio)
       .values({
         codigo,
         perfilId: llave.usuarioId,
-        grupo: entrada.grupo,
-        oficioId: entrada.oficio_id ?? null,
-        sugerenciaId,
+        proveedorId: proveedor.id,
+        // La vista siempre trae grupo — viene de un `join` obligatorio con
+        // `catalogo_oficios`—; el tipo lo marca nulo porque es una vista.
+        grupo: oficio.grupo!,
+        oficioId: entrada.oficio_id,
         detalle: entrada.detalle?.trim() ?? null,
-        municipio: entrada.municipio,
-        zonaId: entrada.zona_id ?? null,
-        zonaTexto: entrada.zona_texto ?? null,
-        urgencia: entrada.urgencia,
-        capacidadPago: entrada.capacidad_pago,
+        // Copiados de la ficha (ADR 0015): describen dónde está el
+        // prestador, un hecho real, no una pregunta más para quien pide.
+        municipio: proveedor.municipio,
+        zonaId: proveedor.zonaId,
+        zonaTexto: proveedor.zonaTexto,
         nota: entrada.nota ?? null,
       })
       .returning({ id: solicitudesServicio.id })
+
+    // El hilo nace aquí mismo (ADR 0015): la orden ya identifica a los dos
+    // lados, así que no hay razón para esperar a que alguien abra el chat.
+    await db.insert(chats).values({ solicitudServicioId: fila.id })
 
     return { id: fila.id, codigo }
   }
@@ -201,16 +185,17 @@ export async function mias(
       estado: solicitudesServicio.estado,
       creada_at: solicitudesServicio.creadaAt,
       expira_at: solicitudesServicio.expiraAt,
-      num_respuestas: sql<number>`(
-        select count(*)::int from respuestas_servicio r
-         where r.solicitud_id = ${solicitudesServicio.id}
-      )`,
+      proveedor_id: solicitudesServicio.proveedorId,
+      proveedor_nombre: proveedores.nombreVisible,
     })
     .from(solicitudesServicio)
-    // ⚠ LEFT, las dos. Un INNER se traga las solicitudes sin oficio —las
-    // anteriores al ADR 0013 y las que llevan propuesta— sin dar error.
+    // ⚠ LEFT, las tres. Un INNER en oficio/sugerencia se traga las
+    // solicitudes sin oficio —las anteriores al ADR 0013 y las que llevan
+    // propuesta— sin dar error; y el proveedor puede haber borrado su
+    // ficha si esto llegó a existir antes de la cascada.
     .leftJoin(catalogoOficios, eq(catalogoOficios.id, solicitudesServicio.oficioId))
     .leftJoin(sugerenciasItem, eq(sugerenciasItem.id, solicitudesServicio.sugerenciaId))
+    .leftJoin(proveedores, eq(proveedores.id, solicitudesServicio.proveedorId))
     .where(eq(solicitudesServicio.perfilId, llave.usuarioId))
     .orderBy(desc(solicitudesServicio.creadaAt))
 
@@ -221,46 +206,166 @@ export async function mias(
     subcategoria: f.oficio_nombre ?? f.propuesta ?? null,
     subcategoria_en_revision: f.oficio_nombre === null && f.propuesta !== null,
     detalle: f.detalle,
-    estado: f.estado,
-    num_respuestas: Number(f.num_respuestas),
+    estado: f.estado as MiSolicitudServicio['estado'],
     creada_at: String(f.creada_at),
     expira_at: String(f.expira_at),
+    proveedor_id: f.proveedor_id,
+    proveedor_nombre: f.proveedor_nombre,
   }))
 }
 
 /**
- * Renovar o cerrar la propia.
+ * Renovar o cancelar la propia. Quien pide, no el prestador.
  *
- * ⚠ El `where` lleva SIEMPRE el perfil. Es lo que impide que alguien cierre
+ * ⚠ El `where` lleva SIEMPRE el perfil. Es lo que impide que alguien toque
  * la solicitud de otro sabiendo su id, y va en la consulta y no en un `if`
  * de arriba: un `if` se puede saltar reordenando el código, un `where` no.
+ *
+ * ⚠ No hay un sexto estado «cancelada»: el cliente pidió cinco (ADR 0015).
+ * Cancelar aterriza en `no_concretada`, que es la que el ADR describe como
+ * «cierra sin que el trabajo se haya hecho, sin necesidad de decir de quién
+ * fue la culpa» — justo lo que es cancelar la propia. `rechazada` habría
+ * sido atribuirle al prestador una decisión que no tomó él.
  */
 export async function gestionar(
   db: BaseDeDatos,
   id: string,
-  accion: 'renovar' | 'cerrar',
+  accion: 'renovar' | 'cancelar',
   llave: { usuarioId: string | null },
 ): Promise<{ ok: true }> {
   if (!llave.usuarioId) throw new SolicitudRechazada('Esto no es tuyo.')
 
-  const filas = await db
-    .update(solicitudesServicio)
-    .set(
-      // ⚠ 'resuelta', no 'cerrada'. El CHECK de la tabla solo acepta
-      // 'abierta' y 'resuelta', así que cerrar una solicitud reventaba con
-      // una violación de restricción en vez de cerrarla.
-      accion === 'cerrar'
-        ? { estado: 'resuelta' }
-        : { expiraAt: sql`now() + interval '15 days'`, estado: 'abierta' },
-    )
+  const [actual] = await db
+    .select({ estado: solicitudesServicio.estado })
+    .from(solicitudesServicio)
     .where(
       and(
         eq(solicitudesServicio.id, id),
         eq(solicitudesServicio.perfilId, llave.usuarioId),
       ),
     )
-    .returning({ id: solicitudesServicio.id })
+    .limit(1)
+  if (!actual) throw new SolicitudRechazada('Esto no es tuyo.')
 
-  if (filas.length === 0) throw new SolicitudRechazada('Esto no es tuyo.')
+  if (accion === 'renovar') {
+    // Solo tiene sentido mientras nadie ha contestado: una orden aceptada
+    // no vence sola (ADR 0015), así que «renovar» algo que no está
+    // pendiente no significa nada.
+    if (actual.estado !== 'pendiente') {
+      throw new SolicitudRechazada('Ya no se puede renovar: el prestador ya respondió.')
+    }
+    await db
+      .update(solicitudesServicio)
+      .set({ expiraAt: sql`now() + interval '15 days'` })
+      .where(eq(solicitudesServicio.id, id))
+    return { ok: true }
+  }
+
+  // Cancelar: solo mientras todavía hay algo que detener.
+  if (actual.estado !== 'pendiente' && actual.estado !== 'aceptada') {
+    throw new SolicitudRechazada('Esta orden ya está cerrada.')
+  }
+  await db
+    .update(solicitudesServicio)
+    .set({ estado: 'no_concretada' satisfies EstadoSolicitud })
+    .where(eq(solicitudesServicio.id, id))
+  return { ok: true }
+}
+
+/**
+ * La bandeja del prestador: sus órdenes, para aceptar, rechazar o cerrar.
+ *
+ * Sin ficha propia, lista vacía — igual que `mias()` sin cuenta.
+ */
+export async function misOrdenes(
+  db: BaseDeDatos,
+  llave: { usuarioId: string | null },
+): Promise<OrdenProveedor[]> {
+  if (!llave.usuarioId) return []
+
+  const [ficha] = await db
+    .select({ id: proveedores.id })
+    .from(proveedores)
+    .where(eq(proveedores.perfilId, llave.usuarioId))
+    .limit(1)
+  if (!ficha) return []
+
+  const filas = await db
+    .select({
+      id: solicitudesServicio.id,
+      codigo: solicitudesServicio.codigo,
+      grupo: solicitudesServicio.grupo,
+      oficio_nombre: catalogoOficios.nombre,
+      propuesta: sugerenciasItem.nombrePropuesto,
+      detalle: solicitudesServicio.detalle,
+      nota: solicitudesServicio.nota,
+      estado: solicitudesServicio.estado,
+      creada_at: solicitudesServicio.creadaAt,
+    })
+    .from(solicitudesServicio)
+    .leftJoin(catalogoOficios, eq(catalogoOficios.id, solicitudesServicio.oficioId))
+    .leftJoin(sugerenciasItem, eq(sugerenciasItem.id, solicitudesServicio.sugerenciaId))
+    .where(eq(solicitudesServicio.proveedorId, ficha.id))
+    // Lo accionable primero: pendiente antes que aceptada, y las tres
+    // terminales al final. Dentro de cada grupo, lo más nuevo arriba.
+    .orderBy(
+      sql`case ${solicitudesServicio.estado}
+            when 'pendiente' then 0
+            when 'aceptada' then 1
+            else 2
+          end`,
+      desc(solicitudesServicio.creadaAt),
+    )
+
+  return filas.map((f) => ({
+    id: f.id,
+    codigo: f.codigo,
+    grupo: f.grupo as OrdenProveedor['grupo'],
+    subcategoria: f.oficio_nombre ?? f.propuesta ?? null,
+    subcategoria_en_revision: f.oficio_nombre === null && f.propuesta !== null,
+    detalle: f.detalle,
+    nota: f.nota,
+    estado: f.estado as OrdenProveedor['estado'],
+    creada_at: String(f.creada_at),
+  }))
+}
+
+/**
+ * El prestador acepta, rechaza o cierra una orden suya.
+ *
+ * ⚠ La verificación de dueño va por SQL —`proveedores.perfilId =
+ * usuarioId`—, no por confiar en que la interfaz solo le enseñe el botón a
+ * quien toca: un `id` de solicitud cualquiera no basta si esa ficha no es
+ * de quien llama.
+ */
+export async function cambiarEstado(
+  db: BaseDeDatos,
+  id: string,
+  siguiente: EstadoSolicitud,
+  llave: { usuarioId: string | null },
+): Promise<{ ok: true }> {
+  if (!llave.usuarioId) throw new SolicitudRechazada('Esto no es tuyo.')
+
+  const [fila] = await db
+    .select({ estado: solicitudesServicio.estado })
+    .from(solicitudesServicio)
+    .innerJoin(proveedores, eq(proveedores.id, solicitudesServicio.proveedorId))
+    .where(
+      and(
+        eq(solicitudesServicio.id, id),
+        eq(proveedores.perfilId, llave.usuarioId),
+      ),
+    )
+    .limit(1)
+  if (!fila) throw new SolicitudRechazada('Esto no es tuyo.')
+
+  if (!transicionValida(fila.estado, siguiente)) {
+    throw new SolicitudRechazada(`No se puede pasar de "${fila.estado}" a "${siguiente}".`)
+  }
+
+  await db
+    .update(solicitudesServicio)
+    .set({ estado: siguiente })
+    .where(eq(solicitudesServicio.id, id))
   return { ok: true }
 }

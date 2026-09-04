@@ -5,7 +5,6 @@ import {
   Check,
   ChevronRight,
   Eye,
-  HandHelping,
   Hash,
   Pencil,
 } from 'lucide-react'
@@ -36,7 +35,7 @@ export default async function SoyProveedorPage() {
   // volver: al entrar caía en la portada y había que buscar esto otra vez.
   if (!user) {
     return (
-      <MarcoFlujo titulo="Ofrecer mi trabajo" volver="/inicio">
+      <MarcoFlujo titulo="Ofrezco mi trabajo" volver="/inicio">
         <PuertaCerrada
           titulo="Para publicar tu ficha hace falta una cuenta"
           porque="Tu ficha lleva tu nombre y tu teléfono, y se queda publicada hasta que tú la borres: tiene que poder volver a ella solo quien la creó."
@@ -198,23 +197,6 @@ export default async function SoyProveedorPage() {
               {proveedor.acepto_foto && proveedor.foto
                 ? 'Publicada en tu ficha'
                 : 'Opcional. Ayuda a que te reconozcan'}
-            </span>
-          </span>
-          <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-        </Link>
-
-        {/* La otra mitad del módulo, desde el lado de quien ofrece. */}
-        <Link
-          href="/solicitudes"
-          className="pulsable-tarjeta shadow-canto flex min-h-16 items-center gap-3 rounded-2xl bg-card px-4 py-3 transition-colors hover:bg-muted"
-        >
-          <span className="bg-familia-azul flex size-10 shrink-0 items-center justify-center rounded-full text-white">
-            <HandHelping className="size-5" aria-hidden="true" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-lg font-medium">Quién está pidiendo</span>
-            <span className="block text-base text-muted-foreground">
-              Lo que la gente necesita, para responder
             </span>
           </span>
           <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />

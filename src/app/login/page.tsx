@@ -121,7 +121,7 @@ export default async function LoginPage({
       >
         <span className="flex items-center gap-3 text-base font-medium">
           <LifeBuoy className="size-5 shrink-0" aria-hidden="true" />
-          Ayuda con la plataforma
+          Preguntas frecuentes
         </span>
         <ChevronRight className="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
       </Link>

@@ -64,6 +64,7 @@ export function FormularioProducto({ producto }: { producto?: MiProducto }) {
   )
   const [unidad, setUnidad] = useState<UnidadProducto | ''>(producto?.unidad ?? '')
   const [imagenId, setImagenId] = useState<string | null>(null)
+  const [subiendoFoto, setSubiendoFoto] = useState(false)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -74,7 +75,7 @@ export function FormularioProducto({ producto }: { producto?: MiProducto }) {
   const parEsValido =
     !llevaPrecio || precioNumero === '' ? unidad === '' || precioNumero !== '' : unidad !== ''
 
-  const puede = nombre.trim().length >= 2 && parEsValido && !enviando
+  const puede = nombre.trim().length >= 2 && parEsValido && !enviando && !subiendoFoto
 
   async function enviar() {
     setEnviando(true)
@@ -244,7 +245,7 @@ export function FormularioProducto({ producto }: { producto?: MiProducto }) {
       )}
 
       <div className="mt-6">
-        <SubirImagen objetoTipo="producto" onSubida={setImagenId} />
+        <SubirImagen objetoTipo="producto" onSubida={setImagenId} onEstadoSubida={setSubiendoFoto} />
         <p className="mt-1 text-sm text-muted-foreground">
           Máximo 2 MB. Una persona la revisa antes de que se vea: si tiene datos
           de alguien, un documento o a un menor, no se publica.

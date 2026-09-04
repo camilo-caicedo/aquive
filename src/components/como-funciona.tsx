@@ -20,8 +20,11 @@ import { Button } from '@/components/ui/button'
  *
  * ⚠ El orden cambió el 20 de agosto de 2026, y no es cosmético: el
  * directorio de servicios pasó a ser la portada, así que quien busca un
- * oficio es ahora el visitante más probable y va primero. La ayuda de
- * emergencia sigue entera, más abajo, que es donde está su público.
+ * oficio es ahora el visitante más probable y va primero.
+ *
+ * ⚠ El 3 de septiembre de 2026 se fueron dos roles: pedir insumos y
+ * entregarlos. No es que se hayan movido de sitio —el módulo de emergencia
+ * dejó de existir con el ADR 0014— así que aquí no hay nada que enlazar.
  */
 
 interface Rol {
@@ -46,7 +49,6 @@ const ROLES: Rol[] = [
       'Busca en el directorio por oficio, municipio y zona. Los filtros viven en la dirección, así que puedes pegar el enlace de «modistas en la comuna 3» en un grupo de WhatsApp.',
       'Abre la ficha de quien te sirva. Ahí están sus precios desde, sus horarios, sus medios de pago y lo que otras personas dijeron de su trabajo.',
       'Escríbele por WhatsApp o llámalo. El contacto ocurre por fuera: la plataforma no ve tu número ni tu conversación.',
-      'Si no encuentras a nadie, publica lo que necesitas en «Solicitudes». Quien tenga cómo hacerlo te escribe.',
       'Cuando te terminen el trabajo, pídele el código y califícalo. Solo puede calificar quien tiene ese código, y sirve una sola vez.',
     ],
     ojo: 'Acuerda el precio antes de empezar y paga cuando el trabajo esté hecho. Nadie de AquíVe te va a pedir plata por adelantado, y quien te la pida no es de aquí.',
@@ -96,6 +98,12 @@ const PARTES = [
     texto:
       'Gente que vive de su oficio y quiere que la encuentren. Estas fichas no se borran solas: se quedan mientras la persona quiera. Es lo que ves al entrar.',
   },
+  {
+    Icono: HandHeart,
+    titulo: 'Las donaciones',
+    texto:
+      'Lo que a alguien le sobra y otro puede aprovechar. Se publica lo que se ofrece, se acuerda por chat, y quien lo publicó lo borra cuando ya no está.',
+  },
 ]
 
 /**
@@ -120,10 +128,8 @@ export function ComoFunciona() {
         distinto.
       </p>
 
-      {/* Las dos partes antes que los roles: sin esto, quien llega por el
-          directorio no entiende por qué hay un tablero de emergencia, y
-          quien llega por la emergencia no entiende por qué la portada
-          enseña modistas. */}
+      {/* Las dos partes antes que los roles: quien llega buscando un oficio
+          tiene que entender de una qué es lo otro que ve, y al revés. */}
       <ul className="lista-escalonada mt-6 grid gap-3 sm:grid-cols-2">
         {PARTES.map(({ Icono, titulo, texto }) => (
           <li key={titulo} className="animar-entrada rounded-2xl bg-card p-4 shadow-canto">

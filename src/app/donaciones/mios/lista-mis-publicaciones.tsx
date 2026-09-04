@@ -54,7 +54,7 @@ export function ListaMisPublicaciones({
   if (publicaciones.length === 0) {
     return (
       <p className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center text-base text-muted-foreground">
-        Todavía no has publicado nada en el muro.
+        Todavía no has publicado nada en donaciones.
       </p>
     )
   }
@@ -73,10 +73,8 @@ export function ListaMisPublicaciones({
           return (
             <li key={p.id} className="shadow-canto rounded-2xl bg-card p-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                {/* La cara va como palabra, no como color: es el dato que
-                    cambia qué se publicó de esta persona. */}
                 <span className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase">
-                  {p.cara === 'ofrece' ? 'Ofrezco' : 'Necesito'} ·{' '}
+                  Ofrezco ·{' '}
                   {NOMBRE_CATEGORIA_MURO[p.categoria as keyof typeof NOMBRE_CATEGORIA_MURO] ??
                     p.categoria}
                 </span>
@@ -153,9 +151,9 @@ export function ListaMisPublicaciones({
                     <Button
                       variant="outline"
                       nativeButton={false}
-                      render={<Link href={`/muro?cara=${p.cara}`} />}
+                      render={<Link href="/donaciones" />}
                     >
-                      Ver en el muro
+                      Ver donaciones
                     </Button>
                     <Button variant="ghost" onClick={() => setBorrando(p.id)}>
                       Borrar

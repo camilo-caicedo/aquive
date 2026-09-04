@@ -31,7 +31,15 @@ export default async function MatriculasPage() {
   // mano declaran `Relationships: []`, así que PostgREST no puede resolver
   // `servidores -> perfiles` a nivel de tipos.
   const [{ data: servidores }, { data: perfiles }, municipios] = await Promise.all([
-    supabase.from('servidores').select('*').eq('verificado', false),
+    // v6-f3: la matrícula salió del registro y ahora es opcional y
+    // posterior, así que `verificado = false` ya no basta -incluye a
+    // quien todavía no ha escrito ninguna-. Solo entra a la cola quien de
+    // verdad puso un número.
+    supabase
+      .from('servidores')
+      .select('*')
+      .eq('verificado', false)
+      .not('numero_matricula', 'is', null),
     // Sin filtrar por tipo: el vínculo real es servidores.perfil_id, y si
     // el tipo del perfil no coincidiera, la cola mostraría «Perfil sin
     // nombre» y no se sabría a quién se está verificando.
@@ -42,7 +50,14 @@ export default async function MatriculasPage() {
   const porPerfil = new Map((perfiles ?? []).map((p) => [p.id, p]))
   // El código DANE no le dice nada a quien está verificando una matrícula.
   const nombreMunicipio = mapaDeNombres(municipios ?? [])
-  const cola = servidores ?? []
+  // El filtro de la consulta ya deja fuera a quien no puso número; esto es
+  // solo para que TypeScript sepa que, de aquí en adelante, las dos
+  // columnas están puestas -la invariante que `guardar_matricula` y
+  // `crear_perfil` ya imponen: nunca una sin la otra.
+  const cola = (servidores ?? []).filter(
+    (s): s is typeof s & { entidad_matricula: EntidadMatricula; numero_matricula: string } =>
+      !!s.entidad_matricula && !!s.numero_matricula,
+  )
 
   return (
     <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">

@@ -5,19 +5,22 @@ import { ChevronDown, Mail, Phone } from 'lucide-react'
 import { CabeceraPantalla } from '@/components/cabecera-pantalla'
 import { ComoFunciona } from '@/components/como-funciona'
 import { Button } from '@/components/ui/button'
-import { CORREO_CONTACTO } from '@/lib/config'
+import { CORREO_CONTACTO, RESPONSABLE } from '@/lib/config'
+import { DESLINDE_CALIDAD, SI_ALGO_SALE_MAL, SOBRE_LAS_INSIGNIAS } from '@/lib/honestidad'
 
 export const metadata: Metadata = {
-  title: 'Ayuda',
+  title: 'Preguntas frecuentes',
   description:
     'Lo que más nos preguntan sobre AquíVe, cómo poner una PQR y cómo escribirle al soporte.',
 }
 
 /**
- * Pantalla 37 · Ayuda.
+ * Pantalla 37 · Preguntas frecuentes (antes «Ayuda»). La ruta sigue siendo
+ * `/ayuda`: hay enlaces guardados apuntando ahí, y un 404 en una pantalla de
+ * ayuda es peor que un nombre que no calza con la URL.
  *
  * Las preguntas van en `<details>` nativo, igual que en «Cómo funciona»:
- * cinco respuestas abiertas no caben en un teléfono, y plegarlas con la
+ * las respuestas abiertas no caben en un teléfono, y plegarlas con la
  * etiqueta del navegador sale gratis en JavaScript, en teclado y en lector
  * de pantalla.
  *
@@ -28,6 +31,12 @@ export const metadata: Metadata = {
  * duplicado a propósito y no extraído a un componente: son dos pantallas
  * que hoy dicen lo mismo, y si un día una de las dos cambia de texto, el
  * componente compartido sería lo primero que estorbaría.
+ *
+ * Las cinco preguntas de más abajo —qué se verifica, qué papel tiene la
+ * fundación, cómo reportar, que no hay dinero de por medio— las pidió el
+ * cliente sin texto nuevo que inventar: cada respuesta es un texto que ya
+ * existe en `lib/honestidad.ts` (efecto legal, no se reescribe) o un dato ya
+ * fijado en `lib/config.ts`.
  */
 
 const PREGUNTAS: { t: string; r: string }[] = [
@@ -48,15 +57,27 @@ const PREGUNTAS: { t: string; r: string }[] = [
     r: 'Hay oficios que no salen en el directorio hasta que una persona de la fundación te llame para verificar tu teléfono y compruebe una referencia tuya. Son el cuidado de niños, el cuidado de personas dependientes y el transporte de pasajeros. No es un error ni una demora: mientras falte una de las dos cosas, ese oficio no se muestra.',
   },
   {
+    t: '¿Qué se verifica y qué significa un perfil verificado?',
+    r: SOBRE_LAS_INSIGNIAS,
+  },
+  {
+    t: '¿AquíVe recibe dinero o interviene en la transacción?',
+    r: DESLINDE_CALIDAD,
+  },
+  {
+    t: '¿Cuál es el papel de la Fundación?',
+    r: `${RESPONSABLE} es la responsable del tratamiento de los datos de la plataforma. Es quien llama a verificar un teléfono, revisa una referencia y atiende la PQR de quien quiere ver, corregir o borrar lo suyo. AquíVe guarda los datos; quien decide para qué se usan es la fundación.`,
+  },
+  {
     t: 'Reportar a alguien',
-    r: 'En la ficha de cada persona hay un botón para reportarla, y no hace falta tener cuenta. Si alguien te pidió dinero por adelantado en nombre de AquíVe, o te llevó a otra página a pagar, repórtalo ahí mismo. Si lo que hay es riesgo para alguien en este momento, eso no es un reporte: es el 123.',
+    r: `${SI_ALGO_SALE_MAL} Y si alguien te pidió dinero por adelantado en nombre de AquíVe, o te llevó a otra página a pagar, repórtalo igual: no hace falta tener cuenta.`,
   },
 ]
 
 export default function AyudaPage() {
   return (
     <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
-      <CabeceraPantalla titulo="Ayuda con la plataforma" volver="/inicio" />
+      <CabeceraPantalla titulo="Preguntas frecuentes" volver="/inicio" />
 
       <p className="max-w-prose text-base text-muted-foreground">
         Esto es lo que más nos preguntan. Si lo tuyo no está aquí, escríbenos

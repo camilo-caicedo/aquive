@@ -13,7 +13,7 @@ import {
 import { contienePII } from '@/lib/validacion'
 import { urlPublica } from '@/server/imagenes/almacen'
 import { borrarImagenesDe, enlazar } from '@/server/imagenes/recorrido'
-import type { Cara, EnMuro, MiPublicacionMuro, Producto } from '@/contrato/comunidad'
+import type { EnMuro, MiPublicacionMuro, Producto } from '@/contrato/comunidad'
 
 export class MuroRechazado extends Error {}
 
@@ -26,23 +26,22 @@ function conUrl<T extends { imagen: string | null }>(fila: T): T {
 
 export async function muro(
   db: BaseDeDatos,
-  filtros: { cara: Cara; municipio?: string; categoria?: string },
+  filtros: { municipio?: string; categoria?: string },
 ): Promise<EnMuro[]> {
-  const condiciones = [eq(muroPublico.cara, filtros.cara)]
+  const condiciones = []
   if (filtros.municipio) condiciones.push(eq(muroPublico.municipio, filtros.municipio))
   if (filtros.categoria) condiciones.push(eq(muroPublico.categoria, filtros.categoria))
 
   const filas = await db
     .select()
     .from(muroPublico)
-    .where(and(...condiciones))
+    .where(condiciones.length > 0 ? and(...condiciones) : undefined)
     .orderBy(desc(muroPublico.creadaAt))
     .limit(60)
 
   return filas.map((f) =>
     conUrl({
       id: f.id!,
-      cara: f.cara as Cara,
       categoria: f.categoria ?? 'otros',
       titulo: f.titulo ?? '',
       detalle: f.detalle,
@@ -64,14 +63,13 @@ export async function muro(
 /**
  * Publicar en el muro.
  *
- * Las dos caras se guardan distinto, y esa asimetría es la regla de producto
- * 4. La base la sostiene con dos CHECK; aquí se comprueba antes para poder
- * explicar el rechazo en castellano en vez de devolver un error de Postgres.
+ * Regla de producto 4: publica con nombre y consentimiento. La base la
+ * sostiene con un CHECK; aquí se comprueba antes para poder explicar el
+ * rechazo en castellano en vez de devolver un error de Postgres.
  */
 export async function publicar(
   db: BaseDeDatos,
   entrada: {
-    cara: Cara
     categoria: string
     titulo: string
     detalle?: string
@@ -93,65 +91,37 @@ export async function publicar(
     }
   }
 
-  if (entrada.cara === 'ofrece') {
-    if (!llave.usuarioId) {
-      throw new MuroRechazado('Para ofrecer algo necesitas entrar con tu cuenta.')
-    }
-    if (!entrada.acepto_publicar_nombre) {
-      throw new MuroRechazado(
-        'Para ofrecer algo hay que aceptar que tu nombre aparezca junto a la publicación.',
-      )
-    }
-
-    const [perfil] = await db
-      .select({ id: perfiles.id, nombre: perfiles.nombreVisible })
-      .from(perfiles)
-      .where(eq(perfiles.id, llave.usuarioId))
-      .limit(1)
-
-    if (!perfil) throw new MuroRechazado('No encontramos tu perfil.')
-
-    const [fila] = await db
-      .insert(publicacionesMuro)
-      .values({
-        cara: 'ofrece',
-        perfilId: perfil.id,
-        autorNombre: perfil.nombre,
-        autorizacionVersion: VERSION_AUTORIZACION_MURO,
-        autorizacionAt: new Date().toISOString(),
-        categoria: entrada.categoria,
-        titulo: entrada.titulo,
-        detalle: entrada.detalle ?? null,
-        municipio: entrada.municipio,
-        zonaId: entrada.zona_id ?? null,
-        acopioId: entrada.acopio_id ?? null,
-      })
-      .returning({ id: publicacionesMuro.id })
-
-    if (entrada.imagen_id) await enlazar(db, entrada.imagen_id, fila.id)
-    return { id: fila.id, token: null }
-  }
-
-  // Cara «necesita»: con cuenta desde el ADR 0006, pero SIN publicar nada.
-  // Ahí sigue la asimetría que importa — quien ofrece aparece con su nombre
-  // y quien pide no—, solo que ahora se sostiene en no copiar el nombre a
-  // la fila, no en no tener dueño.
   if (!llave.usuarioId) {
-    throw new MuroRechazado('Para publicar necesitas entrar con tu cuenta.')
+    throw new MuroRechazado('Para ofrecer algo necesitas entrar con tu cuenta.')
   }
+  if (!entrada.acepto_publicar_nombre) {
+    throw new MuroRechazado(
+      'Para ofrecer algo hay que aceptar que tu nombre aparezca junto a la publicación.',
+    )
+  }
+
+  const [perfil] = await db
+    .select({ id: perfiles.id, nombre: perfiles.nombreVisible })
+    .from(perfiles)
+    .where(eq(perfiles.id, llave.usuarioId))
+    .limit(1)
+
+  if (!perfil) throw new MuroRechazado('No encontramos tu perfil.')
 
   const [fila] = await db
     .insert(publicacionesMuro)
     .values({
-      cara: 'necesita',
-      perfilId: llave.usuarioId,
+      cara: 'ofrece',
+      perfilId: perfil.id,
+      autorNombre: perfil.nombre,
+      autorizacionVersion: VERSION_AUTORIZACION_MURO,
+      autorizacionAt: new Date().toISOString(),
       categoria: entrada.categoria,
       titulo: entrada.titulo,
       detalle: entrada.detalle ?? null,
       municipio: entrada.municipio,
       zonaId: entrada.zona_id ?? null,
       acopioId: entrada.acopio_id ?? null,
-      expiraAt: sql`now() + interval '15 days'`,
     })
     .returning({ id: publicacionesMuro.id })
 
@@ -262,7 +232,6 @@ export async function misPublicaciones(
   const filas = await db
     .select({
       id: publicacionesMuro.id,
-      cara: publicacionesMuro.cara,
       categoria: publicacionesMuro.categoria,
       titulo: publicacionesMuro.titulo,
       detalle: publicacionesMuro.detalle,
@@ -287,7 +256,6 @@ export async function misPublicaciones(
 
   return filas.map((f) => ({
     id: f.id,
-    cara: f.cara as Cara,
     categoria: f.categoria,
     titulo: f.titulo,
     detalle: f.detalle,
@@ -309,9 +277,9 @@ export async function misPublicaciones(
  * Borrar una publicación propia, con su foto.
  *
  * ⚠ Borrado de verdad: la fila se va (regla de producto 3, «Nunca
- * `estado = 'eliminada'`»). En la cara que ofrece la publicación lleva el
- * nombre de esa persona y la versión de la autorización que firmó, así que
- * marcarla como resuelta sería seguir publicando lo que pidió retirar.
+ * `estado = 'eliminada'`»). La publicación lleva el nombre de esa persona y
+ * la versión de la autorización que firmó, así que marcarla como resuelta
+ * sería seguir publicando lo que pidió retirar.
  *
  * Y borra el objeto del almacén, que `ON DELETE CASCADE` no hace.
  *

@@ -1,50 +1,42 @@
-import { createClient } from '@/lib/supabase/server'
+import { notFound } from 'next/navigation'
+import { z } from 'zod'
 import { servidor } from '@/orpc/local'
-import { listarMunicipios } from '@/lib/municipios'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { FormularioPublicarServicio } from './formulario-publicar-servicio'
 
-export const metadata = { title: 'Necesito un servicio' }
+export const metadata = { title: 'Pedir servicio' }
 
-export default async function PublicarServicioPage() {
-  const supabase = await createClient()
+/**
+ * Pedir un servicio, a un prestador concreto (ADR 0015).
+ *
+ * ⚠ Ya no es un flujo abierto: nace desde el botón «Pedir este servicio»
+ * de una ficha, que trae `?proveedor=<id>` en la URL. Sin ese parámetro —o
+ * con uno que no es un id, o de una ficha que ya no existe— no hay a quién
+ * dirigir la orden, y eso es un 404 y no una pantalla a medias.
+ *
+ * ⚠ Consecuencia que el ADR no previó: el formulario ya no ofrece el
+ * catálogo entero (81 oficios en doce categorías) — eso sería el tablero
+ * abierto que el ADR 0014 acaba de retirar, solo que con un paso extra.
+ * Solo se ofrece `ficha.oficios`, que ya viene filtrado por lo que ese
+ * prestador de verdad declaró. Una ficha sin ningún oficio publicado no
+ * tiene qué pedir.
+ */
+export default async function PublicarServicioPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ proveedor?: string }>
+}) {
+  const { proveedor } = await searchParams
+  const idValido = z.uuid().safeParse(proveedor)
+  if (!idValido.success) notFound()
 
-  // ⚠ El catálogo vuelve a esta pantalla con el ADR 0013. El ADR 0011 lo
-  // había sacado por largo —cuarenta y tantas píldoras juntas— y lo que
-  // faltaba no era quitarlo: era enseñar solo las de la categoría elegida,
-  // con la salida escrita siempre delante.
-  //
-  // Son 81 filas de cuatro campos, unos 6 KB. Van enteras al cliente para
-  // que cambiar de categoría no sea otra ida y vuelta al servidor.
-  const [municipios, { data: zonas }, subcategorias] = await Promise.all([
-    listarMunicipios(supabase),
-    supabase.from('zonas').select('*').eq('activa', true).order('orden'),
-    servidor.servicios.subcategorias(),
-  ])
-
-  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ''
+  const ficha = await servidor.servicios.ficha({ id: idValido.data })
+  if (!ficha || ficha.oficios.length === 0) notFound()
 
   return (
-    <main className="animar-pantalla mx-auto max-w-lg px-4 py-6">
-      <h1 className="font-heading text-3xl">Necesito un servicio</h1>
-      <p className="mt-2 text-base text-muted-foreground">
-        Publica qué te hace falta y quien pueda hacerlo te responde con su
-        teléfono. Tú decides a quién escribirle.
-      </p>
-      <Alert variant="warning" className="mt-3">
-        <AlertDescription>
-          No escribas tu nombre, tu teléfono ni tu dirección exacta. No los
-          pedimos y no los guardamos: quien te responda te va a dejar el suyo,
-          y tú eliges.
-        </AlertDescription>
-      </Alert>
-
-      <FormularioPublicarServicio
-        municipios={municipios ?? []}
-        zonas={zonas ?? []}
-        subcategorias={subcategorias}
-        turnstileSiteKey={siteKey}
-      />
-    </main>
+    <FormularioPublicarServicio
+      proveedorId={idValido.data}
+      proveedorNombre={ficha.nombre_visible}
+      oficios={ficha.oficios}
+    />
   )
 }

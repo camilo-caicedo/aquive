@@ -179,6 +179,14 @@ export interface MiProveedor {
   acepto_foto: boolean
   foto_version: string | null
   foto_at: string | null
+  /** La dirección lleva la suya, aparte de la del mapa y la de publicar
+   *  la ficha: publicar dónde vive o atiende alguien es otra finalidad
+   *  (ADR 0017, mismo criterio que el ADR 0004). Se guarda siempre que se
+   *  escriba, autorizada o no — es la vista pública la que filtra. */
+  direccion: string | null
+  acepto_direccion: boolean
+  direccion_version: string | null
+  direccion_at: string | null
   /** La ruta del objeto, no la URL. Sale aunque esté en cola o sin permiso:
    *  aquí se la enseñamos a su dueña, para que pueda quitarla. */
   foto: string | null
@@ -259,7 +267,6 @@ export interface IndiceAdmin {
   pqr: number
   matriculas: number
   telefonos: number
-
   reportes: number
   solicitudes_servicio_sin_revisar: number
   sugerencias: number
@@ -412,7 +419,6 @@ export type EstadoConversacion =
   | 'entregada'
   | 'cerrada'
 export type RolEnConversacion = 'solicitante' | 'ofertador' | 'aliado' | 'admin'
-
 
 // Una fila de `mis_avisos()`. No hay tabla de notificaciones: los tipos se
 // derivan de datos que ya existen, y lo «nuevo» es todo lo posterior a
@@ -640,8 +646,12 @@ export interface Database {
         Row: {
           perfil_id: string
           profesion: string
-          entidad_matricula: EntidadMatricula
-          numero_matricula: string
+          // v6-f3: opcionales desde que la matrícula salió del registro
+          // (ADR de la tarea del 3 de septiembre de 2026). NULL significa
+          // "todavía no la dio", no "no tiene" — se llena después desde
+          // /perfil/matricula.
+          entidad_matricula: EntidadMatricula | null
+          numero_matricula: string | null
           verificado: boolean
           verificado_at: string | null
           verificado_por: string | null
@@ -650,8 +660,8 @@ export interface Database {
         Insert: {
           perfil_id: string
           profesion: string
-          entidad_matricula: EntidadMatricula
-          numero_matricula: string
+          entidad_matricula?: EntidadMatricula | null
+          numero_matricula?: string | null
           verificado?: boolean
           verificado_at?: string | null
           verificado_por?: string | null
@@ -851,7 +861,7 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['sugerencias_item']['Insert']>
         Relationships: []
       }
-      push_avisos: {
+      push_ofertadores: {
         Row: {
           id: string
           perfil_id: string
@@ -868,7 +878,7 @@ export interface Database {
           auth_key: string
           creada_at?: string
         }
-        Update: Partial<Database['public']['Tables']['push_avisos']['Insert']>
+        Update: Partial<Database['public']['Tables']['push_ofertadores']['Insert']>
         Relationships: []
       }
       reportes: {
@@ -1232,9 +1242,21 @@ export interface Database {
           p_oficios: Json
           p_acepto_publicacion: boolean
           p_autorizacion_version: string
+          // v6-f3 (ADR 0017): la dirección, opcional, con su propia
+          // autorización aparte.
+          p_direccion?: string | null
+          p_acepto_direccion?: boolean
+          p_direccion_version?: string | null
           p_token?: string | null
         }
         Returns: string
+      }
+      guardar_matricula: {
+        Args: {
+          p_entidad_matricula: EntidadMatricula
+          p_numero_matricula: string
+        }
+        Returns: undefined
       }
       mi_organizacion_activa: {
         Args: Record<string, never>

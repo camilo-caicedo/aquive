@@ -185,3 +185,8 @@ export function diasLegibles(dias: DiaSemana[]): string | null {
  */
 export const zonaLegible = (nombre: string | null, texto: string | null) =>
   [nombre, texto].filter(Boolean).join(' · ') || null
+
+// `ubicacionCompleta` vive en su propio archivo, sin imports, y no aquí:
+// este módulo importa de `@/contrato`, que un `node` suelto no resuelve, y
+// la comprobación de `servicios.ubicacion.test.mjs` corre sin bundler.
+export { ubicacionCompleta } from './ubicacion-proveedor'

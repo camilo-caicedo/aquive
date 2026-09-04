@@ -171,13 +171,28 @@ export default async function VerificacionesPage() {
             servidor
               ? servidor.verificado
                 ? `Una persona revisó que tu número de ${entidad} aparece en el registro. Eso es todo lo que dice el sello: que el número existe.`
-                : `Registraste tu matrícula de ${entidad}. Una persona la revisa a mano contra el registro de la entidad.`
+                : servidor.numero_matricula
+                  ? `Registraste tu matrícula de ${entidad}. Una persona la revisa a mano contra el registro de la entidad.`
+                  : 'Ya declaraste tu profesión. Si tienes matrícula de una entidad con registro consultable, agrégala aquí abajo.'
               : 'Si tienes matrícula de una entidad con registro consultable —COPNIA, CPNAA, COLPSIC, ReTHUS o SIRNA— una persona revisa que el número exista. Los oficios del directorio no la piden.'
           }
-          estado={servidor ? (servidor.verificado ? 'Hecho' : 'En cola') : 'No aplica'}
-          familia={servidor?.verificado ? 'verde' : 'azul'}
+          estado={
+            !servidor
+              ? 'No aplica'
+              : servidor.verificado
+                ? 'Hecho'
+                : servidor.numero_matricula
+                  ? 'En cola'
+                  : 'Falta agregarla'
+          }
+          familia={servidor?.verificado ? 'verde' : servidor ? 'amarillo' : 'azul'}
           accion={
-            servidor ? undefined : { texto: 'Tengo matrícula', href: '/registro' }
+            servidor?.verificado
+              ? undefined
+              : {
+                  texto: servidor ? 'Corregir mi matrícula' : 'Tengo matrícula',
+                  href: '/perfil/matricula',
+                }
           }
         />
       </ul>

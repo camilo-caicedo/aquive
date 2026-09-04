@@ -6,9 +6,6 @@ import { z } from 'zod'
 // Las imágenes van aquí también, porque es donde se usan hoy. Si mañana las
 // pide otro módulo, se sacan a su propio archivo.
 
-export const Cara = z.enum(['ofrece', 'necesita'])
-export type Cara = z.infer<typeof Cara>
-
 export const CATEGORIAS_MURO = [
   'hogar',
   'ropa',
@@ -33,14 +30,12 @@ export const NOMBRE_CATEGORIA_MURO: Record<string, string> = {
 
 export const EnMuro = z.object({
   id: z.uuid(),
-  cara: Cara,
   categoria: z.string(),
   titulo: z.string(),
   detalle: z.string().nullable(),
   municipio: z.string(),
   municipio_nombre: z.string().nullable(),
   zona_nombre: z.string().nullable(),
-  /** Solo la cara que ofrece tiene nombre. La otra no lo tiene ni en la tabla. */
   autor_nombre: z.string().nullable(),
   creada_at: z.string(),
   imagen: z.string().nullable(),
@@ -50,9 +45,8 @@ export const EnMuro = z.object({
   /**
    * Por dónde se le responde a quien ofrece.
    *
-   * Nulos los tres en la cara que PIDE —esa persona no dio un solo dato— y
-   * también en la que ofrece si no tiene ficha de prestador: su
-   * autorización del muro cubre el nombre, no el contacto.
+   * Nulos si no tiene ficha de prestador: su autorización del muro cubre
+   * el nombre, no el contacto.
    */
   proveedor_id: z.uuid().nullable(),
   telefono: z.string().nullable(),
@@ -148,7 +142,6 @@ const errores = {
  */
 export const MiPublicacionMuro = z.object({
   id: z.uuid(),
-  cara: Cara,
   categoria: z.string(),
   titulo: z.string(),
   detalle: z.string().nullable(),
@@ -168,11 +161,10 @@ export const MiPublicacionMuro = z.object({
 export type MiPublicacionMuro = z.infer<typeof MiPublicacionMuro>
 
 export const contratoComunidad = {
-  /** El muro, una cara a la vez. Pantalla 30. */
+  /** El muro: solo donaciones. Pantalla 30. */
   muro: oc
     .input(
       z.object({
-        cara: Cara.default('ofrece'),
         municipio: z.string().regex(/^[0-9]{5}$/).optional().catch(undefined),
         categoria: z.string().optional().catch(undefined),
       }),
@@ -182,16 +174,14 @@ export const contratoComunidad = {
   /**
    * Publicar en el muro.
    *
-   * La asimetría de la regla de producto 4 la sostiene la base con dos CHECK,
-   * pero se declara también aquí para que el error llegue antes y en
-   * castellano: quien OFRECE publica con nombre y consentimiento; quien
-   * NECESITA no publica su nombre. Las dos son cuentas (ADR 0006).
+   * La regla de producto 4 la sostiene la base con un CHECK, pero se declara
+   * también aquí para que el error llegue antes y en castellano: quien
+   * publica lo hace con nombre y consentimiento (ADR 0006).
    */
   publicarEnMuro: oc
     .errors(errores)
     .input(
       z.object({
-        cara: Cara,
         categoria: CategoriaMuro,
         titulo: z.string().trim().min(3).max(140),
         detalle: z.string().trim().max(300).optional(),
@@ -206,7 +196,7 @@ export const contratoComunidad = {
          * esta aplicación no publica dónde vive nadie.
          */
         acopio_id: z.uuid().optional(),
-        /** Solo para la cara que ofrece: acepta que su nombre sea público. */
+        /** Acepta que su nombre sea público junto a la publicación. */
         acepto_publicar_nombre: z.boolean().default(false),
       }),
     )

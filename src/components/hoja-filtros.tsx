@@ -240,9 +240,9 @@ export function HojaFiltros({
         id={id}
         popover="auto"
         aria-label={titulo}
-        className="hoja-inferior fixed inset-x-0 top-auto bottom-0 m-0 max-h-[88vh] w-full max-w-none rounded-t-2xl border-t border-border bg-background p-0 text-foreground shadow-lg backdrop:bg-foreground/40"
+        className="hoja-inferior fixed inset-x-0 top-auto bottom-0 m-0 max-h-[88dvh] w-full max-w-none rounded-t-2xl border-t border-border bg-background p-0 text-foreground shadow-lg backdrop:bg-foreground/40"
       >
-        <div className="mx-auto flex max-h-[88vh] max-w-lg flex-col">
+        <div className="mx-auto flex max-h-[88dvh] max-w-lg flex-col">
           <div className="shrink-0 px-4 pt-2">
             <div
               aria-hidden="true"

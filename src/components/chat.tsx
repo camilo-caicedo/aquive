@@ -6,10 +6,37 @@ import { Send } from 'lucide-react'
 import { rpc } from '@/orpc/cliente'
 import { useHidratado } from '@/components/hidratado'
 import { MarcoFlujo } from '@/components/marco-flujo'
+import { TarjetaOrdenChat } from '@/components/tarjeta-orden-chat'
 import type { Autor, Hilo, Mensaje, Origen } from '@/contrato/chat'
 
 /**
- * El hilo. Pantalla 12, y el mismo para los cinco orígenes.
+ * Qué le pasa a esta conversación, dicho para cada origen.
+ *
+ * ⚠ Aquí decía, para los cuatro a la vez: «Esta conversación se borra con
+ * lo que la abrió. No queda archivada.» Es verdad y es exactamente cómo
+ * está escrita la regla de producto 3 — y por eso mismo no sirve en
+ * pantalla. «Lo que la abrió» es una llave foránea; quien lee esto está
+ * mirando un chat con una modista y no tiene por qué saber de qué cuelga.
+ * Y «no queda archivada» describe lo que el sistema NO hace, cuando lo que
+ * la persona necesita saber es qué hacer: apuntar la dirección por fuera si
+ * la va a necesitar el jueves.
+ *
+ * Regla de interfaz: sin jerga técnica en ningún texto visible; y el
+ * responsable pidió el 3 de septiembre de 2026 que nada diga algo distinto
+ * de lo que va a pasar de verdad.
+ */
+const AVISO_BORRADO: Record<Origen['tipo'], string> = {
+  solicitud:
+    'Esta conversación se borra junto con el pedido. Apunta por fuera lo que necesites guardar.',
+  producto:
+    'Esta conversación se borra si quien lo vende quita el producto. Apunta por fuera lo que necesites guardar.',
+  muro: 'Esta conversación se borra si quien la publicó quita la donación. Apunta por fuera lo que necesites guardar.',
+  ficha:
+    'Esta conversación se borra si esta persona borra su ficha. Apunta por fuera lo que necesites guardar.',
+}
+
+/**
+ * El hilo. Pantalla 12, y el mismo para los cuatro orígenes.
  *
  * Sirve a los dos lados con el mismo componente. Quién es cada quien lo
  * resuelve el servidor —de quién es la solicitud, el producto, la ficha o
@@ -146,8 +173,16 @@ export function Chat({
         )
       }
     >
+      {origen.tipo === 'solicitud' && hiloInicial.orden && (
+        <TarjetaOrdenChat
+          solicitudId={origen.id}
+          soy={hiloInicial.soy}
+          orden={hiloInicial.orden}
+        />
+      )}
+
       <p className="text-center text-sm text-muted-foreground">
-        Esta conversación se borra con lo que la abrió. No queda archivada.
+        {AVISO_BORRADO[origen.tipo]}
       </p>
 
       {mensajes.length === 0 ? (

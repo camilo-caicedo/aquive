@@ -132,7 +132,6 @@ export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
             </Link>
           </p>
         )}
-
       </main>
     </div>
   )

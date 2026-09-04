@@ -3,20 +3,47 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { CheckCircle2, Clock, MinusCircle, XCircle, type LucideIcon } from 'lucide-react'
 
 import { rpc } from '@/orpc/cliente'
 import { Button } from '@/components/ui/button'
-import { NOMBRE_GRUPO, type MiSolicitudServicio } from '@/contrato/servicios'
+import { BotonChat } from '@/components/boton-chat'
+import { NOMBRE_GRUPO, type EstadoSolicitud, type MiSolicitudServicio } from '@/contrato/servicios'
 import { useAviso } from '@/components/avisos'
 
 /**
- * Las solicitudes de servicio propias.
+ * El estado en palabras Y en icono, nunca solo en color (accesibilidad de
+ * CLAUDE.md). Un punto de color no le dice nada a quien no distingue el
+ * verde del rojo, y aquí es justo lo único que cambia entre una orden que
+ * sigue viva y una que ya se cerró.
+ */
+const ESTADOS: Record<EstadoSolicitud, { etiqueta: string; clase: string; Icono: LucideIcon }> = {
+  pendiente: { etiqueta: 'Pendiente', clase: 'bg-accent text-accent-foreground', Icono: Clock },
+  aceptada: { etiqueta: 'Aceptada', clase: 'bg-ok-suave text-foreground', Icono: CheckCircle2 },
+  realizada: {
+    etiqueta: 'Realizada',
+    clase: 'bg-ok-suave text-foreground',
+    Icono: CheckCircle2,
+  },
+  rechazada: {
+    etiqueta: 'Rechazada',
+    clase: 'bg-destructive/10 text-destructive',
+    Icono: XCircle,
+  },
+  no_concretada: {
+    etiqueta: 'No concretada',
+    clase: 'bg-secondary text-secondary-foreground',
+    Icono: MinusCircle,
+  },
+}
+
+/**
+ * Las solicitudes de servicio propias: cada una es una orden dirigida a un
+ * prestador (ADR 0015), con el estado en que va y sus acciones.
  *
  * ⚠ Esto sustituye a `lista-local.tsx` y `lista-servicios.tsx`, que leían
  * de `localStorage` la lista de tokens de este teléfono. Desde el ADR 0006
- * lo suyo se le pregunta al servidor, y con eso desaparece el fallo que el
- * README tenía abierto —la lista que no siempre aparecía— y el que nadie
- * había escrito: cambiar de teléfono era perderlo todo.
+ * lo suyo se le pregunta al servidor.
  */
 export function ListaMias({ solicitudes }: { solicitudes: MiSolicitudServicio[] }) {
   const router = useRouter()
@@ -24,12 +51,12 @@ export function ListaMias({ solicitudes }: { solicitudes: MiSolicitudServicio[] 
   const [pendiente, iniciar] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
-  function actuar(id: string, accion: 'renovar' | 'cerrar') {
+  function actuar(id: string, accion: 'renovar' | 'cancelar') {
     setError(null)
     rpc.servicios
       .gestionarSolicitud({ id, accion })
       .then(() => {
-        avisar(accion === 'renovar' ? 'Renovada 15 días' : 'Cerrada')
+        avisar(accion === 'renovar' ? 'Renovada 15 días' : 'Pedido cancelado')
         iniciar(() => router.refresh())
       })
       .catch((e) => {
@@ -44,7 +71,7 @@ export function ListaMias({ solicitudes }: { solicitudes: MiSolicitudServicio[] 
   if (solicitudes.length === 0) {
     return (
       <p className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center text-base text-muted-foreground">
-        Todavía no has pedido ningún servicio.
+        Todavía no le has pedido nada a nadie.
       </p>
     )
   }
@@ -60,7 +87,7 @@ export function ListaMias({ solicitudes }: { solicitudes: MiSolicitudServicio[] 
       <ul className={`mt-4 space-y-3 ${pendiente ? 'opacity-60' : ''} transition-opacity`}>
         {solicitudes.map((s) => {
           const vencida = new Date(s.expira_at) < new Date()
-          const abierta = s.estado === 'abierta' && !vencida
+          const { etiqueta, clase, Icono } = ESTADOS[s.estado]
 
           return (
             <li key={s.id} className="shadow-canto rounded-2xl bg-card p-4">
@@ -71,15 +98,11 @@ export function ListaMias({ solicitudes }: { solicitudes: MiSolicitudServicio[] 
                 <h2 className="font-heading text-lg leading-tight">
                   {s.subcategoria ?? s.detalle}
                 </h2>
-                {/* El estado no depende solo del color: lleva su palabra. */}
                 <span
-                  className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-0.5 text-sm font-medium ${
-                    abierta
-                      ? 'bg-ok-suave text-foreground'
-                      : 'bg-secondary text-secondary-foreground'
-                  }`}
+                  className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-0.5 text-sm font-medium ${clase}`}
                 >
-                  {abierta ? 'Abierta' : vencida ? 'Vencida' : 'Cerrada'}
+                  <Icono className="size-4" aria-hidden="true" />
+                  {etiqueta}
                 </span>
               </div>
 
@@ -91,9 +114,10 @@ export function ListaMias({ solicitudes }: { solicitudes: MiSolicitudServicio[] 
                 </p>
               )}
 
-              {/* La categoría debajo del título, no encima: lo que se busca
-                  en la lista propia es cuál de las mías es. */}
+              {/* A quién se le pidió, y la categoría al lado: lo que se
+                  busca en la lista propia es cuál de las mías es. */}
               <p className="mt-1 text-sm text-muted-foreground">
+                {s.proveedor_nombre ?? 'Ese prestador ya no tiene ficha'} ·{' '}
                 {NOMBRE_GRUPO[s.grupo] ?? s.grupo}
               </p>
 
@@ -105,35 +129,45 @@ export function ListaMias({ solicitudes }: { solicitudes: MiSolicitudServicio[] 
                   y ahí importa distinguir un cero de una o. */}
               <p className="mt-1 font-mono text-sm text-muted-foreground">{s.codigo}</p>
 
-              {/* Si alguien respondió. Sin esto, quien pide publicaba, veía
-                  un código y no volvía a saber nada. */}
-              <p className="mt-1 text-base">
-                {s.num_respuestas === 0
-                  ? 'Nadie ha respondido todavía.'
-                  : `${s.num_respuestas} ${s.num_respuestas === 1 ? 'persona respondió' : 'personas respondieron'}. Mira tus mensajes.`}
-              </p>
-
               <p className="mt-1 text-sm text-muted-foreground">
-                {abierta
-                  ? `Se borra sola el ${new Date(s.expira_at).toLocaleDateString('es-CO')}.`
-                  : 'Ya no aparece para nadie.'}
+                {s.estado === 'pendiente'
+                  ? vencida
+                    ? 'Ya se venció. Renuévala si sigues necesitándolo.'
+                    : `Se borra sola el ${new Date(s.expira_at).toLocaleDateString('es-CO')} si no responde.`
+                  : s.estado === 'aceptada'
+                    ? 'Ya no vence sola: acuerden los detalles por el chat.'
+                    : 'Ya no aparece para nadie.'}
               </p>
 
               <div className="mt-3 flex flex-wrap gap-2">
-                {s.num_respuestas > 0 && (
-                  <Button
-                    nativeButton={false}
-                    render={<Link href="/mensajes" />}
-                  >
-                    Ver mensajes
+                {s.proveedor_nombre && (
+                  <BotonChat
+                    origen={{ tipo: 'ficha', id: s.proveedor_id }}
+                    etiqueta={`Escribir por AquíVe a ${s.proveedor_nombre}`}
+                  />
+                )}
+                {s.estado === 'pendiente' && (
+                  <>
+                    <Button variant="outline" onClick={() => actuar(s.id, 'renovar')}>
+                      Renovar 15 días
+                    </Button>
+                    <Button variant="ghost" onClick={() => actuar(s.id, 'cancelar')}>
+                      Cancelar
+                    </Button>
+                  </>
+                )}
+                {s.estado === 'aceptada' && (
+                  <Button variant="ghost" onClick={() => actuar(s.id, 'cancelar')}>
+                    Cancelar
                   </Button>
                 )}
-                <Button variant="outline" onClick={() => actuar(s.id, 'renovar')}>
-                  {abierta ? 'Renovar 15 días' : 'Volver a abrirla'}
-                </Button>
-                {abierta && (
-                  <Button variant="ghost" onClick={() => actuar(s.id, 'cerrar')}>
-                    Cerrarla
+                {s.proveedor_nombre && (
+                  <Button
+                    variant="link"
+                    nativeButton={false}
+                    render={<Link href={`/prestador/${s.proveedor_id}`} />}
+                  >
+                    Ver ficha
                   </Button>
                 )}
               </div>

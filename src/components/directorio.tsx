@@ -1,10 +1,8 @@
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
-import { AccionPrincipal } from '@/components/accion-principal'
-import { Info, Inbox, ShieldAlert, Stethoscope, CircleAlert, Briefcase, HandHelping, List, MapPin } from 'lucide-react'
+import { Info, Inbox, ShieldAlert, CircleAlert, List, MapPin } from 'lucide-react'
 import { servidor } from '@/orpc/local'
 import { AVISO_SERVICIOS, NO_PAGUES_POR_ADELANTADO } from '@/lib/honestidad'
-import { GRUPOS, MODALIDADES, MODOS_PRECIO } from '@/lib/servicios'
+import { MODALIDADES, MODOS_PRECIO, MEDIOS_PAGO, FRANJAS } from '@/lib/servicios'
 import { NOMBRE_GRUPO } from '@/contrato/servicios'
 import { TarjetaProveedor } from '@/components/tarjeta-proveedor'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -14,7 +12,7 @@ import { SelectFiltro } from '@/components/select-filtro'
 import { HojaFiltros, GrupoChips } from '@/components/hoja-filtros'
 import { MapaDeProveedores } from '@/components/mapa-de-proveedores'
 import { VueltaAlDestino } from '@/app/auth/vuelta'
-import type { ModalidadServicio, ModoPrecio } from '@/lib/types'
+import type { ModalidadServicio, ModoPrecio, MedioPago, FranjaHoraria } from '@/lib/types'
 
 /**
  * El directorio del rebusque.
@@ -50,12 +48,14 @@ export async function Directorio({
   searchParams,
 }: {
   searchParams: Promise<{
-    oficio?: string
     grupo?: string
     municipio?: string
     zona?: string
     modalidad?: string
+    domicilio?: string
     modo?: string
+    medioPago?: string
+    franja?: string
     vista?: string
   }>
 }) {
@@ -69,15 +69,21 @@ export async function Directorio({
   // orden. La validación de los filtros también se fue: la hace el contrato,
   // así que un municipio que no sean cinco dígitos ya no llega a la consulta.
   const pedidos = {
-    oficio: params.oficio || undefined,
     grupo: params.grupo || undefined,
     municipio: params.municipio || undefined,
     zona: params.zona || undefined,
     modalidad: MODALIDADES.some((m) => m.valor === params.modalidad)
       ? (params.modalidad as ModalidadServicio)
       : undefined,
+    domicilio: params.domicilio === 'si' ? ('si' as const) : undefined,
     modo: MODOS_PRECIO.some((m) => m.valor === params.modo)
       ? (params.modo as ModoPrecio)
+      : undefined,
+    medioPago: MEDIOS_PAGO.some((m) => m.valor === params.medioPago)
+      ? (params.medioPago as MedioPago)
+      : undefined,
+    franja: FRANJAS.some((f) => f.valor === params.franja)
+      ? (params.franja as FranjaHoraria)
       : undefined,
   }
 
@@ -87,14 +93,11 @@ export async function Directorio({
   ])
 
   const proveedores = directorio.filas
-  const { oficios: oficiosCatalogo, municipios: municipiosLista, zonas } = directorio.facetas
+  const { municipios: municipiosLista, zonas } = directorio.facetas
 
   // Lo que quedó aplicado de verdad: el contrato descarta en silencio un
   // filtro mal formado, así que los chips tienen que leerse de ahí y no de la
   // URL, o se pintaría un chip que no está filtrando nada.
-  const oficio = params.oficio && oficiosCatalogo.some((o) => o.id === params.oficio)
-    ? params.oficio
-    : null
   const grupo = params.grupo && NOMBRE_GRUPO[params.grupo] ? params.grupo : null
   const municipio = params.municipio && /^[0-9]{5}$/.test(params.municipio)
     ? params.municipio
@@ -103,8 +106,15 @@ export async function Directorio({
   const modalidad = MODALIDADES.some((m) => m.valor === params.modalidad)
     ? (params.modalidad as ModalidadServicio)
     : null
+  const domicilio = params.domicilio === 'si' ? 'si' : null
   const modo = MODOS_PRECIO.some((m) => m.valor === params.modo)
     ? (params.modo as ModoPrecio)
+    : null
+  const medioPago = MEDIOS_PAGO.some((m) => m.valor === params.medioPago)
+    ? (params.medioPago as MedioPago)
+    : null
+  const franja = FRANJAS.some((f) => f.valor === params.franja)
+    ? (params.franja as FranjaHoraria)
     : null
 
   const misOficiosEscondidos = miFicha?.oficios_escondidos ?? 0
@@ -117,12 +127,14 @@ export async function Directorio({
   // lleva también la zona: una comuna sin su ciudad no filtra nada, y
   // dejarla colgada devolvía una lista vacía sin explicación.
   const aplicados: Record<string, string | null> = {
-    oficio,
     grupo,
     municipio,
     zona,
     modalidad,
+    domicilio,
     modo,
+    medioPago,
+    franja,
   }
   function sinFiltro(quitar: string) {
     const sp = new URLSearchParams()
@@ -138,18 +150,19 @@ export async function Directorio({
     return qs ? `/directorio?${qs}` : '/directorio'
   }
 
-  const nombreOficio = new Map(oficiosCatalogo.map((o) => [o.id, o.nombre]))
   const nombreZona = new Map(zonas.map((z) => [z.id, z.nombre]))
   const nombreMunicipio = new Map(municipiosLista.map((m) => [m.codigo_dane, m.nombre]))
 
   const chipsAplicados = (
     [
-      ['oficio', oficio ? nombreOficio.get(oficio) : null],
       ['grupo', grupo ? NOMBRE_GRUPO[grupo] : null],
       ['municipio', municipio ? nombreMunicipio.get(municipio) : null],
       ['zona', zona ? nombreZona.get(zona) : null],
       ['modalidad', MODALIDADES.find((m) => m.valor === modalidad)?.etiqueta ?? null],
+      ['domicilio', domicilio ? 'Va a domicilio' : null],
       ['modo', MODOS_PRECIO.find((m) => m.valor === modo)?.etiqueta ?? null],
+      ['medioPago', MEDIOS_PAGO.find((m) => m.valor === medioPago)?.etiqueta ?? null],
+      ['franja', FRANJAS.find((f) => f.valor === franja)?.etiqueta ?? null],
     ] as const
   )
     .filter(([, etiqueta]) => !!etiqueta)
@@ -160,7 +173,7 @@ export async function Directorio({
     }))
 
   // Con lo que se le PIDIÓ a la consulta, no con lo que se pudo pintar como
-  // chip. Un ?oficio=inventado sí filtra —y no encuentra nada—, así que la
+  // chip. Un ?grupo=inventado sí filtra —y no encuentra nada—, así que la
   // lista vacía tiene que decir «nadie coincide con estos filtros» y no
   // «todavía no hay nadie en el directorio», que sería falso habiendo cuatro.
   const hayFiltro = Object.values(pedidos).some(Boolean)
@@ -176,9 +189,9 @@ export async function Directorio({
   const cuantas = `${proveedores.length} ${proveedores.length === 1 ? 'persona' : 'personas'}`
   const titular = lugar ? `${cuantas} en ${lugar}` : `${cuantas} cerca de ti`
 
-  // De dónde vino: si trae categoría u oficio, la migaja vuelve a las
-  // categorías, que es la puerta por la que se llega aquí desde «Buscar».
-  const deDonde = grupo ? NOMBRE_GRUPO[grupo] : oficio ? nombreOficio.get(oficio) : null
+  // De dónde vino: si trae categoría, la migaja vuelve a las categorías, que
+  // es la puerta por la que se llega aquí desde «Buscar».
+  const deDonde = grupo ? NOMBRE_GRUPO[grupo] : null
 
   // El mapa es esta misma pantalla, no otra: mismos filtros, mismo
   // resultado, leído de otra forma.
@@ -239,43 +252,12 @@ export async function Directorio({
               )}
             </Link>
           }
-          chipsExtra={
-            <>
-              {/* El otro lado del directorio. Aquí se mira quién ofrece; a
-                  un toque está quién pide, que es lo que le sirve a un
-                  prestador que entró a ver la competencia y se queda sin
-                  saber que hay trabajo publicado. */}
-              <Link
-                href="/solicitudes"
-                className="pulsable inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
-              >
-                <HandHelping className="size-4" aria-hidden="true" />
-                Quién está pidiendo
-              </Link>
-              {!miFicha && (
-                <Link
-                  href="/servicios/soy-proveedor"
-                  className="pulsable inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full border border-border bg-card px-4 text-base text-foreground transition-colors hover:bg-muted"
-                >
-                  <Briefcase className="size-4" aria-hidden="true" />
-                  Ofrecer mi trabajo
-                </Link>
-              )}
-            </>
-          }
         >
-          <SelectFiltro
-            name="oficio"
-            label="Filtrar por oficio"
-            placeholder="Todos los oficios"
-            valorInicial={params.oficio ?? ''}
-            conBusqueda
-            opciones={(oficiosCatalogo ?? []).map((o) => ({
-              valor: o.id,
-              etiqueta: o.nombre,
-              detalle: o.grupo ? GRUPOS[o.grupo as keyof typeof GRUPOS] : undefined,
-            }))}
-          />
+          {/* Ni «oficio» ni «grupo» son un control aquí: el oficio lo cubre
+              la subcategoría con la que se llegó, y el grupo es la puerta
+              por la que se entró desde «Buscar» — si hace falta soltarlo,
+              ya sale como chip con su equis en la fila de arriba, no como un
+              segundo grupo de píldoras repetido. */}
           <SelectFiltro
             name="municipio"
             label="Filtrar por municipio"
@@ -293,28 +275,15 @@ export async function Directorio({
           <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
             <Info className="size-4 shrink-0 translate-y-0.5" aria-hidden="true" />
             <span>
-              Las listas de oficios y municipios solo muestran los que ya tienen a
-              alguien registrado.
+              La lista de municipios solo muestra los que ya tienen a alguien
+              registrado.
             </span>
           </p>
 
           {/* Las listas cortas pasan a chips: un toque en vez de abrir un
-              desplegable, elegir y cerrarlo.
-
-              La categoría va la primera porque es por donde se entra —desde
-              /categorias— y porque era la única que se podía poner y no
-              quitar: llegabas con ?grupo=salud y la hoja no tenía ni un
-              control para soltarla. */}
-          <GrupoChips
-            name="grupo"
-            label="Categoría"
-            todos="Todas"
-            valorInicial={grupo ?? ''}
-            opciones={Object.entries(GRUPOS).map(([valor, etiqueta]) => ({
-              valor,
-              etiqueta,
-            }))}
-          />
+              desplegable, elegir y cerrarlo. Son los seis filtros que
+              quedan: dónde, modalidad, domicilio, precio, medio de pago y
+              disponibilidad. */}
           {(zonas?.length ?? 0) > 0 && (
             <GrupoChips
               name="zona"
@@ -330,7 +299,20 @@ export async function Directorio({
             label="Cómo atiende"
             todos="En cualquier parte"
             valorInicial={modalidad ?? ''}
-            opciones={MODALIDADES.map((m) => ({ valor: m.valor, etiqueta: m.etiqueta }))}
+            // Sin 'domicilio': esa opción tiene su propio filtro justo
+            // debajo, porque «¿dónde atiende?» y «¿también va a
+            // domicilio?» son dos preguntas, aunque compartan columna.
+            opciones={MODALIDADES.filter((m) => m.valor !== 'domicilio').map((m) => ({
+              valor: m.valor,
+              etiqueta: m.etiqueta,
+            }))}
+          />
+          <GrupoChips
+            name="domicilio"
+            label="Domicilio o entrega"
+            todos="No hace falta"
+            valorInicial={domicilio ?? ''}
+            opciones={[{ valor: 'si', etiqueta: 'Va a domicilio' }]}
           />
           <GrupoChips
             name="modo"
@@ -339,14 +321,22 @@ export async function Directorio({
             valorInicial={modo ?? ''}
             opciones={MODOS_PRECIO.map((m) => ({ valor: m.valor, etiqueta: m.etiqueta }))}
           />
+          <GrupoChips
+            name="medioPago"
+            label="Medio de pago"
+            todos="Cualquiera"
+            valorInicial={medioPago ?? ''}
+            opciones={MEDIOS_PAGO.map((m) => ({ valor: m.valor, etiqueta: m.etiqueta }))}
+          />
+          <GrupoChips
+            name="franja"
+            label="Disponibilidad"
+            todos="Cualquier horario"
+            valorInicial={franja ?? ''}
+            opciones={FRANJAS.map((f) => ({ valor: f.valor, etiqueta: f.etiqueta }))}
+          />
         </HojaFiltros>
       </CabeceraPantalla>
-
-      {/* ⚠ Aquí había también un «Quién está pidiendo». Se fue: esa lista
-          es ahora un destino propio de la barra —«Solicitudes»— y tenerla
-          además aquí eran dos puertas al mismo cuarto. */}
-
-
 
       {/* Dónde está lo suyo, dicho apenas entra. Sin esto, quien ya
           publicó su ficha no tenía forma de saber si aparece ni por dónde
@@ -430,13 +420,6 @@ export async function Directorio({
               </span>
             </p>
           )}
-
-          <p className="mt-4 text-sm text-muted-foreground">
-            Cada persona decidió si aparecer aquí y dónde poner su pin. Marcar
-            un punto en el mapa no es una dirección exacta ni una invitación a
-            presentarse sin avisar: el trabajo se acuerda antes, por chat o por
-            teléfono.
-          </p>
         </>
       ) : proveedores.length === 0 ? (
         <div className="mt-6 rounded-lg border border-dashed border-border p-8 text-center">
@@ -455,15 +438,7 @@ export async function Directorio({
             >
               Ver todos
             </Button>
-          ) : (
-            <Button
-              className="mt-4"
-              nativeButton={false}
-              render={<Link href="/servicios/soy-proveedor" />}
-            >
-              Ofrecer mi trabajo
-            </Button>
-          )}
+          ) : null}
         </div>
       ) : (
         <ul className="revelar mt-6 space-y-3">
@@ -487,39 +462,6 @@ export async function Directorio({
           </Link>
         </AlertDescription>
       </Alert>
-
-
-      {/* Puente al otro lado del sitio. Estaba en la portada, que se lo
-          quedaba entero para explicar dos cosas que no eran suyas; aquí es
-          donde de verdad se busca. Lo que importa de este texto es la
-          diferencia de vida útil, que es lo que sostiene la promesa de
-          borrado del tablero. */}
-      <section className="mt-8 flex flex-col gap-3 rounded-2xl bg-card p-4 shadow-canto sm:flex-row sm:items-center sm:p-5">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
-          <Stethoscope className="size-6" aria-hidden="true" />
-        </span>
-        <div className="flex-1">
-          <h2 className="font-heading text-2xl font-extrabold tracking-tight">
-            ¿Necesitas un profesional?
-          </h2>
-          <p className="mt-1 text-base text-muted-foreground">
-            Psicología, revisión de tu casa, atención médica, asesoría jurídica. Cada quien declara su matrícula; a algunos ya les revisamos que ese número exista en el registro, y esos aparecen de primeros.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          className="w-full sm:w-auto"
-          nativeButton={false}
-          render={<Link href="/profesionales" />}
-        >
-          Ver profesionales
-        </Button>
-      </section>
-      <AccionPrincipal
-        etiqueta="Necesito un servicio"
-        Icono={Plus}
-        href="/servicios/publicar"
-      />
     </main>
   )
 }

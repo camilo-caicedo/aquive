@@ -1,18 +1,10 @@
 import { servidor } from '@/orpc/local'
 
-import { FormularioMuro } from './formulario-muro'
-import type { Cara } from '@/contrato/comunidad'
+import { FormularioDonacion } from './formulario-donacion'
 
-export const metadata = { title: 'Publicar en el muro' }
+export const metadata = { title: 'Publicar una donación' }
 
-export default async function PublicarEnMuroPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ cara?: string }>
-}) {
-  const params = await searchParams
-  const cara: Cara = params.cara === 'necesita' ? 'necesita' : 'ofrece'
-
+export default async function PublicarDonacionPage() {
   const [{ facetas }, acopios] = await Promise.all([
     // Los municipios que ya tienen gente, para no ofrecer los 1.100 del país.
     servidor.servicios.directorio({}),
@@ -20,8 +12,7 @@ export default async function PublicarEnMuroPage({
   ])
 
   return (
-    <FormularioMuro
-      cara={cara}
+    <FormularioDonacion
       municipios={facetas.municipios}
       acopios={acopios.map((a) => ({
         id: a.id,

@@ -77,8 +77,13 @@ export const CONSENTIMIENTO_REFERENCIA_VERSION = 'servicios-referencia-2026-08-1
 // cara de alguien es otra finalidad que publicar su teléfono, igual que
 // el punto en el mapa (ADR 0004). Quien firmó la de agosto no firmó esta.
 export const AUTORIZACION_FOTO_VERSION = 'servicios-foto-2026-08-27'
-// El perfil también publica nombre y teléfono —en /profesionales y en
-// /ofertadores— y también necesita su versión guardada (mínimo legal 2). La
+// La dirección lleva la suya, aparte de la de publicar la ficha y aparte
+// de la del mapa: publicar dónde vive o atiende alguien es otra finalidad,
+// igual que el punto del ADR 0004 (ADR 0017, artículo 9 de la Ley 1581).
+// Quien firmó la ficha o el mapa no firmó esta.
+export const AUTORIZACION_DIRECCION_VERSION = 'servicios-direccion-2026-09-03'
+// El perfil también publica nombre y teléfono —en /profesionales— y
+// también necesita su versión guardada (mínimo legal 2). La
 // fecha es la del texto que hoy se lee en el formulario de registro, no la
 // de cuando se añadió la columna: decir que alguien aceptó un texto que no
 // existía sería peor que no guardar nada.

@@ -9,10 +9,10 @@ export const metadata = { title: 'Mensajes' }
 
 /** De dónde salió el hilo. Va como palabra, nunca como color solo. */
 const DE: Record<Origen['tipo'], string> = {
-  servicio: 'Servicio',
   producto: 'Producto',
   muro: 'Comunidad',
   ficha: 'Ficha',
+  solicitud: 'Pedido',
 }
 
 /**
@@ -93,9 +93,16 @@ export default async function MensajesPage() {
         </ul>
       )}
 
+      {/* ⚠ Decía «Los hilos se borran con lo que los abrió. No hay archivo
+          de conversaciones.» El cliente lo marcó en su revisión del 3 de
+          septiembre de 2026, y con razón: «hilo» y «lo que los abrió» son
+          palabras del código. Aquí va lo mismo con las palabras de quien
+          lee, y termina en algo que se puede hacer en vez de en algo que la
+          aplicación no hace. */}
       <p className="mt-6 text-sm text-muted-foreground">
-        Los hilos se borran con lo que los abrió. No hay archivo de
-        conversaciones.
+        Una conversación se borra cuando se borra el pedido, el producto, la
+        donación o la ficha de la que salió. Apunta por fuera lo que
+        necesites guardar.
       </p>
     </main>
   )

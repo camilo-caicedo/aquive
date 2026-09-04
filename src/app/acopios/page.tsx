@@ -41,7 +41,7 @@ export default async function AcopiosPage({
 
   return (
     <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
-      <CabeceraPantalla titulo="Dónde entregar" volver="/muro" />
+      <CabeceraPantalla titulo="Dónde entregar" volver="/donaciones" />
 
       <p className="text-base text-muted-foreground">
         Puntos donde puedes dejar lo que vas a donar. Los lleva gente de la
@@ -135,8 +135,8 @@ export default async function AcopiosPage({
 
       <p className="mt-4 text-base">
         ¿Prefieres entregarlo tú?{' '}
-        <Link href="/muro" className="text-enlace underline underline-offset-4">
-          Publícalo en el muro
+        <Link href="/donaciones" className="text-enlace underline underline-offset-4">
+          Publícalo en donaciones
         </Link>{' '}
         y lo acuerdas con quien lo necesite.
       </p>

@@ -31,8 +31,9 @@ import {
 const ENLACES = [
   // ⚠ Servicios es la portada desde el 20 de agosto de 2026, por decisión
   // del responsable: pasó tiempo desde el sismo y lo que queda vivo es la
-  // reactivación económica. El módulo de emergencia acabó retirándose entero
-  // (ADR 0014).
+  // reactivación económica. El ADR 0014 fue más allá y retiró el tablero de
+  // pedidos abiertos entero —insumos y el de servicios—: quien necesita algo
+  // busca y contacta, no publica y espera.
   //
   // ⚠ Apunta a /inicio y NO a `/`. La portada decide a quién le sirve qué:
   // sin sesión y sin filtros da la bienvenida, y eso está bien para quien
@@ -41,13 +42,13 @@ const ENLACES = [
   // la única pantalla del sitio que quien está adentro ya leyó. /inicio da
   // el inicio siempre, haya sesión o no.
   { href: '/inicio', etiqueta: 'Inicio', Icono: Home },
-  // Los dos lados del directorio, uno en cada celda: quién presta un
-  // servicio y quién está pidiendo uno. Antes el segundo era una sección
-  // colgada del primero —/servicios/solicitudes— y no lo encontraba nadie.
   // «Buscar» lleva a las categorías, no a un buscador: es la puerta ancha
   // para quien no sabe qué escribir. Debajo cuelgan el listado, el mapa por
   // zonas y la ficha.
   { href: '/categorias', etiqueta: 'Buscar', Icono: Search },
+  // ⚠ La emergencia sale de la barra (ADR 0003, decisión del 26 de agosto de
+  // 2026): se entra a ella desde el inicio. Deja de gastar una de las
+  // cuatro celdas, que ahora las pide el chat.
   { href: '/mensajes', etiqueta: 'Mensajes', Icono: MessageSquare },
   // ⚠ Apunta a /perfil y NO a la pantalla de abrir cuenta: aquella rebota a
   // /login sin sesión, y /perfil sirve las dos caras — con sesión el menú de
@@ -93,10 +94,11 @@ function celdas(coordinacion: Coordinacion) {
 // pantalla de habeas data viven en rutas propias y las dos son «lo mío».
 // /aliado ya no cuelga de aquí: tiene celda propia cuando corresponde.
 const TAMBIEN: Record<string, string[]> = {
-  // Todo lo que se entra a MIRAR cuelga del inicio y no gasta celda: las
-  // tres listas de servicios, sus fichas de una en una, la demanda y la
-  // comunidad. Sus pantallas encienden «Inicio» en vez de apagar las cuatro
-  // celdas, que es lo que hace que la barra parezca de otra aplicación.
+  // La portada es el directorio, así que las otras dos listas de la misma
+  // pregunta cuelgan de ella, y también la puerta vieja /servicios y todo
+  // lo que hay debajo: publicar una ficha, una ficha concreta, la demanda.
+  // Lo que se entra a MIRAR desde el inicio: la comunidad. No gasta celda
+  // propia, y sus pantallas encienden «Inicio» en vez de apagar las cuatro.
   '/inicio': [
     '/',
     '/directorio',
@@ -107,11 +109,11 @@ const TAMBIEN: Record<string, string[]> = {
     '/producto',
     '/profesional',
     '/entidad',
-    '/solicitudes',
     '/muro',
+    '/donaciones',
     '/barrio',
   ],
-  // Buscar: categorías es la puerta, y debajo el mapa y las zonas.
+  // Buscar: categorías es la puerta, y debajo el mapa, las zonas y la ficha.
   '/categorias': ['/zonas', '/mapa'],
   // La ruta vieja de la bandeja acompañada redirige aquí, pero alguien puede
   // llegar por un enlace guardado.
@@ -137,7 +139,7 @@ const TAMBIEN: Record<string, string[]> = {
 }
 
 // Coincidencia exacta para la portada; por prefijo para el resto, para que
-// /responder/ABCD siga marcando «Solicitudes».
+// una ficha concreta o una subruta de un módulo sigan marcando su celda.
 //
 // ⚠ La portada mira TAMBIEN igual que las demás. Antes cortocircuitaba con
 // `return ruta === '/'`, y desde que el directorio vive ahí eso apagaba la
@@ -145,9 +147,9 @@ const TAMBIEN: Record<string, string[]> = {
 // barra parecía de otra aplicación justo al dar el primer paso dentro del
 // módulo que ahora recibe a todo el mundo.
 // ⚠ Por segmentos y no por `startsWith` a secas. Con la comparación de
-// texto pelada, /solicitudes encendía TAMBIÉN «Lo mío», porque de esa celda
-// cuelga /solicitud —la solicitud propia— y una es prefijo de la otra. Lo
-// mismo pasaría el día que alguien añada /servicio junto a /servicios.
+// texto pelada, /mis-solicitudes encendía TAMBIÉN «Lo mío» dos veces por
+// dos caminos distintos, y /servicio encendería «Servicios» el día que
+// exista junto a /servicios. Un segmento entero o nada.
 function bajo(ruta: string, base: string) {
   return ruta === base || ruta.startsWith(base + '/')
 }

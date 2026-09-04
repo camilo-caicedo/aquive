@@ -137,8 +137,16 @@ export const Filtros = z.object({
     .optional()
     .catch(undefined),
   zona: z.uuid().optional().catch(undefined),
+  // La interfaz separa «¿dónde atiende?» de «¿también va a domicilio?»,
+  // aunque las dos pregunten sobre la misma columna `modalidad` —un arreglo
+  // que puede traer 'domicilio' junto con 'local' o 'remoto'—. `modalidad`
+  // sigue aceptando cualquiera de los tres valores porque es la columna
+  // real; el filtro de domicilio va aparte, en `domicilio`.
   modalidad: Modalidad.optional().catch(undefined),
+  domicilio: z.literal('si').optional().catch(undefined),
   modo: Modo.optional().catch(undefined),
+  medioPago: MedioDePago.optional().catch(undefined),
+  franja: Franja.optional().catch(undefined),
 })
 
 export type Filtros = z.infer<typeof Filtros>
@@ -288,6 +296,24 @@ export const OficioPropuesto = z.object({
 
 export type OficioPropuesto = z.infer<typeof OficioPropuesto>
 
+/**
+ * Los cinco estados de una orden (ADR 0015). `pendiente` es el estado de
+ * nacimiento; `aceptada` y `rechazada` son la respuesta del prestador;
+ * `realizada` cierra bien; `no_concretada` cierra sin trabajo, sin decir de
+ * quién fue la culpa. Gemelo del `CHECK` de la base y de
+ * `src/server/servicios/transiciones.ts`, que es quien de verdad manda en
+ * qué salto es legal.
+ */
+export const EstadoSolicitud = z.enum([
+  'pendiente',
+  'aceptada',
+  'realizada',
+  'rechazada',
+  'no_concretada',
+])
+
+export type EstadoSolicitud = z.infer<typeof EstadoSolicitud>
+
 export const MiSolicitudServicio = z.object({
   id: z.uuid(),
   /** Cuatro letras y dos dígitos: se dice por teléfono sin deletrear. */
@@ -303,17 +329,13 @@ export const MiSolicitudServicio = z.object({
   subcategoria_en_revision: z.boolean(),
   /** El contexto que escribió, si lo escribió. Opcional desde el ADR 0013. */
   detalle: z.string().nullable(),
-  estado: z.string(),
+  estado: EstadoSolicitud,
   creada_at: z.string(),
   expira_at: z.string(),
-  /**
-   * Cuántos respondieron.
-   *
-   * ⚠ Faltaba, y sin él quien pedía un servicio publicaba, veía un código y
-   * no volvía a saber nada: ninguna pantalla le decía si alguien se había
-   * movido. La vista SQL ya lo calculaba.
-   */
-  num_respuestas: z.number(),
+  /** A quién se le pidió (ADR 0015): con qué ficha seguir hablando. */
+  proveedor_id: z.uuid(),
+  /** Nulo si esa ficha ya se borró: la fila sigue, huérfana de nombre. */
+  proveedor_nombre: z.string().nullable(),
 })
 
 export type MiSolicitudServicio = z.infer<typeof MiSolicitudServicio>
@@ -325,6 +347,25 @@ const erroresMatricula = {
     data: z.object({ motivo: z.string() }),
   },
 } as const
+
+/**
+ * Una orden en la bandeja del prestador (ADR 0015). Sin datos de quien
+ * pide —el mínimo legal no cambia: la cuenta no se publica— y sin
+ * `proveedor_id`: la bandeja ya está filtrada por la ficha de quien mira.
+ */
+export const OrdenProveedor = z.object({
+  id: z.uuid(),
+  codigo: z.string(),
+  grupo: GrupoOficio,
+  subcategoria: z.string().nullable(),
+  subcategoria_en_revision: z.boolean(),
+  detalle: z.string().nullable(),
+  nota: z.string().nullable(),
+  estado: EstadoSolicitud,
+  creada_at: z.string(),
+})
+
+export type OrdenProveedor = z.infer<typeof OrdenProveedor>
 
 const erroresUbicacion = {
   RECHAZADO: {
@@ -504,44 +545,60 @@ export const contratoServicios = {
   /**
    * Pedir un servicio.
    *
-   * ⚠ Exige cuenta desde el ADR 0006. Lo que se le PIDE a quien pide no
-   * cambió: oficio, municipio, zona, urgencia, capacidad de pago y la nota
-   * filtrada. Su nombre no se publica y la solicitud no lo lleva.
+   * ⚠ ADR 0015: deja de ser un pedido al aire y pasa a nacer dirigido —
+   * `proveedor_id` es obligatorio—. El formulario corto que abre la ficha ya
+   * sabe a quién se le pide, así que municipio y zona los copia el dominio
+   * de esa ficha en vez de volver a preguntarlos; y urgencia y capacidad de
+   * pago se van con el tablero que las leía, porque nadie más las mira.
+   *
+   * ⚠ Consecuencia que el ADR no previó, documentada en su propio archivo:
+   * `oficio_id` ya no es «uno del catálogo entero» sino «uno de los que ESTA
+   * ficha ya ofrece» — el dominio lo comprueba contra
+   * `proveedor_oficios_publicos`, no contra `catalogo_oficios` a secas.
+   * `grupo` se fue del todo del formulario: el dominio lo copia del oficio
+   * elegido, que ya sabe de qué categoría es. Y desaparece
+   * `subcategoria_nueva`: la salida escrita del ADR 0013 —«¿no encuentras lo
+   * tuyo?»— tenía sentido contra el catálogo de 81 oficios, no contra los
+   * tres o cuatro que un prestador concreto declaró.
+   *
+   * Exige cuenta desde el ADR 0006. Su nombre no se publica y la solicitud
+   * no lo lleva.
    */
   publicarSolicitud: oc
     .errors(erroresUbicacion)
     .input(
-      z
-        .object({
-          // ADR 0011: la categoría es cerrada. ADR 0013: debajo va una
-          // subcategoría —del catálogo o propuesta— y el detalle, que era
-          // obligatorio, pasa a ser el contexto opcional.
-          grupo: GrupoOficio,
-          /** Una fila de `catalogo_oficios` de esa misma categoría. */
-          oficio_id: z.string().trim().min(1).max(60).optional(),
-          /** O el texto de quien no encontró lo suyo. Va a moderación. */
-          subcategoria_nueva: z.string().trim().min(2).max(60).optional(),
-          detalle: z.string().trim().min(3).max(80).optional(),
-          municipio: z.string().regex(/^[0-9]{5}$/),
-          zona_id: z.uuid().optional(),
-          zona_texto: z.string().trim().max(80).optional(),
-          urgencia: z.enum(['hoy', 'esta_semana', 'sin_prisa']),
-          capacidad_pago: z.enum(['puedo_pagar', 'pago_poco', 'no_puedo_pagar']),
-          nota: z.string().trim().max(140).optional(),
-        })
-        // Exactamente una: el gemelo en Zod del CHECK
-        // `solicitudes_servicio_una_subcategoria`. Aquí es donde se EXIGE
-        // la subcategoría (ADR 0013); el CHECK de la base solo impide el
-        // estado absurdo.
-        .refine((v) => Boolean(v.oficio_id) !== Boolean(v.subcategoria_nueva), {
-          message: 'Elige qué necesitas de la lista, o escríbelo tú.',
-          path: ['oficio_id'],
-        }),
+      z.object({
+        /** A quién se le pide (ADR 0015). */
+        proveedor_id: z.uuid(),
+        /** Uno de los oficios que ESA ficha ya ofrece, nunca del catálogo entero. */
+        oficio_id: z.string().trim().min(1).max(60),
+        detalle: z.string().trim().min(3).max(80).optional(),
+        nota: z.string().trim().max(140).optional(),
+      }),
     )
     .output(z.object({ id: z.uuid(), codigo: z.string() })),
 
   /** Las mías, para el perfil. */
   misSolicitudes: oc.output(z.array(MiSolicitudServicio)),
+
+  /**
+   * La bandeja del prestador (ADR 0015): sus órdenes, para aceptar,
+   * rechazar, o cerrar las que ya aceptó.
+   */
+  misOrdenes: oc.output(z.array(OrdenProveedor)),
+
+  /**
+   * El prestador mueve su propia orden de un estado a otro.
+   *
+   * ⚠ El servidor comprueba SIEMPRE dos cosas: que la ficha dueña de la
+   * orden es la de quien llama, y que el salto pedido es uno de los que
+   * `src/server/servicios/transiciones.ts` admite. No basta con que la
+   * interfaz solo enseñe los botones legales.
+   */
+  cambiarEstadoSolicitud: oc
+    .errors(erroresUbicacion)
+    .input(z.object({ id: z.uuid(), estado: EstadoSolicitud }))
+    .output(z.object({ ok: z.literal(true) })),
 
   // -------------------------------------------------------------------
   // Subcategorías (ADR 0013)
@@ -651,10 +708,18 @@ export const contratoServicios = {
     )
     .output(z.object({ ok: z.literal(true) })),
 
-  /** Renovarla por otros 15 días, o cerrarla. */
+  /**
+   * Quien pide gestiona la suya: renovarla 15 días más —solo mientras sigue
+   * pendiente, ADR 0015— o cancelarla.
+   *
+   * ⚠ No hay acción «rechazar» de este lado: eso es del prestador, y va por
+   * `cambiarEstadoSolicitud`. Cancelar aterriza en `no_concretada`, no en
+   * `rechazada`: quien pide no está rechazando su propia orden, la está
+   * dejando sin efecto.
+   */
   gestionarSolicitud: oc
     .errors(erroresUbicacion)
-    .input(z.object({ id: z.uuid(), accion: z.enum(['renovar', 'cerrar']) }))
+    .input(z.object({ id: z.uuid(), accion: z.enum(['renovar', 'cancelar']) }))
     .output(z.object({ ok: z.literal(true) })),
 
   /**
