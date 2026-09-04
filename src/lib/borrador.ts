@@ -43,7 +43,13 @@ export function useBorrador<T extends Record<string, unknown>>(
   // función entera en sus dependencias: cambiaría en cada render y
   // volvería a intentar restaurar.
   const alRestaurarRef = useRef(alRestaurar)
-  alRestaurarRef.current = alRestaurar
+  // Fuera del render: escribir un ref mientras se renderiza no está
+  // permitido. Este efecto corre en cada render (sin lista de
+  // dependencias) y sigue dejando el ref al día antes de que el efecto de
+  // abajo —que sí tiene lista de dependencias— lo lea.
+  useEffect(() => {
+    alRestaurarRef.current = alRestaurar
+  })
 
   // Restaura una sola vez, al montar. Antes que el volcado de abajo:
   // guardar primero pisaría el borrador con el estado inicial (vacío)

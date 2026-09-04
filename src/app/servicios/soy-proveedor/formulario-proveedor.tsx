@@ -253,20 +253,27 @@ export function FormularioProveedor({
   const [centroMunicipio, setCentroMunicipio] = useState<
     { latitud: number; longitud: number } | null | undefined
   >(undefined)
+  // Qué municipio describe `centroMunicipio` — así el valor viejo no se ve
+  // mientras carga el nuevo, sin tener que resetear el estado desde el
+  // cuerpo del efecto.
+  const [municipioDeCentro, setMunicipioDeCentro] = useState('')
   useEffect(() => {
-    if (proveedor || municipio === '') {
-      setCentroMunicipio(undefined)
-      return
-    }
+    if (proveedor || municipio === '') return
     let cancelado = false
-    setCentroMunicipio(undefined)
     rpc.servicios.centroMunicipio({ municipio }).then((c) => {
-      if (!cancelado) setCentroMunicipio(c)
+      if (!cancelado) {
+        setCentroMunicipio(c)
+        setMunicipioDeCentro(municipio)
+      }
     })
     return () => {
       cancelado = true
     }
   }, [proveedor, municipio])
+  const centroMunicipioEfectivo =
+    proveedor || municipio === '' || municipio !== municipioDeCentro
+      ? undefined
+      : centroMunicipio
   const [modalidad, setModalidad] = useState<ModalidadServicio[]>(
     proveedor?.modalidad ?? []
   )
@@ -980,7 +987,7 @@ export function FormularioProveedor({
                         ]
                       : []
                   }
-                  centro={puntoMapa ?? centroMunicipio ?? undefined}
+                  centro={puntoMapa ?? centroMunicipioEfectivo ?? undefined}
                   zoom={13}
                   alto={260}
                   seleccionable
