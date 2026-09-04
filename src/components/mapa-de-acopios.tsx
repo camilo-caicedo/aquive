@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic'
 
 import type { Acopio } from '@/contrato/acopios'
+import { Skeleton } from '@/components/ui/skeleton'
 
 // Igual que el de prestadores: Leaflet toca `window` al importarse, así que
 // el mapa entra solo en el navegador y no le cuesta 42 KB a quien nunca
@@ -10,7 +11,7 @@ import type { Acopio } from '@/contrato/acopios'
 const Mapa = dynamic(() => import('@/components/mapa').then((m) => m.Mapa), {
   ssr: false,
   loading: () => (
-    <div className="shadow-canto h-[360px] w-full animate-pulse rounded-2xl bg-muted" />
+    <Skeleton className="shadow-canto h-[360px] w-full rounded-2xl" />
   ),
 })
 

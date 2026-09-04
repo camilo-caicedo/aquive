@@ -135,7 +135,10 @@ Para que `/admin` sea accesible hay que insertar a mano la primera fila en
   el contraste de los controles nativos en gama baja.
 - **Las animaciones son solo CSS.** No por presupuesto de JS, sino porque una
   animación que se traba se lee como una aplicación rota.
-- **Sin esqueleto de carga.** ADR 0005: impedía hidratar.
+- **Sin `Suspense` en ninguna parte.** ADR 0005: deja el subárbol sin
+  hidratar, y la comprobación de septiembre lo amplió a cualquier límite,
+  también en producción. El esqueleto que sí hay es el de la navegación
+  (ADR 0016), que es marcado normal y no un límite de carga.
 
 ## Lo que decide si esto sirve
 

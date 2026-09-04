@@ -160,13 +160,18 @@ export default function RootLayout({ children, modal }: LayoutProps<"/">) {
             `{modal}`: los formularios de flujo se abren interceptados y
             desde ahí también se guarda. */}
         <ProveedorDeAvisos>
-          <BarraDeCarga />
           <RastroDeNavegacion />
           <AvisoPruebas />
           <Encabezado />
           <div id="contenido" className="flex-1">
             {children}
           </div>
+          {/* ⚠ Va DESPUÉS de `#contenido` y no arriba del todo, aunque su
+              barra sea `fixed` y le dé igual dónde esté: el esqueleto que
+              monta al alargarse la espera ocupa el sitio de `#contenido` en
+              esta columna, y ahí el encabezado, la barra y el pie le quedan
+              donde tienen que quedarle sin una sola medida a mano. */}
+          <BarraDeCarga />
           {/* Las pantallas interceptadas: la ficha y los formularios de flujo
               se abren encima de lo que ya estaba, sin desmontarlo. Fuera de
               una intercepción esto es `null`. Ver `hoja-modal.tsx`. */}

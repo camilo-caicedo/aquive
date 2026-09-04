@@ -625,10 +625,23 @@ en un rediseño:
       error que desaparece a los cuatro segundos obliga a repetir la acción
       para volver a leerlo.
 
-    Al navegar, `BarraDeCarga` en el layout. ⚠ No es —ni puede ser— un
-    `loading.tsx`: el ADR 0005 lo retiró tras comprobar que dejaba la página
-    sin hidratar. Es una barra encima del árbol, sin `Suspense` y sin
-    `useSearchParams()`.
+    Al navegar, `BarraDeCarga` en el layout, con dos señales: la línea de
+    3 px sale de inmediato, y pasados 200 ms las siluetas de lo que viene,
+    con la forma del destino (ADR 0016). No salen para una hoja del slot
+    `@modal` ni para un enlace que solo cambia la query.
+
+    ⚠ Nada de esto es —ni puede ser— un `loading.tsx`: el ADR 0005 lo
+    retiró tras comprobar que dejaba la página sin hidratar, y la
+    comprobación del 4 de septiembre de 2026 amplió el hallazgo a
+    **cualquier `Suspense`**, también en producción. Esto es marcado normal
+    que se monta y se desmonta con estado de cliente, encima del árbol y no
+    alrededor de él, sin `Suspense` y sin `useSearchParams()`.
+
+    ⚠ Y lleva `flushSync` en el manejador del clic a propósito: React
+    agrupa ese `setState` con el `startTransition` de `Link`, y sin
+    forzarlo el aviso solo se renderiza cuando la pantalla nueva ya
+    confirmó — o sea, nunca a tiempo. El ADR 0016 lo cuenta con las
+    medidas.
 
 12. **Lo que pone su fondo dentro de una cinta pone también su tinta.**
     `TINTA_CINTA.azul` es `text-white` y se hereda, así que una píldora con

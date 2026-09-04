@@ -612,13 +612,30 @@ body:has(dialog[open]) {
 
    Esto lo apaga en cualquier aparato sin puntero fino, sin tener que tocar
    los cincuenta y siete sitios que usan `hover:`. Tailwind emite el hover
-   como `&:hover`, así que basta con neutralizar el transform ahí.
+   como `&:hover`, así que basta con neutralizar ahí la propiedad que el
+   levantamiento usa.
+
+   ⚠ Y esa propiedad es `translate`, NO `transform`. Tailwind v4 emite las
+   utilidades `translate-*` como `translate: var(--tw-translate-x)
+   var(--tw-translate-y)`, y aquí ponía `transform: none`, que es una
+   propiedad que estas clases ni tocan. Costaba las dos mitades a la vez:
+
+   - El hover pegado seguía vivo, porque nadie apagaba `translate`. O sea
+     que esta regla no hacía lo que su propio comentario decía.
+   - Y de paso borraba el `transform` de `.pulsable-tarjeta:active`. En un
+     táctil el `:hover` se queda pegado DURANTE el toque, así que las dos
+     reglas competían con la misma especificidad —clase más pseudoclase— y
+     ganaba ésta por ir después en el archivo. Las seis tarjetas que juntan
+     `pulsable-tarjeta` con `hover:-translate-y` no se hundían al tocarlas:
+     «Busco», «Ofrezco» y «Dono» del inicio, las categorías y las dos de la
+     bienvenida. Las de `/perfil` sí, y por eso parecía cosa suya: llevan
+     `hover:bg-muted`, que no le toca el `transform` a nadie.
    -------------------------------------------------------------------- */
 @media not all and (hover: hover) and (pointer: fine) {
   .hover\:-translate-y-0\.5:hover,
   .hover\:-translate-y-1:hover,
   .hover\:translate-y-0\.5:hover {
-    transform: none;
+    translate: none;
   }
 }
 
@@ -840,3 +857,26 @@ html {
 .leaflet-container .leaflet-control { z-index: 8; }
 .leaflet-container .leaflet-top,
 .leaflet-container .leaflet-bottom { z-index: 9; }
+
+/* --------------------------------------------------------------------
+   Mientras se va a otra pantalla, el esqueleto ocupa el sitio del
+   contenido viejo.
+
+   Lo monta `BarraDeCarga` como hermano de `#contenido`, y esto esconde el
+   contenido de la pantalla que se está dejando. Si no, se verían los dos
+   apilados y la página mediría el doble.
+
+   ⚠ Fuera de `@layer` a propósito, como las reglas de `MarcoFlujo`:
+   Tailwind v4 mete sus utilidades en capas, y `#contenido` lleva `flex-1`.
+   Lo que no está en ninguna capa gana, que es lo único que deja
+   neutralizarlo desde aquí.
+
+   ⚠ Esto NO es el esqueleto del ADR 0005. Aquel envolvía la página en un
+   `Suspense` y la dejaba sin hidratar; esto es marcado normal que se monta
+   y se desmonta con estado de cliente, sin ningún límite de por medio. La
+   consecuencia del ADR que sí cambia —«se queda la anterior»— va escrita
+   en el ADR 0016.
+   -------------------------------------------------------------------- */
+body:has([data-esqueleto-navegacion]) #contenido {
+  display: none;
+}

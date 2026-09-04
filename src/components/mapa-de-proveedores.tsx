@@ -4,13 +4,14 @@ import dynamic from 'next/dynamic'
 
 import { familiaDe } from '@/lib/familias'
 import type { EnListado } from '@/contrato/servicios'
+import { Skeleton } from '@/components/ui/skeleton'
 
 // Leaflet toca `window` al importarse, así que el mapa entra solo en el
 // navegador. Y de paso no le cuesta 42 KB a quien nunca abre esta pantalla.
 const Mapa = dynamic(() => import('@/components/mapa').then((m) => m.Mapa), {
   ssr: false,
   loading: () => (
-    <div className="shadow-canto h-[360px] w-full animate-pulse rounded-2xl bg-muted" />
+    <Skeleton className="shadow-canto h-[360px] w-full rounded-2xl" />
   ),
 })
 

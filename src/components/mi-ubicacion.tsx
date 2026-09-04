@@ -5,11 +5,12 @@ import { useState } from 'react'
 
 import { rpc } from '@/orpc/cliente'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const Mapa = dynamic(() => import('@/components/mapa').then((m) => m.Mapa), {
   ssr: false,
   loading: () => (
-    <div className="shadow-canto h-[320px] w-full animate-pulse rounded-2xl bg-muted" />
+    <Skeleton className="shadow-canto h-[320px] w-full rounded-2xl" />
   ),
 })
 
