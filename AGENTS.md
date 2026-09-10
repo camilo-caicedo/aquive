@@ -72,6 +72,13 @@ archivo, y detrás de él:
 | `docs/decisiones/0018-*.md` | La sombrilla abre el menú |
 | `docs/decisiones/0019-*.md` | Municipio, barrio y dirección, cada uno con lo suyo |
 | `docs/decisiones/0020-*.md` | Siluetas al navegar, sin `Suspense` |
+| `docs/decisiones/0021-*.md` | Vuelve una sección de destacados a `/inicio` |
+| `docs/decisiones/0022-*.md` | La ficha sube la prominencia visual de la calificación |
+| `docs/decisiones/0023-*.md` | La ficha absorbe el flujo de pedir un servicio |
+| `docs/decisiones/0024-*.md` | La matrícula pierde su puerta de autoservicio en el perfil |
+| `docs/decisiones/0025-*.md` | Se retira la pantalla «Datos abiertos» |
+| `docs/decisiones/0026-*.md` | El precio admite un techo opcional, además del piso |
+| `docs/decisiones/0027-*.md` | Nombre de negocio y horario por hora exacta, sumados sin reemplazar |
 | `docs/multiagente/protocolo.md` | Cómo colaboran Claude Code y Antigravity/Gemini en este repo |
 | `docs/marca/AquiVe-Flujo.dc.html` | Prototipo de las 40 pantallas |
 | `docs/marca/Manual-de-Marca-AquiVe.pdf` | Manual de marca |
@@ -140,8 +147,9 @@ información: quien contrata y quien presta acuerdan el monto y la entrega por
 fuera.
 
 Un precio se declara como **modo** (`gratis`, `aporte`, `solidario`, `normal`)
-más un valor «desde» numérico y una unidad de lista. **Nunca es campo de texto
-libre** — por ahí se cuela un segundo teléfono.
+más un valor «desde» numérico, un «hasta» opcional (ADR 0026) y una unidad de
+lista. **Nunca es campo de texto libre** — por ahí se cuela un segundo
+teléfono.
 
 El alojamiento se paga (Vercel Pro, decisión del 26 de agosto de 2026), así que
 la restricción de uso no comercial del plan gratuito ya no aplica y el listado
@@ -215,7 +223,7 @@ mensaje explicativo.
 
 | Campo | Tope |
 | --- | --- |
-| Presentación del prestador | 300 |
+| Presentación del prestador | 200 |
 | Detalle de solicitud de servicio | 80 |
 | Comentario de reseña | 140 |
 | Réplica del prestador | 140 |

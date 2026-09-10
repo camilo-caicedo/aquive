@@ -41,13 +41,14 @@ El ADR se escribe **antes** del código. Si una tarea te obliga a contradecir
 | [0017](0017-la-solicitud-es-una-orden.md) | La solicitud es una orden dirigida a un prestador | aceptada |
 | [0018](0018-la-sombrilla-abre-el-menu.md) | La sombrilla abre el menú | aceptada |
 | [0019](0019-municipio-barrio-y-direccion.md) | Municipio, barrio y dirección, cada uno con lo suyo | aceptada |
-| [0020](0020-destacados-en-inicio.md) | Vuelve una sección de destacados a `/inicio` | aceptada |
-| [0021](0021-la-calificacion-pesa-mas-en-la-ficha.md) | La ficha sube la prominencia visual de la calificación | aceptada |
-| [0022](0022-la-ficha-absorbe-pedir-un-servicio.md) | La ficha absorbe el flujo de pedir un servicio | aceptada |
-| [0023](0023-la-matricula-pierde-su-puerta-en-el-perfil.md) | La matrícula pierde su puerta de autoservicio en el perfil | aceptada |
-| [0024](0024-se-retira-datos-abiertos.md) | Se retira la pantalla «Datos abiertos» | aceptada |
-| [0025](0025-el-precio-admite-un-techo.md) | El precio admite un techo opcional, además del piso | aceptada |
-| [0026](0026-nombre-de-negocio-y-horarios-por-hora.md) | Nombre de negocio y horario por hora exacta, sumados sin reemplazar | aceptada |
+| [0020](0020-esqueleto-al-navegar.md) | Vuelve el esqueleto, pero al navegar y sin `Suspense` | aceptada |
+| [0021](0021-destacados-en-inicio.md) | Vuelve una sección de destacados a `/inicio` | aceptada |
+| [0022](0022-la-calificacion-pesa-mas-en-la-ficha.md) | La ficha sube la prominencia visual de la calificación | aceptada |
+| [0023](0023-la-ficha-absorbe-pedir-un-servicio.md) | La ficha absorbe el flujo de pedir un servicio | aceptada |
+| [0024](0024-la-matricula-pierde-su-puerta-en-el-perfil.md) | La matrícula pierde su puerta de autoservicio en el perfil | aceptada |
+| [0025](0025-se-retira-datos-abiertos.md) | Se retira la pantalla «Datos abiertos» | aceptada |
+| [0026](0026-el-precio-admite-un-techo.md) | El precio admite un techo opcional, además del piso | aceptada |
+| [0027](0027-nombre-de-negocio-y-horarios-por-hora.md) | Nombre de negocio y horario por hora exacta, sumados sin reemplazar | aceptada |
 
 ## Plantilla
 
