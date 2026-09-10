@@ -66,16 +66,16 @@ que esperar el rechazo del envío — regla de interfaz 11).
 
 ## 3. Pasos de implementación (Antigravity)
 
-- [ ] **Paso 1 [Reagrupar pasos]:** cambia el array `PASOS` (líneas ~1844-1851) a 3 entradas,
+- [x] **Paso 1 [Reagrupar pasos]:** cambia el array `PASOS` (líneas ~1844-1851) a 3 entradas,
       reasignando las `claves` de cada bloque existente.
-- [ ] **Paso 2 [Nombre del negocio]:** agrega el campo al bloque `figura`/`quien`, visible
+- [x] **Paso 2 [Nombre del negocio]:** agrega el campo al bloque `figura`/`quien`, visible
       solo para `microempresa`, mandándolo a `guardar_proveedor` como `p_nombre_negocio`.
-- [ ] **Paso 3 [Precio hasta]:** agrega el input "hasta $" junto a cada "desde $" del
+- [x] **Paso 3 [Precio hasta]:** agrega el input "hasta $" junto a cada "desde $" del
       selector de oficios, mandándolo dentro de `p_oficios` como `precio_hasta`.
-- [ ] **Paso 4 [Horario exacto]:** agrega los dos campos de hora en el bloque
+- [x] **Paso 4 [Horario exacto]:** agrega los dos campos de hora en el bloque
       `disponibilidad`, mandándolos como `p_hora_desde`/`p_hora_hasta`.
-- [ ] **Paso 5 [Tope 200]:** baja `maxLength` y el contador de la presentación a 200.
-- [ ] **Paso 6:** confirma que `/perfil/datos` (que reusa este mismo componente con
+- [x] **Paso 5 [Tope 200]:** baja `maxLength` y el contador de la presentación a 200.
+- [x] **Paso 6:** confirma que `/perfil/datos` (que reusa este mismo componente con
       `secciones={['quien', 'figura', 'contacto', 'ciudad', 'presentacion']}`) se sigue
       viendo bien con la nueva agrupación de pasos — si esa pantalla no usa el array
       `PASOS` de la misma forma, revisa que no se rompa.
@@ -93,13 +93,13 @@ que esperar el rechazo del envío — regla de interfaz 11).
 
 ## 5. Verificación y puerta de calidad
 
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] Completar el alta entera de punta a punta, con y sin nombre de negocio, con y sin
+- [x] `npm run lint`
+- [x] `npm run typecheck` (tsc --noEmit)
+- [x] Completar el alta entera de punta a punta, con y sin nombre de negocio, con y sin
       horario exacto, con y sin techo de precio.
-- [ ] Probar `/perfil/datos` después del cambio.
-- [ ] Sin warnings de build.
-- [ ] Aprobación del `git diff` por Claude Code.
+- [x] Probar `/perfil/datos` después del cambio.
+- [x] Sin warnings de build (`npm run build` exit 0).
+- [x] Aprobación del `git diff` por Claude Code.
 
 ## 6. Notas y bloqueos
 

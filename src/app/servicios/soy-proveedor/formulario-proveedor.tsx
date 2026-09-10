@@ -160,6 +160,7 @@ type PropuestaLocal = {
   grupo: GrupoOficio
   modo: ModoPrecio
   precio_desde: number | null
+  precio_hasta?: number | null
   unidad: UnidadPrecio | null
   /** Lo que dijo moderación, si ya dijo algo. */
   estado?: string
@@ -225,6 +226,8 @@ export function FormularioProveedor({
 
   const [nombre, setNombre] = useState(proveedor?.nombre_visible ?? '')
   const [tipo, setTipo] = useState<TipoProveedor>(proveedor?.tipo ?? 'persona')
+  // Solo se muestra y guarda cuando tipo === 'microempresa' (ADR 0027)
+  const [nombreNegocio, setNombreNegocio] = useState(proveedor?.nombre_negocio ?? '')
   const [telefono, setTelefono] = useState(proveedor?.telefono ?? '')
   const [municipio, setMunicipio] = useState(proveedor?.municipio ?? '')
   const [zonaId, setZonaId] = useState(proveedor?.zona_id ?? '')
@@ -279,6 +282,9 @@ export function FormularioProveedor({
   )
   const [dias, setDias] = useState<DiaSemana[]>(proveedor?.dias ?? [])
   const [franjas, setFranjas] = useState<FranjaHoraria[]>(proveedor?.franjas ?? [])
+  // Horario exacto opcional (ADR 0027): hora_desde y hora_hasta
+  const [horaDesde, setHoraDesde] = useState(proveedor?.hora_desde ?? '')
+  const [horaHasta, setHoraHasta] = useState(proveedor?.hora_hasta ?? '')
   const [mediosPago, setMediosPago] = useState<MedioPago[]>(proveedor?.medios_pago ?? [])
   const [descripcion, setDescripcion] = useState(proveedor?.descripcion ?? '')
   const [elegidos, setElegidos] = useState<OficioProveedorInput[]>(
@@ -286,6 +292,7 @@ export function FormularioProveedor({
       oficio_id: o.oficio_id,
       modo: o.modo,
       precio_desde: o.precio_desde,
+      precio_hasta: o.precio_hasta ?? null,
       unidad: o.unidad,
     })) ?? []
   )
@@ -293,11 +300,11 @@ export function FormularioProveedor({
   // el paso 3: nadie debería recorrer tres pasos para corregir un precio.
   const [pasoOficios, setPasoOficios] = useState<1 | 2 | 3>(proveedor ? 3 : 1)
 
-  // El alta en seis pasos cortos, no un formulario de diez secciones de
-  // una sentada: pedido literal del cliente, con «cuánto falta» siempre
-  // a la vista. Solo se usa sin ficha y sin secciones sueltas (más abajo);
-  // editando, cada pantalla de /perfil sigue pidiendo su sección.
-  const [paso, setPaso] = useState<1 | 2 | 3 | 4 | 5 | 6>(1)
+  // El alta en tres pasos (ADR 0027):
+  // 1: Cuéntanos sobre ti
+  // 2: Cuéntanos qué ofreces
+  // 3: ¿Cómo pueden encontrarte?
+  const [paso, setPaso] = useState<1 | 2 | 3>(1)
 
   // Las categorías del paso 1. Con ficha, se deducen de lo que ya tiene:
   // guardarlas en la base sería una segunda fuente de verdad sobre algo
@@ -370,6 +377,7 @@ export function FormularioProveedor({
     {
       nombre,
       tipo,
+      nombreNegocio,
       telefono,
       municipio,
       zonaId,
@@ -381,6 +389,8 @@ export function FormularioProveedor({
       modalidad,
       dias,
       franjas,
+      horaDesde,
+      horaHasta,
       mediosPago,
       descripcion,
       elegidos,
@@ -395,6 +405,7 @@ export function FormularioProveedor({
     (d) => {
       setNombre(d.nombre)
       setTipo(d.tipo)
+      if (typeof d.nombreNegocio === 'string') setNombreNegocio(d.nombreNegocio)
       setTelefono(d.telefono)
       setMunicipio(d.municipio)
       setZonaId(d.zonaId)
@@ -406,6 +417,8 @@ export function FormularioProveedor({
       setModalidad(d.modalidad)
       setDias(d.dias)
       setFranjas(d.franjas)
+      if (typeof d.horaDesde === 'string') setHoraDesde(d.horaDesde)
+      if (typeof d.horaHasta === 'string') setHoraHasta(d.horaHasta)
       setMediosPago(d.mediosPago)
       setDescripcion(d.descripcion)
       setElegidos(d.elegidos)
@@ -429,8 +442,26 @@ export function FormularioProveedor({
   const errorDescripcion = descripcion.trim() && contienePII(descripcion) ? MENSAJE_PII : null
   const errorZona = zonaTexto.trim() && contienePII(zonaTexto) ? MENSAJE_PII : null
   const errorDireccion = direccion.trim() && contienePII(direccion) ? MENSAJE_PII : null
+  const errorNombreNegocio =
+    tipo === 'microempresa' && nombreNegocio.trim()
+      ? contienePII(nombreNegocio)
+        ? MENSAJE_PII
+        : nombreNegocio.trim().length < 3
+          ? 'El nombre del negocio debe tener al menos 3 caracteres.'
+          : nombreNegocio.trim().length > 60
+            ? 'El nombre del negocio no puede superar los 60 caracteres.'
+            : null
+      : null
+
+  // Horario exacto: si se llenan ambos, hora_hasta debe ser posterior a hora_desde (ADR 0027)
+  const errorHorario =
+    horaDesde && horaHasta && horaHasta <= horaDesde
+      ? 'La hora de cierre debe ser posterior a la hora de apertura.'
+      : null
 
   const nombreValido = nombre.trim().length >= 3 && nombre.trim().length <= 60
+  const nombreNegocioValido = !errorNombreNegocio
+  const horarioValido = !errorHorario
   const telefonoValido = /^[0-9+()\- ]{7,20}$/.test(telefono.trim())
 
   // El barrio es el dato principal y obligatorio; la comuna es secundaria
@@ -450,6 +481,8 @@ export function FormularioProveedor({
 
   const puedeGuardar =
     nombreValido &&
+    nombreNegocioValido &&
+    horarioValido &&
     telefonoValido &&
     hayUbicacion &&
     modalidad.length > 0 &&
@@ -457,7 +490,7 @@ export function FormularioProveedor({
     !errorDescripcion &&
     !errorZona &&
     !errorDireccion &&
-    descripcion.length <= 300 &&
+    descripcion.length <= 200 &&
     autorizo &&
     !subiendoFoto &&
     !guardando
@@ -494,7 +527,17 @@ export function FormularioProveedor({
     setPropuestas((prev) =>
       prev.some((x) => x.nombre.toLowerCase() === nombre.toLowerCase() && x.grupo === grupo)
         ? prev
-        : [...prev, { nombre, grupo, modo: 'normal', precio_desde: null, unidad: null }],
+        : [
+            ...prev,
+            {
+              nombre,
+              grupo,
+              modo: 'normal',
+              precio_desde: null,
+              precio_hasta: null,
+              unidad: null,
+            },
+          ],
     )
     setEscribiendo((prev) => ({ ...prev, [grupo]: '' }))
   }
@@ -511,7 +554,16 @@ export function FormularioProveedor({
         return prev.filter((o) => o.oficio_id !== id)
       }
       if (prev.length >= TOPE_OFICIOS) return prev
-      return [...prev, { oficio_id: id, modo: 'normal', precio_desde: null, unidad: null }]
+      return [
+        ...prev,
+        {
+          oficio_id: id,
+          modo: 'normal',
+          precio_desde: null,
+          precio_hasta: null,
+          unidad: null,
+        },
+      ]
     })
   }
 
@@ -550,6 +602,10 @@ export function FormularioProveedor({
       p_acepto_direccion: autorizoDireccion,
       p_direccion_version: autorizoDireccion ? AUTORIZACION_DIRECCION_VERSION : null,
       p_token: token ?? null,
+      p_nombre_negocio:
+        tipo === 'microempresa' && nombreNegocio.trim() ? nombreNegocio.trim() : null,
+      p_hora_desde: horaDesde ? horaDesde : null,
+      p_hora_hasta: horaHasta ? horaHasta : null,
     })
 
     if (rpcError) {
@@ -697,8 +753,11 @@ export function FormularioProveedor({
 
     figura: {
       titulo: 'Bajo qué figura',
-      resumen: TIPOS_PROVEEDOR.find((t) => t.valor === tipo)?.etiqueta ?? '',
-      falta: false,
+      resumen:
+        tipo === 'microempresa' && nombreNegocio.trim()
+          ? `Microempresa · ${nombreNegocio.trim()}`
+          : (TIPOS_PROVEEDOR.find((t) => t.valor === tipo)?.etiqueta ?? ''),
+      falta: tipo === 'microempresa' && !!errorNombreNegocio,
       cuerpo: (
         <fieldset>
           <legend className="mb-2 text-base font-medium">¿Cómo trabajas?</legend>
@@ -709,6 +768,30 @@ export function FormularioProveedor({
               </Chip>
             ))}
           </div>
+
+          {tipo === 'microempresa' && (
+            <div className="mt-4">
+              <Label htmlFor="nombreNegocio">
+                Nombre del negocio{' '}
+                <span className="font-normal text-muted-foreground">(opcional)</span>
+              </Label>
+              <Input
+                id="nombreNegocio"
+                value={nombreNegocio}
+                onChange={(e) => setNombreNegocio(e.target.value)}
+                maxLength={60}
+                placeholder="Taller Hermanos Gómez, Costuras Doña Rosa…"
+                className="mt-1"
+              />
+              <p className="mt-1 text-sm text-muted-foreground">
+                Si tu negocio tiene un nombre comercial que la gente reconoce,
+                escríbelo aquí.
+              </p>
+              {errorNombreNegocio && (
+                <p className="mt-1 text-sm text-destructive">{errorNombreNegocio}</p>
+              )}
+            </div>
+          )}
         </fieldset>
       ),
     },
@@ -1026,39 +1109,86 @@ export function FormularioProveedor({
     disponibilidad: {
       titulo: 'Días y horas',
       resumen:
-        dias.length === 0
+        dias.length === 0 && !horaDesde && !horaHasta
           ? 'Sin días marcados'
-          : `${dias.length} ${dias.length === 1 ? 'día' : 'días'}`,
-      falta: false,
+          : [
+              dias.length > 0 ? `${dias.length} ${dias.length === 1 ? 'día' : 'días'}` : null,
+              horaDesde && horaHasta ? `${horaDesde} a ${horaHasta}` : null,
+            ]
+              .filter(Boolean)
+              .join(' · '),
+      falta: !!errorHorario,
       cuerpo: (
-        <fieldset>
-          <legend className="mb-2 text-base font-medium">
-            ¿Qué días? <span className="font-normal text-muted-foreground">(opcional)</span>
-          </legend>
-          <div className="flex flex-wrap gap-2">
-            {DIAS.map((d) => (
-              <Chip
-                key={d.valor}
-                activo={dias.includes(d.valor)}
-                onClick={() => setDias((p) => alternar(p, d.valor))}
-              >
-                <span className="sr-only">{d.etiqueta}</span>
-                <span aria-hidden="true">{d.corta}</span>
-              </Chip>
-            ))}
+        <div className="space-y-4">
+          <fieldset>
+            <legend className="mb-2 text-base font-medium">
+              ¿Qué días? <span className="font-normal text-muted-foreground">(opcional)</span>
+            </legend>
+            <div className="flex flex-wrap gap-2">
+              {DIAS.map((d) => (
+                <Chip
+                  key={d.valor}
+                  activo={dias.includes(d.valor)}
+                  onClick={() => setDias((p) => alternar(p, d.valor))}
+                >
+                  <span className="sr-only">{d.etiqueta}</span>
+                  <span aria-hidden="true">{d.corta}</span>
+                </Chip>
+              ))}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {FRANJAS.map((f) => (
+                <Chip
+                  key={f.valor}
+                  activo={franjas.includes(f.valor)}
+                  onClick={() => setFranjas((p) => alternar(p, f.valor))}
+                >
+                  {f.etiqueta}
+                </Chip>
+              ))}
+            </div>
+          </fieldset>
+
+          <div>
+            <Label className="text-base font-medium">
+              Horario exacto{' '}
+              <span className="font-normal text-muted-foreground">(opcional)</span>
+            </Label>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Si tienes un horario fijo de atención, puedes indicarlo además de
+              las franjas.
+            </p>
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="flex-1">
+                <Label htmlFor="horaDesde" className="text-xs text-muted-foreground">
+                  Desde las
+                </Label>
+                <Input
+                  id="horaDesde"
+                  type="time"
+                  value={horaDesde}
+                  onChange={(e) => setHoraDesde(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="horaHasta" className="text-xs text-muted-foreground">
+                  Hasta las
+                </Label>
+                <Input
+                  id="horaHasta"
+                  type="time"
+                  value={horaHasta}
+                  onChange={(e) => setHoraHasta(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            {errorHorario && (
+              <p className="mt-1 text-sm text-destructive">{errorHorario}</p>
+            )}
           </div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {FRANJAS.map((f) => (
-              <Chip
-                key={f.valor}
-                activo={franjas.includes(f.valor)}
-                onClick={() => setFranjas((p) => alternar(p, f.valor))}
-              >
-                {f.etiqueta}
-              </Chip>
-            ))}
-          </div>
-        </fieldset>
+        </div>
       ),
     },
 
@@ -1330,7 +1460,7 @@ export function FormularioProveedor({
                                   // se dejara puesto, el CHECK de la base rechaza
                                   // el guardado con un mensaje que nadie entiende.
                                   ...(m.valor === 'gratis' || m.valor === 'aporte'
-                                    ? { precio_desde: null, unidad: null }
+                                    ? { precio_desde: null, precio_hasta: null, unidad: null }
                                     : {}),
                                 })
                               }
@@ -1356,6 +1486,22 @@ export function FormularioProveedor({
                               }
                               placeholder="Desde cuánto (opcional)"
                               aria-label={`Precio desde, ${oficio?.nombre ?? ''}`}
+                              className="min-w-0 flex-1"
+                            />
+                            <Input
+                              type="number"
+                              inputMode="numeric"
+                              min={0}
+                              step={1000}
+                              value={e.precio_hasta ?? ''}
+                              onChange={(ev) =>
+                                cambiarOficio(e.oficio_id, {
+                                  precio_hasta:
+                                    ev.target.value === '' ? null : Number(ev.target.value),
+                                })
+                              }
+                              placeholder="Hasta cuánto (opcional)"
+                              aria-label={`Precio hasta, ${oficio?.nombre ?? ''}`}
                               className="min-w-0 flex-1"
                             />
                             <Select
@@ -1418,7 +1564,7 @@ export function FormularioProveedor({
                                 cambiarPropuesta(x.nombre, {
                                   modo: m.valor as ModoPrecio,
                                   ...(m.valor === 'gratis' || m.valor === 'aporte'
-                                    ? { precio_desde: null, unidad: null }
+                                    ? { precio_desde: null, precio_hasta: null, unidad: null }
                                     : {}),
                                 })
                               }
@@ -1444,6 +1590,22 @@ export function FormularioProveedor({
                               }
                               placeholder="Desde cuánto (opcional)"
                               aria-label={`Precio desde, ${x.nombre}`}
+                              className="min-w-0 flex-1"
+                            />
+                            <Input
+                              type="number"
+                              inputMode="numeric"
+                              min={0}
+                              step={1000}
+                              value={x.precio_hasta ?? ''}
+                              onChange={(ev) =>
+                                cambiarPropuesta(x.nombre, {
+                                  precio_hasta:
+                                    ev.target.value === '' ? null : Number(ev.target.value),
+                                })
+                              }
+                              placeholder="Hasta cuánto (opcional)"
+                              aria-label={`Precio hasta, ${x.nombre}`}
                               className="min-w-0 flex-1"
                             />
                             <Select
@@ -1507,13 +1669,13 @@ export function FormularioProveedor({
             id="descripcion"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
-            maxLength={300}
+            maxLength={200}
             rows={3}
             placeholder="Llevo quince años cosiendo. Trabajo rápido y entrego a tiempo."
             className="mt-1"
           />
           <p className="mt-1 text-sm text-muted-foreground">
-            {descripcion.length}/300. No pongas otro teléfono ni tu dirección: el
+            {descripcion.length}/200. No pongas otro teléfono ni tu dirección: el
             número de arriba ya sale en tu ficha.
           </p>
           {errorDescripcion && (
@@ -1833,40 +1995,41 @@ export function FormularioProveedor({
   }
 
   // ─────────────────────────────────────────────────────────────────
-  // 3 · El alta, en seis pasos cortos y no diez secciones de una sentada:
-  //     pedido literal del cliente, con «cuánto falta» siempre a la vista.
-  //
-  //     Nombrados y no numerados —«Paso 2 de 6» no dice de qué es el
-  //     2—, mismo criterio que ya usa `formulario-publicar-servicio.tsx`
-  //     y el asistente de `formulario-registro.tsx`: `MarcoFlujo` ya trae
-  //     esa barra con `pasos`/`pasoActual`.
-  //
-  //     Los pasos se abren aquí y no saltan a /perfil a propósito:
-  //     `guardar_proveedor` escribe la ficha entera de una vez —nombre,
-  //     teléfono, municipio, zona y al menos un oficio son NOT NULL—, así
-  //     que antes de publicar no hay ficha de la que colgar una pantalla
-  //     suelta. Después de publicar sí, y la 15 lleva a cada una.
+  // 3 · El alta, en tres pasos organizados (ADR 0027):
+  //     1: Cuéntanos sobre ti (quien, figura, contacto, foto)
+  //     2: Cuéntanos qué ofreces (oficios, presentacion)
+  //     3: ¿Cómo pueden encontrarte? (ciudad, zonas, disponibilidad, matricula, permiso)
   // ─────────────────────────────────────────────────────────────────
 
   const PASOS: { nombre: string; claves: ClaveSeccion[] }[] = [
-    { nombre: 'Quién eres', claves: ['quien', 'figura'] },
-    { nombre: 'Contacto', claves: ['contacto'] },
-    { nombre: 'Ubicación', claves: ['ciudad', 'zonas'] },
-    { nombre: 'Qué ofreces', claves: ['oficios', 'disponibilidad', 'presentacion'] },
-    { nombre: 'Tu foto', claves: ['foto'] },
-    { nombre: 'Confirmar', claves: ['matricula', 'permiso'] },
+    { nombre: 'Cuéntanos sobre ti', claves: ['quien', 'figura', 'contacto', 'foto'] },
+    { nombre: 'Cuéntanos qué ofreces', claves: ['oficios', 'presentacion'] },
+    {
+      nombre: '¿Cómo pueden encontrarte?',
+      claves: ['ciudad', 'zonas', 'disponibilidad', 'matricula', 'permiso'],
+    },
   ]
 
-  // Falta algo más que lo que ya marca `BLOQUES[c].falta` en los pasos de
-  // ubicación (el filtro de PII de la dirección) y de foto (que no se
-  // avance con la subida a medias).
+  // Falta algo más que lo que ya marca `BLOQUES[c].falta`:
+  // Paso 1: quien, contacto, foto no subiendo, figura sin error
+  // Paso 2: oficios elegidos/propuestos, presentación dentro del tope y sin PII
+  // Paso 3: ciudad, zonas/ubicación, dirección sin PII, horario válido, y permiso aceptado
   const pasoValido: Record<number, boolean> = {
-    1: !BLOQUES.quien.falta,
-    2: !BLOQUES.contacto.falta,
-    3: !BLOQUES.ciudad.falta && !BLOQUES.zonas.falta && !errorDireccion,
-    4: !BLOQUES.oficios.falta,
-    5: !subiendoFoto,
-    6: !BLOQUES.permiso.falta,
+    1:
+      !BLOQUES.quien.falta &&
+      !BLOQUES.contacto.falta &&
+      !BLOQUES.figura.falta &&
+      !subiendoFoto,
+    2:
+      !BLOQUES.oficios.falta &&
+      !errorDescripcion &&
+      descripcion.length <= 200,
+    3:
+      !BLOQUES.ciudad.falta &&
+      !BLOQUES.zonas.falta &&
+      !errorDireccion &&
+      !errorHorario &&
+      !BLOQUES.permiso.falta,
   }
 
   return (
@@ -1886,7 +2049,7 @@ export function FormularioProveedor({
               Atrás
             </Button>
           )}
-          {paso < 6 ? (
+          {paso < 3 ? (
             <Button
               type="button"
               className="flex-1"
@@ -1926,7 +2089,7 @@ export function FormularioProveedor({
           esto no se pide todavía porque hace falta que la ficha exista
           primero. Va en el último paso para que no quede como una
           sorpresa después de publicar. */}
-      {paso === 6 && (
+      {paso === 3 && (
         <p className="mt-4 text-base text-muted-foreground">
           Después de publicar: alguien de {RESPONSABLE_SERVICIOS} te llama para
           verificar tu teléfono, y desde tu perfil puedes dar la referencia de
