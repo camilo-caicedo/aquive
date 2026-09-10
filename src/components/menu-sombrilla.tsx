@@ -21,7 +21,7 @@ import { HojaAccion } from '@/components/hoja-accion'
 // igual que estas otras tres: son información del sitio, no «lo mío»
 // (mismo criterio que `TAMBIEN` en navegacion.tsx).
 const ENLACES_MENU: { href: string; etiqueta: string; Icono: LucideIcon }[] = [
-  { href: '/', etiqueta: 'Bienvenida', Icono: Sparkles },
+  { href: '/', etiqueta: 'Inicio', Icono: Sparkles },
   { href: '/quienes-somos', etiqueta: 'Quiénes somos', Icono: Info },
   { href: '/ayuda', etiqueta: 'Preguntas frecuentes', Icono: HelpCircle },
   { href: '/aliados', etiqueta: 'Aliados', Icono: HandHeart },

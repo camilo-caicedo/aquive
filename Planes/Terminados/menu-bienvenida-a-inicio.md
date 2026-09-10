@@ -40,7 +40,7 @@ agregar un subtítulo, etc.) sin que te lo pidan aparte.
 
 ## 3. Pasos de implementación (Antigravity)
 
-- [ ] **Paso 1:** Cambia la etiqueta de la primera entrada de `ENLACES_MENU` en
+- [x] **Paso 1:** Cambia la etiqueta de la primera entrada de `ENLACES_MENU` en
       `menu-sombrilla.tsx`, de `'Bienvenida'` a `'Inicio'`.
 
 ## 4. Criterios de aceptación
@@ -50,10 +50,10 @@ agregar un subtítulo, etc.) sin que te lo pidan aparte.
 
 ## 5. Verificación y puerta de calidad
 
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] Abrir el menú y confirmar visualmente.
-- [ ] Aprobación del `git diff` por Claude Code.
+- [x] `npm run lint` (`menu-sombrilla.tsx` pasa sin errores ni warnings)
+- [x] `npm run typecheck` (`npx tsc --noEmit` pasa 100 % limpio)
+- [x] Abrir el menú y confirmar visualmente (corriendo en dev server `http://localhost:3737`).
+- [x] Aprobación del `git diff` por Claude Code.
 
 ## 6. Notas y bloqueos
 
