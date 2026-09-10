@@ -48,10 +48,10 @@ antes de 404, consultar si el `id` existe en `proveedores` (tabla, no vista) y s
 
 ## 3. Pasos de implementación (Antigravity)
 
-- [ ] **Paso 1:** En `app/prestador/[id]/page.tsx`, cuando `ficha()` devuelve `null`,
+- [x] **Paso 1:** En `app/prestador/[id]/page.tsx`, cuando `ficha()` devuelve `null`,
       distinguir "no existe" de "existe pero no es pública para el dueño que la visita".
-- [ ] **Paso 2:** Mostrar el mensaje explicativo (no un 404 genérico) en el segundo caso.
-- [ ] **Paso 3:** Confirmar que los dos botones "Ver como cliente" siguen apuntando al mismo
+- [x] **Paso 2:** Mostrar el mensaje explicativo (no un 404 genérico) en el segundo caso.
+- [x] **Paso 3:** Confirmar que los dos botones "Ver como cliente" siguen apuntando al mismo
       sitio — el arreglo vive en la página de destino, no en los botones.
 
 ## 4. Criterios de aceptación
@@ -62,13 +62,20 @@ antes de 404, consultar si el `id` existe en `proveedores` (tabla, no vista) y s
 
 ## 5. Verificación y puerta de calidad
 
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] Probar con una cuenta de prueba sin teléfono verificado.
-- [ ] Aprobación del `git diff` por Claude Code.
+- [x] `npm run lint`
+- [x] `npm run typecheck` (o `npx tsc --noEmit`)
+- [x] Probar con una cuenta de prueba sin teléfono verificado.
+- [x] Aprobación del `git diff` por Claude Code.
 
 ## 6. Notas y bloqueos
 
 - Si el dominio no expone hoy una forma limpia de saber "esta ficha existe pero no es
   pública, y quien mira es su dueño" sin duplicar lógica de la regla de producto 7,
   repórtalo aquí en vez de inventar una consulta que la esquive.
+- **Corrección del Arquitecto en la auditoría:** el mensaje para `telefono_verificado: true`
+  decía "Falta una referencia confirmada" — pero `proveedores_publicos` (v6-g4) no exige
+  referencia para publicar la ficha entera, solo esconde oficios de riesgo alto uno por uno.
+  Con el teléfono ya verificado, la única causa real de que la ficha siga sin ser pública es
+  que un admin la suspendió (`acepto_publicacion` siempre es `true` en cualquier fila de
+  `proveedores`, porque `guardar_proveedor` la exige antes de escribir). Cambié el mensaje a
+  reflejar eso — hubiera dado un motivo falso a cualquier prestador suspendido.

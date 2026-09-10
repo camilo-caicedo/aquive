@@ -23,6 +23,10 @@ import { BotonChat } from '@/components/boton-chat'
 import { MarcoFlujo } from '@/components/marco-flujo'
 import { CriteriosResena } from '@/components/criterios-resena'
 import { BotonReportar } from '@/components/boton-reportar'
+import { Button } from '@/components/ui/button'
+import { createClient } from '@/lib/supabase/server'
+import { RESPONSABLE_SERVICIOS } from '@/lib/config'
+import type { MiProveedor } from '@/lib/types'
 
 export const metadata = { title: 'Ficha del proveedor' }
 
@@ -41,7 +45,37 @@ export default async function FichaPage({
   // El municipio viene dentro: era una segunda consulta desde aquí, y la
   // aplicación de Expo habría tenido que acordarse de repetirla.
   const ficha = await servidor.servicios.ficha({ id })
-  if (!ficha) notFound()
+  if (!ficha) {
+    const miFicha = await servidor.servicios.miFicha()
+    if (miFicha && miFicha.id === id) {
+      const supabase = await createClient()
+      const { data: mio } = await supabase.rpc('mi_proveedor', {})
+      const miProveedor = mio as MiProveedor | null
+      return (
+        <MarcoFlujo titulo="Mi ficha" volver="/servicios/soy-proveedor">
+          <div className="rounded-2xl bg-accent p-6 text-accent-foreground">
+            <h1 className="font-heading text-xl font-bold">Tu ficha todavía no se ve</h1>
+            <p className="mt-2 text-base">
+              {miProveedor?.telefono_verificado
+                ? // Si el teléfono ya está verificado y la ficha sigue sin
+                  // ser pública, la única causa que deja `proveedores_publicos`
+                  // (ver v6-g4) es que un admin la suspendió — la referencia
+                  // confirmada solo esconde oficios de riesgo alto, uno por
+                  // uno, nunca la ficha entera.
+                  'Un administrador suspendió tu ficha. Escríbenos si crees que fue un error.'
+                : `Alguien de ${RESPONSABLE_SERVICIOS} tiene que llamarte para verificar tu teléfono. Es lo único que comprobamos antes de publicar una ficha.`}
+            </p>
+            <div className="mt-6">
+              <Button render={<Link href="/servicios/soy-proveedor" />}>
+                Volver a mi ficha
+              </Button>
+            </div>
+          </div>
+        </MarcoFlujo>
+      )
+    }
+    notFound()
+  }
 
   // Lo que esta persona vende en «Hecho en el barrio». Va aparte de la
   // ficha y no dentro: un producto es de comunidad y un oficio de
