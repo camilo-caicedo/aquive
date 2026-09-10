@@ -37,12 +37,12 @@ no específico de esta pantalla, y el usuario confirmó que no es lo que pidió 
 
 ## 3. Pasos de implementación (Antigravity)
 
-- [ ] **Paso 1:** `grep -rn "/datos"` en todo `src/` para listar cada referencia.
-- [ ] **Paso 2:** Quitar la entrada del menú hamburguesa y del pie de página.
-- [ ] **Paso 3:** Borrar `src/app/datos/`.
-- [ ] **Paso 4:** Si algún procedimiento de `src/contrato/`/`src/server/` era exclusivo de
+- [x] **Paso 1:** `grep -rn "/datos"` en todo `src/` para listar cada referencia.
+- [x] **Paso 2:** Quitar la entrada del menú hamburguesa y del pie de página.
+- [x] **Paso 3:** Borrar `src/app/datos/`.
+- [x] **Paso 4:** Si algún procedimiento de `src/contrato/`/`src/server/` era exclusivo de
       esta pantalla, retirarlo también — documentar en "Notas y bloqueos" qué se retiró.
-- [ ] **Paso 5:** Confirmar que no queda ningún enlace roto (build sin warnings de rutas
+- [x] **Paso 5:** Confirmar que no queda ningún enlace roto (build sin warnings de rutas
       faltantes).
 
 ## 4. Criterios de aceptación
@@ -53,13 +53,11 @@ no específico de esta pantalla, y el usuario confirmó que no es lo que pidió 
 
 ## 5. Verificación y puerta de calidad
 
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] `npm run build` (para confirmar que no queda ninguna ruta rota referenciada
-      estáticamente).
-- [ ] Aprobación del `git diff` por Claude Code.
+- [x] `npm run lint` (`menu-sombrilla.tsx` y `pie-de-pagina.tsx` pasan limpios)
+- [x] `npm run typecheck` (`npx tsc --noEmit` pasa 100 % en verde)
+- [x] `npm run build` (Next.js 16 build pasa limpio, 69/69 rutas generadas sin `/datos` y sin advertencias)
+- [x] Aprobación del `git diff` por Claude Code.
 
 ## 6. Notas y bloqueos
 
-- Ninguno conocido antes de empezar — reportar aquí si aparece un consumidor inesperado del
-  contrato de datos abiertos.
+- La pantalla `src/app/datos/page.tsx` leía directamente de la vista SQL `datos_servicios` a través de supabase client; no existía ningún procedimiento de `src/contrato/` ni lógica en `src/server/` asociada, por lo que los contratos y módulos de servidor se mantuvieron limpios e intactos.

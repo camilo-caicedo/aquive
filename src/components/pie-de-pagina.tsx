@@ -74,11 +74,6 @@ export function PieDePagina() {
                 Cómo cuidarte
               </Link>
             </li>
-            <li>
-              <Link href="/datos" className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4">
-                Datos abiertos
-              </Link>
-            </li>
           </ul>
         </nav>
       </div>

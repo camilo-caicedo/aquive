@@ -5,7 +5,6 @@ import Link from 'next/link'
 
 import isotipo from '@/../docs/marca/isotipo-carrito.png'
 import {
-  BarChart3,
   HandHeart,
   HelpCircle,
   Info,
@@ -17,15 +16,14 @@ import { HojaAccion } from '@/components/hoja-accion'
 
 // El menú de la sombrilla (ADR 0018). La bienvenida va primera: es lo que
 // se pierde en un toque —ir directo a «/»— y lo que este menú compensa.
-// «Aliados» y «Datos abiertos» no cuelgan de ninguna celda de la barra,
-// igual que estas otras tres: son información del sitio, no «lo mío»
-// (mismo criterio que `TAMBIEN` en navegacion.tsx).
+// «Aliados» no cuelga de ninguna celda de la barra, igual que estas otras
+// tres: son información del sitio, no «lo mío» (mismo criterio que `TAMBIEN`
+// en navegacion.tsx).
 const ENLACES_MENU: { href: string; etiqueta: string; Icono: LucideIcon }[] = [
   { href: '/', etiqueta: 'Inicio', Icono: Sparkles },
   { href: '/quienes-somos', etiqueta: 'Quiénes somos', Icono: Info },
   { href: '/ayuda', etiqueta: 'Preguntas frecuentes', Icono: HelpCircle },
   { href: '/aliados', etiqueta: 'Aliados', Icono: HandHeart },
-  { href: '/datos', etiqueta: 'Datos abiertos', Icono: BarChart3 },
   { href: '/contacto', etiqueta: 'Contacto', Icono: Mail },
 ]
 
