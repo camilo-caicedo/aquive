@@ -57,6 +57,7 @@ const FILAS: {
   {
     etiqueta: 'Habeas data',
     valor: CORREO_HABEAS_DATA_SERVICIOS,
+    textoEnlace: 'Escríbenos para tu habeas data',
     href: `mailto:${CORREO_HABEAS_DATA_SERVICIOS}`,
     // Es el mismo buzón, y decirlo evita que alguien escriba dos veces
     // creyendo que la primera fue al sitio equivocado.
