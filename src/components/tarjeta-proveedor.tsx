@@ -107,7 +107,7 @@ export function TarjetaProveedor({ proveedor }: { proveedor: EnListado }) {
             >
               <span className="min-w-0">{o.nombre}</span>
               <span className="text-muted-foreground sm:shrink-0 sm:text-right">
-                {precioLegible(o.modo, o.precio_desde, o.unidad)}
+                {precioLegible(o.modo, o.precio_desde, o.unidad, o.precio_hasta)}
               </span>
             </li>
           ))}
@@ -142,7 +142,7 @@ export function TarjetaProveedor({ proveedor }: { proveedor: EnListado }) {
             href={`/prestador/${proveedor.id}`}
             className="pulsable border-enlace text-enlace hover:bg-accent ml-auto inline-flex min-h-12 shrink-0 items-center rounded-full border px-5 text-base font-semibold transition-colors"
           >
-            Ver ficha
+            Ver perfil
           </Link>
         </div>
         </div>

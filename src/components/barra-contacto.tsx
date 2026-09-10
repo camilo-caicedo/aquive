@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ClipboardList, MessageCircle, Phone } from 'lucide-react'
+import { MessageCircle, Phone } from 'lucide-react'
 import { enlaceWhatsapp } from '@/lib/contacto'
 import { BotonChat } from '@/components/boton-chat'
 import { Button } from '@/components/ui/button'
@@ -12,14 +12,17 @@ import { Button } from '@/components/ui/button'
  * subir para escribir. Aquí están siempre, y el aviso corto va con ellos
  * porque es el momento en que se decide (regla 5).
  *
- * ⚠ ADR 0017: «Pedir este servicio» pasa a ser la acción principal —la
- * única en lima (regla de interfaz 2)— porque es el flujo nuevo: una orden
- * que el prestador acepta o rechaza, con seguimiento en `/mis-solicitudes`.
- * WhatsApp y llamar se quedan visibles y sin relleno, no escondidos detrás
- * de un menú: el cliente insiste en que sigan a la vista para quien
- * prefiere resolverlo directo. Y cada uno dice qué va a pasar ANTES de
- * tocarlo —que WhatsApp abre WhatsApp, que llamar marca— para que nadie
- * toque un botón sin saber a dónde lo lleva.
+ * ⚠ ADR 0017 y ADR 0023: «Pedir este servicio» YA NO vive aquí. Desde que
+ * la ficha absorbió el flujo de pedir (ADR 0023), el botón lima de la
+ * pantalla —la única acción principal, regla de interfaz 2— es «Solicitar
+ * servicio», inline dentro de la ficha, junto al selector de oficio
+ * («¿Qué necesitas?», `selector-y-pedido-de-oficio.tsx`). Esta barra se
+ * quedó con los contactos directos: ninguno es lima, y por eso WhatsApp,
+ * llamar y el chat siguen visibles y sin relleno, no escondidos detrás de
+ * un menú — el cliente insiste en que sigan a la vista para quien prefiere
+ * resolverlo directo. Cada uno dice qué va a pasar ANTES de tocarlo —que
+ * WhatsApp abre WhatsApp, que llamar marca— para que nadie toque un botón
+ * sin saber a dónde lo lleva.
  *
  * WhatsApp ancho y los otros dos en botones redondos al lado, no tres
  * botones iguales: casi todo el mundo escribe por WhatsApp primero, y los
@@ -54,16 +57,7 @@ export function BarraContacto({
 }) {
   return (
     <>
-      <Button
-        className="h-14 w-full text-lg"
-        nativeButton={false}
-        render={<Link href={`/servicios/publicar?proveedor=${proveedorId}`} />}
-      >
-        <ClipboardList className="size-6" aria-hidden="true" />
-        Pedir este servicio
-      </Button>
-
-      <p className="mt-2 text-sm text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         Se lo mandas a {nombre} y te avisamos cuando responda. O contáctalo
         directo: WhatsApp abre la conversación fuera de AquíVe, y llamar marca
         de una vez.{' '}

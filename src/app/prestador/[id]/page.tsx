@@ -20,6 +20,7 @@ import { MarcoFlujo } from '@/components/marco-flujo'
 import { CriteriosResena, NIVELES_RESENA } from '@/components/criterios-resena'
 import { BotonReportar } from '@/components/boton-reportar'
 import { BotonInfoDinero } from '@/components/boton-info-dinero'
+import { SelectorYPedidoDeOficio } from '@/components/selector-y-pedido-de-oficio'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 import { RESPONSABLE_SERVICIOS } from '@/lib/config'
@@ -156,11 +157,30 @@ export default async function FichaPage({
           >
             <span className="text-base font-medium">{o.nombre}</span>
             <span className="text-base text-muted-foreground">
-              {precioLegible(o.modo, o.precio_desde, o.unidad)}
+              {precioLegible(o.modo, o.precio_desde, o.unidad, o.precio_hasta)}
             </span>
           </li>
         ))}
       </ul>
+
+      {/* Pedir sin salir de la ficha (ADR 0023): bloque embebido para solicitar servicio */}
+      {ficha.oficios.length > 0 && (
+        <section className="mt-8 rounded-2xl bg-card p-4 shadow-canto">
+          <h2 className="font-heading text-2xl font-extrabold tracking-tight">
+            ¿Qué necesitas?
+          </h2>
+          <p className="mt-1 text-base text-muted-foreground">
+            Elige el servicio que requieres y describe tu solicitud.
+          </p>
+          <div className="mt-4">
+            <SelectorYPedidoDeOficio
+              proveedorId={id}
+              oficios={ficha.oficios}
+              textoBoton="Solicitar servicio"
+            />
+          </div>
+        </section>
+      )}
 
       {/* Lo que vende, debajo de lo que hace. Es la misma persona y el
           mismo trato —se acuerda por fuera, sin comisión—, así que no hace

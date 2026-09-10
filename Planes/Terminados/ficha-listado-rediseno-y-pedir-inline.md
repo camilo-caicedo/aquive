@@ -68,14 +68,14 @@ componente de selección de oficio.
 
 ## 3. Pasos de implementación (Antigravity)
 
-- [ ] **Paso 1 [Extraer el selector]:** saca el bloque de selección de oficio + envío de
+- [x] **Paso 1 [Extraer el selector]:** saca el bloque de selección de oficio + envío de
       `formulario-publicar-servicio.tsx` a un componente compartido.
-- [ ] **Paso 2 [Ficha absorbe pedir]:** embebe ese componente en `prestador/[id]/page.tsx`,
+- [x] **Paso 2 [Ficha absorbe pedir]:** embebe ese componente en `prestador/[id]/page.tsx`,
       retira el botón único de `barra-contacto.tsx`, decide la acción principal de la
       pantalla.
-- [ ] **Paso 3 [Tarjeta de listado]:** "Ver perfil", precio en rango.
-- [ ] **Paso 4 [Qué hace / Qué vende]:** ajuste visual según el mockup.
-- [ ] **Paso 5:** confirma que `/servicios/publicar?proveedor=<id>` sigue funcionando de
+- [x] **Paso 3 [Tarjeta de listado]:** "Ver perfil", precio en rango.
+- [x] **Paso 4 [Qué hace / Qué vende]:** ajuste visual según el mockup.
+- [x] **Paso 5:** confirma que `/servicios/publicar?proveedor=<id>` sigue funcionando de
       punta a punta, usando el componente compartido.
 
 ## 4. Criterios de aceptación
@@ -89,17 +89,28 @@ componente de selección de oficio.
 
 ## 5. Verificación y puerta de calidad
 
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] Probar el flujo completo: buscar → ver ficha → pedir servicio, sin salir de la ficha.
-- [ ] Probar `/servicios/publicar?proveedor=<id>` por separado (ruta de respaldo).
-- [ ] Un prestador con un solo oficio y uno con varios — el selector se comporta igual que
+- [x] `npm run lint`
+- [x] `npm run typecheck` (o `npx tsc --noEmit`)
+- [x] Probar el flujo completo: buscar → ver ficha → pedir servicio, sin salir de la ficha.
+- [x] Probar `/servicios/publicar?proveedor=<id>` por separado (ruta de respaldo).
+- [x] Un prestador con un solo oficio y uno con varios — el selector se comporta igual que
       hoy en `formulario-publicar-servicio.tsx` (una sola opción).
-- [ ] Sin warnings de build.
-- [ ] Aprobación del `git diff` por Claude Code.
+- [x] Sin warnings de build.
+- [x] Aprobación del `git diff` por Claude Code.
 
 ## 6. Notas y bloqueos
 
 - Si extraer el selector resulta más complejo de lo esperado (props muy distintas entre el
   contexto de la ficha y el de `/servicios/publicar`), repórtalo aquí en vez de duplicar la
   lógica silenciosamente — es justo lo que el ADR 0023 pidió evitar.
+- **Corrección del Arquitecto en la auditoría:** `formulario-publicar-servicio.tsx` (la
+  ruta de respaldo) perdió el `accion={...}` de `MarcoFlujo` — el botón "Enviar pedido"
+  quedó inline dentro del contenido en vez de la barra fija. Esa pantalla es un FLUJO, y la
+  regla de interfaz 9 (con su propia justificación en el comentario de `marco-flujo.tsx`:
+  "le roba 64px al campo que se está escribiendo") exige la acción en barra fija ahí. Partí
+  `SelectorYPedidoDeOficio` en un hook (`useSelectorYPedidoDeOficio`) + dos piezas
+  (`CamposSelectorYPedido`, `BotonSelectorYPedido`) para poder poner el botón en `accion`
+  sin duplicar el estado ni la lógica de envío — `SelectorYPedidoDeOficio` se queda como
+  antes (todo junto, inline) para la ficha, que sí es un destino y no necesita barra fija
+  (ADR 0023). También corregí el comentario de `barra-contacto.tsx`, que seguía describiendo
+  el botón "Pedir este servicio" que ya no vive ahí.
