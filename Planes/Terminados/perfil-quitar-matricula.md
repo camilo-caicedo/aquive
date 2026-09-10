@@ -31,9 +31,9 @@ decisión de producto nueva que no está en este plan.
 
 ## 3. Pasos de implementación (Antigravity)
 
-- [ ] **Paso 1:** Quita el array `deLaMatricula` y su inclusión en `filas`, en
+- [x] **Paso 1:** Quita el array `deLaMatricula` y su inclusión en `filas`, en
       `app/perfil/page.tsx`.
-- [ ] **Paso 2:** Confirma que la variable `matricula` (línea ~193,
+- [x] **Paso 2:** Confirma que la variable `matricula` (línea ~193,
       `servidor.servicios.miMatricula()`) sigue usándose en otro lado de la pantalla o, si
       quedó huérfana, quítala también — sin dejar código muerto.
 
@@ -46,10 +46,10 @@ decisión de producto nueva que no está en este plan.
 
 ## 5. Verificación y puerta de calidad
 
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] Revisar visualmente `/perfil` — sin la fila, sin huecos ni bordes raros donde estaba.
-- [ ] Aprobación del `git diff` por Claude Code.
+- [x] `npm run lint`
+- [x] `npm run typecheck` (o `npx tsc --noEmit`)
+- [x] Revisar visualmente `/perfil` — sin la fila, sin huecos ni bordes raros donde estaba.
+- [x] Aprobación del `git diff` por Claude Code.
 
 ## 6. Notas y bloqueos
 

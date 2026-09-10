@@ -174,7 +174,6 @@ export default async function PerfilPage() {
     misProductos,
     misSolicitudes,
     misPublicaciones,
-    matricula,
     misOrdenes,
   ] = await Promise.all([
       supabase.rpc('mi_proveedor', {}),
@@ -188,9 +187,6 @@ export default async function PerfilPage() {
       // no lo sabía; desde el ADR 0006 cuelga de la cuenta.
       servidor.servicios.misSolicitudes(),
       servidor.comunidad.misPublicaciones(),
-      // El otro papel público, y el que se quedó sin puerta al retirarse
-      // `/registro` con el módulo de insumos (ADR 0014).
-      servidor.servicios.miMatricula(),
       // Lo que le han pedido A ÉL (ADR 0017). Vacía sin ficha propia: la
       // consulta ya filtra por dueño, así que no hace falta esperar a saber
       // si `proveedor` existe para pedirla.
@@ -342,22 +338,7 @@ export default async function PerfilPage() {
       ]
     : []
 
-  // Siempre visible, se tenga o no matrícula declarada: es la única puerta
-  // a `/perfil/matricula` desde que se fue `/registro`, y quien no la tenía
-  // no tenía cómo llegar a declararla.
-  const deLaMatricula: Fila[] = [
-    {
-      href: '/perfil/matricula',
-      Icono: BadgeCheck,
-      nombre: matricula ? 'Mi matrícula' : 'Agregar mi matrícula',
-      descripcion: matricula
-        ? 'Tu profesión y tu número. Una persona lo comprueba en el registro'
-        : 'Solo si tu profesión la exige: ingeniería, salud, derecho, psicología',
-      pista: matricula && !matricula.verificado ? 'sin verificar' : undefined,
-    },
-  ]
-
-  const filas = [...deLaCuenta, ...delCarne, ...deLaMatricula]
+  const filas = [...deLaCuenta, ...delCarne]
 
   return (
     <main className="animar-pantalla mx-auto max-w-lg px-4 py-6">
