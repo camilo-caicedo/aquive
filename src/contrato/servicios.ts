@@ -777,6 +777,17 @@ export const contratoServicios = {
     .output(z.array(Categoria)),
 
   /**
+   * Prestadores destacados para la portada. ADR 0021.
+   *
+   * Hasta 6 prestadores ordenados por volumen de servicios confirmados descendente.
+   * Reusa la vista pública `proveedores_publicos`, que filtra riesgo alto sin respaldo
+   * y suspendidos.
+   */
+  destacados: oc
+    .input(z.object({ municipio: z.string().regex(/^[0-9]{5}$/).optional().catch(undefined) }))
+    .output(z.array(EnListado)),
+
+  /**
    * Las zonas con gente, agregadas. Pantalla 08.
    *
    * Devuelve CUÁNTOS por zona, nunca dónde está nadie. La granularidad

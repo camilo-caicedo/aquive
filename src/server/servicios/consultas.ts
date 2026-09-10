@@ -429,6 +429,105 @@ export async function categorias(
 }
 
 /**
+ * Prestadores destacados para la portada. ADR 0021.
+ *
+ * Hasta 6 prestadores de `proveedores_publicos`, ordenados por
+ * `servicios_confirmados` desc (empate por `creado_at` desc).
+ */
+export async function destacados(
+  db: BaseDeDatos,
+  filtros: { municipio?: string },
+): Promise<EnListado[]> {
+  const condiciones = filtros.municipio
+    ? [eq(proveedoresPublicos.municipio, filtros.municipio)]
+    : []
+
+  const filas = await db
+    .select({
+      id: proveedoresPublicos.id,
+      nombreVisible: proveedoresPublicos.nombreVisible,
+      tipo: proveedoresPublicos.tipo,
+      telefonoVerificado: proveedoresPublicos.telefonoVerificado,
+      municipio: proveedoresPublicos.municipio,
+      municipioNombre: municipios.nombre,
+      zonaNombre: proveedoresPublicos.zonaNombre,
+      zonaTexto: proveedoresPublicos.zonaTexto,
+      modalidad: proveedoresPublicos.modalidad,
+      referenciasConfirmadas: proveedoresPublicos.referenciasConfirmadas,
+      serviciosConfirmados: proveedoresPublicos.serviciosConfirmados,
+      totalResenas: proveedoresPublicos.totalResenas,
+      cumplimiento: proveedoresPublicos.cumplimiento,
+      descripcion: proveedoresPublicos.descripcion,
+      foto: proveedoresPublicos.foto,
+      latitud: proveedoresPublicos.latitud,
+      longitud: proveedoresPublicos.longitud,
+    })
+    .from(proveedoresPublicos)
+    .leftJoin(municipios, eq(municipios.codigoDane, proveedoresPublicos.municipio))
+    .where(condiciones.length > 0 ? and(...condiciones) : undefined)
+    .orderBy(
+      desc(proveedoresPublicos.serviciosConfirmados),
+      desc(proveedoresPublicos.creadoAt),
+      asc(proveedoresPublicos.nombreVisible),
+    )
+    .limit(6)
+
+  const ids = filas.map((f) => f.id!).filter(Boolean)
+  const oficios = ids.length
+    ? await db
+        .select({
+          proveedorId: proveedorOficiosPublicos.proveedorId,
+          oficio_id: proveedorOficiosPublicos.oficioId,
+          nombre: proveedorOficiosPublicos.oficioNombre,
+          grupo: proveedorOficiosPublicos.grupo,
+          modo: proveedorOficiosPublicos.modo,
+          precio_desde: proveedorOficiosPublicos.precioDesde,
+          precio_hasta: proveedorOficiosPublicos.precioHasta,
+          unidad: proveedorOficiosPublicos.unidad,
+        })
+        .from(proveedorOficiosPublicos)
+        .where(inArray(proveedorOficiosPublicos.proveedorId, ids))
+        .orderBy(asc(proveedorOficiosPublicos.oficioNombre))
+    : []
+
+  const porProveedor = new Map<string, EnListado['oficios']>()
+  for (const o of oficios) {
+    const lista = porProveedor.get(o.proveedorId!) ?? []
+    lista.push({
+      oficio_id: o.oficio_id!,
+      nombre: o.nombre ?? '',
+      grupo: o.grupo,
+      modo: (o.modo ?? 'normal') as EnListado['oficios'][number]['modo'],
+      precio_desde: aNumeroONulo(o.precio_desde),
+      precio_hasta: aNumeroONulo(o.precio_hasta),
+      unidad: o.unidad as EnListado['oficios'][number]['unidad'],
+    })
+    porProveedor.set(o.proveedorId!, lista)
+  }
+
+  return filas.map((f) => ({
+    id: f.id!,
+    nombre_visible: f.nombreVisible ?? '',
+    tipo: f.tipo ?? 'persona',
+    telefono_verificado: f.telefonoVerificado ?? false,
+    municipio: f.municipio ?? '',
+    municipio_nombre: f.municipioNombre ?? null,
+    zona_nombre: f.zonaNombre,
+    zona_texto: f.zonaTexto,
+    modalidad: (f.modalidad ?? []) as EnListado['modalidad'],
+    referencias_confirmadas: aNumero(f.referenciasConfirmadas),
+    servicios_confirmados: aNumero(f.serviciosConfirmados),
+    total_resenas: aNumero(f.totalResenas),
+    cumplimiento: aNumeroONulo(f.cumplimiento),
+    descripcion: f.descripcion,
+    foto: f.foto ? urlPublica(`${f.foto}.webp`) : null,
+    latitud: aNumeroONulo(f.latitud),
+    longitud: aNumeroONulo(f.longitud),
+    oficios: porProveedor.get(f.id!) ?? [],
+  }))
+}
+
+/**
  * Las zonas con gente, agregadas.
  *
  * Devuelve CUÁNTOS por zona y nada más: esta consulta no toca coordenadas.

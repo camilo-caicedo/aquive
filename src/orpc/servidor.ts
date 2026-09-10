@@ -175,6 +175,7 @@ export const enrutador = os.router({
       },
     ),
     categorias: os.servicios.categorias.handler(({ input }) => servicios.categorias(db, input)),
+    destacados: os.servicios.destacados.handler(({ input }) => servicios.destacados(db, input)),
     zonas: os.servicios.zonas.handler(({ input }) => servicios.zonasConGente(db, input)),
     centroMunicipio: os.servicios.centroMunicipio.handler(({ input }) =>
       ubicacion.centroMunicipio(db, input.municipio),

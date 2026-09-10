@@ -3,6 +3,7 @@ import { Search, Briefcase, Heart } from 'lucide-react'
 
 import { servidor } from '@/orpc/local'
 import { TarjetaCategoria } from '@/components/tarjeta-categoria'
+import { TarjetaProveedor } from '@/components/tarjeta-proveedor'
 
 /**
  * La portada de quien ya está dentro.
@@ -19,9 +20,15 @@ import { TarjetaCategoria } from '@/components/tarjeta-categoria'
  *    principal).
  * 2. Las categorías con más gente, con foto, para que buscar un servicio
  *    quede a un clic de aquí y no a dos.
+ * 3. Destacados (ADR 0021): hasta 6 prestadores ordenados por servicios
+ *    confirmados, debajo de categorías. Si no hay prestadores, no se muestra
+ *    la sección (regla de interfaz 1).
  */
 export async function Inicio({ municipio }: { municipio?: string }) {
-  const categorias = await servidor.servicios.categorias({ municipio })
+  const [categorias, destacados] = await Promise.all([
+    servidor.servicios.categorias({ municipio }),
+    servidor.servicios.destacados({ municipio }),
+  ])
   const destacadas = categorias.slice(0, 6)
 
   return (
@@ -92,6 +99,17 @@ export async function Inicio({ municipio }: { municipio?: string }) {
           >
             Ver todas las categorías
           </Link>
+        </section>
+      )}
+
+      {destacados.length > 0 && (
+        <section className="mt-8">
+          <h2 className="font-heading text-2xl">Destacados</h2>
+          <ul className="revelar mt-4 space-y-3">
+            {destacados.map((p) => (
+              <TarjetaProveedor key={p.id} proveedor={p} />
+            ))}
+          </ul>
         </section>
       )}
     </main>

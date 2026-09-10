@@ -45,12 +45,12 @@ interfaz 1: primer pantallazo con dato real).
 
 ## 3. Pasos de implementación (Antigravity)
 
-- [ ] **Paso 1 [Contrato]:** agrega el procedimiento/campo de destacados a
+- [x] **Paso 1 [Contrato]:** agrega el procedimiento/campo de destacados a
       `src/contrato/servicios.ts`.
-- [ ] **Paso 2 [Dominio]:** implementa la consulta en `src/server/servicios/consultas.ts`,
+- [x] **Paso 2 [Dominio]:** implementa la consulta en `src/server/servicios/consultas.ts`,
       reusando `proveedoresPublicos`.
-- [ ] **Paso 3 [Procedimiento oRPC]:** conecta el procedimiento en `src/orpc/servidor.ts`.
-- [ ] **Paso 4 [UI]:** agrega la sección "Destacados" en `inicio.tsx`, debajo de categorías,
+- [x] **Paso 3 [Procedimiento oRPC]:** conecta el procedimiento en `src/orpc/servidor.ts`.
+- [x] **Paso 4 [UI]:** agrega la sección "Destacados" en `inicio.tsx`, debajo de categorías,
       reusando `TarjetaProveedor` si aplica.
 
 ## 4. Criterios de aceptación
@@ -63,12 +63,12 @@ interfaz 1: primer pantallazo con dato real).
 
 ## 5. Verificación y puerta de calidad
 
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] Probar `/inicio` con datos de prueba, y también con un municipio sin nadie (la sección
+- [x] `npm run lint`
+- [x] `npm run typecheck`
+- [x] Probar `/inicio` con datos de prueba, y también con un municipio sin nadie (la sección
       no debe aparecer).
-- [ ] Sin warnings de build.
-- [ ] Aprobación del `git diff` por Claude Code.
+- [x] Sin warnings de build.
+- [x] Aprobación del `git diff` por Claude Code.
 
 ## 6. Notas y bloqueos
 
