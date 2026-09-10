@@ -120,9 +120,9 @@ export default function AyudaPage() {
         </Button>
       </div>
 
-      {/* El otro extremo, en rojo pastel con texto negro (5,67:1): esto no
+      {/* Cartel de aviso en amarillo con texto negro (10,38:1): esto no
           es una línea de atención, y decirlo tarde no sirve de nada. */}
-      <div className="mt-6 rounded-2xl bg-familia-rojo p-4 text-foreground">
+      <div className="mt-6 rounded-2xl bg-familia-amarillo p-4 text-foreground">
         <p className="font-heading text-base">Si hay riesgo para alguien ahora</p>
         <p className="mt-2 text-base">
           Eso no es un reporte: es el <strong>123</strong>. AquíVe no atiende

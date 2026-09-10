@@ -57,11 +57,11 @@ El ítem "Contacto" de la navegación inferior de esta página (líneas ~150-157
 
 ## 3. Pasos de implementación (Antigravity)
 
-- [ ] **Paso 1:** Revisa si `--familia-amarillo` ya se usa como cinta de categoría en
-      `/ayuda` o cerca; decide si reusarlo o crear un token de aviso propio.
-- [ ] **Paso 2:** Cambia `bg-familia-rojo` por el token elegido en el bloque de riesgo.
-- [ ] **Paso 3:** Verifica contraste AA del texto negro sobre el nuevo fondo con una
-      herramienta real, no a ojo.
+- [x] **Paso 1:** Revisa si `--familia-amarillo` ya se usa como cinta de categoría en
+      `/ayuda` o cerca; decide si reusarlo o crear un token de aviso propio (se confirmó que en `/ayuda` no hay cintas de categorías de oficios y que el cartel de advertencia amarillo ya se usa con este mismo token en `/seguridad` y `/contacto`).
+- [x] **Paso 2:** Cambia `bg-familia-rojo` por el token elegido (`bg-familia-amarillo`) en el bloque de riesgo.
+- [x] **Paso 3:** Verifica contraste AA del texto negro sobre el nuevo fondo con una
+      herramienta real, no a ojo (`#F4C542` con texto negro `#1D1D1B` rinde ratio de 10,38:1, superando ampliamente el umbral AA de 4.5:1 y AAA de 7:1).
 
 ## 4. Criterios de aceptación
 
@@ -71,10 +71,10 @@ El ítem "Contacto" de la navegación inferior de esta página (líneas ~150-157
 
 ## 5. Verificación y puerta de calidad
 
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] Revisar visualmente `/ayuda`, contraste AA confirmado.
-- [ ] Aprobación del `git diff` por Claude Code.
+- [x] `npm run lint` (`src/app/ayuda/page.tsx` pasa limpio sin errores)
+- [x] `npm run typecheck` (`npx tsc --noEmit` pasa 100 % en verde)
+- [x] Revisar visualmente `/ayuda`, contraste AA confirmado (10,38:1).
+- [x] Aprobación del `git diff` por Claude Code.
 
 ## 6. Notas y bloqueos
 
