@@ -160,7 +160,7 @@ export const contratoCuentas = {
         municipios: z.array(z.string().regex(/^[0-9]{5}$/)).min(1).max(TOPE_MUNICIPIOS),
         contacto_publico: z.string().trim().min(7).max(40).nullable().optional(),
         contacto_tipo: z.enum(['whatsapp', 'telefono']).optional(),
-        descripcion: z.string().trim().max(300).nullable().optional(),
+        descripcion: z.string().trim().max(200).nullable().optional(),
       }),
     )
     .output(z.object({ ok: z.literal(true) })),

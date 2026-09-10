@@ -124,25 +124,35 @@ function conMonto(
   modo: ModoPrecio,
   precioDesde: number | null,
   cola: string,
+  precioHasta?: number | null,
 ): string {
   if (modo === 'gratis') return 'Gratis'
   if (modo === 'aporte') return 'Aporte voluntario'
   const prefijo = modo === 'solidario' ? 'Precio solidario' : null
   if (precioDesde == null) return prefijo ?? 'Precio a convenir'
-  const monto = new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    maximumFractionDigits: 0,
-  }).format(precioDesde)
-  return `${prefijo ? prefijo + ': ' : ''}Desde ${monto}${cola}`
+  const formato = (n: number) =>
+    new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      maximumFractionDigits: 0,
+    }).format(n)
+  // El techo es opcional (ADR 0025): sin él, sigue siendo «Desde $X» — el
+  // proveedor declaró un piso, no una tarifa cerrada, y dar a entender lo
+  // contrario provoca justo la discusión que la plataforma no puede mediar.
+  const rango =
+    precioHasta != null && precioHasta > precioDesde
+      ? `Desde ${formato(precioDesde)} hasta ${formato(precioHasta)}`
+      : `Desde ${formato(precioDesde)}`
+  return `${prefijo ? prefijo + ': ' : ''}${rango}${cola}`
 }
 
 export function precioLegible(
   modo: ModoPrecio,
   precioDesde: number | null,
-  unidad: UnidadPrecio | null
+  unidad: UnidadPrecio | null,
+  precioHasta?: number | null,
 ): string {
-  return conMonto(modo, precioDesde, unidad ? ` ${etiquetaDe(UNIDADES, unidad)}` : '')
+  return conMonto(modo, precioDesde, unidad ? ` ${etiquetaDe(UNIDADES, unidad)}` : '', precioHasta)
 }
 
 /**

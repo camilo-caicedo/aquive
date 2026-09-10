@@ -142,6 +142,8 @@ export type OficioProveedorInput = {
   oficio_id: string
   modo: ModoPrecio
   precio_desde?: number | null
+  /** Techo opcional del rango — ADR 0025. */
+  precio_hasta?: number | null
   unidad?: UnidadPrecio | null
 }
 
@@ -162,8 +164,13 @@ export interface MiProveedor {
   modalidad: ModalidadServicio[]
   dias: DiaSemana[]
   franjas: FranjaHoraria[]
+  /** Horario exacto, opcional, además de `dias`/`franjas` — ADR 0026. */
+  hora_desde: string | null
+  hora_hasta: string | null
   medios_pago: MedioPago[]
   descripcion: string | null
+  /** Solo tiene valor cuando `tipo = 'microempresa'` — ADR 0026. */
+  nombre_negocio: string | null
   suspendido: boolean
   alta_asistida: boolean
   sin_cuenta: boolean
@@ -200,6 +207,7 @@ export interface MiProveedor {
     riesgo: RiesgoOficio
     modo: ModoPrecio
     precio_desde: number | null
+    precio_hasta: number | null
     unidad: UnidadPrecio | null
     /** Falso cuando la regla S lo está escondiendo. */
     publicado: boolean
@@ -980,6 +988,9 @@ export interface Database {
           total_resenas: number
           /** Modos de precio de sus oficios PUBLICADOS, para el filtro. */
           modos: ModoPrecio[]
+          nombre_negocio: string | null
+          hora_desde: string | null
+          hora_hasta: string | null
         }
         Relationships: []
       }
@@ -989,6 +1000,7 @@ export interface Database {
           oficio_id: string
           modo: ModoPrecio
           precio_desde: number | null
+          precio_hasta: number | null
           unidad: UnidadPrecio | null
           oficio_nombre: string
           grupo: GrupoOficio
@@ -1250,6 +1262,11 @@ export interface Database {
           p_acepto_direccion?: boolean
           p_direccion_version?: string | null
           p_token?: string | null
+          // v6-g4 (ADR 0026): nombre de negocio y horario por hora exacta,
+          // sumados sin reemplazar `p_dias`/`p_franjas`.
+          p_nombre_negocio?: string | null
+          p_hora_desde?: string | null
+          p_hora_hasta?: string | null
         }
         Returns: string
       }

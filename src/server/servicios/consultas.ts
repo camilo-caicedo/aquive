@@ -79,8 +79,11 @@ export async function ficha(db: BaseDeDatos, id: string): Promise<Ficha | null> 
       modalidad: proveedoresPublicos.modalidad,
       dias: proveedoresPublicos.dias,
       franjas: proveedoresPublicos.franjas,
+      horaDesde: proveedoresPublicos.horaDesde,
+      horaHasta: proveedoresPublicos.horaHasta,
       mediosPago: proveedoresPublicos.mediosPago,
       descripcion: proveedoresPublicos.descripcion,
+      nombreNegocio: proveedoresPublicos.nombreNegocio,
       foto: proveedoresPublicos.foto,
       creadoAt: proveedoresPublicos.creadoAt,
       referenciasConfirmadas: proveedoresPublicos.referenciasConfirmadas,
@@ -108,6 +111,7 @@ export async function ficha(db: BaseDeDatos, id: string): Promise<Ficha | null> 
         grupo: proveedorOficiosPublicos.grupo,
         modo: proveedorOficiosPublicos.modo,
         precio_desde: proveedorOficiosPublicos.precioDesde,
+        precio_hasta: proveedorOficiosPublicos.precioHasta,
         unidad: proveedorOficiosPublicos.unidad,
       })
       .from(proveedorOficiosPublicos)
@@ -142,8 +146,11 @@ export async function ficha(db: BaseDeDatos, id: string): Promise<Ficha | null> 
     modalidad: (proveedor.modalidad ?? []) as Ficha['modalidad'],
     dias: (proveedor.dias ?? []) as Ficha['dias'],
     franjas: (proveedor.franjas ?? []) as Ficha['franjas'],
+    hora_desde: proveedor.horaDesde,
+    hora_hasta: proveedor.horaHasta,
     medios_pago: (proveedor.mediosPago ?? []) as Ficha['medios_pago'],
     descripcion: proveedor.descripcion,
+    nombre_negocio: proveedor.nombreNegocio,
     foto: proveedor.foto ? urlPublica(`${proveedor.foto}.webp`) : null,
     creado_at: aFecha(proveedor.creadoAt),
     referencias_confirmadas: aNumero(proveedor.referenciasConfirmadas),
@@ -158,6 +165,7 @@ export async function ficha(db: BaseDeDatos, id: string): Promise<Ficha | null> 
       grupo: o.grupo,
       modo: (o.modo ?? 'normal') as Ficha['oficios'][number]['modo'],
       precio_desde: aNumeroONulo(o.precio_desde),
+      precio_hasta: aNumeroONulo(o.precio_hasta),
       unidad: o.unidad as Ficha['oficios'][number]['unidad'],
     })),
     resenas: resenas.map((r) => ({
@@ -276,6 +284,7 @@ export async function directorio(
           grupo: proveedorOficiosPublicos.grupo,
           modo: proveedorOficiosPublicos.modo,
           precio_desde: proveedorOficiosPublicos.precioDesde,
+          precio_hasta: proveedorOficiosPublicos.precioHasta,
           unidad: proveedorOficiosPublicos.unidad,
         })
         .from(proveedorOficiosPublicos)
@@ -292,6 +301,7 @@ export async function directorio(
       grupo: o.grupo,
       modo: (o.modo ?? 'normal') as EnListado['oficios'][number]['modo'],
       precio_desde: aNumeroONulo(o.precio_desde),
+      precio_hasta: aNumeroONulo(o.precio_hasta),
       unidad: o.unidad as EnListado['oficios'][number]['unidad'],
     })
     porProveedor.set(o.proveedorId!, lista)
@@ -588,6 +598,7 @@ export async function inicio(
           grupo: proveedorOficiosPublicos.grupo,
           modo: proveedorOficiosPublicos.modo,
           precio_desde: proveedorOficiosPublicos.precioDesde,
+          precio_hasta: proveedorOficiosPublicos.precioHasta,
           unidad: proveedorOficiosPublicos.unidad,
         })
         .from(proveedorOficiosPublicos)
@@ -604,6 +615,7 @@ export async function inicio(
       grupo: o.grupo,
       modo: (o.modo ?? 'normal') as EnListado['oficios'][number]['modo'],
       precio_desde: aNumeroONulo(o.precio_desde),
+      precio_hasta: aNumeroONulo(o.precio_hasta),
       unidad: o.unidad as EnListado['oficios'][number]['unidad'],
     })
     porProveedor.set(o.proveedorId!, lista)

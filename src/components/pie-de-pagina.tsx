@@ -1,36 +1,13 @@
 import Link from 'next/link'
-import { Phone } from 'lucide-react'
 import { RESPONSABLE } from '@/lib/config'
-
-const EMERGENCIAS = [
-  { nombre: 'Emergencias', numero: '123' },
-  { nombre: 'Cruz Roja', numero: '132' },
-  { nombre: 'Defensa Civil', numero: '144' },
-]
 
 export function PieDePagina() {
   return (
     // El mismo gancho que la barra inferior: en una pantalla de flujo no
-    // se dibuja. Las líneas de emergencia al final de un formulario a medio
-    // llenar no son una salida, son ruido debajo del campo que se escribe.
+    // se dibuja.
     <footer data-pie-de-pagina className="mt-12 border-t border-border bg-secondary">
       <div className="mx-auto max-w-3xl px-4 py-8">
-        <h2 className="font-heading text-lg">Líneas de emergencia</h2>
-        <ul className="mt-2 flex flex-wrap gap-2">
-          {EMERGENCIAS.map((e) => (
-            <li key={e.numero}>
-              <a
-                href={`tel:${e.numero}`}
-                className="pulsable shadow-canto flex min-h-12 items-center gap-2 rounded-full bg-card px-3 text-base font-medium"
-              >
-                <Phone className="size-4" aria-hidden="true" />
-                {e.nombre} {e.numero}
-              </a>
-            </li>
-          ))}
-        </ul>
-
-        <p className="mt-4 text-base font-medium">
+        <p className="text-base font-medium">
           Esta plataforma no reemplaza a las autoridades.
         </p>
 

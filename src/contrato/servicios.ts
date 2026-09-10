@@ -27,6 +27,9 @@ export const OficioDeProveedor = z.object({
   grupo: z.string().nullable(),
   modo: Modo,
   precio_desde: z.number().nullable(),
+  // Techo opcional del rango — ADR 0025. `null` significa «sin techo
+  // declarado», no «gratis» ni «cero»: sigue mostrándose «Desde $X».
+  precio_hasta: z.number().nullable(),
   unidad: Unidad.nullable(),
 })
 
@@ -54,8 +57,14 @@ export const Ficha = z.object({
   modalidad: z.array(Modalidad),
   dias: z.array(Dia),
   franjas: z.array(Franja),
+  // Horario exacto, opcional — ADR 0026. Suma a `dias`/`franjas`, no los
+  // reemplaza: el filtro de /directorio sigue usando la franja amplia.
+  hora_desde: z.string().nullable(),
+  hora_hasta: z.string().nullable(),
   medios_pago: z.array(MedioDePago),
   descripcion: z.string().nullable(),
+  // Solo tiene valor cuando `tipo = 'microempresa'` — ADR 0026.
+  nombre_negocio: z.string().nullable(),
   /**
    * URL de su foto, o nulo.
    *
