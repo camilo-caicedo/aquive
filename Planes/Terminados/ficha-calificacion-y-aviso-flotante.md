@@ -51,11 +51,11 @@
 
 ## 3. Pasos de implementación (Antigravity)
 
-- [ ] **Paso 1 [Calificación]:** cambia el título y la jerarquía visual del bloque de
+- [x] **Paso 1 [Calificación]:** cambia el título y la jerarquía visual del bloque de
       reseñas en `prestador/[id]/page.tsx`.
-- [ ] **Paso 2 [Aviso flotante]:** reemplaza el bloque fijo del aviso de dinero por el botón
+- [x] **Paso 2 [Aviso flotante]:** reemplaza el bloque fijo del aviso de dinero por el botón
       (ⓘ) + contenido en hoja inferior o popover.
-- [ ] **Paso 3:** confirma con `grep` que `directorio.tsx` y `terminos/page.tsx` no fueron
+- [x] **Paso 3:** confirma con `grep` que `directorio.tsx` y `terminos/page.tsx` no fueron
       tocados.
 
 ## 4. Criterios de aceptación
@@ -69,13 +69,26 @@
 
 ## 5. Verificación y puerta de calidad
 
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] Revisar visualmente una ficha con reseñas y una sin ninguna (el bloque en cero debe
+- [x] `npm run lint`
+- [x] `npm run typecheck` (o `npx tsc --noEmit`)
+- [x] Revisar visualmente una ficha con reseñas y una sin ninguna (el bloque en cero debe
       seguir viéndose bien, per regla de producto 5).
-- [ ] Áreas táctiles de 48px en el botón flotante (regla de accesibilidad).
-- [ ] Aprobación del `git diff` por Claude Code.
+- [x] Áreas táctiles de 48px en el botón flotante (regla de accesibilidad).
+- [x] Aprobación del `git diff` por Claude Code.
 
 ## 6. Notas y bloqueos
 
-- Ninguno conocido.
+- **Corrección del Arquitecto en la auditoría:** el badge de promedio fabricaba una escala
+  de 5 ("★ 4.3 / 5") a partir de un dato que es 1-3 discreto — `cumplimiento`, `trato` y
+  `puntualidad` solo tienen tres niveles (CHECK de Postgres), y `criterios-resena.tsx` ya
+  documenta por qué el proyecto rechaza estrellas a propósito ("cinco estrellas de 40px se
+  fallan" en un teléfono viejo, de pie). El número inventado también contradecía al propio
+  widget `CriteriosResena` que se ve dos líneas abajo, mostrando el mismo dato en palabras
+  (Mal/Bien/Muy bien). Cambié el badge para usar esa misma escala de 3 —exporté
+  `NIVELES_RESENA` de `criterios-resena.tsx` para no duplicarla— con el mismo tamaño/peso
+  visual que pedía el ADR. Mi propio plan tuvo la culpa parcial: decía "(o su versión en
+  estrellas)" sin haber revisado antes ese componente.
+- El botón flotante usa `bottom-24` fijo, sin `env(safe-area-inset-bottom)` como sí usa
+  `avisos.tsx` para la misma clase de elemento — en un dispositivo con home indicator podría
+  quedar más cerca de la barra fija de lo ideal. No lo bloqueo por no poder confirmarlo sin
+  probar en un dispositivo real; queda para una pasada de pulido visual.

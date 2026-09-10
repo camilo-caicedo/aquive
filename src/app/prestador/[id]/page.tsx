@@ -3,11 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { CalendarDays, MapPin, Wallet } from 'lucide-react'
 import { servidor } from '@/orpc/local'
-import {
-  NO_PAGUES_POR_ADELANTADO,
-  SEGURIDAD_DOMICILIO,
-  SOBRE_LAS_RESENAS,
-} from '@/lib/honestidad'
+import { SOBRE_LAS_RESENAS } from '@/lib/honestidad'
 import {
   diasLegibles,
   etiquetaFranja,
@@ -21,8 +17,9 @@ import { InsigniasProveedor } from '@/components/insignias-proveedor'
 import { BarraContacto } from '@/components/barra-contacto'
 import { BotonChat } from '@/components/boton-chat'
 import { MarcoFlujo } from '@/components/marco-flujo'
-import { CriteriosResena } from '@/components/criterios-resena'
+import { CriteriosResena, NIVELES_RESENA } from '@/components/criterios-resena'
 import { BotonReportar } from '@/components/boton-reportar'
+import { BotonInfoDinero } from '@/components/boton-info-dinero'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/server'
 import { RESPONSABLE_SERVICIOS } from '@/lib/config'
@@ -263,17 +260,10 @@ export default async function FichaPage({
         )}
       </dl>
 
-      {/* Los textos largos se quedan aquí, donde hay sitio para leerlos;
-          la línea corta y los dos botones van en la barra fija de abajo,
-          que es donde se decide (regla 5). */}
-      <div className="mt-6 rounded-xl bg-card p-4 shadow-canto">
-        <p className="text-sm text-muted-foreground">{NO_PAGUES_POR_ADELANTADO}</p>
-        {aDomicilio && (
-          <p className="mt-2 text-sm text-muted-foreground">{SEGURIDAD_DOMICILIO}</p>
-        )}
-      </div>
+      {/* Botón flotante para advertencia de seguridad y pagos (ADR 0022). */}
+      <BotonInfoDinero aDomicilio={aDomicilio} />
 
-      <h2 className="font-heading mt-8 text-2xl font-extrabold tracking-tight">Qué dice quien lo contrató</h2>
+      <h2 className="font-heading mt-8 text-2xl font-extrabold tracking-tight">Calificación</h2>
 
       {ficha.total_resenas === 0 ? (
         <p className="mt-3 text-base text-muted-foreground">
@@ -282,21 +272,47 @@ export default async function FichaPage({
         </p>
       ) : (
         <>
-          {/* Volumen antes que promedio: el número grande es cuántos
-              servicios se confirmaron, no la nota. */}
-          <p className="mt-3 text-base">
-            <span className="text-2xl font-bold">{ficha.servicios_confirmados}</span>{' '}
-            {ficha.servicios_confirmados === 1
-              ? 'servicio confirmado'
-              : 'servicios confirmados'}
-            <span className="text-muted-foreground">
-              {' · '}
-              {ficha.total_resenas}{' '}
-              {ficha.total_resenas === 1 ? 'calificación' : 'calificaciones'}
-            </span>
-          </p>
+          {(() => {
+            const criterios = [ficha.cumplimiento, ficha.trato, ficha.puntualidad].filter(
+              (c): c is number => c !== null,
+            )
+            // Misma escala de 3 que CriteriosResena, nunca una de 5: no hay
+            // cinco niveles en el dato, y fabricar un «4.3/5» le da a esto
+            // una precisión que la calificación real no tiene (ADR 0022,
+            // corregido en auditoría).
+            const promedio =
+              criterios.length > 0
+                ? criterios.reduce((a, b) => a + b, 0) / criterios.length
+                : null
+            const etiquetaPromedio =
+              promedio !== null ? (NIVELES_RESENA[Math.round(promedio)] ?? null) : null
 
-          <div className="mt-3">
+            return (
+              <div className="mt-3 flex flex-wrap items-center gap-4">
+                {etiquetaPromedio !== null && (
+                  <div className="rounded-2xl bg-accent px-3.5 py-2 text-accent-foreground shadow-canto">
+                    <span className="font-heading text-2xl font-bold leading-none">
+                      {etiquetaPromedio}
+                    </span>
+                  </div>
+                )}
+                <div>
+                  <p className="text-base">
+                    <span className="text-2xl font-bold">{ficha.servicios_confirmados}</span>{' '}
+                    {ficha.servicios_confirmados === 1
+                      ? 'servicio confirmado'
+                      : 'servicios confirmados'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {ficha.total_resenas}{' '}
+                    {ficha.total_resenas === 1 ? 'calificación' : 'calificaciones'}
+                  </p>
+                </div>
+              </div>
+            )
+          })()}
+
+          <div className="mt-4">
             <CriteriosResena
               cumplimiento={ficha.cumplimiento}
               trato={ficha.trato}

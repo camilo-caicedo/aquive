@@ -10,7 +10,10 @@
  * Redundante a propósito: el valor va escrito además de dibujado, para
  * que no dependa solo del color ni del ancho de una barra.
  */
-const NIVELES = ['—', 'Mal', 'Bien', 'Muy bien']
+/** Compartido con la ficha, para el resumen de arriba (regla de producto 5, ADR 0022):
+ *  la misma escala de 3, nunca una de 5 inventada encima de esta. */
+export const NIVELES_RESENA = ['—', 'Mal', 'Bien', 'Muy bien']
+const NIVELES = NIVELES_RESENA
 
 function etiqueta(valor: number | null) {
   if (valor == null) return NIVELES[0]
