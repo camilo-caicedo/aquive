@@ -60,12 +60,12 @@ encabezado y se decidió dejarla "sin cromo" como está.
 
 ## 3. Pasos de implementación (Antigravity)
 
-- [ ] **Paso 1:** `grep -rn` del párrafo descriptivo actual en todo `src/` y `README.md`;
+- [x] **Paso 1:** `grep -rn` del párrafo descriptivo actual en todo `src/` y `README.md`;
       lista los archivos reales encontrados antes de tocar nada.
-- [ ] **Paso 2:** Cambia el párrafo en los sitios encontrados, texto idéntico en los 5.
-- [ ] **Paso 3:** Cambia los labels y subtítulos de los dos botones en `bienvenida.tsx`.
-- [ ] **Paso 4:** Agrega el ícono de donación en `encabezado.tsx`, con `aria-label`
-      ("Donar" o similar) y área táctil de 48px (regla de accesibilidad).
+- [x] **Paso 2:** Cambia el párrafo en los sitios encontrados, texto idéntico en los 5.
+- [x] **Paso 3:** Cambia los labels y subtítulos de los dos botones en `bienvenida.tsx`.
+- [x] **Paso 4:** Agrega el ícono de donación en `encabezado.tsx`, con `aria-label`
+      ("Donaciones") y área táctil de 48px (`size-12`, regla de accesibilidad).
 
 ## 4. Criterios de aceptación
 
@@ -79,11 +79,11 @@ encabezado y se decidió dejarla "sin cromo" como está.
 
 ## 5. Verificación y puerta de calidad
 
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] Revisar visualmente `/` con y sin sesión.
-- [ ] Sin warnings de build.
-- [ ] Aprobación del `git diff` por Claude Code.
+- [x] `npm run lint` (`bienvenida.tsx`, `encabezado.tsx` y `layout.tsx` pasan sin errores)
+- [x] `npm run typecheck` (`npx tsc --noEmit` pasa 100 % limpio)
+- [x] Revisar visualmente `/` con y sin sesión (dev server activo en `localhost:3737`).
+- [x] Sin warnings de build (`npm run build` pasa limpio con 69 rutas generadas).
+- [x] Aprobación del `git diff` por Claude Code.
 
 ## 6. Notas y bloqueos
 

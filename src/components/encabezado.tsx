@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import { ShieldCheck } from 'lucide-react'
+import { Heart, ShieldCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { servidor } from '@/orpc/local'
 import { BarraInferior, Navegacion, type Coordinacion } from '@/components/navegacion'
@@ -122,6 +122,14 @@ export async function Encabezado() {
               Se dibuja solo cuando el navegador dice que se puede
               instalar; en iPhone no aparece nunca. */}
           <BotonInstalar />
+          <Link
+            href="/donaciones"
+            aria-label="Donaciones"
+            title="Donaciones"
+            className="pulsable flex size-12 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Heart className="size-5" aria-hidden="true" />
+          </Link>
           {tienePerfil && <BotonAvisos sinVer={encabezado?.avisos_sin_ver ?? 0} />}
           {/* Píldora blanca con canto, no relleno lima. El lima del
               encabezado ya lo gasta la marca, y dos limas en la misma barra

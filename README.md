@@ -1,7 +1,6 @@
 # AquíVe · Ayuda directa en Colombia
 
-Una red de vecinos donde quien necesita un servicio encuentra a quien lo
-ofrece, sin intermediarios. Sin comisiones, sin intermediar el pago.
+Una red de personas donde quien necesita algo encuentra a quien lo ofrece.
 
 > Esta frase es la misma, palabra por palabra, que la de
 > `src/components/bienvenida.tsx` —que es lo que se sirve en `/`, y por tanto

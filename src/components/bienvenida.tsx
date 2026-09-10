@@ -74,9 +74,8 @@ export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
         </h1>
 
         <p className="mt-4 text-center text-base text-muted-foreground">
-          Una red de vecinos donde quien necesita un servicio encuentra a quien
-          lo ofrece, sin intermediarios. Sin comisiones, sin intermediar el
-          pago.
+          Una red de personas donde quien necesita algo encuentra a quien lo
+          ofrece.
         </p>
 
         {/* Dos caminos y ninguno preseleccionado. El primero no pide nada; el
@@ -86,8 +85,11 @@ export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
           href="/inicio"
           className="pulsable-tarjeta shadow-cartel-azul mt-7 block rounded-2xl bg-card p-5 transition-transform hover:-translate-y-0.5"
         >
-          <span className="font-heading block text-xl">Necesito un servicio</span>
-          <span className="mt-1.5 block text-base text-muted-foreground">
+          <span className="font-heading block text-xl">Necesito algo</span>
+          <span className="font-heading text-foreground mt-1 block text-sm">
+            Servicios y productos
+          </span>
+          <span className="mt-1 block text-base text-muted-foreground">
             Busca en tu zona, mira quién está disponible y escríbele.
           </span>
         </Link>
@@ -106,8 +108,11 @@ export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
           }
           className="pulsable-tarjeta shadow-cartel-amarillo mt-4 block rounded-2xl bg-card p-5 transition-transform hover:-translate-y-0.5"
         >
-          <span className="font-heading block text-xl">Ofrezco mi trabajo</span>
-          <span className="mt-1.5 block text-base text-muted-foreground">
+          <span className="font-heading block text-xl">Ofrezco algo</span>
+          <span className="font-heading text-foreground mt-1 block text-sm">
+            Servicios y productos
+          </span>
+          <span className="mt-1 block text-base text-muted-foreground">
             {conSesion
               ? 'Publica tu oficio, tus precios y tu zona, y aparece cuando alguien busque cerca.'
               : 'Entra con Google, publica tu oficio y aparece cuando alguien busque cerca.'}

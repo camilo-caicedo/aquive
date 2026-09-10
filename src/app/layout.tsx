@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     siteName: "AquíVe",
     title: "AquíVe",
     description:
-      "Una red de vecinos donde quien necesita un servicio encuentra a quien lo ofrece, sin intermediarios. Sin comisiones, sin intermediar el pago.",
+      "Una red de personas donde quien necesita algo encuentra a quien lo ofrece.",
     url: "https://aquive.co/",
     locale: "es_CO",
   },
@@ -71,7 +71,7 @@ export const metadata: Metadata = {
   // temporal, y el módulo de Servicios —el trabajo de quien vive de su
   // oficio— no aparecía en ninguna descripción.
   description:
-    "Una red de vecinos donde quien necesita un servicio encuentra a quien lo ofrece, sin intermediarios. Sin comisiones, sin intermediar el pago.",
+    "Una red de personas donde quien necesita algo encuentra a quien lo ofrece.",
   manifest: "/manifest.json",
   // Verificación de propiedad del dominio ante Google. Hace falta para que
   // Google apruebe la marca de la pantalla de consentimiento OAuth: sin
@@ -124,7 +124,7 @@ const DATOS_ESTRUCTURADOS = {
   url: "https://aquive.co/",
   inLanguage: "es-CO",
   description:
-    "Una red de vecinos donde quien necesita un servicio encuentra a quien lo ofrece, sin intermediarios. Sin comisiones, sin intermediar el pago.",
+    "Una red de personas donde quien necesita algo encuentra a quien lo ofrece.",
   publisher: {
     "@type": "Organization",
     name: "AquíVe",
