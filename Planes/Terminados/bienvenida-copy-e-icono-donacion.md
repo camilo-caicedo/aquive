@@ -91,3 +91,10 @@ encabezado y se decidió dejarla "sin cromo" como está.
   ya aceptada explícitamente por el usuario — no es motivo para revertir sin preguntar,
   pero repórtalo si algo lo indica durante la construcción (no hay forma de comprobarlo en
   desarrollo).
+- **Corrección post-cierre, con confirmación directa de la Fundación:** el ícono NO va en el
+  encabezado global — va flotante, arriba a la derecha, solo en `bienvenida.tsx` (mockup de
+  la Fundación lo confirma). Se movió de `encabezado.tsx` a `bienvenida.tsx`, `absolute`
+  dentro de `<main>` (que ahora es `relative`), sin depender del header que esta pantalla no
+  usa. Ícono cambiado de `Heart` a `PackageOpen` (caja de recolección, no corazón — pedido
+  también por el usuario tras ver el mockup). Renderiza igual con y sin sesión, porque los
+  dos botones "Necesito algo"/"Ofrezco algo" tampoco dependen de la sesión.

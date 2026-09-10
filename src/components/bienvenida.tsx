@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { PackageOpen } from 'lucide-react'
 
 import isotipo from '@/../docs/marca/isotipo-carrito.png'
 import { FranjaSombrilla } from '@/components/franja-sombrilla'
@@ -42,7 +43,19 @@ export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
     <div data-sin-cromo={conSesion ? undefined : true} className="min-h-dvh">
       <FranjaSombrilla />
 
-      <main className="animar-pantalla mx-auto flex max-w-md flex-col px-5 py-8">
+      <main className="animar-pantalla relative mx-auto flex max-w-md flex-col px-5 py-8">
+        {/* Único ícono de esta pantalla "sin cromo": la Fundación lo pidió
+            flotante arriba a la derecha, sobre el crema, sin depender del
+            encabezado global que esta pantalla no usa. */}
+        <Link
+          href="/donaciones"
+          aria-label="Donaciones"
+          title="Donaciones"
+          className="pulsable shadow-canto absolute top-8 right-5 z-10 flex size-12 items-center justify-center rounded-full bg-card text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <PackageOpen className="size-5" aria-hidden="true" />
+        </Link>
+
         {/* El isotipo en círculo. El PNG no tiene canal alfa —trae fondo
             blanco sólido— así que el círculo blanco no es un adorno: es lo
             que evita que se vea un cuadrado recortado sobre el crema.
