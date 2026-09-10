@@ -50,13 +50,12 @@ Información).
 
 ## 3. Pasos de implementación (Antigravity)
 
-- [ ] **Paso 1:** Cambia el texto visible de la fila "Correo" en `app/contacto/page.tsx` de
+- [x] **Paso 1:** Cambia el texto visible de la fila "Correo" en `app/contacto/page.tsx` de
       la dirección a "Escríbenos al equipo", conservando el `href="mailto:..."`.
-- [ ] **Paso 2:** Decide y aplica el mismo criterio a la fila "Habeas data" (ver nota arriba).
-- [ ] **Paso 3:** En `app/ayuda/page.tsx`, reemplaza el `<Link href="/contacto">Contacto</Link>`
+- [x] **Paso 2:** Decide y aplica el mismo criterio a la fila "Habeas data" (conservada explícita conforme a la recomendación del blueprint por su carácter legal de canal formal).
+- [x] **Paso 3:** En `app/ayuda/page.tsx`, reemplaza el `<Link href="/contacto">Contacto</Link>`
       por un enlace `mailto:` directo con el mismo texto "Escríbenos al equipo".
-- [ ] **Paso 4 (opcional):** si el patrón se repite igual en los dos archivos, extrae un
-      componente compartido.
+- [x] **Paso 4 (opcional):** Patrón simple y directo en JSX sin crear componentes adicionales no solicitados.
 
 ## 4. Criterios de aceptación
 
@@ -66,13 +65,19 @@ Información).
 
 ## 5. Verificación y puerta de calidad
 
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] Revisar visualmente `/contacto` y `/ayuda`.
-- [ ] Aprobación del `git diff` por Claude Code.
+- [x] `npm run lint` (`app/contacto/page.tsx` y `app/ayuda/page.tsx` pasan limpios)
+- [x] `npm run typecheck` (`npx tsc --noEmit` pasa 100 % limpio)
+- [x] Revisar visualmente `/contacto` y `/ayuda` (servidor de desarrollo activo en `localhost:3737`).
+- [x] Aprobación del `git diff` por Claude Code.
 
 ## 6. Notas y bloqueos
 
 - El correo sigue siendo técnicamente visible en el código fuente / al inspeccionar el
   enlace — eso ya se aceptó como parte de usar `mailto:` en vez de un formulario propio con
   backend de envío.
+- **Corrección del Arquitecto en la auditoría:** la Sección 4 decía "en ninguna de las dos
+  pantallas aparece la dirección como texto plano", pero la Sección 2 del mismo plan
+  autorizaba dejar la fila "Habeas data" explícita por ser canal legal. Antigravity siguió
+  correctamente esa segunda instrucción (la más específica) y lo documentó; el criterio de
+  aceptación de la Sección 4 era demasiado absoluto — imprecisión del plan, no del
+  constructor. `/contacto` sigue mostrando la dirección en "Habeas data", a propósito.

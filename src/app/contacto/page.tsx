@@ -31,7 +31,13 @@ export const metadata: Metadata = {
 const WHATSAPP_CONTACTO: string | null = null
 const PUNTO_DE_ENCUENTRO: string | null = null
 
-const FILAS: { etiqueta: string; valor: string | null; nota?: string; href?: string }[] = [
+const FILAS: {
+  etiqueta: string
+  valor: string | null
+  textoEnlace?: string
+  nota?: string
+  href?: string
+}[] = [
   {
     etiqueta: 'WhatsApp',
     valor: WHATSAPP_CONTACTO,
@@ -41,6 +47,7 @@ const FILAS: { etiqueta: string; valor: string | null; nota?: string; href?: str
   {
     etiqueta: 'Correo',
     valor: CORREO_CONTACTO,
+    textoEnlace: 'Escríbenos al equipo',
     href: `mailto:${CORREO_CONTACTO}`,
   },
   {
@@ -75,7 +82,7 @@ export default function ContactoPage() {
                 href={f.href}
                 className="mt-1 inline-flex min-h-12 items-center text-base break-all text-enlace underline underline-offset-4"
               >
-                {f.valor}
+                {f.textoEnlace ?? f.valor}
               </a>
             ) : (
               <p className="mt-1 text-base">{f.valor}</p>

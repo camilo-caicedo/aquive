@@ -148,12 +148,12 @@ export default function AyudaPage() {
             </Link>
           </li>
           <li>
-            <Link
-              href="/contacto"
+            <a
+              href={`mailto:${CORREO_CONTACTO}`}
               className="inline-flex min-h-12 items-center text-base text-enlace underline underline-offset-4"
             >
-              Contacto
-            </Link>
+              Escríbenos al equipo
+            </a>
           </li>
         </ul>
       </nav>
