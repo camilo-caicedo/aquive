@@ -434,13 +434,28 @@ export type RolEnConversacion = 'solicitante' | 'ofertador' | 'aliado' | 'admin'
 // derivan de datos que ya existen, y lo «nuevo» es todo lo posterior a
 // `perfiles.avisos_vistos_at`.
 //
-// ⚠ Eran cinco tipos y la función solo emite dos. Los otros tres —`mensaje`,
+// ⚠ Eran cinco tipos y la función solo emitía dos. Los otros tres —`mensaje`,
 // `invitacion`, `sin_atender`— eran del flujo acompañado, y `v5-b1` reescribió
 // `mis_avisos()` sin ellos. El desajuste no era cosmético: el mapa de iconos
 // de la campana se indexaba por este tipo, así que el único aviso que la base
-// sí emite daba `undefined` y `<Icono />` reventaba la campana entera.
+// sí emitía daba `undefined` y `<Icono />` reventaba la campana entera.
+//
+// v6-h1 (2026-09-10): `mis_avisos()` dejó de devolver `[]` siempre —desde
+// `v6-f3` (ADR 0016) era un placeholder que nunca se completó— y emite
+// cinco tipos reales. `'respuesta'` y `'reporte'` ya no los emite ninguna
+// función viva; se dejan en la unión por compatibilidad de tipos con datos
+// viejos que puedan seguir en caché del cliente, no porque `mis_avisos()`
+// los produzca hoy.
 export interface Aviso {
-  tipo: 'respuesta' | 'reporte'
+  tipo:
+    | 'solicitud_aceptada'
+    | 'solicitud_rechazada'
+    | 'servicio_confirmado'
+    | 'referencia_confirmada'
+    | 'telefono_verificado'
+    | 'ficha_suspendida'
+    | 'respuesta'
+    | 'reporte'
   texto: string
   fecha: string
   /** A dónde lleva. Cada aviso es un enlace, no un resumen que toca buscar. */

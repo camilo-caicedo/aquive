@@ -58,7 +58,7 @@ function haceCuanto(iso: string) {
  * antes de que esto lo conozca, se pinta un icono genérico en vez de tirar
  * la pantalla.
  */
-const ICONO_AVISO: Record<Aviso['tipo'], LucideIcon> = {
+const ICONO_AVISO: Partial<Record<Aviso['tipo'], LucideIcon>> = {
   respuesta: MessageSquare,
   reporte: ShieldAlert,
 }

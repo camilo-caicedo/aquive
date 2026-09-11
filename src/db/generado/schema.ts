@@ -498,6 +498,7 @@ export const solicitudesServicio = pgTable("solicitudes_servicio", {
 	revisadaAt: timestamp("revisada_at", { withTimezone: true, mode: 'string' }),
 	sugerenciaId: uuid("sugerencia_id"),
 	proveedorId: uuid("proveedor_id").notNull(),
+	actualizadoAt: timestamp("actualizado_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	index("idx_solicitudes_servicio_perfil").using("btree", table.perfilId.asc().nullsLast().op("uuid_ops")),
 	index("idx_solicitudes_servicio_proveedor").using("btree", table.proveedorId.asc().nullsLast().op("text_ops"), table.estado.asc().nullsLast().op("text_ops")),
