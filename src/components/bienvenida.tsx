@@ -83,7 +83,7 @@ export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
         <h1 className="font-heading mt-6 text-center text-4xl leading-[1.05]">
           ¿Qué te trae
           <br />
-          hoy aquí?
+          hoy por aquí?
         </h1>
 
         <p className="mt-4 text-center text-base text-muted-foreground">
@@ -98,12 +98,12 @@ export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
           href="/inicio"
           className="pulsable-tarjeta shadow-cartel-azul mt-7 block rounded-2xl bg-card p-5 transition-transform hover:-translate-y-0.5"
         >
-          <span className="font-heading block text-xl">Necesito algo</span>
+          <span className="font-heading block text-xl">Busco un servicio o producto</span>
           <span className="font-heading text-foreground mt-1 block text-sm">
-            Servicios y productos
+            Servicios y vecindario
           </span>
           <span className="mt-1 block text-base text-muted-foreground">
-            Busca en tu zona, mira quién está disponible y escríbele.
+            Mira quién está disponible cerca de ti y contáctalo directamente.
           </span>
         </Link>
 
@@ -121,14 +121,14 @@ export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
           }
           className="pulsable-tarjeta shadow-cartel-amarillo mt-4 block rounded-2xl bg-card p-5 transition-transform hover:-translate-y-0.5"
         >
-          <span className="font-heading block text-xl">Ofrezco algo</span>
+          <span className="font-heading block text-xl">Ofrezco mi trabajo o productos</span>
           <span className="font-heading text-foreground mt-1 block text-sm">
-            Servicios y productos
+            Servicios y vecindario
           </span>
           <span className="mt-1 block text-base text-muted-foreground">
             {conSesion
-              ? 'Publica tu oficio, tus precios y tu zona, y aparece cuando alguien busque cerca.'
-              : 'Entra con Google, publica tu oficio y aparece cuando alguien busque cerca.'}
+              ? 'Publica tu oficio, tarifas y zona para que más personas te encuentren fácil.'
+              : 'Entra con Google, publica tu oficio y permite que tus vecinos te encuentren.'}
           </span>
         </Link>
 
@@ -140,7 +140,7 @@ export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
             pantalla siguiente desmiente es peor que no prometer nada. */}
         {!conSesion && (
           <p className="mt-8 text-center text-base text-muted-foreground">
-            Mirar quién hay cerca no necesita cuenta.
+            Explorar quién está cerca no necesita cuenta.
             <br />
             <Link
               href="/login"

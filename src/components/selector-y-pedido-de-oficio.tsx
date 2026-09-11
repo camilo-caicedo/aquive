@@ -93,11 +93,11 @@ export function CamposSelectorYPedido({
     <div className="space-y-4">
       {estado.unico ? (
         <p className="rounded-2xl bg-card p-3 text-base shadow-canto">
-          Vas a pedir: <span className="font-semibold">{estado.unico.nombre}</span>
+          Vas a solicitar: <span className="font-semibold">{estado.unico.nombre}</span>
         </p>
       ) : (
         <fieldset>
-          <legend className="mb-2 text-base font-medium">¿Cuál de sus oficios necesitas?</legend>
+          <legend className="mb-2 text-base font-medium">¿Qué servicio necesitas?</legend>
           <div className="flex flex-wrap gap-2">
             {oficios.map((o) => (
               <button
@@ -119,24 +119,24 @@ export function CamposSelectorYPedido({
       )}
 
       <div>
-        <Label htmlFor="detalle">Cuéntanos más (opcional)</Label>
+        <Label htmlFor="detalle">Detalle del trabajo (opcional)</Label>
         <Input
           id="detalle"
           value={estado.detalle}
           onChange={(e) => estado.setDetalle(e.target.value)}
           maxLength={80}
           className="mt-1"
-          placeholder="La pieza de atrás, unos 12 metros"
+          placeholder="Ej: Pintar una habitación de 12 metros cuadrados"
         />
         <p className="mt-1 text-sm text-muted-foreground">
-          {estado.detalle.trim().length}/80. Sin teléfonos ni direcciones: eso se acuerda por el chat de aquí.
+          {estado.detalle.trim().length}/80. Sin teléfonos ni direcciones: esos datos se coordinan por el chat.
         </p>
         {estado.errorDetalle && <p className="mt-1 text-sm text-destructive">{estado.errorDetalle}</p>}
       </div>
 
       <div>
         <Label htmlFor="nota">
-          ¿Algo más? <span className="font-normal text-muted-foreground">(opcional)</span>
+          ¿Alguna indicación adicional? <span className="font-normal text-muted-foreground">(opcional)</span>
         </Label>
         <Textarea
           id="nota"
@@ -144,11 +144,11 @@ export function CamposSelectorYPedido({
           onChange={(e) => estado.setNota(e.target.value)}
           maxLength={140}
           rows={3}
-          placeholder="Son dos pantalones para bajar el ruedo."
+          placeholder="Ej: Cuento con los materiales listos para empezar."
           className="mt-1"
         />
         <p className="mt-1 text-sm text-muted-foreground">
-          {estado.nota.length}/140. Sin nombres, teléfonos ni direcciones.
+          {estado.nota.length}/140. Sin teléfonos ni direcciones.
         </p>
         {estado.errorNota && <p className="mt-1 text-sm text-destructive">{estado.errorNota}</p>}
       </div>
@@ -165,7 +165,7 @@ export function CamposSelectorYPedido({
 /** El botón solo — para vivir en la barra fija de un `MarcoFlujo` de flujo. */
 export function BotonSelectorYPedido({
   estado,
-  texto = 'Solicitar servicio',
+  texto = 'Enviar solicitud',
   className = 'w-full text-base font-semibold',
 }: {
   estado: EstadoSelector
@@ -174,7 +174,7 @@ export function BotonSelectorYPedido({
 }) {
   return (
     <Button className={className} disabled={!estado.puedeEnviar || estado.enviando} onClick={estado.enviar}>
-      {estado.enviando ? 'Enviando…' : texto}
+      {estado.enviando ? 'Enviando solicitud…' : texto}
     </Button>
   )
 }
@@ -186,7 +186,7 @@ export function BotonSelectorYPedido({
 export function SelectorYPedidoDeOficio({
   proveedorId,
   oficios,
-  textoBoton = 'Solicitar servicio',
+  textoBoton = 'Enviar solicitud',
   className = '',
 }: {
   proveedorId: string

@@ -32,22 +32,20 @@ export default async function LoginPage({
   return (
     <MarcoFlujo titulo="Entrar" volver="/inicio">
       <h2 className="font-heading text-4xl leading-[1.05]">
-        Entra con
+        Ingresa con
         <br />
         tu cuenta
         <br />
         de Google
       </h2>
       <p className="mt-2 text-base text-muted-foreground">
-        Es el único acceso por ahora. Si es tu primera vez, la cuenta se crea
-        sola; si ya entraste antes, vuelves a lo tuyo. Sin contraseña que
-        recordar ni que perder.
+        Rápido y seguro. Si es tu primera vez, tu cuenta se creará en un instante. Sin contraseñas que memorizar ni trámites complicados.
       </p>
 
       {error && (
         <Alert variant="destructive" className="mt-4">
           <AlertDescription>
-            No se pudo iniciar sesión. Intenta de nuevo.
+            No pudimos iniciar sesión. Por favor intenta de nuevo.
           </AlertDescription>
         </Alert>
       )}
@@ -70,15 +68,14 @@ export default async function LoginPage({
 
         <p className="mt-2 text-base text-muted-foreground">
           Al continuar aceptas los{' '}
-          <Link href="/terminos" className="underline">
+          <Link href="/terminos" className="underline font-medium">
             términos
           </Link>{' '}
           y el{' '}
-          <Link href="/privacidad" className="underline">
+          <Link href="/privacidad" className="underline font-medium">
             aviso de privacidad
           </Link>
-          . Todavía no se publica nada: el perfil lo escribes en el paso
-          siguiente.
+          . No te preocupes: aún no se publicará nada en el directorio.
         </p>
       </div>
 
@@ -87,11 +84,9 @@ export default async function LoginPage({
           aquí sin cuenta de Google necesita saber de una que no se ha
           equivocado de sitio. */}
       <section className="bg-accent text-accent-foreground mt-8 rounded-2xl p-5">
-        <h2 className="font-heading text-xl">¿No tienes cuenta de Google?</h2>
+        <h2 className="font-heading text-xl">¿No manejas cuenta de Google?</h2>
         <p className="mt-2 text-base">
-          No hace falta cuenta para buscar un servicio ni para pedir algo en el
-          muro: eso funciona sin registro. Y si vas a ofrecer tu trabajo pero no
-          manejas Google, la fundación te da de alta en persona.
+          No necesitas cuenta para explorar servicios ni encontrar donaciones. Y si deseas ofrecer tu oficio pero no tienes correo, el equipo de la fundación puede ayudarte a crear tu carné de forma presencial.
         </p>
         {/* La primera en píldora blanca —es la salida que más gente usa— y
             la segunda como enlace: es para pocos, y con dos botones iguales

@@ -222,7 +222,7 @@ export default async function PerfilPage() {
   // perfil de quien solo viene a buscar se leía como el panel a medio
   // llenar de un prestador.
   const deLaCuenta: Fila[] = [
-    { href: '/perfil/datos', Icono: UserPen, nombre: 'Mis datos y contacto', descripcion: 'Tu nombre, tu teléfono y tu municipio' },
+    { href: '/perfil/datos', Icono: UserPen, nombre: 'Mis datos y contacto', descripcion: 'Tu nombre visible, teléfono y municipio' },
     // ⚠ Faltaba, y con ella faltaba la única salida: `publicaciones_muro`
     // solo se INSERTABA. La regla de producto 3 dice que una publicación
     // vive «mientras su dueño la deje», y su dueño no tenía cómo dejarla.
@@ -230,14 +230,14 @@ export default async function PerfilPage() {
       href: '/donaciones/mios',
       Icono: Heart,
       nombre: 'Mis donaciones',
-      descripcion: 'Lo que ofreciste y ya no usas. Bórralo cuando se entregue',
+      descripcion: 'Artículos que ofreciste a la comunidad',
       pista: misPublicaciones.length > 0 ? String(misPublicaciones.length) : undefined,
     },
     {
       href: '/mis-solicitudes',
       Icono: ClipboardList,
       nombre: 'Mis solicitudes',
-      descripcion: 'Los servicios que pediste y en qué van',
+      descripcion: 'Servicios que has pedido y su estado actual',
       pista: misSolicitudes.length > 0 ? String(misSolicitudes.length) : undefined,
     },
     // Lo que le pidieron A ÉL (ADR 0017). Solo con ficha: sin ella no hay
@@ -249,7 +249,7 @@ export default async function PerfilPage() {
             href: '/perfil/solicitudes-recibidas',
             Icono: Inbox,
             nombre: 'Solicitudes recibidas',
-            descripcion: 'Lo que te pidieron a ti. Aquí lo aceptas o lo rechazas',
+            descripcion: 'Trabajos que te han solicitado clientes',
             pista:
               ordenesPendientes > 0
                 ? `${ordenesPendientes} pendiente${ordenesPendientes === 1 ? '' : 's'}`
@@ -257,8 +257,8 @@ export default async function PerfilPage() {
           },
         ]
       : []),
-    { href: '/perfil/avisos', Icono: Bell, nombre: 'Avisos', descripcion: 'Cuándo te avisamos por mensaje nuevo o respuesta' },
-    { href: '/perfil/privacidad', Icono: KeyRound, nombre: 'Privacidad y cuenta', descripcion: 'Qué guardamos de ti, y borrar tu cuenta y todo lo tuyo' },
+    { href: '/perfil/avisos', Icono: Bell, nombre: 'Avisos', descripcion: 'Configura tus notificaciones y mensajes' },
+    { href: '/perfil/privacidad', Icono: KeyRound, nombre: 'Privacidad y cuenta', descripcion: 'Consulta qué guardamos o administra tu cuenta' },
   ]
 
   const delCarne: Fila[] = proveedor
@@ -267,7 +267,7 @@ export default async function PerfilPage() {
           href: '/perfil/oficios',
           Icono: ListOrdered,
           nombre: 'Mis oficios y precios',
-          descripcion: 'Qué haces y desde cuánto cobras cada cosa',
+          descripcion: 'Lo que ofreces y tus tarifas de referencia',
           pista: String(proveedor.oficios.length),
         },
         // ⚠ Faltaba, y era la única puerta: `/perfil/foto` solo se enlazaba
@@ -279,7 +279,7 @@ export default async function PerfilPage() {
           href: '/perfil/foto',
           Icono: Camera,
           nombre: 'Mi foto',
-          descripcion: 'La que sale en tu ficha. Alguien la revisa antes de publicarla',
+          descripcion: 'La foto que se muestra en tu ficha pública',
           pista:
             proveedor.foto_estado === 'en_cola'
               ? 'en revisión'
@@ -293,25 +293,25 @@ export default async function PerfilPage() {
           href: '/barrio/mios',
           Icono: ShoppingBag,
           nombre: 'Mis productos',
-          descripcion: 'Lo que vendes en «Hecho en el barrio»',
+          descripcion: 'Artículos que tienes en venta en «Hecho en el barrio»',
           pista:
             misProductos.length > 0
               ? `${misProductos.length} publicado${misProductos.length === 1 ? '' : 's'}`
               : undefined,
         },
-        { href: '/perfil/disponibilidad', Icono: Clock, nombre: 'Cuándo y dónde atiendo', descripcion: 'Tus días, tus horarios y si vas a domicilio' },
+        { href: '/perfil/disponibilidad', Icono: Clock, nombre: 'Cuándo y dónde atiendo', descripcion: 'Tus días, horarios y zonas de atención' },
         {
           href: '/perfil/resenas',
           Icono: Star,
           nombre: 'Reseñas recibidas',
-          descripcion: 'Lo que dijo quien te contrató. Puedes responder una vez',
+          descripcion: 'Opiniones y calificaciones que han dejado tus clientes',
           pista: sinResponder > 0 ? `${sinResponder} sin responder` : undefined,
         },
         {
           href: '/perfil/verificaciones',
           Icono: BadgeCheck,
           nombre: 'Verificaciones',
-          descripcion: 'Tu teléfono, tu referencia y tu matrícula: qué está comprobado',
+          descripcion: 'Tu teléfono verificado y referencias comprobadas',
           pista:
             verificacionesPendientes > 0
               ? `${verificacionesPendientes} pendiente${verificacionesPendientes === 1 ? '' : 's'}`
@@ -320,11 +320,11 @@ export default async function PerfilPage() {
         {
           href: '/perfil/codigos',
           Icono: Hash,
-          nombre: 'Códigos que generé',
-          descripcion: 'Le das uno a quien atendiste y con él te califica. Sirve una vez',
+          nombre: 'Códigos generados',
+          descripcion: 'Códigos para entregar a tus clientes al terminar un servicio',
           pista: sinUsar > 0 ? `${sinUsar} sin usar` : undefined,
         },
-        { href: '/servicios/soy-proveedor', Icono: IdCard, nombre: 'Mi ficha publicada', descripcion: 'El resumen de todo lo que tienes puesto' },
+        { href: '/servicios/soy-proveedor', Icono: IdCard, nombre: 'Mi ficha publicada', descripcion: 'Resumen y gestión de tu ficha de trabajo' },
         // ⚠ La fila de arriba lleva al RESUMEN, no a la ficha. Ningún enlace
         // de toda la aplicación llevaba a ver la propia como la ve
         // cualquiera, que es lo único que responde «¿qué está viendo la
@@ -333,7 +333,7 @@ export default async function PerfilPage() {
           href: `/prestador/${proveedor.id}`,
           Icono: Eye,
           nombre: 'Ver mi ficha como la ven',
-          descripcion: 'Lo mismo que ve cualquiera que entra a buscarte',
+          descripcion: 'Cómo ven tu ficha los demás usuarios',
         },
       ]
     : []
@@ -409,17 +409,17 @@ export default async function PerfilPage() {
         // que está completa, sino una invitación.
         <section className="shadow-cartel-amarillo rounded-2xl bg-card p-4">
           <h2 className="font-heading text-xl leading-tight">
-            ¿Vives de un oficio?
+            ¿Vives de tu trabajo o tienes un oficio?
           </h2>
           <p className="mt-1 text-base text-muted-foreground">
-            Con tu carné apareces en el directorio y quien necesite tu trabajo
-            te encuentra. Publicarlo no cuesta nada.
+            Publica tu carné gratis en el directorio, muestra lo que haces y recibe
+            solicitudes directamente de tus vecinos.
           </p>
           <Link
             href="/servicios/soy-proveedor"
             className="pulsable mt-3 inline-flex min-h-12 items-center rounded-full bg-primary px-5 text-base font-semibold text-primary-foreground"
           >
-            Armar mi carné
+            Crear mi carné
           </Link>
         </section>
       )}

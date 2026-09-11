@@ -27,12 +27,12 @@ import type { Autor, Hilo, Mensaje, Origen } from '@/contrato/chat'
  */
 const AVISO_BORRADO: Record<Origen['tipo'], string> = {
   solicitud:
-    'Esta conversación se borra junto con el pedido. Apunta por fuera lo que necesites guardar.',
+    'Este chat se eliminará cuando concluya el pedido. Te recomendamos anotar cualquier dato clave.',
   producto:
-    'Esta conversación se borra si quien lo vende quita el producto. Apunta por fuera lo que necesites guardar.',
-  muro: 'Esta conversación se borra si quien la publicó quita la donación. Apunta por fuera lo que necesites guardar.',
+    'Este chat se eliminará si quien vende retira el producto. Anota por fuera lo que necesites recordar.',
+  muro: 'Este chat se eliminará si se retira la publicación. Anota por fuera los acuerdos o detalles clave.',
   ficha:
-    'Esta conversación se borra si esta persona borra su ficha. Apunta por fuera lo que necesites guardar.',
+    'Este chat se eliminará si la persona retira su carné. Anota por fuera lo que necesites conservar.',
 }
 
 /**
@@ -167,7 +167,7 @@ export function Chat({
                 está a punto de escribir un número. Lo demás —que el hilo se
                 borra con lo que lo abrió— se dice una vez arriba. */}
             <p className="mt-2 text-sm text-muted-foreground">
-              No se pueden compartir teléfonos ni correos por aquí.
+              Por seguridad comunitaria, no compartas teléfonos ni correos por aquí.
             </p>
           </form>
         )
@@ -187,9 +187,9 @@ export function Chat({
 
       {mensajes.length === 0 ? (
         <p className="mt-8 text-center text-base text-muted-foreground">
-          Todavía no hay mensajes.
+          Aún no hay mensajes en esta conversación.
           <br />
-          Escribe para ponerse de acuerdo.
+          Escribe un saludo para ponerte de acuerdo.
         </p>
       ) : (
         <ol className="mt-4 space-y-1" aria-live="polite">

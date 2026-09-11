@@ -40,9 +40,9 @@ export async function Inicio({ municipio }: { municipio?: string }) {
         >
           <Search className="size-6 shrink-0" aria-hidden="true" />
           <span>
-            <span className="font-heading block text-xl">Busco</span>
+            <span className="font-heading block text-xl">Buscar</span>
             <span className="mt-0.5 block text-base text-muted-foreground">
-              Necesito un producto o servicio
+              Encuentra servicios y productos en tu zona
             </span>
           </span>
         </Link>
@@ -53,9 +53,9 @@ export async function Inicio({ municipio }: { municipio?: string }) {
         >
           <Briefcase className="size-6 shrink-0" aria-hidden="true" />
           <span>
-            <span className="font-heading block text-xl">Ofrezco</span>
+            <span className="font-heading block text-xl">Ofrecer</span>
             <span className="mt-0.5 block text-base text-muted-foreground">
-              Quiero ofrecer un producto o servicio
+              Publica tu oficio o lo que vendes
             </span>
           </span>
         </Link>
@@ -66,9 +66,9 @@ export async function Inicio({ municipio }: { municipio?: string }) {
         >
           <Heart className="size-6 shrink-0" aria-hidden="true" />
           <span>
-            <span className="font-heading block text-xl">Dono</span>
+            <span className="font-heading block text-xl">Donar</span>
             <span className="mt-0.5 block text-base text-muted-foreground">
-              Quiero donar
+              Comparte lo que ya no usas con un vecino
             </span>
           </span>
         </Link>

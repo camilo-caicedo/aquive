@@ -97,17 +97,16 @@ export function FormularioEmpezar({ municipios }: { municipios: MunicipioBasico[
           disabled={!puedeGuardar || guardando}
           onClick={guardar}
         >
-          {guardando ? 'Abriendo…' : 'Abrir mi cuenta'}
+          {guardando ? 'Guardando…' : 'Comenzar'}
         </Button>
       }
     >
       <p className="text-base text-muted-foreground">
-        Dos cosas y ya estás dentro. No hace falta que ofrezcas nada: la cuenta
-        sirve igual para buscar, para pedir y para escribir.
+        Solo dos datos rápidos y listo. Puedes usar tu cuenta para buscar servicios, pedir trabajos o escribirle a un vecino.
       </p>
 
       <div className="mt-6">
-        <Label htmlFor="nombre">¿Cómo te llamamos?</Label>
+        <Label htmlFor="nombre">¿Cómo te llamas o cómo te conocen?</Label>
         <Input
           id="nombre"
           value={nombre}
@@ -115,14 +114,13 @@ export function FormularioEmpezar({ municipios }: { municipios: MunicipioBasico[
           maxLength={60}
           autoComplete="name"
           className="mt-1"
-          placeholder="Tu nombre o como te conocen"
+          placeholder="Ej: Doña Rosa, Carlos Gómez..."
           aria-describedby="ayuda-nombre"
         />
         {/* La verdad, y no «será público»: para una cuenta que no publica nada
             este nombre no lo ve nadie más que la persona a la que le escribas. */}
         <p id="ayuda-nombre" className="mt-1 text-sm text-muted-foreground">
-          Es lo que ve quien reciba tu primer mensaje. No sale en ninguna lista
-          mientras no publiques algo.
+          Es el nombre que verá la persona cuando le envíes un mensaje. No se publica en ningún directorio a menos que abras un carné o una donación.
         </p>
         {errorNombre && (
           <p className="mt-1 text-sm font-medium text-destructive">{errorNombre}</p>
@@ -159,8 +157,7 @@ export function FormularioEmpezar({ municipios }: { municipios: MunicipioBasico[
           </ComboboxContent>
         </Combobox>
         <p className="mt-1 text-sm text-muted-foreground">
-          Sirve para enseñarte lo que hay cerca. Lo puedes cambiar cuando
-          quieras desde tu perfil.
+          Nos sirve para mostrarte personas y oficios cercanos a ti. Podrás cambiarlo cuando quieras desde tu perfil.
         </p>
       </div>
 

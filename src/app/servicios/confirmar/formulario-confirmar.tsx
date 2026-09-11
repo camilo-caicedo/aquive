@@ -11,9 +11,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 
 const CRITERIOS = [
-  { clave: 'cumplimiento', etiqueta: '¿Hizo lo que dijo que iba a hacer?' },
-  { clave: 'trato', etiqueta: '¿Cómo te trató?' },
-  { clave: 'puntualidad', etiqueta: '¿Llegó y entregó a tiempo?' },
+  { clave: 'cumplimiento', etiqueta: '¿El trabajo se realizó según lo acordado?' },
+  { clave: 'trato', etiqueta: '¿Cómo fue la atención y el trato recibido?' },
+  { clave: 'puntualidad', etiqueta: '¿Cumplió con los tiempos pactados?' },
 ] as const
 
 const NIVELES = [
@@ -107,15 +107,10 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
   return (
     <div className="mt-6 space-y-6">
       <div>
-        <Label htmlFor="codigo">El código que te dieron</Label>
+        <Label htmlFor="codigo">Código del servicio</Label>
         <Input
           id="codigo"
           value={codigo}
-          // ⚠ El tope son OCHO caracteres útiles, no veinte de `maxLength`:
-          // se limpia y se corta al escribir, así que pegar un enlace entero
-          // o seguir tecleando no pasa del octavo. Se vuelve a componer con
-          // un espacio en medio —«ABCD 2345»— porque es como está impreso en
-          // el papel del que se copia.
           onChange={(e) => {
             const limpio = e.target.value
               .replace(/[^a-zA-Z0-9]/g, '')
@@ -128,27 +123,14 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
           autoComplete="off"
           spellCheck={false}
           placeholder="ABCD 2345"
-          // Monoespaciada y grande: se copia de un papel, carácter por
-          // carácter, y así se distingue lo que se lleva escrito.
-          // Grande y monoespaciada porque se copia de un papel carácter por
-          // carácter; alineada a la izquierda y no centrada, para que al
-          // escribir el cursor no salte de sitio en cada letra.
           className="mt-1 h-16 border-enlace/40 px-5 font-mono text-2xl tracking-[0.2em] uppercase"
         />
-        {/* Se dice al escribir cuántos faltan. Antes el botón se quedaba
-            apagado sin explicar por qué, y desde un papel mal fotocopiado
-            eso es un callejón sin salida.
-
-            Lo que no se puede es decir de quién es el código antes de
-            enviarlo: no hay ninguna función que lo resuelva sin gastarlo, y
-            una consulta abierta por código sería una forma de sondear
-            códigos ajenos. */}
         <p aria-live="polite" className="mt-1 text-sm text-muted-foreground">
           {!codigoEmpezado
-            ? 'Ocho letras y números. No necesitas cuenta, y cada código sirve una sola vez.'
+            ? 'Son 8 letras y números. Cada código sirve una sola vez para confirmar que el trabajo se realizó.'
             : codigoCompleto
-              ? 'Listo. Al enviar se confirma el servicio de quien te dio este código.'
-              : `Llevas ${codigoLimpio.length} de 8.`}
+              ? 'Listo. Al enviar se confirmará el servicio de quien te dio este código.'
+              : `Llevas ${codigoLimpio.length} de 8 caracteres.`}
         </p>
       </div>
 
@@ -164,12 +146,7 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
                 onClick={() => setNotas((p) => ({ ...p, [c.clave]: n.valor }))}
                 className={`inline-flex min-h-14 flex-1 items-center justify-center rounded-full px-3 text-base transition-colors ${
                   notas[c.clave] === n.valor
-                    ? // Tinta, no lima. Son tres criterios de cinco niveles:
-                      // con lima habría hasta tres rellenos compitiendo con
-                      // el botón de enviar, que es la acción de verdad. El
-                      // negro sobre blanco da 16,88:1 y no deja duda de cuál
-                      // está elegido sin depender de percibir un color.
-                      'bg-foreground font-semibold text-background'
+                    ? 'bg-foreground font-semibold text-background'
                     : 'bg-card shadow-canto hover:bg-muted'
                 }`}
               >
@@ -182,7 +159,7 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
 
       <div>
         <Label htmlFor="comentario">
-          ¿Algo más?{' '}
+          Comentario o recomendación{' '}
           <span className="font-normal text-muted-foreground">(opcional)</span>
         </Label>
         <Textarea
@@ -191,11 +168,11 @@ export function FormularioConfirmar({ turnstileSiteKey }: { turnstileSiteKey: st
           onChange={(e) => setComentario(e.target.value)}
           maxLength={140}
           rows={3}
+          placeholder="Cuéntanos cómo fue tu experiencia..."
           className="mt-1"
         />
         <p className="mt-1 text-sm text-muted-foreground">
-          {comentario.length}/140. Lo puede leer cualquiera, y esa persona puede
-          responderte en público.
+          {comentario.length}/140. Tu opinión es pública y ayuda a que otros vecinos confíen en su trabajo.
         </p>
         {errorComentario && (
           <p className="mt-1 text-sm text-destructive">{errorComentario}</p>

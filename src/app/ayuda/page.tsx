@@ -41,20 +41,20 @@ export const metadata: Metadata = {
 
 const PREGUNTAS: { t: string; r: string }[] = [
   {
-    t: '¿Cómo publico mi oficio?',
-    r: 'Entra con tu cuenta de Google y llena tu ficha: tus oficios, los municipios y zonas donde trabajas, y tu teléfono. Si no tienes cuenta de Google, alguien de la fundación puede registrarte y te entrega un código con el que después ves, corriges y borras tu ficha por tu cuenta.',
+    t: '¿Cómo publico mi oficio o servicio?',
+    r: 'Inicia sesión con tu cuenta de Google y completa tu carné: tus oficios, las zonas donde trabajas y tu teléfono de contacto. Si no manejas correo electrónico, un facilitador de la fundación puede ayudarte a crear tu ficha y darte un código para que la gestiones cuando quieras.',
   },
   {
-    t: '¿Cómo se acuerdan los pagos?',
-    r: 'Entre ustedes dos y por fuera de la aplicación. AquíVe no cobra comisión, no recibe pagos y no tiene pasarela: los precios que ves en una ficha son información, no un cobro. Acuerda el valor antes de empezar y paga cuando el trabajo esté hecho.',
+    t: '¿Cómo se acuerdan los pagos y precios?',
+    r: 'Se acuerdan directamente entre ustedes, de persona a persona y sin intermediarios. AquíVe no cobra comisiones ni procesa dinero: las tarifas en las fichas son una referencia. Te recomendamos acordar el valor antes de iniciar el trabajo y pagar contra entrega o labor terminada.',
   },
   {
     t: '¿Qué pasa si cancelo un servicio?',
-    r: 'No pasa nada en la plataforma: no hay penalización ni cobro, porque no hay dinero de por medio. Avísale a la otra persona por el mismo canal por el que hablaron. Si ya te dieron un código de servicio y el trabajo no se hizo, no lo uses para calificar.',
+    r: 'No hay sanciones ni cobros, porque la plataforma no maneja dinero. Solo te pedimos avisarle con tiempo a la otra persona por respeto a su jornada. Si te dieron un código de confirmación y el servicio no se realizó, simplemente no lo uses.',
   },
   {
-    t: '¿Por qué uno de mis oficios no aparece?',
-    r: 'Hay oficios que no salen en el directorio hasta que una persona de la fundación te llame para verificar tu teléfono y compruebe una referencia tuya. Son el cuidado de niños, el cuidado de personas dependientes y el transporte de pasajeros. No es un error ni una demora: mientras falte una de las dos cosas, ese oficio no se muestra.',
+    t: '¿Por qué uno de mis oficios no aparece de inmediato?',
+    r: 'Por seguridad comunitaria, algunos oficios de cuidado o transporte (como cuidado de niños, adultos mayores o transporte de pasajeros) requieren que el equipo de la fundación valide tu número telefónico y al menos una referencia previa antes de mostrarse en el directorio público.',
   },
   {
     t: '¿Qué se verifica y qué significa un perfil verificado?',

@@ -58,9 +58,8 @@ export function BarraContacto({
   return (
     <>
       <p className="text-sm text-muted-foreground">
-        Se lo mandas a {nombre} y te avisamos cuando responda. O contáctalo
-        directo: WhatsApp abre la conversación fuera de AquíVe, y llamar marca
-        de una vez.{' '}
+        ¿Quieres hablar primero con {nombre}? Escríbele por WhatsApp, llámalo o
+        conversa por el chat de AquíVe sin dar tu número.{' '}
         <Link href="/seguridad" className="underline">
           Cómo cuidarte
         </Link>
@@ -75,7 +74,7 @@ export function BarraContacto({
               href={enlaceWhatsapp(telefono)}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`Escribir a ${nombre} por WhatsApp. Abre la aplicación de WhatsApp.`}
+              aria-label={`Escribir a ${nombre} por WhatsApp`}
             />
           }
         >
@@ -84,14 +83,14 @@ export function BarraContacto({
         </Button>
         <a
           href={`tel:${telefono}`}
-          aria-label={`Llamar al ${telefono}. Marca el número directamente.`}
+          aria-label={`Llamar a ${nombre}`}
           className="pulsable flex size-14 shrink-0 items-center justify-center rounded-full border border-enlace text-enlace transition-colors hover:bg-accent"
         >
           <Phone className="size-6" aria-hidden="true" />
         </a>
         <BotonChat
           origen={{ tipo: 'ficha', id: proveedorId }}
-          etiqueta={`Escribir por AquíVe a ${nombre}`}
+          etiqueta={`Conversar por AquíVe con ${nombre}`}
           className="size-14 [&>svg]:size-6"
         />
       </div>

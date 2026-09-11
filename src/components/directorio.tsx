@@ -186,7 +186,7 @@ export async function Directorio({
   // cercanía que nadie calculó. Es el mismo motivo por el que las tarjetas
   // no dicen kilómetros.
   const lugar = zona ? nombreZona.get(zona) : municipio ? nombreMunicipio.get(municipio) : null
-  const cuantas = `${proveedores.length} ${proveedores.length === 1 ? 'persona' : 'personas'}`
+  const cuantas = `${proveedores.length} ${proveedores.length === 1 ? 'persona disponible' : 'personas disponibles'}`
   const titular = lugar ? `${cuantas} en ${lugar}` : `${cuantas} cerca de ti`
 
   // De dónde vino: si trae categoría, la migaja vuelve a las categorías, que
@@ -384,9 +384,9 @@ export async function Directorio({
           papel en la mano no baja veinte fichas para encontrar dónde
           meterlo. */}
       <p className="mt-4 text-base text-muted-foreground">
-        ¿Te hicieron un trabajo y te dieron un código?{' '}
+        ¿Recibiste un servicio?{' '}
         <Link href="/servicios/confirmar" className="underline">
-          Califícalo aquí
+          Ingresa aquí tu código para calificarlo
         </Link>
       </p>
 
@@ -426,8 +426,8 @@ export async function Directorio({
           <Inbox className="mx-auto size-8 text-muted-foreground" aria-hidden="true" />
           <p className="mt-2 text-base text-muted-foreground">
             {hayFiltro
-              ? 'Nadie coincide con estos filtros todavía.'
-              : 'Todavía no hay nadie en el directorio. Si trabajas por tu cuenta, puedes ser el primero.'}
+              ? 'No encontramos resultados con estos filtros todavía.'
+              : 'Todavía no hay nadie en el directorio. Si trabajas por tu cuenta, ¡sé el primero en publicar tu ficha!'}
           </p>
           {hayFiltro ? (
             <Button

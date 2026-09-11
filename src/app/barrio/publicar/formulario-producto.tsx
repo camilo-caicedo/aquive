@@ -26,14 +26,14 @@ import {
 type Modo = 'gratis' | 'aporte' | 'solidario' | 'normal'
 
 const MODOS: { valor: Modo; etiqueta: string; ayuda: string }[] = [
-  { valor: 'normal', etiqueta: 'Precio normal', ayuda: 'El que cobras siempre.' },
+  { valor: 'normal', etiqueta: 'Precio fijo', ayuda: 'El valor habitual de tu producto.' },
   {
     valor: 'solidario',
     etiqueta: 'Precio solidario',
-    ayuda: 'Más barato para quien está sin trabajo.',
+    ayuda: 'Un valor más accesible para apoyar a vecinos que lo necesiten.',
   },
-  { valor: 'aporte', etiqueta: 'Lo que puedan dar', ayuda: 'Sin precio fijo.' },
-  { valor: 'gratis', etiqueta: 'Gratis', ayuda: 'Lo regalas.' },
+  { valor: 'aporte', etiqueta: 'Aporte voluntario', ayuda: 'Lo que el vecino pueda darte.' },
+  { valor: 'gratis', etiqueta: 'Gratis', ayuda: 'Lo entregas sin costo.' },
 ]
 
 /**
@@ -119,9 +119,7 @@ export function FormularioProducto({ producto }: { producto?: MiProducto }) {
       }
     >
       <p className="text-base text-muted-foreground">
-        Aparece con tu nombre y con los datos de tu ficha, que es por donde te
-        van a escribir. El precio es información: AquíVe no cobra comisión y no
-        recibe el pago.
+        Tu publicación aparecerá con el nombre y contacto de tu carné o ficha. El valor que indiques es solo informativo: en AquíVe no cobramos comisiones ni recibimos pagos.
       </p>
 
       <div className="mt-6">
@@ -129,14 +127,14 @@ export function FormularioProducto({ producto }: { producto?: MiProducto }) {
           htmlFor="nombre"
           className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase"
         >
-          Qué vendes
+          ¿Qué vendes u ofreces?
         </label>
         <input
           id="nombre"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           maxLength={140}
-          placeholder="Tamales de pollo"
+          placeholder="Ej: Empanadas vallunas, artesanías en macramé..."
           className="bg-card border border-input focus-visible:ring-ring mt-2 min-h-14 w-full rounded-2xl px-4 text-base focus-visible:ring-2 focus-visible:outline-none"
         />
       </div>
@@ -146,7 +144,7 @@ export function FormularioProducto({ producto }: { producto?: MiProducto }) {
           htmlFor="detalle"
           className="font-heading text-xs tracking-[0.085em] text-muted-foreground uppercase"
         >
-          Detalle (opcional)
+          Descripción o detalles (opcional)
         </label>
         <textarea
           id="detalle"
@@ -154,10 +152,11 @@ export function FormularioProducto({ producto }: { producto?: MiProducto }) {
           onChange={(e) => setDetalle(e.target.value)}
           maxLength={300}
           rows={3}
+          placeholder="Cuéntale a tus vecinos qué incluye, sabores, medidas o cómo pedirlo..."
           className="bg-card border border-input focus-visible:ring-ring mt-2 w-full resize-none rounded-2xl px-4 py-3 text-base focus-visible:ring-2 focus-visible:outline-none"
         />
         <p className="mt-1 text-sm text-muted-foreground">
-          {detalle.length}/300 · Sin teléfonos ni correos: ya están en tu ficha.
+          {detalle.length}/300 · No incluyas teléfonos ni correos aquí (se usan los de tu carné).
         </p>
       </div>
 
@@ -247,9 +246,8 @@ export function FormularioProducto({ producto }: { producto?: MiProducto }) {
       <div className="mt-6">
         <SubirImagen objetoTipo="producto" onSubida={setImagenId} onEstadoSubida={setSubiendoFoto} />
         <p className="mt-1 text-sm text-muted-foreground">
-          Máximo 2 MB. Una persona la revisa antes de que se vea: si tiene datos
-          de alguien, un documento o a un menor, no se publica.
-          {producto ? ' Si no subes otra, se queda la que ya tenía.' : ''}
+          Máximo 2 MB. Una persona del equipo revisa la foto antes de publicarla para proteger la seguridad de la comunidad (no se permiten documentos personales, datos de contacto ni fotos de menores de edad).
+          {producto ? ' Si no subes una nueva foto, se conservará la actual.' : ''}
         </p>
       </div>
 
@@ -261,11 +259,11 @@ export function FormularioProducto({ producto }: { producto?: MiProducto }) {
 
       {!producto && (
       <p className="mt-4 text-base text-muted-foreground">
-        ¿Todavía no tienes ficha?{' '}
-        <Link href="/servicios/soy-proveedor" className="text-enlace underline underline-offset-4">
-          Ármala primero
+        ¿Aún no tienes tu carné de prestador?{' '}
+        <Link href="/servicios/soy-proveedor" className="text-enlace underline underline-offset-4 font-medium">
+          Créalo aquí
         </Link>
-        : es la que lleva tu nombre y tu contacto.
+        {' '}para que los vecinos sepan quién eres y cómo contactarte.
       </p>
       )}
     </MarcoFlujo>

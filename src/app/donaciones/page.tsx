@@ -47,14 +47,14 @@ export default async function DonacionesPage({
     <main className="animar-pantalla mx-auto max-w-2xl px-4 py-6">
       <CabeceraPantalla titulo="Donaciones" volver="/inicio" />
       <p className="text-base text-muted-foreground">
-        Lo que alguien tiene y ya no usa. Se acuerda directamente con quien
-        publicó y no pasa dinero por aquí.
+        Cosas en buen estado que alguien ya no usa y decide regalar a un vecino.
+        Todo se acuerda directamente con quien publica, sin intermediarios ni dinero de por medio.
       </p>
 
       {publicaciones.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center">
           <p className="text-base text-muted-foreground">
-            Todavía nadie ha publicado algo para dar.
+            Aún no hay donaciones publicadas en esta zona. ¡Anímate a compartir lo que ya no uses!
           </p>
         </div>
       ) : (
@@ -120,13 +120,13 @@ export default async function DonacionesPage({
                       dando una dirección. */}
                   {p.acopio_nombre && (
                     <p className="bg-ok-suave text-foreground mt-3 rounded-xl p-3 text-base">
-                      Se entrega en <strong>{p.acopio_nombre}</strong>
-                      {p.acopio_direccion ? ` · ${p.acopio_direccion}` : ''}.{' '}
+                      Disponible para recoger en <strong>{p.acopio_nombre}</strong>
+                      {p.acopio_direccion ? ` (${p.acopio_direccion})` : ''}.{' '}
                       <Link
                         href="/acopios"
-                        className="text-enlace underline underline-offset-4"
+                        className="text-enlace underline underline-offset-4 font-medium"
                       >
-                        Ver el punto
+                        Ver ubicación del punto
                       </Link>
                     </p>
                   )}
@@ -170,8 +170,7 @@ export default async function DonacionesPage({
                         etiqueta={`Escribir por AquíVe sobre ${p.titulo}`}
                       />
                       <span className="text-sm text-muted-foreground">
-                        Esta persona no tiene ficha publicada, así que su
-                        teléfono no sale aquí. Escríbele por AquíVe.
+                        Esta persona no tiene teléfono público. Puedes escribirle directamente por el chat de AquíVe.
                       </span>
                     </div>
                   )}

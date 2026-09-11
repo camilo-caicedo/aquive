@@ -119,8 +119,7 @@ export default async function BarrioPage({
       </CabeceraPantalla>
 
       <p className="text-base text-muted-foreground">
-        Lo que hacen y venden las personas del directorio. Acuerdas el precio y
-        la entrega con quien vende: AquíVe no cobra comisión y no recibe el pago.
+        Productos y creaciones hechas por vecinos y prestadores locales. El precio y la entrega se acuerdan directamente con quien vende: en AquíVe no cobramos comisiones ni recibimos dinero.
       </p>
 
       <BuscadorDelBarrio municipio={params.municipio} busqueda={params.q} />
@@ -128,8 +127,8 @@ export default async function BarrioPage({
       {productos.length === 0 ? (
         <p className="mt-6 rounded-2xl border border-dashed border-border p-8 text-center text-base text-muted-foreground">
           {hayFiltro
-            ? 'Nada coincide con lo que buscas.'
-            : 'Todavía no hay productos publicados. Si haces algo para vender, puedes ser el primero.'}
+            ? 'No encontramos productos con esos filtros.'
+            : 'Aún no hay productos publicados por aquí. Si elaboras algo para vender, ¡anímate a publicar!'}
         </p>
       ) : (
         <ul className="revelar mt-6 grid gap-3 sm:grid-cols-2">
@@ -141,8 +140,7 @@ export default async function BarrioPage({
 
       {/* Pegado a los precios, que es donde nace la duda. */}
       <p className="mt-6 text-sm text-muted-foreground">
-        Nadie de AquíVe te va a pedir un adelanto. Acuerda el precio antes y
-        paga cuando tengas la cosa en la mano.
+        Consejo de seguridad: acuerda el valor antes de la entrega y paga contra entrega. Nadie de AquíVe te pedirá adelantos ni transferencias previas.
       </p>
 
       <AccionPrincipal etiqueta="Vender algo" Icono={Plus} href="/barrio/publicar" />
