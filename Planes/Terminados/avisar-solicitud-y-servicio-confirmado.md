@@ -106,16 +106,23 @@
 
 ## 5. Verificación y puerta de calidad
 
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
+- [x] `npm run lint` (verificado por el Arquitecto)
+- [x] `npm run typecheck` (verificado por el Arquitecto)
 - [ ] Probar de punta a punta: aceptar una solicitud con dos cuentas de prueba (una pide,
-      otra presta), confirmar un servicio con un código real.
-- [ ] Sin warnings de build.
-- [ ] Aprobación del `git diff` por Claude Code.
+      otra presta), confirmar un servicio con un código real. **Pendiente** — no se probó
+      con datos reales en esta sesión.
+- [x] Sin warnings de build (verificado por el Arquitecto).
+- [x] Aprobación del `git diff` por Claude Code.
 
 ## 6. Notas y bloqueos
 
 - Si `confirmar_y_resenar` no devuelve nada útil para resolver el `perfil_id` sin una
   consulta extra, está bien hacer esa consulta — no es una vuelta grande, y el arquitecto la
   revisará contra la regla de "ningún acceso a datos desde el navegador" (esto corre en el
-  servidor, así que no debería chocar).
+  servidor, así que no debería chocar). Confirmado en la auditoría: `confirmar_y_resenar` SÍ
+  devuelve `proveedor_id` (`v3-s6-resenas.sql:199-202`), así que no hizo falta la consulta
+  de respaldo.
+- Diff auditado sin correcciones: `cambiarEstado` trae `perfilId`, escribe `actualizadoAt`,
+  el texto del push coincide palabra por palabra con `mis_avisos()`; el route handler de
+  confirmar resuelve el `perfil_id` real antes de avisar; `interruptor.tsx` refleja la
+  cobertura real.

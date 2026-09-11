@@ -75,18 +75,28 @@ export function PanelReferencias({
 
   async function marcar(id: string, estado: EstadoReferencia) {
     setOcupado(true)
-    const supabase = createClient()
-    const { error: rpcError } = await supabase.rpc('marcar_referencia', {
-      p_id: id,
-      p_estado: estado,
-    })
-    setOcupado(false)
-    if (rpcError) {
-      setError(rpcError.message)
-      return
+    setError(null)
+    try {
+      const res = await fetch('/api/admin/marcar-referencia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          estado,
+        }),
+      })
+      const datos = (await res.json()) as { ok?: boolean; motivo?: string }
+      setOcupado(false)
+      if (!res.ok || !datos.ok) {
+        setError(datos.motivo ?? 'No se pudo marcar la referencia')
+        return
+      }
+      avisar('Referencia resuelta')
+      router.refresh()
+    } catch {
+      setOcupado(false)
+      setError('Error de conexión')
     }
-    avisar('Referencia resuelta')
-    router.refresh()
   }
 
   if (referencias.length === 0) {

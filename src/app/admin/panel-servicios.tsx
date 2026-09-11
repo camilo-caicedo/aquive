@@ -109,6 +109,59 @@ export function PanelServicios({
   ) {
     setOcupado(true)
     setError(null)
+
+    if (fn === 'verificar_telefono_proveedor') {
+      try {
+        const res = await fetch('/api/admin/verificar-telefono', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            proveedor_id: args.p_proveedor_id,
+            verificado: args.p_verificado,
+          }),
+        })
+        const datos = (await res.json()) as { ok?: boolean; motivo?: string }
+        setOcupado(false)
+        if (!res.ok || !datos.ok) {
+          setError(datos.motivo ?? 'No se pudo verificar el teléfono')
+          return
+        }
+        avisar('Guardado')
+        router.refresh()
+        return
+      } catch {
+        setOcupado(false)
+        setError('Error de conexión')
+        return
+      }
+    }
+
+    if (fn === 'suspender_proveedor') {
+      try {
+        const res = await fetch('/api/admin/suspender-proveedor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            proveedor_id: args.p_proveedor_id,
+            suspendido: args.p_suspendido,
+          }),
+        })
+        const datos = (await res.json()) as { ok?: boolean; motivo?: string }
+        setOcupado(false)
+        if (!res.ok || !datos.ok) {
+          setError(datos.motivo ?? 'No se pudo suspender la ficha')
+          return
+        }
+        avisar('Guardado')
+        router.refresh()
+        return
+      } catch {
+        setOcupado(false)
+        setError('Error de conexión')
+        return
+      }
+    }
+
     const supabase = createClient()
     // @ts-expect-error — el nombre de la RPC es dinámico y las cuatro
     // firmas son distintas; comprobarlo en el tipo no aporta nada aquí.

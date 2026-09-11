@@ -12,6 +12,7 @@ import {
 import { contienePII, validarNota } from '@/lib/validacion'
 import type { MiSolicitudServicio, OrdenProveedor } from '@/contrato/servicios'
 import { transicionValida, type EstadoSolicitud } from './transiciones'
+import { avisar } from '@/server/avisos/push'
 
 export class SolicitudRechazada extends Error {}
 
@@ -347,7 +348,10 @@ export async function cambiarEstado(
   if (!llave.usuarioId) throw new SolicitudRechazada('Esto no es tuyo.')
 
   const [fila] = await db
-    .select({ estado: solicitudesServicio.estado })
+    .select({
+      estado: solicitudesServicio.estado,
+      perfilId: solicitudesServicio.perfilId,
+    })
     .from(solicitudesServicio)
     .innerJoin(proveedores, eq(proveedores.id, solicitudesServicio.proveedorId))
     .where(
@@ -365,7 +369,22 @@ export async function cambiarEstado(
 
   await db
     .update(solicitudesServicio)
-    .set({ estado: siguiente })
+    .set({
+      estado: siguiente,
+      actualizadoAt: sql`now()`,
+    })
     .where(eq(solicitudesServicio.id, id))
+
+  if (siguiente === 'aceptada' || siguiente === 'rechazada') {
+    await avisar(db, fila.perfilId, {
+      cuerpo:
+        siguiente === 'aceptada'
+          ? 'El prestador aceptó tu solicitud.'
+          : 'El prestador rechazó tu solicitud.',
+      url: '/mis-solicitudes',
+      tag: `solicitud-${id}`,
+    })
+  }
+
   return { ok: true }
 }

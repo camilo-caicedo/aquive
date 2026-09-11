@@ -43,9 +43,14 @@ const TIPOS: { nombre: string; detalle: string; hay: boolean }[] = [
     hay: true,
   },
   {
+    nombre: 'Te aceptaron o rechazaron una solicitud',
+    detalle: 'Cuando el prestador responde a tu pedido de servicio.',
+    hay: true,
+  },
+  {
     nombre: 'Alguien usó tu código',
-    detalle: 'Cuando entra una calificación nueva.',
-    hay: false,
+    detalle: 'Cuando entra una calificación nueva de un cliente.',
+    hay: true,
   },
   {
     nombre: 'Novedades de AquíVe',

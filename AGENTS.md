@@ -427,7 +427,7 @@ diferencia entre «el código no debería» y «la base no lo acepta».
 | Paso | Estado |
 | --- | --- |
 | 1 · Tipos de Drizzle desde el esquema | **hecho** — regenerado con `npm run db:pull` el 3 de septiembre de 2026, contra la base de pruebas ya migrada. `verificar-esquema` da 45 objetos y 460 columnas |
-| 2 · Eliminar el acceso a datos desde el navegador | en curso — quedan ~20 archivos: 10 en admin y aliado, el resto repartidos. `crear_perfil` y `guardar_ofrecimientos` se fueron con los ADR 0014 y 0015 |
+| 2 · Eliminar el acceso a datos desde el navegador | en curso — quedan ~17 archivos: 7 en admin y aliado, el resto repartidos. `crear_perfil` y `guardar_ofrecimientos` se fueron con los ADR 0014 y 0015; `verificar_telefono_proveedor`, `suspender_proveedor` y `marcar_referencia` pasaron a Route Handler el 2026-09-10, como parte del arreglo de notificaciones |
 | 3 · Contrato oRPC con las primeras lecturas | **hecho** — Servicios, chat, comunidad, moderación |
 | 4 · Migrar lecturas, luego escrituras | en curso — las escrituras de solicitudes de servicio y las de la cuenta ya están en el contrato |
 | 5 · Cron y cifrado fuera del motor | **no** — el cron de imágenes huérfanas sí está fuera, pero `pg_cron` sigue programando el vencimiento de servicios —ya solo uno, el de 72 h se fue con insumos, y desde el ADR 0017 solo vence lo que sigue en `pendiente`— y el cifrado de referencias sigue en Postgres con `pgp_sym_encrypt` y el Vault |

@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { BadgeCheck, Copy, Phone, Info } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { rpc } from '@/orpc/cliente'
 import { AUTORIZACION_PROVEEDOR_VERSION } from '@/lib/config'
 import { contienePII, MENSAJE_PII } from '@/lib/validacion'
@@ -208,17 +207,25 @@ export function PanelProveedores({
   }
 
   async function verificar(id: string, valor: boolean) {
-    const supabase = createClient()
-    const { error: rpcError } = await supabase.rpc('verificar_telefono_proveedor', {
-      p_proveedor_id: id,
-      p_verificado: valor,
-    })
-    if (rpcError) {
-      setError(rpcError.message)
-      return
+    try {
+      const res = await fetch('/api/admin/verificar-telefono', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          proveedor_id: id,
+          verificado: valor,
+        }),
+      })
+      const datos = (await res.json()) as { ok?: boolean; motivo?: string }
+      if (!res.ok || !datos.ok) {
+        setError(datos.motivo ?? 'No se pudo verificar el teléfono')
+        return
+      }
+      avisar(valor ? 'Teléfono verificado' : 'Verificación retirada')
+      router.refresh()
+    } catch {
+      setError('Error de conexión')
     }
-    avisar(valor ? 'Teléfono verificado' : 'Verificación retirada')
-    router.refresh()
   }
 
   return (

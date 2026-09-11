@@ -164,14 +164,18 @@ forma, solo de qué llama.
 
 ## 5. Verificación y puerta de calidad
 
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
+- [x] `npm run lint` (verificado por el Arquitecto)
+- [x] `npm run typecheck` (verificado por el Arquitecto)
 - [ ] Probar las tres acciones de punta a punta, con una cuenta admin y una de aliado, y
-      confirmar que sigue fallando para quien no tiene el permiso.
-- [ ] Confirmar que las tres ramas del dispatcher de `panel-servicios.tsx` que quedan fuera
-      de alcance (reseñas, solicitudes) siguen funcionando sin cambios.
-- [ ] Sin warnings de build.
-- [ ] Aprobación del `git diff` por Claude Code.
+      confirmar que sigue fallando para quien no tiene el permiso. **Pendiente** — no se
+      probó con datos reales en esta sesión.
+- [x] Confirmar que las tres ramas del dispatcher de `panel-servicios.tsx` que quedan fuera
+      de alcance (reseñas, solicitudes) siguen funcionando sin cambios — confirmado, el diff
+      solo agrega código, no toca esas ramas (`git diff --stat`: 53 inserciones, 0
+      eliminaciones).
+- [x] Sin warnings de build (verificado por el Arquitecto — los tres endpoints nuevos
+      aparecen en la salida de `npm run build`).
+- [x] Aprobación del `git diff` por Claude Code.
 
 ## 6. Notas y bloqueos
 
@@ -182,3 +186,12 @@ forma, solo de qué llama.
 - Cuando esto quede aprobado, el arquitecto actualiza la fila "2 · Eliminar el acceso a
   datos desde el navegador" de `AGENTS.md` §"Estado de la migración" — tres archivos menos
   de los ~20 pendientes. No lo edites tú.
+- **Corrección del Arquitecto en la auditoría:** el push de "ficha suspendida" llevaba a
+  `/perfil/avisos` (la pantalla de ajustes de notificaciones); la campanita, para el mismo
+  evento, lleva a `/servicios/soy-proveedor`. Corregido para que las dos coincidan —
+  `/perfil/avisos` no explica nada sobre la suspensión, solo deja prender/apagar avisos.
+- El resto del diff quedó exacto al blueprint: `createClient()` de sesión (no service role,
+  para que `auth.uid()` funcione dentro de las funciones de Postgres), el `avisar()` de
+  toast local intacto y sin confundirse con el de push, `panel-proveedores.tsx` no inventó
+  un botón de suspender que no existía ahí (correcto — solo un admin puede suspender, no un
+  aliado, y el código ya lo respetaba antes de este cambio).

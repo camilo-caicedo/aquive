@@ -1,4 +1,8 @@
 import { NextResponse } from 'next/server'
+import { eq } from 'drizzle-orm'
+import { db } from '@/db/cliente'
+import { proveedores } from '@/db/esquema'
+import { avisar } from '@/server/avisos/push'
 import { createServiceClient } from '@/lib/supabase/service'
 import { verificarTurnstile } from '@/lib/turnstile'
 import { contienePII, MENSAJE_PII } from '@/lib/validacion'
@@ -63,6 +67,25 @@ export async function POST(request: Request) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 400 })
+  }
+
+  if (data && typeof data === 'object' && 'proveedor_id' in data) {
+    const proveedorId = (data as { proveedor_id?: string }).proveedor_id
+    if (proveedorId) {
+      const [prov] = await db
+        .select({ perfilId: proveedores.perfilId })
+        .from(proveedores)
+        .where(eq(proveedores.id, proveedorId))
+        .limit(1)
+
+      if (prov?.perfilId) {
+        await avisar(db, prov.perfilId, {
+          cuerpo: 'Alguien confirmó un servicio con tu código y dejó su reseña.',
+          url: '/perfil/resenas',
+          tag: `servicio-confirmado-${proveedorId}`,
+        })
+      }
+    }
   }
 
   return NextResponse.json(data)
