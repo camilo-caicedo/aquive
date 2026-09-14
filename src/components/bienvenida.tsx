@@ -98,9 +98,9 @@ export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
           href="/inicio"
           className="pulsable-tarjeta shadow-cartel-azul mt-7 block rounded-2xl bg-card p-5 transition-transform hover:-translate-y-0.5"
         >
-          <span className="font-heading block text-xl">Busco un servicio o producto</span>
+          <span className="font-heading block text-xl">Necesito algo</span>
           <span className="font-heading text-foreground mt-1 block text-sm">
-            Servicios y vecindario
+            Servicios y productos
           </span>
           <span className="mt-1 block text-base text-muted-foreground">
             Mira quién está disponible cerca de ti y contáctalo directamente.
@@ -121,9 +121,9 @@ export function Bienvenida({ conSesion = false }: { conSesion?: boolean }) {
           }
           className="pulsable-tarjeta shadow-cartel-amarillo mt-4 block rounded-2xl bg-card p-5 transition-transform hover:-translate-y-0.5"
         >
-          <span className="font-heading block text-xl">Ofrezco mi trabajo o productos</span>
+          <span className="font-heading block text-xl">Ofrezco algo</span>
           <span className="font-heading text-foreground mt-1 block text-sm">
-            Servicios y vecindario
+            Servicios y productos
           </span>
           <span className="mt-1 block text-base text-muted-foreground">
             {conSesion
